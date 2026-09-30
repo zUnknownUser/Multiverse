@@ -33,7 +33,7 @@ perfis públicos e unicidade exigirão o backend de perfis na próxima etapa.
    alteração de plano nem contratação de serviço nesta tarefa.
 3. Configurar um domínio remetente no provedor de e-mail. A configuração preparada usa
    `RESEND_API_KEY` e `VERIFICATION_EMAIL_FROM` (por exemplo, `Multiverse <conta@seu-dominio>`).
-4. Em `firebase/`, configurar os segredos pelo Secret Manager, nunca pelo app ou Git:
+4. Em `backend/firebase/`, configurar os segredos pelo Secret Manager, nunca pelo app ou Git:
    `firebase functions:secrets:set RESEND_API_KEY` e
    `firebase functions:secrets:set VERIFICATION_CODE_SECRET`.
    O segundo deve ser um segredo aleatório forte, com pelo menos 32 bytes de entropia.
@@ -63,7 +63,7 @@ o handler web do Firebase poderá apresentar a recuperação no navegador.
 ## Validação local
 
 ```sh
-cd functions
+cd backend/firebase/functions # a partir da raiz do repositório
 npm ci
 npm test
 ```

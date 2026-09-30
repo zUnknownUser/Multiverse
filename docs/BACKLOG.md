@@ -1,5 +1,7 @@
 # Backlog — próximos passos sugeridos
 
+Os caminhos de código abaixo são relativos a `apps/ios/`; as referências visuais ficam em `design/`.
+
 Itens de produto/arquitetura que surgiram durante o desenvolvimento, avaliados e
 conscientemente adiados (escopo grande demais pra entrar "de brinde" numa tarefa maior, ou
 dependem de decisão de produto/design que não estava no escopo pedido). Nada aqui bloqueia o

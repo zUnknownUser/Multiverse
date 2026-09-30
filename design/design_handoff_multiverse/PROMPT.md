@@ -1,21 +1,21 @@
 # Prompt pro Claude Code
 
 1. Crie um projeto novo no Xcode: **iOS App**, nome `Multiverse`, interface **SwiftUI**, iOS 17+.
-2. Copie esta pasta `design_handoff_multiverse/` pra raiz do projeto.
-3. Baixe a fonte Archivo no Google Fonts (`Archivo-VariableFont_wdth,wght.ttf`) e coloque em `design_handoff_multiverse/`.
+2. As referências estão em `design/design_handoff_multiverse/` no monorepo.
+3. Baixe a fonte Archivo no Google Fonts (`Archivo-VariableFont_wdth,wght.ttf`) e coloque em `design/design_handoff_multiverse/`.
 4. Abra o terminal na pasta do projeto, rode `claude` e cole o texto abaixo:
 
 ---
 
 ```
-Você vai construir o app iOS "Multiverse" em SwiftUI (iOS 17+), recriando com fidelidade total o protótipo em design_handoff_multiverse/.
+Você vai construir o app iOS "Multiverse" em SwiftUI (iOS 17+), recriando com fidelidade total o protótipo em design/design_handoff_multiverse/.
 
 Leia nesta ordem:
-1. design_handoff_multiverse/README.md: especificação completa de todas as telas, textos, medidas, cores, interações e estado.
-2. design_handoff_multiverse/reference/Multiverse v2.dc.html: protótipo em HTML. O <script> no fim do arquivo é a fonte da verdade da lógica; o template tem os estilos exatos (inline). Sempre que o README deixar alguma dúvida, confira aqui.
-3. design_handoff_multiverse/swift/*.swift: base pronta (tokens, componentes, modelos, regras). Mova pro target do app e USE esses arquivos; não recrie tokens nem componentes que já existem.
-4. design_handoff_multiverse/screenshots/*.png: capturas de cada tela; compare cada tela que você construir com a captura correspondente.
-5. design_handoff_multiverse/data/sample-data.json: adicione ao bundle e carregue com SampleData.load().
+1. design/design_handoff_multiverse/README.md: especificação completa de todas as telas, textos, medidas, cores, interações e estado.
+2. design/design_handoff_multiverse/reference/Multiverse v2.dc.html: protótipo em HTML. O <script> no fim do arquivo é a fonte da verdade da lógica; o template tem os estilos exatos (inline). Sempre que o README deixar alguma dúvida, confira aqui.
+3. design/design_handoff_multiverse/swift/*.swift: base pronta (tokens, componentes, modelos, regras). Mova pro target do app e USE esses arquivos; não recrie tokens nem componentes que já existem.
+4. design/design_handoff_multiverse/screenshots/*.png: capturas de cada tela; compare cada tela que você construir com a captura correspondente.
+5. design/design_handoff_multiverse/data/sample-data.json: adicione ao bundle e carregue com SampleData.load().
 
 Regras:
 - Visual 100% igual ao protótipo: borda 2pt ink em tudo, sombras duras sem blur, retícula nas capas, fonte Archivo com os pesos e larguras do README, cores por universo. Não use estilos padrão do iOS (List, TabView visual, NavigationBar, Form); tudo é customizado.

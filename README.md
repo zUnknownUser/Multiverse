@@ -1,149 +1,108 @@
 # Multiverse
 
-Rede social pra fãs de universos fictícios (Marvel, DC, Warcraft) — diário + reviews + rede.
-App iOS nativo em SwiftUI, construído no Windows/VS Code e preparado pra abrir direto no
-Xcode via [XcodeGen](https://github.com/yonaskolb/XcodeGen).
+App iOS e backend Firebase no mesmo repositório. Cada parte tem suas próprias
+configurações, dependências e comandos de execução.
 
-## Requisitos
+## Estrutura
 
-- macOS com Xcode 16 ou mais recente
-- iOS 17.0+ (deployment target)
-- Swift 6
-- [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`)
+```text
+apps/ios/
+├── project.yml              # Fonte de verdade do projeto Xcode
+├── GoogleService-Info.plist  # Configuração cliente do Firebase
+├── Configuration/           # StoreKit
+├── Multiverse/              # App e recursos
+├── MultiverseWidgets/       # Widgets e Live Activity
+└── MultiverseTests/         # Testes iOS
+backend/firebase/
+├── firebase.json            # Configuração de publicação
+├── functions/               # Funções TypeScript e testes
+├── firestore.rules
+└── hosting/                 # Associação de links com o app
+docs/
+└── BACKLOG.md
+design/                      # Protótipos, screenshots e originais dos ícones
+```
 
-## Setup no Mac
+`apps/ios/Multiverse.xcodeproj` é gerado pelo XcodeGen e não é versionado.
+Os ícones usados pelo app ficam no catálogo de assets em `apps/ios/Multiverse/Resources/`;
+os arquivos de `design/` são referências e não entram na compilação.
 
-```bash
-git clone <repository>
-cd Multiverse
+## App iOS — Xcode
 
-brew install xcodegen
+Requer macOS, Xcode com SDK iOS compatível com as dependências fixadas no `project.yml`
+e XcodeGen (`brew install xcodegen`). O app tem deployment target iOS 17.0.
+
+Na raiz do repositório:
+
+```sh
+make ios-open
+```
+
+Ou diretamente na pasta do app:
+
+```sh
+cd apps/ios
 xcodegen generate
-
 open Multiverse.xcodeproj
 ```
 
-No Xcode:
+O caminho do projeto mudou: abra o `.xcodeproj` dentro de `apps/ios/`, inclusive se
+houver um atalho antigo na lista de projetos recentes do Xcode.
 
-1. Selecione o target **Multiverse** → aba **Signing & Capabilities**.
-2. Marque **Automatically manage signing** e escolha seu **Development Team**.
-3. Rode no Simulator (⌘R) ou num dispositivo físico.
+Equipe, Bundle IDs, App Group, Firebase, StoreKit e dependências foram mantidos.
+Detalhes de assinatura, arquitetura e autenticação: [guia iOS](apps/ios/README.md).
 
-O `project.yml` usa assinatura automática com a equipe `5RS2AA677K`, a mesma do Verbum.
-Os targets do app e dos widgets compartilham o App Group `group.com.nexussoft.multiverse`.
-Para gerar os perfis de desenvolvimento, conecte e desbloqueie um iPhone registrado nessa
-equipe e execute pelo Xcode. Certificados e provisioning profiles não ficam no repositório.
+## Backend — VS Code ou outra IDE
 
-### Fonte Archivo
+Abra `backend/firebase/` na IDE de sua preferência, ou abra a raiz para ver o monorepo.
+As funções usam Node.js 22 e npm. Na raiz:
 
-O projeto foi montado sem acesso à internet, então a fonte variável **Archivo** (Google
-Fonts) não está incluída. O app cai pro system font automaticamente se ela não for
-encontrada, então funciona sem esse passo — mas pra ficar pixel-perfeito, siga
-`Multiverse/Resources/Fonts/README.md`.
-
-### Variáveis de ambiente
-
-O conteúdo ainda vem dos JSONs locais através de `MockRepository`. A autenticação Google
-e o Analytics usam o `GoogleService-Info.plist` do projeto Firebase cadastrado para
-`com.nexussoft.multiverse`; não há backend próprio nesta etapa.
-
-## Arquitetura
-
-Feature-First + Core + DesignSystem:
-
-```
-Multiverse/
-├── App/            — shell do app: entry point, RootView, tab bar, sheets globais
-├── Core/           — infraestrutura e código transversal (nunca UI de feature)
-│   ├── AppStore.swift        — @Observable central, único estado de conteúdo do app
-│   ├── Models.swift          — modelos de domínio (espelham sample-data.json)
-│   ├── Navigation.swift      — Route / AppTab
-│   ├── Logic.swift           — fórmulas puras (determinísticas, iguais ao protótipo)
-│   ├── StaticContent.swift   — conteúdo estático que não está no JSON
-│   ├── Repository/           — MultiverseRepository (protocolo) + MockRepository
-│   └── Auth/                 — AuthRepository (protocolo) + MockAuthRepository + modelos
-├── DesignSystem/   — tokens visuais (Theme) + componentes de UI reutilizáveis entre features
-└── Features/       — uma pasta por fluxo: Views + componentes específicos daquele fluxo
-    ├── Onboarding/, Auth/, Home/, Search/, Notifications/, Profile/, Universe/,
-    │   Item/, Thread/, ReadingOrder/, ListDetail/, Diary/, Wrapped/, LogSheet/, Settings/
+```sh
+make backend-install
+make backend-test
 ```
 
-**Regra de dependência:** Views só falam com `AppStore`/`AuthStore` (via `@Environment`);
-`AppStore`/`AuthStore` só falam com os protocolos `MultiverseRepository`/`AuthRepository`;
-só `MockRepository`/`MockAuthRepository` conhecem `sample-data.json` e `UserDefaults`. Pra
-trocar por um backend de verdade (Supabase/Firebase — ver seção abaixo), basta implementar
-os dois protocolos de novo e passar a instância no `init` de `AppStore`/`AuthStore`; nenhuma
-tela muda.
+Alternativa direta:
 
-### Autenticação
-
-O botão Google usa `FirebaseAuthRepository`, Google Sign-In e Firebase Authentication.
-`GoogleService-Info.plist` é incluído somente no app pelo XcodeGen; o esquema de retorno
-OAuth fica em `Multiverse/Resources/Info.plist`. Os SDKs são resolvidos pelo Swift Package
-Manager. A sessão usa o UID do Firebase e é restaurada pelo SDK; tokens não são gravados
-manualmente em `UserDefaults`.
-
-Apple conserva o visual e permanece indisponível. Cadastro e login por e-mail usam
-Firebase Auth; a confirmação de seis dígitos está conectada às funções preparadas em
-`firebase/`, que ainda precisam ser configuradas e publicadas. A recuperação usa link
-do Firebase para a tela Nova senha, com Associated Domains preparado. Veja
-`firebase/README.md` para as dependências de ativação. `MockAuthRepository` permanece disponível para desenvolvimento.
-O catálogo e as interações continuam usando `MockRepository`: esta etapa não implementa
-persistência remota de perfis, nomes de usuário, diário ou feed. O perfil usa o UID do Firebase e o nome de exibição. O apelido de cadastro é local e
-não representa reserva de um @usuário global. O onboarding e os ajustes locais são
-separados por UID; sair descarta o estado de conteúdo em memória.
-
-### Analytics
-
-Firebase Analytics inicializa com o app. Os eventos `login` e `sign_up` usam
-`method: google` ou `method: password`; `sign_up` só é emitido quando Firebase confirma
-a criação de uma conta.
-`logout` é emitido após sair com sucesso. Restaurar a sessão não conta como novo login.
-Os eventos não incluem nome, e-mail, tokens ou um User ID personalizado.
-
-A coleta é habilitada explicitamente no app. No console Firebase, confirme a integração
-com Google Analytics em **Configurações do projeto → Integrações** (o plist fornecido
-originalmente contém `IS_ANALYTICS_ENABLED = false`). Para inspecionar eventos em
-DebugView, adicione `-FIRDebugEnabled` aos argumentos de execução do scheme no Xcode.
-
-Validação manual: entrar com Google, cancelar a tela de autorização, reabrir o app,
-sair, entrar com outra conta e conferir o usuário em Firebase Authentication. O login
-real exige a autorização do titular da conta; os testes automatizados usam um cliente
-injetado e não autenticam uma conta Google real.
-
-### Fase 2 — backend real
-
-Ver `design_handoff_multiverse/README.md` (seção "Para o backend"). O plano é Supabase ou
-Firebase, com tabelas equivalentes aos modelos em `Core/Models.swift`, mais `follows`,
-`votes` (alvo polimórfico — já modelado assim em `PollTopic`) e `likes`.
-
-## Testes
-
-```bash
-xcodebuild test -scheme Multiverse -destination "platform=iOS Simulator,name=iPhone 16"
+```sh
+cd backend/firebase/functions
+npm ci
+npm test
 ```
 
-`MultiverseTests/` cobre as regras de negócio determinísticas (`Logic`) e o comportamento
-do `AppStore` (precedência de "visto" entre diário/checks, persistência de voto/follow
-através do repositório).
+O backend de confirmação por e-mail está preparado, mas não foi publicado.
+Serviço de e-mail, segredos, App Check e links ainda precisam de configuração externa;
+veja o [guia de ativação](backend/firebase/README.md).
 
-## Design de referência
+Os comandos Firebase devem ser executados em `backend/firebase/`, onde estão
+`firebase.json` e `.firebaserc`. Os comandos `make` acima não fazem deploy.
 
-`design_handoff_multiverse/` tem a especificação completa (README, protótipo HTML,
-screenshots de cada tela, dados de amostra) usada como fonte de verdade visual. `Login
-Multiverse/` tem as capturas do fluxo de autenticação. Nenhum dos dois é necessário pra
-compilar o app — são só material de referência.
+## Validação
 
-## Backlog
+Na raiz do monorepo:
 
-`BACKLOG.md` documenta melhorias de produto/arquitetura identificadas mas conscientemente
-adiadas (aba Arena, identidade visual, estados de erro/offline, missões da primeira semana,
-notas de adaptação pro iPhone Duo, plano de migração pra SwiftData) — com o motivo de cada
-adiamento.
+```sh
+make ios-build
+make ios-test
+make backend-test
+```
 
-## Estado deste ambiente
+Para escolher outro simulador instalado:
 
-Projeto gerado por XcodeGen e validado no Xcode com build para simulador e testes
-automatizados, incluindo autenticação com cliente injetado. A autorização
-Google com uma conta real e o recebimento de eventos no console devem ser conferidos
-no ambiente Firebase configurado.
+```sh
+make ios-test IOS_DESTINATION='platform=iOS Simulator,name=iPhone 16'
+```
+
+`make test` executa as duas suítes. Os testes automatizados não enviam códigos reais
+nem substituem a validação de autenticação e links em um aparelho conectado ao Firebase.
+
+## Documentação e referências
+
+- [Arquitetura e configuração iOS](apps/ios/README.md)
+- [Configuração e ativação do backend](backend/firebase/README.md)
+- [Backlog](docs/BACKLOG.md)
+- [Especificação de design](design/design_handoff_multiverse/README.md)
+
+A reorganização preserva o código e o layout; não muda as regras de negócio nem publica
+serviços externos. Dependências instaladas, artefatos de build e segredos locais seguem
+fora do Git.

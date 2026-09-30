@@ -29,5 +29,5 @@ Pods/
 *.p12
 *.cer
 
-# Descompactados só pra referência de design — o conteúdo já está em design_handoff_multiverse/
+# Descompactados só pra referência de design — o conteúdo já está em design/design_handoff_multiverse/
 *.zip
