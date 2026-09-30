@@ -1,6 +1,7 @@
 import Testing
 @testable import Multiverse
 
+@MainActor
 struct AppStoreTests {
 
     /// `checks[id]` explícito manda mais que o diário — mesmo pra um item já registrado,

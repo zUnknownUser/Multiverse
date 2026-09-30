@@ -184,6 +184,7 @@ struct ComicProgress: View {
 // Uso: BurstCenter() injetado no ambiente; BurstOverlay() num ZStack por cima da tela;
 // nos botões: use GeometryReader/coordinateSpace "screen" pra achar o ponto e chamar burst.fire(...)
 
+@MainActor
 @Observable
 final class BurstCenter {
     struct Burst: Identifiable, Equatable {

@@ -49,6 +49,7 @@ struct WrappedData {
 
 /// Estado global do app, injetado no ambiente. Espelha 1:1 os números e regras do
 /// protótipo HTML (ver `<script>` de `reference/Multiverse v2.dc.html`).
+@MainActor
 @Observable
 final class AppStore {
     /// Única fonte de dados/mutações — hoje `MockRepository`; a fase 2 (Supabase/Firebase)
@@ -136,7 +137,6 @@ final class AppStore {
     }
 
     /// Carrega tudo do repositório. Chamado uma vez, a partir de `.task` na `RootView`.
-    @MainActor
     func bootstrap() async {
         guard isLoading else { return }
         do {

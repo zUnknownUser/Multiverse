@@ -2,7 +2,7 @@ import SwiftUI
 
 // Espelha 1:1 o arquivo Resources/sample-data.json
 
-struct SampleData: Codable {
+struct SampleData: Codable, Sendable {
     let universes: [Universe]
     let items: [Item]
     let users: [User]
@@ -24,7 +24,7 @@ struct SampleData: Codable {
     }
 }
 
-struct Universe: Codable, Identifiable, Hashable {
+struct Universe: Codable, Identifiable, Hashable, Sendable {
     let id: String, name: String
     let c: String, c2: String, ink: String   // cor principal, variante escura, cor do texto sobre a principal
     let track: String                        // rgba() da trilha de progresso sobre a cor (ver Theme)
@@ -37,34 +37,34 @@ struct Universe: Codable, Identifiable, Hashable {
 }
 
 /// Obra, personagem ou evento. type ∈ HQ, Filme, Série, Jogo, Livro, Personagem, Evento
-struct Item: Codable, Identifiable, Hashable {
+struct Item: Codable, Identifiable, Hashable, Sendable {
     let id: String, uni: String, type: String, title: String
     let year: FlexString
     let avg: Double
     let canon: String, desc: String
 }
 
-struct User: Codable, Identifiable, Hashable {
+struct User: Codable, Identifiable, Hashable, Sendable {
     let id: String, name: String, handle: String, avatarColor: String, bio: String
     let followers: Int?
     let badgeUniverse: String
 }
 
-struct TimelineEntry: Codable, Hashable { let era: String, itemId: String, note: String }
+struct TimelineEntry: Codable, Hashable, Sendable { let era: String, itemId: String, note: String }
 
-struct ReadingOrder: Codable, Identifiable, Hashable {
+struct ReadingOrder: Codable, Identifiable, Hashable, Sendable {
     let id: String, uni: String, title: String, by: String
     let votes: Int
     let steps: [String]
 }
 
-struct LoreList: Codable, Identifiable, Hashable {
+struct LoreList: Codable, Identifiable, Hashable, Sendable {
     let id: String, title: String, desc: String
     let likes: Int, comments: Int
     let items: [String]
 }
 
-struct Review: Codable, Identifiable, Hashable {
+struct Review: Codable, Identifiable, Hashable, Sendable {
     let id: String, user: String, item: String
     var rating: Double
     var text: String
@@ -74,7 +74,7 @@ struct Review: Codable, Identifiable, Hashable {
     var comments: [Comment]
 }
 
-struct Comment: Codable, Hashable {
+struct Comment: Codable, Hashable, Sendable {
     let user: String
     let text: String
     var likes: Int
@@ -82,12 +82,12 @@ struct Comment: Codable, Hashable {
     var when: String?
 }
 
-struct CanonInfo: Codable, Hashable { let status: String, note: String }   // Cânone | Variante | Retconado | Contestado
-struct StatusColor: Codable, Hashable { let bg: String, fg: String }
-struct Duel: Codable, Hashable { let a: String, b: String, question: String; let baseVotes: [Int] }
-struct Me: Codable, Hashable { let id: String; let following: [String]; let followers: Int }
+struct CanonInfo: Codable, Hashable, Sendable { let status: String, note: String }   // Cânone | Variante | Retconado | Contestado
+struct StatusColor: Codable, Hashable, Sendable { let bg: String, fg: String }
+struct Duel: Codable, Hashable, Sendable { let a: String, b: String, question: String; let baseVotes: [Int] }
+struct Me: Codable, Hashable, Sendable { let id: String; let following: [String]; let followers: Int }
 
-struct DiaryEntry: Codable, Identifiable, Hashable {
+struct DiaryEntry: Codable, Identifiable, Hashable, Sendable {
     var id = UUID()
     let itemId: String, day: Int, month: String
     let rating: Double
@@ -95,7 +95,7 @@ struct DiaryEntry: Codable, Identifiable, Hashable {
 }
 
 /// `year` no JSON às vezes é número (2006) e às vezes texto ("1ª ap. 2002")
-struct FlexString: Codable, Hashable, CustomStringConvertible {
+struct FlexString: Codable, Hashable, CustomStringConvertible, Sendable {
     let value: String
     init(from decoder: Decoder) throws {
         let c = try decoder.singleValueContainer()
