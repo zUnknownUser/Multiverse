@@ -133,6 +133,7 @@ private struct ReviewDetailCard: View {
     let onQuote: () -> Void
     @Environment(AppStore.self) private var store
     @State private var showReactionBar = false
+    @State private var showingSend = false
 
     var body: some View {
         guard let user = store.user(review.user) else { return AnyView(EmptyView()) }
@@ -179,6 +180,13 @@ private struct ReviewDetailCard: View {
                             .burstOnTap("POW!", color: MV.C.marvel, when: store.userReaction(for: review.id) != .pow) {
                                 store.setReaction(.pow, for: review.id)
                             }
+                        if item != nil {
+                            Text("Mandar").font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
+                                .padding(.horizontal, 12).padding(.vertical, 8)
+                                .background(MV.C.card)
+                                .contentShape(Rectangle())
+                                .onTapGesture { showingSend = true }
+                        }
                     }
                     .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
                     .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
@@ -209,6 +217,9 @@ private struct ReviewDetailCard: View {
             .padding(14)
             .comicCard(shadow: MV.Shadow.l)
             .reactionBar(isPresented: $showReactionBar, onReact: { store.setReaction($0, for: review.id) }, onQuote: onQuote)
+            .sheet(isPresented: $showingSend) {
+                if let item { SendCardSheet(itemID: item.id) }
+            }
         )
     }
 }

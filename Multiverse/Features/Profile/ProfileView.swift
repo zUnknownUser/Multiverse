@@ -93,16 +93,34 @@ struct ProfileView: View {
                 }
             } else {
                 let following = store.isFollowing(userID)
-                Text(following ? "SEGUINDO" : "SEGUIR")
-                    .font(MVFont.bold(13))
-                    .frame(maxWidth: .infinity).padding(.vertical, 12)
-                    .foregroundStyle(following ? MV.C.paper : MV.C.ink)
-                    .background(following ? Color.clear : MV.C.paper)
-                    .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.paper, lineWidth: MV.stroke))
-                    .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
-                    .burstOnTap("ZAP!", color: MV.C.dc, when: !following) {
-                        store.toggleFollow(userID)
-                    }
+                HStack(spacing: 10) {
+                    Text(following ? "SEGUINDO" : "SEGUIR")
+                        .font(MVFont.bold(13))
+                        .frame(maxWidth: .infinity).padding(.vertical, 12)
+                        .foregroundStyle(following ? MV.C.paper : MV.C.ink)
+                        .background(following ? Color.clear : MV.C.paper)
+                        .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.paper, lineWidth: MV.stroke))
+                        .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
+                        .burstOnTap("ZAP!", color: MV.C.dc, when: !following) {
+                            store.toggleFollow(userID)
+                        }
+                    Text("MENSAGEM")
+                        .font(MVFont.bold(13))
+                        .frame(maxWidth: .infinity).padding(.vertical, 12)
+                        .foregroundStyle(MV.C.paper)
+                        .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.paper, lineWidth: MV.stroke))
+                        .contentShape(Rectangle())
+                        .onTapGesture { store.push(.conversation(userID)) }
+                    Text("DESAFIAR")
+                        .font(MVFont.bold(13))
+                        .frame(maxWidth: .infinity).padding(.vertical, 12)
+                        .foregroundStyle(MV.C.ink)
+                        .background(MV.C.wow)
+                        .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.paper, lineWidth: MV.stroke))
+                        .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
+                        .contentShape(Rectangle())
+                        .onTapGesture { store.showingChallengeUserID = userID }
+                }
             }
         }
         .padding(16)

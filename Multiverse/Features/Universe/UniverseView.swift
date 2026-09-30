@@ -1,7 +1,7 @@
 import SwiftUI
 
 private enum UniverseTab: String, CaseIterable {
-    case geral = "Geral", linha = "Linha do tempo", ordens = "Ordens", pers = "Personagens"
+    case geral = "Geral", linha = "Linha do tempo", ordens = "Ordens", pers = "Personagens", salas = "Salas"
 }
 
 struct UniverseView: View {
@@ -22,6 +22,7 @@ struct UniverseView: View {
                     case .linha: TimelineTabContent(universeID: universeID)
                     case .ordens: OrdersTabContent(universeID: universeID)
                     case .pers: CharactersTabContent(universeID: universeID)
+                    case .salas: RoomsTabContent(universeID: universeID)
                     }
                 }
                 .padding(.bottom, 24)
@@ -286,6 +287,43 @@ private struct CharactersTabContent: View {
                     }
                 }
                 .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, MV.pad)
+    }
+}
+
+private struct RoomsTabContent: View {
+    let universeID: String
+    @Environment(AppStore.self) private var store
+
+    private var rooms: [Room] {
+        store.rooms.filter { store.item($0.itemID)?.uni == universeID }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if rooms.isEmpty {
+                Text("Nenhuma sala aberta nesse universo agora.")
+                    .font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.muted)
+            } else {
+                ForEach(rooms) { room in
+                    if let item = store.item(room.itemID) {
+                        Button { store.push(.room(item.id)) } label: {
+                            HStack(spacing: 10) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(item.title).font(MVFont.bold(14)).foregroundStyle(MV.C.ink)
+                                    Text("\(Logic.fmt(room.onlineCount)) online").font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
+                                }
+                                Spacer()
+                                Text("→").foregroundStyle(MV.C.muted)
+                            }
+                            .padding(12)
+                            .comicCard(shadow: MV.Shadow.s)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
             }
         }
         .padding(.horizontal, MV.pad)

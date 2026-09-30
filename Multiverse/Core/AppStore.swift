@@ -141,6 +141,9 @@ final class AppStore {
     // MARK: - Registro
     var logDraft: LogDraft?
 
+    /// Usuário sendo desafiado — abre a `DuelChallengeSheet` de qualquer tela (perfil, Home, conversa).
+    var showingChallengeUserID: String?
+
     // MARK: - Onboarding
     var onboardingPhase: OnboardingPhase = .step1
     var onboardingUniverses: Set<String> = []
@@ -180,6 +183,16 @@ final class AppStore {
     // MARK: - Onde assistir (cache por obra, carregado sob demanda)
     var watchAvailabilityByItem: [String: WatchAvailability] = [:]
 
+    // MARK: - Mensagens e cartas
+    var conversations: [Conversation] = []
+    var messagesByConversation: [String: [Message]] = [:]
+
+    // MARK: - Salas por obra
+    var rooms: [Room] = []
+    var roomMessages: [String: [RoomMessage]] = [:]    // itemID → mensagens
+    var roomProgress: [String: Int] = [:]              // itemID → índice de trecho alcançado
+    var liveEvent: LiveEvent?
+
     // MARK: - Sugestões de correção (cache por obra, carregado sob demanda)
     var correctionsByItem: [String: [CorrectionSuggestion]] = [:]
 
@@ -217,6 +230,10 @@ final class AppStore {
             async let theoryLoreResult = repository.fetchTheoryLoreState()
             async let predictionEventsResult = repository.fetchPredictionEvents()
             async let predictionStateResult = repository.fetchPredictionState()
+            async let conversationsResult = repository.fetchConversations()
+            async let roomsResult = repository.fetchRooms()
+            async let roomProgressResult = repository.fetchRoomProgress()
+            async let liveEventResult = repository.fetchLiveEvent()
 
             let catalog = try await catalogResult
             universes = catalog.universes
@@ -286,6 +303,11 @@ final class AppStore {
             let predState = try await predictionStateResult
             predictionPoints = predState.points
             predictionAnswers = predState.answers
+
+            conversations = try await conversationsResult
+            rooms = try await roomsResult
+            roomProgress = try await roomProgressResult
+            liveEvent = try await liveEventResult
         } catch {
             // MockRepository nunca lança; um repositório real trataria erro de rede aqui
             // (ex.: `loadError` pra a RootView mostrar um estado de erro com "tentar de novo").
@@ -1036,6 +1058,13 @@ final class AppStore {
         return !revealedSpoilers.contains(review.id)
     }
 
+    /// Mesma lógica do escudo, aplicada a uma carta de obra numa DM/sala.
+    /// "O escudo de spoiler deve funcionar em DMs, cartas, salas e chat ao vivo."
+    func isShieldedMessage(_ message: Message) -> Bool {
+        guard let itemID = message.itemID, let item = itemsByID[itemID], isAheadOfShield(item) else { return false }
+        return !revealedSpoilers.contains(message.id)
+    }
+
     /// Total de reviews escondidas pelo escudo agora — usado no banner da Home.
     var shieldHiddenCount: Int { reviews.filter { isShieldedReview($0) }.count }
 
@@ -1264,5 +1293,90 @@ final class AppStore {
         guard watchAvailabilityByItem[itemID] == nil else { return }
         guard let fetched = try? await repository.fetchWatchAvailability(itemID: itemID) else { return }
         watchAvailabilityByItem[itemID] = fetched
+    }
+
+    // MARK: - Mensagens e cartas
+
+    var friendConversations: [Conversation] { conversations.filter { !$0.isRequest } }
+    var requestConversations: [Conversation] { conversations.filter { $0.isRequest } }
+    var totalUnreadMessages: Int { conversations.reduce(0) { $0 + $1.unreadCount } }
+
+    func messages(with userID: String) -> [Message] { messagesByConversation[userID] ?? [] }
+
+    func loadMessages(with userID: String) async {
+        guard let fetched = try? await repository.fetchMessages(conversationID: userID) else { return }
+        messagesByConversation[userID] = fetched
+    }
+
+    func openConversation(with userID: String) {
+        if let idx = conversations.firstIndex(where: { $0.userID == userID }) { conversations[idx].unreadCount = 0 }
+        let repository = self.repository
+        Task { try? await repository.markConversationRead(userID) }
+    }
+
+    func sendMessage(to userID: String, text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        appendMessage(Message(id: "msg-\(UUID().uuidString.prefix(8))", conversationID: userID, senderID: meID, when: "agora", kind: .text, text: trimmed))
+    }
+
+    func sendCard(to userIDs: [String], itemID: String, text: String) {
+        for userID in userIDs {
+            appendMessage(Message(id: "msg-\(UUID().uuidString.prefix(8))", conversationID: userID, senderID: meID, when: "agora", kind: .workCard, text: text.isEmpty ? nil : text, itemID: itemID))
+        }
+        showToast(userIDs.count == 1 ? "Carta enviada" : "Carta enviada pra \(userIDs.count)")
+    }
+
+    func sendDuelChallenge(to userID: String, itemAID: String, itemBID: String, question: String, wager: String, myChoice: Int) {
+        let payload = DuelChallengePayload(itemAID: itemAID, itemBID: itemBID, question: question, wager: wager, chooserChoice: myChoice, responderChoice: nil)
+        appendMessage(Message(id: "msg-\(UUID().uuidString.prefix(8))", conversationID: userID, senderID: meID, when: "agora", kind: .duelChallenge, duelChallenge: payload))
+        showToast("Desafio enviado")
+    }
+
+    func respondToDuelChallenge(messageID: String, in userID: String, choice: Int) {
+        guard var list = messagesByConversation[userID], let idx = list.firstIndex(where: { $0.id == messageID }) else { return }
+        list[idx].duelChallenge?.responderChoice = choice
+        messagesByConversation[userID] = list
+        let repository = self.repository
+        Task { try? await repository.respondToDuelChallenge(messageID: messageID, choice: choice) }
+    }
+
+    private func appendMessage(_ message: Message) {
+        messagesByConversation[message.conversationID, default: []].append(message)
+        if let idx = conversations.firstIndex(where: { $0.userID == message.conversationID }) {
+            conversations[idx].lastPreview = message.text ?? "mandou uma carta"
+            conversations[idx].lastWhen = "agora"
+        } else {
+            conversations.insert(Conversation(userID: message.conversationID, lastPreview: message.text ?? "mandou uma carta", lastWhen: "agora", unreadCount: 0, isRequest: !follows.contains(message.conversationID)), at: 0)
+        }
+        let repository = self.repository
+        Task { try? await repository.sendMessage(message) }
+    }
+
+    // MARK: - Salas por obra
+
+    func room(for itemID: String) -> Room? { rooms.first { $0.itemID == itemID } }
+    func roomMessagesFor(itemID: String, segment: Int) -> [RoomMessage] {
+        (roomMessages[itemID] ?? []).filter { $0.segmentIndex == segment }
+    }
+
+    func loadRoomMessages(itemID: String) async {
+        guard let fetched = try? await repository.fetchRoomMessages(itemID: itemID) else { return }
+        roomMessages[itemID] = fetched
+    }
+
+    func setRoomProgress(itemID: String, segment: Int) {
+        roomProgress[itemID] = segment
+        let repository = self.repository
+        Task { try? await repository.setRoomProgress(itemID: itemID, segmentIndex: segment) }
+    }
+
+    func postRoomMessage(itemID: String, segment: Int, text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let message = RoomMessage(id: "rm-\(UUID().uuidString.prefix(8))", itemID: itemID, segmentIndex: segment, userID: meID, text: trimmed, when: "agora")
+        roomMessages[itemID, default: []].append(message)
+        let repository = self.repository
+        Task { try? await repository.postRoomMessage(message) }
     }
 }

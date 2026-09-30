@@ -5,6 +5,7 @@ struct ItemView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var reviewFilter: ReviewFilter = .popular
+    @State private var showingSend = false
 
     private enum ReviewFilter: String { case popular = "Populares", friends = "Amigos" }
 
@@ -28,6 +29,9 @@ struct ItemView: View {
                 }
                 .padding(.bottom, 24)
             }
+        }
+        .sheet(isPresented: $showingSend) {
+            SendCardSheet(itemID: itemID)
         }
     }
 
@@ -104,12 +108,37 @@ struct ItemView: View {
                     .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
                     .contentShape(Rectangle())
                     .onTapGesture { store.toggleItemLiked(item.id) }
+
+                Text("✉")
+                    .font(.system(size: 17, weight: .bold))
+                    .frame(width: 46, height: 46)
+                    .foregroundStyle(MV.C.ink)
+                    .background(MV.C.card)
+                    .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+                    .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
+                    .contentShape(Rectangle())
+                    .onTapGesture { showingSend = true }
             }
             if let mine = store.myDiaryEntry(for: item.id) {
                 HStack(spacing: 6) {
                     Text("Sua nota:").font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted)
                     StarsText(rating: mine.rating, color: uni.color, size: 14)
                 }
+            }
+            if let room = store.room(for: item.id) {
+                Button { store.push(.room(item.id)) } label: {
+                    HStack(spacing: 6) {
+                        Text("● SALA").font(MVFont.bold(12)).foregroundStyle(MV.C.marvel)
+                        Text("\(Logic.fmt(room.onlineCount)) online").font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted)
+                        Spacer()
+                        Text("ENTRAR →").font(MVFont.bold(11)).foregroundStyle(MV.C.ink)
+                    }
+                    .padding(.horizontal, 12).frame(height: 40)
+                    .background(MV.C.card)
+                    .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+                    .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
+                }
+                .buttonStyle(.plain)
             }
         }
     }

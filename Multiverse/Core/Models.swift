@@ -134,6 +134,69 @@ enum ReactionType: String, CaseIterable, Codable, Sendable {
     var textColor: Color { self == .heh ? MV.C.ink : MV.C.card }
 }
 
+// MARK: - Mensagens e cartas (recursos 5b–5d, 5g)
+
+struct Conversation: Codable, Identifiable, Hashable, Sendable {
+    var id: String { userID }
+    let userID: String
+    var lastPreview: String
+    var lastWhen: String
+    var unreadCount: Int
+    /// Cai em "Pedidos" quando a pessoa ainda não é seguida de volta.
+    var isRequest: Bool
+}
+
+enum CardKind: String, Codable, Sendable {
+    case text, workCard, duelChallenge
+}
+
+struct DuelChallengePayload: Codable, Hashable, Sendable {
+    let itemAID: String
+    let itemBID: String
+    let question: String
+    let wager: String
+    var chooserChoice: Int?    // lado que quem desafiou escolheu (some com o resultado)
+    var responderChoice: Int?  // lado que "eu" escolhi
+}
+
+struct Message: Codable, Identifiable, Hashable, Sendable {
+    let id: String
+    let conversationID: String
+    let senderID: String
+    let when: String
+    let kind: CardKind
+    var text: String?
+    var itemID: String?
+    var duelChallenge: DuelChallengePayload?
+}
+
+// MARK: - Salas por obra (recursos 5e, 5i, 5f)
+
+struct Room: Codable, Identifiable, Hashable, Sendable {
+    var id: String { itemID }
+    let itemID: String
+    let segments: [String]
+    let onlineCount: Int
+}
+
+struct RoomMessage: Codable, Identifiable, Hashable, Sendable {
+    let id: String
+    let itemID: String
+    let segmentIndex: Int
+    let userID: String
+    let text: String
+    let when: String
+}
+
+/// "Estreia ao vivo" — recurso 5f. Evento único de demonstração; ver `LivePremiereView`.
+struct LiveEvent: Codable, Identifiable, Hashable, Sendable {
+    let id: String
+    let itemID: String
+    let question: String
+    let viewerCount: Int
+    let durationSeconds: Int
+}
+
 // MARK: - Escudo de spoiler
 
 /// Índice do usuário na timeline de um universo — tudo que vem depois fica escondido.
@@ -296,6 +359,11 @@ struct RecursosData: Codable, Sendable {
     let predictionEvents: [PredictionEvent]
     let watchAvailability: [WatchAvailability]
     let correctionSuggestions: [CorrectionSuggestion]
+    let conversations: [Conversation]
+    let messages: [Message]
+    let rooms: [Room]
+    let roomMessages: [RoomMessage]
+    let liveEvent: LiveEvent
 
     static func load() -> RecursosData {
         let url = Bundle.main.url(forResource: "recursos-data", withExtension: "json")!

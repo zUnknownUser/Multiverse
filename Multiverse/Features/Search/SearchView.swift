@@ -21,6 +21,21 @@ struct SearchView: View {
                 }
                 .scrollIndicators(.hidden)
 
+                if query.isEmpty {
+                    Button { store.push(.exploreRooms) } label: {
+                        HStack(spacing: 8) {
+                            Text("● SALAS AO VIVO").font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
+                            Spacer()
+                            Text("EXPLORAR →").font(MVFont.bold(11)).foregroundStyle(MV.C.muted)
+                        }
+                        .padding(.horizontal, 14).frame(height: 44)
+                        .background(MV.C.card)
+                        .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+                        .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
+                    }
+                    .buttonStyle(.plain)
+                }
+
                 let (rows, total) = store.searchResults(query: query, filter: filter)
                 Text(query.isEmpty ? "Mais registrados esta semana" : "\(total) resultados")
                     .kicker(11).foregroundStyle(MV.C.muted)

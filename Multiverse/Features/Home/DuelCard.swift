@@ -3,6 +3,7 @@ import SwiftUI
 /// "Duelo do dia" — Home.
 struct DuelCard: View {
     @Environment(AppStore.self) private var store
+    @State private var showingFriendPicker = false
 
     var body: some View {
         let duel = store.currentDuel
@@ -45,6 +46,10 @@ struct DuelCard: View {
                         }
                         .buttonStyle(.plain)
                     }
+                    Button { showingFriendPicker = true } label: {
+                        Text("Chamar amigo pro duelo").font(MVFont.bold(12)).foregroundStyle(MV.C.ink).underline()
+                    }
+                    .buttonStyle(.plain)
                 } else {
                     Text("Toque num lado pra votar").font(MVFont.bold(12)).foregroundStyle(MV.C.muted)
                 }
@@ -55,6 +60,9 @@ struct DuelCard: View {
         .clipShape(RoundedRectangle(cornerRadius: MV.R.xl))
         .overlay(RoundedRectangle(cornerRadius: MV.R.xl).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
         .background(RoundedRectangle(cornerRadius: MV.R.xl).fill(MV.C.shadow).offset(x: MV.Shadow.m, y: MV.Shadow.m))
+        .sheet(isPresented: $showingFriendPicker) {
+            FriendPickerSheet(title: "Chamar pro duelo") { store.showingChallengeUserID = $0 }
+        }
     }
 }
 

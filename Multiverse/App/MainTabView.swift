@@ -9,6 +9,10 @@ struct MainTabView: View {
         Binding(get: { store.logDraft != nil }, set: { if !$0 { store.closeLog() } })
     }
 
+    private var challengeSheetPresented: Binding<Bool> {
+        Binding(get: { store.showingChallengeUserID != nil }, set: { if !$0 { store.showingChallengeUserID = nil } })
+    }
+
     var body: some View {
         Group {
             switch store.tab {
@@ -24,6 +28,11 @@ struct MainTabView: View {
         .overlay { ToastOverlay() }
         .sheet(isPresented: logSheetPresented) {
             LogSheetView()
+        }
+        .sheet(isPresented: challengeSheetPresented) {
+            if let userID = store.showingChallengeUserID {
+                DuelChallengeSheet(userID: userID)
+            }
         }
     }
 }
@@ -98,6 +107,11 @@ private struct RouteDestination: View {
         case .pro: ProPaywallView()
         case .proStats: ProStatsView()
         case .adjustShieldPoint: AdjustShieldPointView()
+        case .messages: MessagesHomeView()
+        case .conversation(let id): ConversationView(userID: id)
+        case .room(let id): ItemRoomView(itemID: id)
+        case .exploreRooms: ExploreRoomsView()
+        case .livePremiere: LivePremiereView()
         }
     }
 }

@@ -13,6 +13,10 @@ actor MockRepository: MultiverseRepository {
     private var itemToggles = ItemToggles()
     private var reviewToggles = ReviewToggles()
     private var reactions: [String: ReactionType] = [:]
+    private var conversations: [Conversation]
+    private var messages: [Message]
+    private var roomMessages: [RoomMessage]
+    private var roomProgress: [String: Int] = [:]
     private var pollVotes = PollVotes()
     private var orderState = OrderState()
     private var likedLists: Set<String> = []
@@ -58,6 +62,10 @@ actor MockRepository: MultiverseRepository {
         theoryLoreState = TheoryLoreState(points: 40, accuracyPercent: 66)
         predictionState = PredictionState(points: 1240, answers: ["pq1": .choice(1)])
         correctionSuggestions = recursos.correctionSuggestions
+        conversations = recursos.conversations
+        messages = recursos.messages
+        roomMessages = recursos.roomMessages
+        roomProgress = ["w-wotlk": 1]
     }
 
     private func delay() async {
@@ -317,6 +325,68 @@ actor MockRepository: MultiverseRepository {
     func fetchWatchAvailability(itemID: String) async throws -> WatchAvailability? {
         await delay()
         return recursos.watchAvailability.first { $0.itemID == itemID }
+    }
+
+    // MARK: - Mensagens e cartas
+
+    func fetchConversations() async throws -> [Conversation] {
+        await delay()
+        return conversations
+    }
+
+    func fetchMessages(conversationID: String) async throws -> [Message] {
+        await delay()
+        return messages.filter { $0.conversationID == conversationID }
+    }
+
+    func sendMessage(_ message: Message) async throws {
+        messages.append(message)
+        if let idx = conversations.firstIndex(where: { $0.userID == message.conversationID }) {
+            conversations[idx].lastPreview = message.text ?? "mandou uma carta"
+            conversations[idx].lastWhen = "agora"
+        }
+    }
+
+    func respondToDuelChallenge(messageID: String, choice: Int) async throws {
+        guard let idx = messages.firstIndex(where: { $0.id == messageID }) else { return }
+        messages[idx].duelChallenge?.responderChoice = choice
+    }
+
+    func markConversationRead(_ conversationID: String) async throws {
+        guard let idx = conversations.firstIndex(where: { $0.userID == conversationID }) else { return }
+        conversations[idx].unreadCount = 0
+    }
+
+    // MARK: - Salas por obra
+
+    func fetchRooms() async throws -> [Room] {
+        await delay()
+        return recursos.rooms
+    }
+
+    func fetchRoomMessages(itemID: String) async throws -> [RoomMessage] {
+        await delay()
+        return roomMessages.filter { $0.itemID == itemID }
+    }
+
+    func postRoomMessage(_ message: RoomMessage) async throws {
+        roomMessages.append(message)
+    }
+
+    func fetchRoomProgress() async throws -> [String: Int] {
+        await delay()
+        return roomProgress
+    }
+
+    func setRoomProgress(itemID: String, segmentIndex: Int) async throws {
+        roomProgress[itemID] = segmentIndex
+    }
+
+    // MARK: - Estreia ao vivo
+
+    func fetchLiveEvent() async throws -> LiveEvent? {
+        await delay()
+        return recursos.liveEvent
     }
 
     // MARK: - Geração determinística (idêntica ao protótipo HTML)

@@ -28,4 +28,9 @@ enum Route: Hashable {
     case pro
     case proStats
     case adjustShieldPoint
+    case messages
+    case conversation(String)
+    case room(String)
+    case exploreRooms
+    case livePremiere
 }

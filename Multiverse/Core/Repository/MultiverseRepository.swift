@@ -182,4 +182,21 @@ protocol MultiverseRepository: Sendable {
 
     // Onde assistir
     func fetchWatchAvailability(itemID: String) async throws -> WatchAvailability?
+
+    // Mensagens e cartas
+    func fetchConversations() async throws -> [Conversation]
+    func fetchMessages(conversationID: String) async throws -> [Message]
+    func sendMessage(_ message: Message) async throws
+    func respondToDuelChallenge(messageID: String, choice: Int) async throws
+    func markConversationRead(_ conversationID: String) async throws
+
+    // Salas por obra
+    func fetchRooms() async throws -> [Room]
+    func fetchRoomMessages(itemID: String) async throws -> [RoomMessage]
+    func postRoomMessage(_ message: RoomMessage) async throws
+    func fetchRoomProgress() async throws -> [String: Int]
+    func setRoomProgress(itemID: String, segmentIndex: Int) async throws
+
+    // Estreia ao vivo
+    func fetchLiveEvent() async throws -> LiveEvent?
 }

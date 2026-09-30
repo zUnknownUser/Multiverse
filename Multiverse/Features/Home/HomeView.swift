@@ -7,6 +7,7 @@ struct HomeView: View {
         ScreenScaffold {
             VStack(alignment: .leading, spacing: 26) {
                 header.padding(.horizontal, MV.pad)
+                if store.liveEvent != nil { LivePremiereBanner().padding(.horizontal, MV.pad) }
                 if store.isShieldActive { ShieldStatusBanner().padding(.horizontal, MV.pad) }
                 wrappedBanner.padding(.horizontal, MV.pad)
                 universeGrid.padding(.horizontal, MV.pad)
@@ -56,6 +57,26 @@ struct HomeView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(store.unreadCount > 0 ? "Avisos, \(store.unreadCount) não lidos" : "Avisos")
+
+                Button { store.push(.messages) } label: {
+                    ZStack(alignment: .topTrailing) {
+                        Text("✉").font(.system(size: 18, weight: .bold))
+                            .frame(width: 40, height: 40)
+                            .background(MV.C.card)
+                            .clipShape(Circle())
+                            .overlay(Circle().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+                        if store.totalUnreadMessages > 0 {
+                            Text("\(store.totalUnreadMessages)")
+                                .font(MVFont.black(9))
+                                .foregroundStyle(MV.C.card)
+                                .padding(.horizontal, 4).padding(.vertical, 1)
+                                .background(Capsule().fill(MV.C.marvel))
+                                .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: 1))
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(store.totalUnreadMessages > 0 ? "Mensagens, \(store.totalUnreadMessages) não lidas" : "Mensagens")
 
                 Button { store.openMyProfile() } label: {
                     let me = store.user(store.meID)!

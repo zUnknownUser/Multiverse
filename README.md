@@ -106,6 +106,13 @@ screenshots de cada tela, dados de amostra) usada como fonte de verdade visual. 
 Multiverse/` tem as capturas do fluxo de autenticação. Nenhum dos dois é necessário pra
 compilar o app — são só material de referência.
 
+## Backlog
+
+`BACKLOG.md` documenta melhorias de produto/arquitetura identificadas mas conscientemente
+adiadas (aba Arena, identidade visual, estados de erro/offline, missões da primeira semana,
+notas de adaptação pro iPhone Duo, plano de migração pra SwiftData) — com o motivo de cada
+adiamento.
+
 ## Estado deste ambiente
 
 Este projeto foi desenvolvido no Windows, sem Xcode/SDK iOS disponível — ou seja, **nunca
