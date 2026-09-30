@@ -14,7 +14,7 @@ struct MainTabView: View {
             switch store.tab {
             case .home: HomeStack()
             case .search: SearchStack()
-            case .notifications: NotificationsStack()
+            case .clubs: ClubsStack()
             case .profile: ProfileStack()
             }
         }
@@ -50,12 +50,12 @@ private struct SearchStack: View {
     }
 }
 
-private struct NotificationsStack: View {
+private struct ClubsStack: View {
     @Environment(AppStore.self) private var store
     var body: some View {
         @Bindable var store = store
-        NavigationStack(path: $store.notificationsPath) {
-            NotificationsView()
+        NavigationStack(path: $store.clubsPath) {
+            ClubsHomeView()
                 .navigationDestination(for: Route.self) { RouteDestination(route: $0) }
         }
     }
@@ -88,6 +88,16 @@ private struct RouteDestination: View {
         case .settings: SettingsView()
         case .blockedUsers: BlockedUsersView()
         case .deleteAccount: DeleteAccountView()
+        case .notifications: NotificationsView()
+        case .club(let id): ClubDetailView(clubID: id)
+        case .clubDiscussion(let clubID, let week): ClubDiscussionView(clubID: clubID, week: week)
+        case .theories: TheoriesFeedView()
+        case .theoryDetail(let id): TheoryDetailView(theoryID: id)
+        case .predictions: PredictionsView()
+        case .correctionForm(let itemID): SuggestCorrectionView(itemID: itemID)
+        case .pro: ProPaywallView()
+        case .proStats: ProStatsView()
+        case .adjustShieldPoint: AdjustShieldPointView()
         }
     }
 }

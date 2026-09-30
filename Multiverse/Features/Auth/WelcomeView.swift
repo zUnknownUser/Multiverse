@@ -34,7 +34,7 @@ struct WelcomeView: View {
                     .padding(.horizontal, 14).padding(.vertical, 8)
                     .background(MV.C.wow)
                     .overlay(RoundedRectangle(cornerRadius: MV.R.sm).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-                    .background(RoundedRectangle(cornerRadius: MV.R.sm).fill(MV.C.ink).offset(x: 3, y: 3))
+                    .background(RoundedRectangle(cornerRadius: MV.R.sm).fill(MV.C.shadow).offset(x: 3, y: 3))
                     .rotationEffect(.degrees(-6))
                     .position(x: geo.size.width * 0.58, y: geo.size.height * 0.16)
 
@@ -44,7 +44,7 @@ struct WelcomeView: View {
                     .padding(.horizontal, 12).padding(.vertical, 6)
                     .background(MV.C.card)
                     .overlay(RoundedRectangle(cornerRadius: MV.R.sm).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-                    .background(RoundedRectangle(cornerRadius: MV.R.sm).fill(MV.C.ink).offset(x: 3, y: 3))
+                    .background(RoundedRectangle(cornerRadius: MV.R.sm).fill(MV.C.shadow).offset(x: 3, y: 3))
                     .rotationEffect(.degrees(-8))
                     .position(x: geo.size.width * 0.14, y: geo.size.height * 0.9)
             }

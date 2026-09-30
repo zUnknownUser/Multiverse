@@ -18,6 +18,7 @@ struct ItemView: View {
                     friendsSection(item: item, uni: uni).padding(.horizontal, MV.pad)
                     Text(item.desc).font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
                         .padding(.horizontal, MV.pad)
+                    WhereToWatchSection(itemID: item.id).padding(.horizontal, MV.pad)
                     canonSection(item: item, uni: uni).padding(.horizontal, MV.pad)
                     essentialSection(item: item, uni: uni).padding(.horizontal, MV.pad)
                     histogramSection(item: item, uni: uni).padding(.horizontal, MV.pad)
@@ -304,6 +305,11 @@ struct ItemView: View {
                     }
                 }
             }
+
+            Button { store.push(.correctionForm(item.id)) } label: {
+                Text("Sugerir correção").font(MVFont.bold(12)).underline().foregroundStyle(MV.C.ink)
+            }
+            .buttonStyle(.plain)
         }
     }
 }

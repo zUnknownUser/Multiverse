@@ -15,7 +15,7 @@ struct BackButtonBar: View {
                     .padding(.horizontal, 14).padding(.vertical, 9)
                     .background(Capsule().fill(MV.C.card))
                     .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-                    .background(Capsule().fill(MV.C.ink).offset(x: MV.Shadow.s, y: MV.Shadow.s))
+                    .background(Capsule().fill(MV.C.shadow).offset(x: MV.Shadow.s, y: MV.Shadow.s))
             }
             .buttonStyle(.plain)
             Spacer()

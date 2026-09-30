@@ -1,7 +1,7 @@
 import Foundation
 
 enum AppTab: String, CaseIterable, Hashable {
-    case home, search, notifications, profile
+    case home, search, clubs, profile
 }
 
 /// Destinos navegáveis dentro da NavigationStack de cada aba.
@@ -17,4 +17,15 @@ enum Route: Hashable {
     case settings
     case blockedUsers
     case deleteAccount
+    /// Avisos deixou de ser aba — agora é o sino no topo da Home, empilhado como rota.
+    case notifications
+    case club(String)
+    case clubDiscussion(clubID: String, week: Int)
+    case theories
+    case theoryDetail(String)
+    case predictions
+    case correctionForm(String)
+    case pro
+    case proStats
+    case adjustShieldPoint
 }

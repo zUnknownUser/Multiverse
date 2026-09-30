@@ -2,9 +2,10 @@ import SwiftUI
 
 struct NotificationsView: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        ScreenScaffold {
+        ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             VStack(alignment: .leading, spacing: 22) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("ATIVIDADE").font(MVFont.display(28, width: 122)).foregroundStyle(MV.C.ink)

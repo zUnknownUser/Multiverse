@@ -28,5 +28,6 @@ protocol AuthRepository: Sendable {
     func updateAccountSettings(_ settings: AccountSettings) async
 
     func fetchBlockedUsers() async -> [BlockedUser]
+    func blockUser(handle: String) async
     func unblockUser(_ id: String) async
 }

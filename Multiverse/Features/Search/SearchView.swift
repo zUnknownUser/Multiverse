@@ -55,7 +55,7 @@ struct SearchView: View {
         .background(MV.C.card)
         .clipShape(RoundedRectangle(cornerRadius: MV.R.xl))
         .overlay(RoundedRectangle(cornerRadius: MV.R.xl).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-        .background(RoundedRectangle(cornerRadius: MV.R.xl).fill(MV.C.ink).offset(x: MV.Shadow.m, y: MV.Shadow.m))
+        .background(RoundedRectangle(cornerRadius: MV.R.xl).fill(MV.C.shadow).offset(x: MV.Shadow.m, y: MV.Shadow.m))
     }
 }
 

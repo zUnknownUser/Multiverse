@@ -16,6 +16,14 @@ actor MockRepository: MultiverseRepository {
     private var orderState = OrderState()
     private var likedLists: Set<String> = []
 
+    private let recursos: RecursosData
+    private var shieldState: ShieldState
+    private var clubState: ClubState
+    private var clubMessages: [ClubMessage]
+    private var theoryLoreState: TheoryLoreState
+    private var predictionState: PredictionState
+    private var correctionSuggestions: [CorrectionSuggestion]
+
     /// Simula latência de rede pra que estados de loading façam sentido; ajuste/zere se quiser.
     private let simulatedLatency: Duration = .milliseconds(220)
 
@@ -38,6 +46,17 @@ actor MockRepository: MultiverseRepository {
         reviews = initial
 
         diary = MockRepository.initialDiary()
+
+        recursos = .load()
+        shieldState = ShieldState(points: ["wow": 4, "marvel": 3], advanceAutomatically: true)
+        clubState = ClubState(
+            memberUnits: ["c-cidadela|nina": 18, "c-cidadela|duda": 11, "c-cidadela|gui": 7, "c-cidadela|bia": 2],
+            heartedMessages: [], powedMessages: []
+        )
+        clubMessages = recursos.clubMessages
+        theoryLoreState = TheoryLoreState(points: 40, accuracyPercent: 66)
+        predictionState = PredictionState(points: 1240, answers: ["pq1": .choice(1)])
+        correctionSuggestions = recursos.correctionSuggestions
     }
 
     private func delay() async {
@@ -125,6 +144,9 @@ actor MockRepository: MultiverseRepository {
         case .duel(let i):
             guard pollVotes.duel[i] == nil else { return }
             pollVotes.duel[i] = optionIndex
+        case .theory(let id):
+            guard pollVotes.theory[id] == nil else { return }
+            pollVotes.theory[id] = optionIndex
         }
     }
 
@@ -174,6 +196,117 @@ actor MockRepository: MultiverseRepository {
 
     func setListLiked(listID: String, liked: Bool) async throws {
         if liked { likedLists.insert(listID) } else { likedLists.remove(listID) }
+    }
+
+    // MARK: - Escudo de spoiler
+
+    func fetchShieldState() async throws -> ShieldState {
+        await delay()
+        return shieldState
+    }
+
+    func setShieldPoint(universeID: String, timelineIndex: Int) async throws {
+        shieldState.points[universeID] = timelineIndex
+    }
+
+    func setShieldAdvanceAutomatically(_ enabled: Bool) async throws {
+        shieldState.advanceAutomatically = enabled
+    }
+
+    // MARK: - Clubes de maratona
+
+    func fetchClubs() async throws -> [Club] {
+        await delay()
+        return recursos.clubs
+    }
+
+    func fetchClubMessages(clubID: String) async throws -> [ClubMessage] {
+        await delay()
+        return clubMessages.filter { $0.clubID == clubID }
+    }
+
+    func postClubMessage(_ message: ClubMessage) async throws {
+        clubMessages.append(message)
+    }
+
+    func fetchClubState() async throws -> ClubState {
+        await delay()
+        return clubState
+    }
+
+    func setClubUnitsCompleted(clubID: String, units: Int) async throws {
+        clubState.memberUnits["\(clubID)|duda"] = units
+    }
+
+    func setClubMessageHearted(messageID: String, hearted: Bool) async throws {
+        if hearted { clubState.heartedMessages.insert(messageID) } else { clubState.heartedMessages.remove(messageID) }
+        guard let idx = clubMessages.firstIndex(where: { $0.id == messageID }) else { return }
+        clubMessages[idx].hearts += hearted ? 1 : -1
+    }
+
+    func addClubMessagePow(messageID: String) async throws {
+        guard !clubState.powedMessages.contains(messageID) else { return }
+        clubState.powedMessages.insert(messageID)
+        guard let idx = clubMessages.firstIndex(where: { $0.id == messageID }) else { return }
+        clubMessages[idx].pows += 1
+    }
+
+    // MARK: - Teorias
+
+    func fetchTheories() async throws -> [Theory] {
+        await delay()
+        return recursos.theories
+    }
+
+    func postTheory(_ theory: Theory) async throws {
+        // Amostra em memória — persistir uma teoria nova exigiria `theories` ser `var`;
+        // deixado de fora de propósito (ver README de limitações) pra não desviar do escopo mock.
+    }
+
+    func fetchTheoryLoreState() async throws -> TheoryLoreState {
+        await delay()
+        return theoryLoreState
+    }
+
+    // MARK: - Previsões
+
+    func fetchPredictionEvents() async throws -> [PredictionEvent] {
+        await delay()
+        return recursos.predictionEvents
+    }
+
+    func fetchPredictionState() async throws -> PredictionState {
+        await delay()
+        return predictionState
+    }
+
+    func submitPredictionAnswer(questionID: String, answer: PredictionAnswer) async throws {
+        predictionState.answers[questionID] = answer
+    }
+
+    // MARK: - Denúncia
+
+    func submitReport(_ report: ReportSubmission) async throws {
+        await delay()
+        // Mock: nada pra persistir além do toast que a View já mostra.
+    }
+
+    // MARK: - Sugerir correção
+
+    func fetchCorrectionSuggestions(itemID: String) async throws -> [CorrectionSuggestion] {
+        await delay()
+        return correctionSuggestions.filter { $0.itemID == itemID }
+    }
+
+    func submitCorrection(_ suggestion: CorrectionSuggestion) async throws {
+        correctionSuggestions.append(suggestion)
+    }
+
+    // MARK: - Onde assistir
+
+    func fetchWatchAvailability(itemID: String) async throws -> WatchAvailability? {
+        await delay()
+        return recursos.watchAvailability.first { $0.itemID == itemID }
     }
 
     // MARK: - Geração determinística (idêntica ao protótipo HTML)

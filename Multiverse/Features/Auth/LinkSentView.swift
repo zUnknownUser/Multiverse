@@ -13,7 +13,7 @@ struct LinkSentView: View {
                 .padding(.horizontal, 16).padding(.vertical, 10)
                 .background(MV.C.dc)
                 .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-                .background(RoundedRectangle(cornerRadius: MV.R.md).fill(MV.C.ink).offset(x: MV.Shadow.m, y: MV.Shadow.m))
+                .background(RoundedRectangle(cornerRadius: MV.R.md).fill(MV.C.shadow).offset(x: MV.Shadow.m, y: MV.Shadow.m))
                 .rotationEffect(.degrees(-3))
 
             Text("OLHE SEU E-MAIL").font(MVFont.display(34, width: 120)).foregroundStyle(MV.C.ink)

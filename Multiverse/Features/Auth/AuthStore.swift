@@ -214,4 +214,5 @@ final class AuthStore {
     func saveAccountSettings(_ settings: AccountSettings) async { await repository.updateAccountSettings(settings) }
     func loadBlockedUsers() async -> [BlockedUser] { await repository.fetchBlockedUsers() }
     func unblock(_ id: String) async { await repository.unblockUser(id) }
+    func blockUser(handle: String) async { await repository.blockUser(handle: handle) }
 }

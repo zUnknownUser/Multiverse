@@ -44,7 +44,7 @@ struct AuthField<Trailing: View>: View {
             .background(MV.C.card)
             .overlay(RoundedRectangle(cornerRadius: MV.R.xl).strokeBorder(errored ? MV.C.marvel : MV.C.ink, lineWidth: MV.stroke))
             .clipShape(RoundedRectangle(cornerRadius: MV.R.xl))
-            .background(RoundedRectangle(cornerRadius: MV.R.xl).fill(MV.C.ink).offset(x: MV.Shadow.s, y: MV.Shadow.s))
+            .background(RoundedRectangle(cornerRadius: MV.R.xl).fill(MV.C.shadow).offset(x: MV.Shadow.s, y: MV.Shadow.s))
         }
     }
 }
@@ -75,7 +75,7 @@ struct AuthErrorBanner: View {
         .background(MV.C.marvel)
         .overlay(RoundedRectangle(cornerRadius: MV.R.xl).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
         .clipShape(RoundedRectangle(cornerRadius: MV.R.xl))
-        .background(RoundedRectangle(cornerRadius: MV.R.xl).fill(MV.C.ink).offset(x: MV.Shadow.s, y: MV.Shadow.s))
+        .background(RoundedRectangle(cornerRadius: MV.R.xl).fill(MV.C.shadow).offset(x: MV.Shadow.s, y: MV.Shadow.s))
     }
 }
 

@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(AppStore.self) private var store
     @Environment(AuthStore.self) private var auth
+    @Environment(ProStore.self) private var proStore
     @Environment(\.dismiss) private var dismiss
     @State private var settings = AccountSettings()
     @State private var blockedCount = 0
@@ -13,7 +14,9 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 26) {
                 Text("AJUSTES").font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
 
+                proPromoRow
                 accountSection
+                themeSection
                 privacySection
                 notificationsSection
 
@@ -61,6 +64,44 @@ struct SettingsView: View {
                 infoRow("Senha", value: "Alterar")
             }
             .comicCard(shadow: MV.Shadow.s)
+        }
+    }
+
+    private var proPromoRow: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(proStore.isPro ? "VOCÊ É PRO" : "MULTIVERSE PRO").font(MVFont.black(14)).foregroundStyle(MV.C.paper)
+                Text(proStore.isPro ? "Seus números, temas e mais liberados." : "Estatísticas, temas e Wrapped anual.")
+                    .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.paper.opacity(0.85))
+            }
+            Spacer()
+            Text("→").font(MVFont.black(16)).foregroundStyle(MV.C.paper)
+        }
+        .padding(14)
+        .background(MV.C.marvel)
+        .clipShape(RoundedRectangle(cornerRadius: MV.R.xl))
+        .overlay(RoundedRectangle(cornerRadius: MV.R.xl).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+        .contentShape(Rectangle())
+        .onTapGesture { store.push(proStore.isPro ? .proStats : .pro) }
+    }
+
+    private var themeSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("TEMA").kicker(11).foregroundStyle(MV.C.muted)
+            HStack(spacing: 0) {
+                ForEach(ThemePreference.allCases, id: \.self) { option in
+                    let selected = store.themePreference == option
+                    Text(option.label.uppercased())
+                        .font(MVFont.bold(12))
+                        .frame(maxWidth: .infinity).frame(height: 46)
+                        .foregroundStyle(selected ? MV.C.paper : MV.C.ink)
+                        .background(selected ? MV.C.ink : Color.clear)
+                        .contentShape(Rectangle())
+                        .onTapGesture { store.themePreference = option }
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
+            .comicCard(radius: MV.R.md, shadow: MV.Shadow.s)
         }
     }
 

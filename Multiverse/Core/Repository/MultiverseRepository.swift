@@ -23,6 +23,8 @@ enum PollTopic: Hashable, Sendable {
     case essential(itemID: String)
     case canon(itemID: String)
     case duel(index: Int)
+    /// Plausível (0) / Viajou (1) — voto numa teoria.
+    case theory(id: String)
 }
 
 struct PollVotes: Sendable {
@@ -30,6 +32,7 @@ struct PollVotes: Sendable {
     var essential: [String: Int] = [:]
     var canon: [String: Int] = [:]
     var duel: [Int: Int] = [:]
+    var theory: [String: Int] = [:]
 
     func value(for topic: PollTopic) -> Int? {
         switch topic {
@@ -37,6 +40,7 @@ struct PollVotes: Sendable {
         case .essential(let id): return essential[id]
         case .canon(let id): return canon[id]
         case .duel(let i): return duel[i]
+        case .theory(let id): return theory[id]
         }
     }
 }
@@ -56,6 +60,49 @@ struct ReviewToggles: Sendable {
 struct OrderState: Sendable {
     var upvoted: Set<String> = []
     var following: Set<String> = ["o-azeroth"]
+}
+
+// MARK: - Escudo de spoiler
+
+struct ShieldState: Sendable {
+    var points: [String: Int] = [:]           // universeID → índice na timeline
+    var advanceAutomatically: Bool = true
+}
+
+// MARK: - Clubes
+
+struct ClubState: Sendable {
+    var memberUnits: [String: Int] = [:]      // chave "clubID|userID" → unidades concluídas na semana
+    var heartedMessages: Set<String> = []
+    var powedMessages: Set<String> = []
+}
+
+// MARK: - Teorias
+
+struct TheoryLoreState: Sendable {
+    var points: Int = 0
+    var accuracyPercent: Int = 64
+}
+
+// MARK: - Previsões
+
+enum PredictionAnswer: Sendable, Equatable {
+    case choice(Int)
+    case slider(Double)
+}
+
+struct PredictionState: Sendable {
+    var points: Int = 0
+    var answers: [String: PredictionAnswer] = [:]   // questionID → resposta
+}
+
+// MARK: - Denúncia
+
+struct ReportSubmission: Sendable {
+    let targetType: String
+    let targetID: String
+    let reason: ReportReason
+    let alsoBlock: Bool
 }
 
 /// Fonte única de dados e mutações do app. Hoje só existe `MockRepository` (sample-data.json
@@ -99,4 +146,38 @@ protocol MultiverseRepository: Sendable {
     // Listas
     func fetchLikedLists() async throws -> Set<String>
     func setListLiked(listID: String, liked: Bool) async throws
+
+    // Escudo de spoiler
+    func fetchShieldState() async throws -> ShieldState
+    func setShieldPoint(universeID: String, timelineIndex: Int) async throws
+    func setShieldAdvanceAutomatically(_ enabled: Bool) async throws
+
+    // Clubes de maratona
+    func fetchClubs() async throws -> [Club]
+    func fetchClubMessages(clubID: String) async throws -> [ClubMessage]
+    func postClubMessage(_ message: ClubMessage) async throws
+    func fetchClubState() async throws -> ClubState
+    func setClubUnitsCompleted(clubID: String, units: Int) async throws
+    func setClubMessageHearted(messageID: String, hearted: Bool) async throws
+    func addClubMessagePow(messageID: String) async throws
+
+    // Teorias
+    func fetchTheories() async throws -> [Theory]
+    func postTheory(_ theory: Theory) async throws
+    func fetchTheoryLoreState() async throws -> TheoryLoreState
+
+    // Previsões
+    func fetchPredictionEvents() async throws -> [PredictionEvent]
+    func fetchPredictionState() async throws -> PredictionState
+    func submitPredictionAnswer(questionID: String, answer: PredictionAnswer) async throws
+
+    // Denúncia e moderação
+    func submitReport(_ report: ReportSubmission) async throws
+
+    // Sugerir correção
+    func fetchCorrectionSuggestions(itemID: String) async throws -> [CorrectionSuggestion]
+    func submitCorrection(_ suggestion: CorrectionSuggestion) async throws
+
+    // Onde assistir
+    func fetchWatchAvailability(itemID: String) async throws -> WatchAvailability?
 }

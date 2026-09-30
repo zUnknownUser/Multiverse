@@ -46,5 +46,7 @@
 	<array>
 		<string>Archivo-VariableFont_wdth,wght.ttf</string>
 	</array>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 </dict>
 </plist>

@@ -13,8 +13,12 @@ struct ThreadView: View {
                 let uni = store.universe(of: item)
                 VStack(alignment: .leading, spacing: 18) {
                     miniHeader(item: item, uni: uni)
-                    ReviewDetailCard(review: review)
-                    commentsSection(review: review)
+                    if store.isShieldedReview(review) {
+                        ShieldedReviewCard(review: review)
+                    } else {
+                        ReviewDetailCard(review: review)
+                        commentsSection(review: review)
+                    }
                 }
                 .padding(.horizontal, MV.pad)
                 .padding(.bottom, 90)

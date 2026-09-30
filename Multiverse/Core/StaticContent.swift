@@ -64,4 +64,12 @@ enum StaticContent {
     static let weeklyDebateOptions = ["Melhor momento da lore", "Pior retcon de todos", "Os dois ao mesmo tempo"]
     static let weeklyDebateBase = [1830, 1290, 1692]
     static let weeklyDebateComments = "612 comentários"
+
+    /// Reputação em teorias dos autores de exemplo no feed de Teorias.
+    static let theoryAccuracy: [String: Int] = ["joao": 71, "bia": 58, "caio": 49]
+
+    /// Liga dos amigos em Previsões — "Você" entra dinamicamente via `AppStore.predictionPoints`.
+    static let predictionLeague: [(userID: String, points: Int)] = [
+        ("nina", 2310), ("caio", 980),
+    ]
 }

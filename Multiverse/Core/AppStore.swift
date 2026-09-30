@@ -17,6 +17,31 @@ enum SearchFilter: String, CaseIterable {
     case all = "Tudo", works = "Obras", characters = "Personagens", events = "Eventos", people = "Pessoas"
 }
 
+enum TheoryFeedFilter: String, CaseIterable {
+    case open = "Em aberto", confirmed = "Confirmadas", refuted = "Refutadas", mine = "Minhas"
+}
+
+/// Modo Noir — "Siga o modo do sistema" ou força claro/escuro (Ajustes).
+enum ThemePreference: String, CaseIterable {
+    case system, light, dark
+
+    var label: String {
+        switch self {
+        case .system: return "Sistema"
+        case .light: return "Claro"
+        case .dark: return "Noir"
+        }
+    }
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+}
+
 struct SearchResultRow: Identifiable {
     let id: String
     let title: String
@@ -83,7 +108,7 @@ final class AppStore {
     var tab: AppTab = .home
     var homePath: [Route] = []
     var searchPath: [Route] = []
-    var notificationsPath: [Route] = []
+    var clubsPath: [Route] = []
     var profilePath: [Route] = []
     var unreadCount: Int = 4
 
@@ -124,6 +149,39 @@ final class AppStore {
         didSet { UserDefaults.standard.set(isOnboarded, forKey: "mv-onboarded") }
     }
 
+    /// Modo Noir. `RootView` aplica `.preferredColorScheme` a partir daqui.
+    var themePreference: ThemePreference {
+        didSet { UserDefaults.standard.set(themePreference.rawValue, forKey: "mv-theme") }
+    }
+
+    // MARK: - Escudo de spoiler
+    var shieldPoints: [String: Int] = [:]         // universeID → índice na timeline
+    var shieldAdvanceAutomatically = true
+
+    // MARK: - Clubes de maratona
+    var clubs: [Club] = []
+    var clubMessages: [ClubMessage] = []
+    var clubMemberUnits: [String: Int] = [:]      // "clubID|userID" → unidades concluídas
+    var heartedClubMessages: Set<String> = []
+    var powedClubMessages: Set<String> = []
+
+    // MARK: - Teorias
+    var theories: [Theory] = []
+    var theoryVotes: [String: Int] = [:]          // theoryID → 0 (Plausível) / 1 (Viajou)
+    var lorePoints = 0
+    var theoryAccuracyPercent = 0
+
+    // MARK: - Previsões
+    var predictionEvents: [PredictionEvent] = []
+    var predictionPoints = 0
+    var predictionAnswers: [String: PredictionAnswer] = [:]
+
+    // MARK: - Onde assistir (cache por obra, carregado sob demanda)
+    var watchAvailabilityByItem: [String: WatchAvailability] = [:]
+
+    // MARK: - Sugestões de correção (cache por obra, carregado sob demanda)
+    var correctionsByItem: [String: [CorrectionSuggestion]] = [:]
+
     // MARK: - Toast
     var toast: String?
     private var toastTask: Task<Void, Never>?
@@ -133,6 +191,7 @@ final class AppStore {
     init(repository: MultiverseRepository? = nil) {
         let onboarded = UserDefaults.standard.bool(forKey: "mv-onboarded")
         isOnboarded = onboarded
+        themePreference = ThemePreference(rawValue: UserDefaults.standard.string(forKey: "mv-theme") ?? "") ?? .system
         self.repository = repository ?? MockRepository(startFollowing: onboarded)
     }
 
@@ -149,6 +208,13 @@ final class AppStore {
             async let pollVotesResult = repository.fetchPollVotes()
             async let orderStateResult = repository.fetchOrderState()
             async let likedListsResult = repository.fetchLikedLists()
+            async let shieldStateResult = repository.fetchShieldState()
+            async let clubsResult = repository.fetchClubs()
+            async let clubStateResult = repository.fetchClubState()
+            async let theoriesResult = repository.fetchTheories()
+            async let theoryLoreResult = repository.fetchTheoryLoreState()
+            async let predictionEventsResult = repository.fetchPredictionEvents()
+            async let predictionStateResult = repository.fetchPredictionState()
 
             let catalog = try await catalogResult
             universes = catalog.universes
@@ -193,11 +259,36 @@ final class AppStore {
             orderFollows = orderState.following
 
             likedLists = try await likedListsResult
+
+            let shieldState = try await shieldStateResult
+            shieldPoints = shieldState.points
+            shieldAdvanceAutomatically = shieldState.advanceAutomatically
+
+            clubs = try await clubsResult
+            let clubState = try await clubStateResult
+            clubMemberUnits = clubState.memberUnits
+            heartedClubMessages = clubState.heartedMessages
+            powedClubMessages = clubState.powedMessages
+            if let firstClub = clubs.first {
+                clubMessages = try await repository.fetchClubMessages(clubID: firstClub.id)
+            }
+
+            theories = try await theoriesResult
+            theoryVotes = pollVotes.theory
+            let loreState = try await theoryLoreResult
+            lorePoints = loreState.points
+            theoryAccuracyPercent = loreState.accuracyPercent
+
+            predictionEvents = try await predictionEventsResult
+            let predState = try await predictionStateResult
+            predictionPoints = predState.points
+            predictionAnswers = predState.answers
         } catch {
             // MockRepository nunca lança; um repositório real trataria erro de rede aqui
             // (ex.: `loadError` pra a RootView mostrar um estado de erro com "tentar de novo").
         }
         isLoading = false
+        syncWidgetData()
     }
 
     // MARK: - Acesso a dados
@@ -219,6 +310,7 @@ final class AppStore {
         checks[id] = value
         let repository = self.repository
         Task { try? await repository.setItemSeen(itemID: id, seen: value) }
+        syncWidgetData()
     }
 
     func myDiaryEntry(for itemID: String) -> DiaryEntry? {
@@ -371,8 +463,33 @@ final class AppStore {
         duelVotes[di] = side
         let repository = self.repository
         Task { try? await repository.submitPollVote(topic: .duel(index: di), optionIndex: side) }
+        syncWidgetData()
     }
-    func nextDuel() { duelIndex += 1 }
+    func nextDuel() { duelIndex += 1; syncWidgetData() }
+
+    /// Manda os números atuais pra extensão de widgets via App Group (ver `WidgetBridge`).
+    func syncWidgetData() {
+        let mainUniID = user(meID)?.badgeUniverse ?? "wow"
+        let followedOrder = readingOrders.first { orderFollows.contains($0.id) } ?? readingOrders.first
+        let progress = followedOrder.map { orderProgress($0) } ?? (done: 0, total: 0)
+        let nextItem = followedOrder
+            .flatMap { order in order.steps.first { !isSeen($0) } }
+            .flatMap { itemsByID[$0] }
+
+        let duel = currentDuel
+        WidgetBridge.save(WidgetBridge.Snapshot(
+            universeName: universe(mainUniID)?.name ?? "",
+            universePercent: universePercent(mainUniID),
+            universePercentDelta: 3,
+            nextOrderItemTitle: nextItem?.title ?? followedOrder?.title ?? "",
+            nextOrderDone: progress.done,
+            nextOrderTotal: progress.total,
+            duelQuestion: duel.question,
+            duelSideATitle: itemsByID[duel.a]?.title ?? "",
+            duelSideBTitle: itemsByID[duel.b]?.title ?? "",
+            duelVotesLabel: duelTotalVotesLabel()
+        ))
+    }
     func duelTotalVotesLabel() -> String {
         let di = currentDuelPosition
         let base = duels[di].baseVotes
@@ -743,6 +860,10 @@ final class AppStore {
         logDraft = nil
         showToast("Publicado no feed do seu pessoal")
 
+        if shieldAdvanceAutomatically, let idx = timelineIndex(for: item) {
+            advanceShieldPoint(universeID: item.uni, to: idx)
+        }
+
         let repository = self.repository
         Task {
             try? await repository.addDiaryEntry(entry)
@@ -831,7 +952,7 @@ final class AppStore {
         switch tab {
         case .home: homePath.append(route)
         case .search: searchPath.append(route)
-        case .notifications: notificationsPath.append(route)
+        case .clubs: clubsPath.append(route)
         case .profile: profilePath.append(route)
         }
     }
@@ -842,12 +963,17 @@ final class AppStore {
             switch newTab {
             case .home: homePath = []
             case .search: searchPath = []
-            case .notifications: notificationsPath = []
+            case .clubs: clubsPath = []
             case .profile: profilePath = []
             }
         }
         tab = newTab
-        if newTab == .notifications { unreadCount = 0 }
+    }
+
+    /// Sino de Avisos: empilha a rota na aba atual e zera o contador.
+    func openNotifications() {
+        push(.notifications)
+        unreadCount = 0
     }
 
     func openMyProfile() {
@@ -869,5 +995,248 @@ final class AppStore {
         let updated = User(id: current.id, name: name, handle: handle, avatarColor: avatarColor, bio: bio, followers: current.followers, badgeUniverse: current.badgeUniverse)
         users[idx] = updated
         usersByID[meID] = updated
+    }
+
+    // MARK: - Escudo de spoiler
+
+    /// `true` quando o item está à frente do seu ponto na timeline do próprio universo.
+    func isAheadOfShield(_ item: Item) -> Bool {
+        guard let idx = timelineIndex(for: item) else { return false }
+        return idx > (shieldPoints[item.uni] ?? -1)
+    }
+
+    func isShieldedReview(_ review: Review) -> Bool {
+        guard let item = itemsByID[review.item], isAheadOfShield(item) else { return false }
+        return !revealedSpoilers.contains(review.id)
+    }
+
+    /// Total de reviews escondidas pelo escudo agora — usado no banner da Home.
+    var shieldHiddenCount: Int { reviews.filter { isShieldedReview($0) }.count }
+
+    var isShieldActive: Bool { !shieldPoints.isEmpty }
+
+    /// "Você está em Ano 27 (Warcraft) e Fase 3 (Marvel)." — texto do banner da Home.
+    func shieldStatusLine() -> String? {
+        let segments = universes.compactMap { u -> String? in
+            guard let idx = shieldPoints[u.id], let entries = timelines[u.id], entries.indices.contains(idx) else { return nil }
+            let era = entries[idx].era.components(separatedBy: " · ").first ?? entries[idx].era
+            return "\(era) (\(u.name))"
+        }
+        guard !segments.isEmpty else { return nil }
+        return "Você está em " + segments.joined(separator: " e ") + "."
+    }
+
+    /// "3 anos à frente de onde você está" — tenta comparar o número no rótulo da era
+    /// ("Ano 27", "Ano 30"); cai pra contagem de marcos na timeline quando não dá.
+    func shieldDistanceLabel(for item: Item) -> String {
+        guard let idx = timelineIndex(for: item), let entries = timelines[item.uni] else {
+            return "à frente de onde você está"
+        }
+        let point = shieldPoints[item.uni] ?? -1
+        func yearNumber(_ era: String) -> Int? {
+            guard let range = era.range(of: #"\d+"#, options: .regularExpression) else { return nil }
+            return Int(era[range])
+        }
+        let targetYear = yearNumber(entries[idx].era)
+        let pointYear = (point >= 0 && point < entries.count) ? yearNumber(entries[point].era) : nil
+        if let t = targetYear, let p = pointYear, t > p {
+            return "\(t - p) ano\(t - p > 1 ? "s" : "") à frente de onde você está"
+        }
+        let steps = idx - point
+        return "\(steps) marco\(steps > 1 ? "s" : "") à frente de onde você está"
+    }
+
+    func revealShielded(reviewID: String) {
+        revealedSpoilers.insert(reviewID)
+        let repository = self.repository
+        Task { try? await repository.setSpoilerRevealed(reviewID: reviewID) }
+    }
+
+    /// Botão "Já vi isso" do card do escudo: marca o item como visto e avança o ponto até ele.
+    func shieldMarkSeen(_ itemID: String) {
+        checks[itemID] = true
+        let repository = self.repository
+        Task { try? await repository.setItemSeen(itemID: itemID, seen: true) }
+        if let item = itemsByID[itemID], let idx = timelineIndex(for: item) {
+            advanceShieldPoint(universeID: item.uni, to: idx)
+        }
+    }
+
+    private func advanceShieldPoint(universeID: String, to index: Int) {
+        guard index > (shieldPoints[universeID] ?? -1) else { return }
+        shieldPoints[universeID] = index
+        let repository = self.repository
+        Task { try? await repository.setShieldPoint(universeID: universeID, timelineIndex: index) }
+    }
+
+    func setShieldPoint(universeID: String, index: Int) {
+        shieldPoints[universeID] = index
+        let repository = self.repository
+        Task { try? await repository.setShieldPoint(universeID: universeID, timelineIndex: index) }
+    }
+
+    func setShieldAdvanceAutomatically(_ enabled: Bool) {
+        shieldAdvanceAutomatically = enabled
+        let repository = self.repository
+        Task { try? await repository.setShieldAdvanceAutomatically(enabled) }
+    }
+
+    // MARK: - Clubes de maratona
+
+    func club(_ id: String) -> Club? { clubs.first { $0.id == id } }
+    func currentClubWeek(_ club: Club) -> ClubWeek? { club.weeks.first { $0.week == club.currentWeek } }
+
+    func clubUnitsCompleted(clubID: String, userID: String) -> Int {
+        clubMemberUnits["\(clubID)|\(userID)"] ?? 0
+    }
+
+    func clubMemberProgressLabel(clubID: String, userID: String, week: ClubWeek) -> String {
+        let units = clubUnitsCompleted(clubID: clubID, userID: userID)
+        if week.totalUnits <= 1 { return units > 0 ? "Terminou ✓" : "Não começou" }
+        if units >= week.totalUnits { return "Terminou ✓" }
+        return "\(week.unitLabel) \(units)"
+    }
+
+    func setMyClubUnits(clubID: String, units: Int) {
+        clubMemberUnits["\(clubID)|\(meID)"] = units
+        let repository = self.repository
+        Task { try? await repository.setClubUnitsCompleted(clubID: clubID, units: units) }
+    }
+
+    func clubMessagesFor(clubID: String, week: Int, segment: String) -> [ClubMessage] {
+        clubMessages.filter { $0.clubID == clubID && $0.week == week && $0.segment == segment }
+    }
+
+    func clubMessageCount(clubID: String, week: Int) -> Int {
+        clubMessages.filter { $0.clubID == clubID && $0.week == week }.count
+    }
+
+    func isClubMessageHidden(_ message: ClubMessage, clubID: String) -> Bool {
+        message.aboutUnit > clubUnitsCompleted(clubID: clubID, userID: meID) && !revealedSpoilers.contains("club:\(message.id)")
+    }
+
+    func revealClubMessage(_ messageID: String) { revealedSpoilers.insert("club:\(messageID)") }
+
+    func isClubMessageHearted(_ id: String) -> Bool { heartedClubMessages.contains(id) }
+
+    func toggleClubMessageHeart(_ id: String) {
+        let turningOn = !heartedClubMessages.contains(id)
+        if turningOn { heartedClubMessages.insert(id) } else { heartedClubMessages.remove(id) }
+        if let idx = clubMessages.firstIndex(where: { $0.id == id }) { clubMessages[idx].hearts += turningOn ? 1 : -1 }
+        let repository = self.repository
+        Task { try? await repository.setClubMessageHearted(messageID: id, hearted: turningOn) }
+    }
+
+    func powClubMessage(_ id: String) {
+        guard !powedClubMessages.contains(id) else { return }
+        powedClubMessages.insert(id)
+        if let idx = clubMessages.firstIndex(where: { $0.id == id }) { clubMessages[idx].pows += 1 }
+        let repository = self.repository
+        Task { try? await repository.addClubMessagePow(messageID: id) }
+    }
+
+    func postClubMessage(clubID: String, week: Int, segment: String, text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let myUnits = clubUnitsCompleted(clubID: clubID, userID: meID)
+        let message = ClubMessage(id: "cm-\(UUID().uuidString.prefix(8))", clubID: clubID, week: week, segment: segment, userID: meID, text: trimmed, when: "agora", hearts: 0, pows: 0, aboutUnit: myUnits)
+        clubMessages.append(message)
+        let repository = self.repository
+        Task { try? await repository.postClubMessage(message) }
+    }
+
+    func pokeLaggingMembers() { showToast("Lembrete enviado pros atrasados do clube.") }
+    func inviteToClub() { showToast("Link de convite copiado.") }
+
+    // MARK: - Teorias
+
+    func theoriesFiltered(_ filter: TheoryFeedFilter) -> [Theory] {
+        switch filter {
+        case .open: return theories.filter { $0.status == .open }
+        case .confirmed: return theories.filter { $0.status == .confirmed }
+        case .refuted: return theories.filter { $0.status == .refuted }
+        case .mine: return theories.filter { $0.userID == meID }
+        }
+    }
+
+    func theoryPercents(_ theory: Theory) -> (plausible: Int, travel: Int) {
+        let percents = Logic.pollPercents(base: [theory.plausibleBase, theory.travelBase], chosen: theoryVotes[theory.id])
+        return (percents[0], percents[1])
+    }
+
+    func theoryTotalVotesLabel(_ theory: Theory) -> String {
+        Logic.fmt(theory.plausibleBase + theory.travelBase + (theoryVotes[theory.id] != nil ? 1 : 0))
+    }
+
+    func isTheoryVoted(_ theoryID: String) -> Bool { theoryVotes[theoryID] != nil }
+
+    func voteTheory(_ theoryID: String, plausible: Bool) {
+        guard theoryVotes[theoryID] == nil else { return }
+        let index = plausible ? 0 : 1
+        theoryVotes[theoryID] = index
+        let repository = self.repository
+        Task { try? await repository.submitPollVote(topic: .theory(id: theoryID), optionIndex: index) }
+    }
+
+    /// "71% ACERTO" — reputação de quem postou a teoria (fixa pros 3 exemplos, determinística pro resto).
+    func theoryAccuracyLabel(_ userID: String) -> String {
+        let pct = StaticContent.theoryAccuracy[userID] ?? (49 + Int(Logic.seed(userID + "acc") % 40))
+        return "\(pct)% ACERTO"
+    }
+
+    // MARK: - Previsões
+
+    func predictionAnswer(for questionID: String) -> PredictionAnswer? { predictionAnswers[questionID] }
+
+    func submitPredictionChoice(questionID: String, optionIndex: Int) {
+        guard predictionAnswers[questionID] == nil else { return }
+        predictionAnswers[questionID] = .choice(optionIndex)
+        let repository = self.repository
+        Task { try? await repository.submitPredictionAnswer(questionID: questionID, answer: .choice(optionIndex)) }
+    }
+
+    func submitPredictionSlider(questionID: String, value: Double) {
+        predictionAnswers[questionID] = .slider(value)
+        let repository = self.repository
+        Task { try? await repository.submitPredictionAnswer(questionID: questionID, answer: .slider(value)) }
+    }
+
+    func predictionLeague() -> [(user: User, points: Int, isMe: Bool)] {
+        var entries = StaticContent.predictionLeague.compactMap { entry -> (User, Int, Bool)? in
+            usersByID[entry.userID].map { ($0, entry.points, false) }
+        }
+        if let me = usersByID[meID] { entries.append((me, predictionPoints, true)) }
+        return entries.sorted { $0.1 > $1.1 }
+    }
+
+    // MARK: - Denúncia e moderação
+
+    func submitReport(targetType: String, targetID: String, reason: ReportReason, alsoBlock: Bool) {
+        showToast("Denúncia enviada. Revisamos em até 24h.")
+        let repository = self.repository
+        Task { try? await repository.submitReport(ReportSubmission(targetType: targetType, targetID: targetID, reason: reason, alsoBlock: alsoBlock)) }
+    }
+
+    // MARK: - Sugerir correção
+
+    func loadCorrections(for itemID: String) async {
+        guard let fetched = try? await repository.fetchCorrectionSuggestions(itemID: itemID) else { return }
+        correctionsByItem[itemID] = fetched
+    }
+
+    func submitCorrection(itemID: String, changeType: CorrectionChangeType, from: String, to: String, source: String, reasoning: String) {
+        let suggestion = CorrectionSuggestion(id: "cs-\(UUID().uuidString.prefix(8))", itemID: itemID, userID: meID, changeType: changeType, fromValue: from, toValue: to, source: source, reasoning: reasoning, approverIDs: [], approvalsNeeded: 3)
+        correctionsByItem[itemID, default: []].insert(suggestion, at: 0)
+        showToast("Sugestão enviada pra revisão.")
+        let repository = self.repository
+        Task { try? await repository.submitCorrection(suggestion) }
+    }
+
+    // MARK: - Onde assistir
+
+    func loadWatchAvailability(for itemID: String) async {
+        guard watchAvailabilityByItem[itemID] == nil else { return }
+        guard let fetched = try? await repository.fetchWatchAvailability(itemID: itemID) else { return }
+        watchAvailabilityByItem[itemID] = fetched
     }
 }

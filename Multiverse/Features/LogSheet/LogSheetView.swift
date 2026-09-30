@@ -172,7 +172,7 @@ private struct LogFormContent: View {
             .background(uni.color)
             .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
             .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
-            .background(RoundedRectangle(cornerRadius: MV.R.md).fill(MV.C.ink).offset(x: MV.Shadow.m, y: MV.Shadow.m))
+            .background(RoundedRectangle(cornerRadius: MV.R.md).fill(MV.C.shadow).offset(x: MV.Shadow.m, y: MV.Shadow.m))
             .contentShape(Rectangle())
             .onTapGesture {
                 store.saveLog()

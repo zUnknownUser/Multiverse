@@ -17,7 +17,7 @@ struct ComicCard: ViewModifier {
                     .strokeBorder(MV.C.ink, style: StrokeStyle(lineWidth: MV.stroke, dash: dashed ? [6, 4] : []))
             )
             .background(
-                RoundedRectangle(cornerRadius: radius).fill(shadow > 0 ? MV.C.ink : .clear)
+                RoundedRectangle(cornerRadius: radius).fill(shadow > 0 ? MV.C.shadow : .clear)
                     .offset(x: shadow, y: shadow)
             )
     }

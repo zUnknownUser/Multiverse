@@ -156,4 +156,10 @@ actor MockAuthRepository: AuthRepository {
     func unblockUser(_ id: String) async {
         blockedUsers.removeAll { $0.id == id }
     }
+
+    func blockUser(handle: String) async {
+        let id = handle.trimmingCharacters(in: CharacterSet(charactersIn: "@"))
+        guard !blockedUsers.contains(where: { $0.handle == handle }) else { return }
+        blockedUsers.append(BlockedUser(id: id, handle: handle, blockedOn: "hoje"))
+    }
 }

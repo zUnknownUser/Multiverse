@@ -104,3 +104,174 @@ struct FlexString: Codable, Hashable, CustomStringConvertible, Sendable {
     func encode(to encoder: Encoder) throws { var c = encoder.singleValueContainer(); try c.encode(value) }
     var description: String { value }
 }
+
+// MARK: - Escudo de spoiler
+
+/// Índice do usuário na timeline de um universo — tudo que vem depois fica escondido.
+struct ShieldPoint: Codable, Hashable, Sendable {
+    let uni: String
+    var timelineIndex: Int
+}
+
+// MARK: - Clubes de maratona
+
+struct ClubWeek: Codable, Hashable, Sendable {
+    let week: Int
+    let itemID: String
+    let totalUnits: Int
+    let unitLabel: String        // "Cap." / "Ep."
+    let paceLabel: String        // "Livro · 400 páginas · ≈57 por dia"
+    let segments: [String]       // rótulos das abas de discussão, ex.: ["Cap. 1–8", "Cap. 9–16", "Final"]
+}
+
+struct Club: Codable, Identifiable, Hashable, Sendable {
+    let id: String
+    let name: String
+    let uni: String
+    let orderID: String
+    let memberIDs: [String]
+    let weeks: [ClubWeek]
+    let currentWeek: Int
+}
+
+struct ClubMessage: Codable, Identifiable, Hashable, Sendable {
+    let id: String
+    let clubID: String
+    let week: Int
+    let segment: String
+    let userID: String
+    let text: String
+    let when: String
+    var hearts: Int
+    var pows: Int
+    /// Capítulo/episódio a que a mensagem se refere — escondida se à frente do progresso do usuário.
+    let aboutUnit: Int
+}
+
+// MARK: - Teorias
+
+enum TheoryStatus: String, Codable, Sendable {
+    case open = "aberta", confirmed = "confirmada", refuted = "refutada"
+}
+
+struct Theory: Codable, Identifiable, Hashable, Sendable {
+    let id: String
+    let userID: String
+    let uni: String
+    let text: String
+    var status: TheoryStatus
+    let postedDaysAgo: Int
+    /// Base de votos "Plausível" / "Viajou" — o resultado de uma teoria é sempre público.
+    let plausibleBase: Int
+    let travelBase: Int
+    /// Item do catálogo onde a teoria deve se resolver (ex.: "Resolve em: Guerras Secretas").
+    let resolvesAtItemID: String?
+    /// Título livre da fonte que confirmou/refutou (nem sempre é um item do catálogo, ex.: "The War Within").
+    let resolutionTitle: String?
+    let resolutionNote: String?       // "Cinemática 3 · marcada por 3 revisores"
+    let accuracyBefore: Int?
+    let accuracyAfter: Int?
+}
+
+// MARK: - Previsões
+
+struct PredictionQuestion: Codable, Identifiable, Hashable, Sendable {
+    let id: String
+    let text: String
+    let points: Int
+    /// Múltipla escolha quando presente; slider (0...10, meio-a-meio 1★–5★) quando `nil`.
+    let options: [String]?
+    let correctOptionIndex: Int?
+    let revealed: Bool
+}
+
+struct PredictionEvent: Codable, Identifiable, Hashable, Sendable {
+    let id: String
+    let uni: String
+    let title: String
+    let closesAt: Date
+    let questions: [PredictionQuestion]
+}
+
+// MARK: - Denúncia
+
+enum ReportReason: String, CaseIterable, Codable, Sendable {
+    case spoiler = "Spoiler sem aviso"
+    case offensive = "Ofensivo ou tóxico"
+    case spam = "Spam ou golpe"
+    case wrongCanon = "Cânone errado de propósito"
+    case other = "Outro motivo"
+
+    var subtitle: String {
+        switch self {
+        case .spoiler: return "Não marcou como spoiler"
+        case .offensive: return "Ataques, preconceito, assédio"
+        case .spam: return "Links, divulgação"
+        case .wrongCanon: return "Desinformação sobre a lore"
+        case .other: return ""
+        }
+    }
+}
+
+// MARK: - Sugerir correção
+
+enum CorrectionChangeType: String, CaseIterable, Codable, Sendable {
+    case canonStatus = "Status de cânone", timeline = "Linha do tempo", connections = "Conexões", data = "Dados"
+}
+
+struct CorrectionSuggestion: Codable, Identifiable, Hashable, Sendable {
+    let id: String
+    let itemID: String
+    let userID: String
+    let changeType: CorrectionChangeType
+    let fromValue: String
+    let toValue: String
+    let source: String
+    let reasoning: String
+    var approverIDs: [String]
+    let approvalsNeeded: Int
+}
+
+// MARK: - Onde assistir
+
+struct WatchOption: Codable, Identifiable, Hashable, Sendable {
+    var id: String { service }
+    let service: String
+    let initials: String
+    let colorHex: String
+    let note: String
+    let actionLabel: String
+}
+
+struct ReadFirstOption: Codable, Identifiable, Hashable, Sendable {
+    let id: String
+    let title: String
+    let subtitle: String
+    let colorHex: String
+    let note: String
+    let actionLabel: String
+}
+
+struct WatchAvailability: Codable, Hashable, Sendable {
+    let itemID: String
+    let options: [WatchOption]
+    let readFirst: [ReadFirstOption]
+}
+
+// MARK: - Dados dos recursos novos (Resources/recursos-data.json)
+
+struct RecursosData: Codable, Sendable {
+    let clubs: [Club]
+    let clubMessages: [ClubMessage]
+    let theories: [Theory]
+    let predictionEvents: [PredictionEvent]
+    let watchAvailability: [WatchAvailability]
+    let correctionSuggestions: [CorrectionSuggestion]
+
+    static func load() -> RecursosData {
+        let url = Bundle.main.url(forResource: "recursos-data", withExtension: "json")!
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try! decoder.decode(RecursosData.self, from: Data(contentsOf: url))
+    }
+}

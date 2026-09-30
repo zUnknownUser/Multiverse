@@ -27,6 +27,7 @@ struct ProfileView: View {
                 reviewsSection(data: data).padding(.horizontal, MV.pad)
 
                 if data.isMe {
+                    clubsSection().padding(.horizontal, MV.pad)
                     listsSection().padding(.horizontal, MV.pad)
                 }
             }
@@ -166,6 +167,11 @@ struct ProfileView: View {
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private func clubsSection() -> some View {
+        if !store.clubs.isEmpty { MyClubsCard() }
     }
 
     @ViewBuilder

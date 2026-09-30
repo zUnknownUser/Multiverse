@@ -43,7 +43,7 @@ struct WrappedView: View {
         .frame(maxWidth: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: MV.R.xxl))
         .overlay(RoundedRectangle(cornerRadius: MV.R.xxl).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-        .background(RoundedRectangle(cornerRadius: MV.R.xxl).fill(MV.C.ink).offset(x: MV.Shadow.m, y: MV.Shadow.m))
+        .background(RoundedRectangle(cornerRadius: MV.R.xxl).fill(MV.C.shadow).offset(x: MV.Shadow.m, y: MV.Shadow.m))
     }
 
     private func countCard(data: WrappedData) -> some View {

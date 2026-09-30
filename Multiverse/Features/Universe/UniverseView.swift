@@ -52,7 +52,7 @@ struct UniverseView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: MV.R.xxl))
         .overlay(RoundedRectangle(cornerRadius: MV.R.xxl).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-        .background(RoundedRectangle(cornerRadius: MV.R.xxl).fill(MV.C.ink).offset(x: MV.Shadow.l, y: MV.Shadow.l))
+        .background(RoundedRectangle(cornerRadius: MV.R.xxl).fill(MV.C.shadow).offset(x: MV.Shadow.l, y: MV.Shadow.l))
     }
 
     private var tabBar: some View {

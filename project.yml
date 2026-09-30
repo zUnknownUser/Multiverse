@@ -34,12 +34,20 @@ targets:
           - UIInterfaceOrientationPortrait
         UIAppFonts:
           - "Archivo-VariableFont_wdth,wght.ttf"
+    entitlements:
+      path: Multiverse/Resources/Multiverse.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.multiverse.app
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.multiverse.app
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: NO
         TARGETED_DEVICE_FAMILY: "1,2"
+    dependencies:
+      - target: MultiverseWidgets
+        embed: true
     scheme:
       testTargets:
         - MultiverseTests
@@ -52,3 +60,33 @@ targets:
       - path: MultiverseTests
     dependencies:
       - target: Multiverse
+
+  # Widgets (2a) + Live Activity de estreia (2b). Precisa de App Group real no Xcode —
+  # ver "Setup no Mac" no README antes do primeiro build.
+  MultiverseWidgets:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: MultiverseWidgets
+      - path: Multiverse/DesignSystem/Theme.swift
+      - path: Multiverse/DesignSystem/Components.swift
+      - path: Multiverse/Core/Models.swift
+      - path: Multiverse/Core/Logic.swift
+      - path: Multiverse/Core/Store/WidgetBridge.swift
+      - path: Multiverse/Core/Store/PremiereActivityAttributes.swift
+    info:
+      path: MultiverseWidgets/Info.plist
+      properties:
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: MultiverseWidgets/MultiverseWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.multiverse.app
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.multiverse.app.widgets
+        GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "1,2"

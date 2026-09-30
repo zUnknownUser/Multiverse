@@ -22,7 +22,7 @@ struct DeleteAccountView: View {
                 .background(ZStack(alignment: .leading) { MV.C.marvel; Halftone(color: MV.C.paper.opacity(0.16)) })
                 .clipShape(RoundedRectangle(cornerRadius: MV.R.xl))
                 .overlay(RoundedRectangle(cornerRadius: MV.R.xl).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-                .background(RoundedRectangle(cornerRadius: MV.R.xl).fill(MV.C.ink).offset(x: MV.Shadow.m, y: MV.Shadow.m))
+                .background(RoundedRectangle(cornerRadius: MV.R.xl).fill(MV.C.shadow).offset(x: MV.Shadow.m, y: MV.Shadow.m))
 
                 Text("Isso é permanente. Vai sumir tudo:").font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
 

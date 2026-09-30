@@ -7,13 +7,16 @@ struct HomeView: View {
         ScreenScaffold {
             VStack(alignment: .leading, spacing: 26) {
                 header.padding(.horizontal, MV.pad)
+                if store.isShieldActive { ShieldStatusBanner().padding(.horizontal, MV.pad) }
                 wrappedBanner.padding(.horizontal, MV.pad)
                 universeGrid.padding(.horizontal, MV.pad)
+                if !store.clubs.isEmpty { MyClubsCard().padding(.horizontal, MV.pad) }
                 trendingSection
                 DuelCard()
                     .padding(.horizontal, MV.pad)
                 DebateCard()
                     .padding(.horizontal, MV.pad)
+                theoriesAndPredictionsRow.padding(.horizontal, MV.pad)
                 feedSection.padding(.horizontal, MV.pad)
                 suggestionsSection
             }
@@ -33,17 +36,40 @@ struct HomeView: View {
                     .kicker(11).foregroundStyle(MV.C.muted)
             }
             Spacer()
-            Button { store.openMyProfile() } label: {
-                let me = store.user(store.meID)!
-                ZStack {
-                    Color(hex: me.avatarColor)
-                    Text(Logic.initials(me.name)).font(MVFont.black(14)).foregroundStyle(Logic.inkOn(hex: me.avatarColor))
+            HStack(spacing: 10) {
+                Button { store.openNotifications() } label: {
+                    ZStack(alignment: .topTrailing) {
+                        Text("🔔").font(.system(size: 20))
+                            .frame(width: 40, height: 40)
+                            .background(MV.C.card)
+                            .clipShape(Circle())
+                            .overlay(Circle().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+                        if store.unreadCount > 0 {
+                            Text("\(store.unreadCount)")
+                                .font(MVFont.black(9))
+                                .foregroundStyle(MV.C.card)
+                                .padding(.horizontal, 4).padding(.vertical, 1)
+                                .background(Capsule().fill(MV.C.marvel))
+                                .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: 1))
+                        }
+                    }
                 }
-                .frame(width: 40, height: 40)
-                .clipShape(Circle())
-                .overlay(Circle().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+                .buttonStyle(.plain)
+                .accessibilityLabel(store.unreadCount > 0 ? "Avisos, \(store.unreadCount) não lidos" : "Avisos")
+
+                Button { store.openMyProfile() } label: {
+                    let me = store.user(store.meID)!
+                    ZStack {
+                        Color(hex: me.avatarColor)
+                        Text(Logic.initials(me.name)).font(MVFont.black(14)).foregroundStyle(Logic.inkOn(hex: me.avatarColor))
+                    }
+                    .frame(width: 40, height: 40)
+                    .clipShape(Circle())
+                    .overlay(Circle().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Seu perfil")
             }
-            .buttonStyle(.plain)
         }
         .padding(.top, 10)
     }
@@ -137,6 +163,28 @@ struct HomeView: View {
         .frame(maxWidth: .infinity)
         .padding(24)
         .comicCard(shadow: 0, dashed: true)
+    }
+
+    private var theoriesAndPredictionsRow: some View {
+        HStack(spacing: 10) {
+            promoTile(title: "TEORIAS", subtitle: "\(store.theoriesFiltered(.open).count) em aberto", bg: MV.C.dc) { store.push(.theories) }
+            promoTile(title: "PREVISÕES", subtitle: "\(store.predictionPoints) pts", bg: MV.C.wow, fg: MV.C.ink) { store.push(.predictions) }
+        }
+    }
+
+    private func promoTile(title: String, subtitle: String, bg: Color, fg: Color = MV.C.paper, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(MVFont.black(15)).foregroundStyle(fg)
+                Text(subtitle).font(MVFont.body(11, weight: 700)).foregroundStyle(fg.opacity(0.85))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(bg)
+            .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+            .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
+        }
+        .buttonStyle(.plain)
     }
 
     private var suggestionsSection: some View {
