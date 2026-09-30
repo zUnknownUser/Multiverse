@@ -11,12 +11,12 @@ struct OnboardingStep2View: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("2 de 3").kicker(11).foregroundStyle(MV.C.muted)
-                    Text("O que você já consumiu?")
+                    Text(L10n.text("2 de 3")).kicker(11).foregroundStyle(MV.C.muted)
+                    Text(L10n.text("O que você já consumiu?"))
                         .font(MVFont.display(28, width: 120))
                         .lineSpacing(-4)
                         .foregroundStyle(MV.C.ink)
-                    Text(n > 0 ? "\(n) marcados. Sem nota por enquanto, dá pra avaliar depois." : "Marque em lote tudo que você já viu, leu ou jogou.")
+                    Text(n > 0 ? L10n.format("%1$@ marcados. Sem nota por enquanto, dá pra avaliar depois.", String(describing: n)) : L10n.text("Marque em lote tudo que você já viu, leu ou jogou."))
                         .font(MVFont.body(14)).foregroundStyle(MV.C.muted)
                 }
 

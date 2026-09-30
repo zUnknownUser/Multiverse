@@ -24,16 +24,16 @@ struct ReadingOrderView: View {
         let following = store.isFollowingOrder(order.id)
 
         VStack(alignment: .leading, spacing: 12) {
-            Text("ORDEM DA COMUNIDADE · \(uni.name.uppercased())").kicker(11).foregroundStyle(uni.inkColor.opacity(0.85))
+            Text(L10n.format("ORDEM DA COMUNIDADE · %1$@", String(describing: uni.name.uppercased()))).kicker(11).foregroundStyle(uni.inkColor.opacity(0.85))
             Text(order.title).font(MVFont.display(26, width: 118)).foregroundStyle(uni.inkColor)
             if let by = store.user(order.by) {
-                Text("por \(by.handle) · \(order.steps.count) itens · \(Logic.fmt(Int((Double(order.votes) / 3).rounded()))) seguem")
+                Text(L10n.format("por %1$@ · %2$@ itens · %3$@ seguem", String(describing: by.handle), String(describing: order.steps.count), String(describing: Logic.fmt(Int((Double(order.votes) / 3).rounded())))))
                     .font(MVFont.body(12, weight: 600)).foregroundStyle(uni.inkColor.opacity(0.85))
             }
 
             VStack(alignment: .leading, spacing: 6) {
                 ComicProgress(value: progress.total > 0 ? Double(progress.done) / Double(progress.total) : 0, fill: uni.inkColor, height: 10)
-                Text("\(progress.done) de \(progress.total)").font(MVFont.bold(12)).foregroundStyle(uni.inkColor)
+                Text(L10n.format("%1$@ de %2$@", String(describing: progress.done), String(describing: progress.total))).font(MVFont.bold(12)).foregroundStyle(uni.inkColor)
             }
 
             HStack(spacing: 10) {
@@ -48,7 +48,7 @@ struct ReadingOrderView: View {
                         store.voteOrder(order.id)
                     }
 
-                Text(following ? "✓ SEGUINDO" : "SEGUIR ORDEM")
+                Text(following ? L10n.text("✓ SEGUINDO") : L10n.text("SEGUIR ORDEM"))
                     .font(MVFont.bold(13))
                     .frame(maxWidth: .infinity).frame(height: 46)
                     .foregroundStyle(following ? uni.inkColor : uni.color)
@@ -99,7 +99,7 @@ private struct StepRow: View {
                     .font(MVFont.bold(14))
                     .strikethrough(seen)
                     .foregroundStyle(MV.C.ink)
-                Text("\(item.type) · \(item.year.description) · ★ \(String(format: "%.1f", item.avg))")
+                Text("\(L10n.text(item.type)) · \(item.year.description) · ★ \(L10n.decimal(item.avg))")
                     .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
             }
             Spacer()

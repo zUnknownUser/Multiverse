@@ -13,7 +13,7 @@ struct DuelCard: View {
 
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("DUELO DO DIA · \(store.currentDuelPosition + 1)/\(store.duels.count)")
+                Text(L10n.format("DUELO DO DIA · %1$@/%2$@", String(describing: store.currentDuelPosition + 1), String(describing: store.duels.count)))
                     .kicker(11).foregroundStyle(MV.C.card)
                 Spacer()
                 Text(store.duelTotalVotesLabel()).font(MVFont.body(11, weight: 700)).foregroundStyle(MV.C.card.opacity(0.85))
@@ -42,16 +42,16 @@ struct DuelCard: View {
                         Text(note).font(MVFont.bold(12)).foregroundStyle(MV.C.muted)
                         Spacer()
                         Button { store.nextDuel() } label: {
-                            Text("PRÓXIMO DUELO →").font(MVFont.bold(12)).foregroundStyle(MV.C.ink).underline()
+                            Text(L10n.text("PRÓXIMO DUELO →")).font(MVFont.bold(12)).foregroundStyle(MV.C.ink).underline()
                         }
                         .buttonStyle(.plain)
                     }
                     Button { showingFriendPicker = true } label: {
-                        Text("Chamar amigo pro duelo").font(MVFont.bold(12)).foregroundStyle(MV.C.ink).underline()
+                        Text(L10n.text("Chamar amigo pro duelo")).font(MVFont.bold(12)).foregroundStyle(MV.C.ink).underline()
                     }
                     .buttonStyle(.plain)
                 } else {
-                    Text("Toque num lado pra votar").font(MVFont.bold(12)).foregroundStyle(MV.C.muted)
+                    Text(L10n.text("Toque num lado pra votar")).font(MVFont.bold(12)).foregroundStyle(MV.C.muted)
                 }
             }
             .padding(14)
@@ -61,7 +61,7 @@ struct DuelCard: View {
         .overlay(RoundedRectangle(cornerRadius: MV.R.xl).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
         .background(RoundedRectangle(cornerRadius: MV.R.xl).fill(MV.C.shadow).offset(x: MV.Shadow.m, y: MV.Shadow.m))
         .sheet(isPresented: $showingFriendPicker) {
-            FriendPickerSheet(title: "Chamar pro duelo") { store.showingChallengeUserID = $0 }
+            FriendPickerSheet(title: L10n.text("Chamar pro duelo")) { store.showingChallengeUserID = $0 }
         }
     }
 }

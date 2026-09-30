@@ -33,7 +33,7 @@ struct HomeView: View {
                     .font(MVFont.display(30, width: 125))
                     .tracking(-0.4)
                     .foregroundStyle(MV.C.ink)
-                Text("\(store.friendsCount) amigos · 3 universos")
+                Text(L10n.format("%1$@ amigos · 3 universos", String(describing: store.friendsCount)))
                     .kicker(11).foregroundStyle(MV.C.muted)
             }
             Spacer()
@@ -56,7 +56,7 @@ struct HomeView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(store.unreadCount > 0 ? "Avisos, \(store.unreadCount) não lidos" : "Avisos")
+                .accessibilityLabel(store.unreadCount > 0 ? L10n.format("Avisos, %1$@ não lidos", String(describing: store.unreadCount)) : L10n.text("Avisos"))
 
                 Button { store.push(.messages) } label: {
                     ZStack(alignment: .topTrailing) {
@@ -76,7 +76,7 @@ struct HomeView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(store.totalUnreadMessages > 0 ? "Mensagens, \(store.totalUnreadMessages) não lidas" : "Mensagens")
+                .accessibilityLabel(store.totalUnreadMessages > 0 ? L10n.format("Mensagens, %1$@ não lidas", String(describing: store.totalUnreadMessages)) : L10n.text("Mensagens"))
 
                 Button { store.openMyProfile() } label: {
                     let me = store.user(store.meID)!
@@ -89,7 +89,7 @@ struct HomeView: View {
                     .overlay(Circle().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Seu perfil")
+                .accessibilityLabel(L10n.text("Seu perfil"))
             }
         }
         .padding(.top, 10)
@@ -101,14 +101,14 @@ struct HomeView: View {
                 MV.C.ink
                 Halftone(color: MV.C.paper.opacity(0.12))
                 HStack(spacing: 12) {
-                    Text("NOVO")
+                    Text(L10n.text("NOVO"))
                         .font(MVFont.black(10)).tracking(0.5)
                         .foregroundStyle(MV.C.card)
                         .padding(.horizontal, 8).padding(.vertical, 4)
                         .background(RoundedRectangle(cornerRadius: MV.R.xs).fill(MV.C.marvel))
                         .overlay(RoundedRectangle(cornerRadius: MV.R.xs).strokeBorder(MV.C.paper, lineWidth: 1.5))
                         .rotationEffect(.degrees(-4))
-                    Text("Seu setembro no Multiverse está pronto")
+                    Text(L10n.text("Seu setembro no Multiverse está pronto"))
                         .font(MVFont.bold(13))
                         .foregroundStyle(MV.C.paper)
                         .lineLimit(2)
@@ -134,7 +134,7 @@ struct HomeView: View {
 
     private var trendingSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "Em alta no seu círculo", trailing: "VER TUDO") {
+            SectionHeader(title: L10n.text("Em alta no seu círculo"), trailing: L10n.text("VER TUDO")) {
                 store.goToTab(.search)
             }
             .padding(.horizontal, MV.pad)
@@ -156,9 +156,9 @@ struct HomeView: View {
     private var feedSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text("DO SEU PESSOAL").font(MVFont.section(19)).foregroundStyle(MV.C.ink)
+                Text(L10n.text("DO SEU PESSOAL")).font(MVFont.section(19)).foregroundStyle(MV.C.ink)
                 Spacer()
-                Text("seguindo \(store.friendsCount)").kicker(11).foregroundStyle(MV.C.muted)
+                Text(L10n.format("seguindo %1$@", String(describing: store.friendsCount))).kicker(11).foregroundStyle(MV.C.muted)
             }
 
             let feed = store.homeFeed()
@@ -176,8 +176,8 @@ struct HomeView: View {
 
     private var emptyFeed: some View {
         VStack(spacing: 6) {
-            Text("SILÊNCIO NO MULTIVERSE").font(MVFont.section(16)).foregroundStyle(MV.C.ink)
-            Text("Seu feed ganha vida quando você segue gente. Comece pelos loristas abaixo.")
+            Text(L10n.text("SILÊNCIO NO MULTIVERSE")).font(MVFont.section(16)).foregroundStyle(MV.C.ink)
+            Text(L10n.text("Seu feed ganha vida quando você segue gente. Comece pelos loristas abaixo."))
                 .font(MVFont.body(13)).foregroundStyle(MV.C.muted)
                 .multilineTextAlignment(.center)
         }
@@ -188,8 +188,8 @@ struct HomeView: View {
 
     private var theoriesAndPredictionsRow: some View {
         HStack(spacing: 10) {
-            promoTile(title: "TEORIAS", subtitle: "\(store.theoriesFiltered(.open).count) em aberto", bg: MV.C.dc) { store.push(.theories) }
-            promoTile(title: "PREVISÕES", subtitle: "\(store.predictionPoints) pts", bg: MV.C.wow, fg: MV.C.ink) { store.push(.predictions) }
+            promoTile(title: L10n.text("TEORIAS"), subtitle: L10n.format("theories.open", store.theoriesFiltered(.open).count), bg: MV.C.dc) { store.push(.theories) }
+            promoTile(title: L10n.text("PREVISÕES"), subtitle: "\(store.predictionPoints) pts", bg: MV.C.wow, fg: MV.C.ink) { store.push(.predictions) }
         }
     }
 
@@ -211,8 +211,8 @@ struct HomeView: View {
     private var suggestionsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("LORISTAS PRA SEGUIR").font(MVFont.section(19)).foregroundStyle(MV.C.ink)
-                Text("Quanto mais gente você segue, melhor fica o seu feed.")
+                Text(L10n.text("LORISTAS PRA SEGUIR")).font(MVFont.section(19)).foregroundStyle(MV.C.ink)
+                Text(L10n.text("Quanto mais gente você segue, melhor fica o seu feed."))
                     .font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted)
             }
             .padding(.horizontal, MV.pad)
@@ -246,7 +246,7 @@ private struct UniverseMiniCard: View {
                     Text(universe.name.uppercased())
                         .font(MVFont.black(14))
                         .foregroundStyle(universe.inkColor)
-                    Text("\(Logic.fmt(universe.live)) ativos agora")
+                    Text(L10n.format("%1$@ ativos agora", String(describing: Logic.fmt(universe.live))))
                         .font(MVFont.body(9, weight: 700))
                         .foregroundStyle(universe.inkColor.opacity(0.85))
                     Spacer(minLength: 0)
@@ -274,7 +274,7 @@ private struct TrendingPosterCard: View {
         Button { store.push(.item(item.id)) } label: {
             VStack(alignment: .leading, spacing: 4) {
                 PosterView(item: item, universe: uni, width: 96, height: 144, titleSize: 11)
-                Text("★ \(String(format: "%.1f", item.avg).replacingOccurrences(of: ".", with: ","))")
+                Text("★ \(L10n.decimal(item.avg))")
                     .font(MVFont.bold(11)).foregroundStyle(MV.C.ink)
                 Text(store.trendingBuzz(for: item))
                     .font(MVFont.body(10, weight: 600)).foregroundStyle(MV.C.muted)
@@ -299,14 +299,14 @@ private struct SuggestionCard: View {
             Text(user.bio).font(MVFont.body(11, weight: 500)).foregroundStyle(MV.C.muted)
                 .multilineTextAlignment(.center).lineLimit(2)
             if let uni = store.universe(user.badgeUniverse) {
-                Text("\(Logic.compat(user.id))% afinidade")
+                Text(L10n.format("%1$@%% afinidade", String(describing: Logic.compat(user.id))))
                     .font(MVFont.black(9)).tracking(0.3)
                     .foregroundStyle(uni.inkColor)
                     .padding(.horizontal, 8).padding(.vertical, 3)
                     .background(Capsule().fill(uni.color))
                     .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: 1.5))
             }
-            Text(following ? "Seguindo" : "Seguir")
+            Text(following ? L10n.text("Seguindo") : L10n.text("Seguir"))
                 .font(MVFont.bold(12))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)

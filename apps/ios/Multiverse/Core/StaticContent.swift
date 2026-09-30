@@ -16,13 +16,13 @@ enum StaticContent {
     }
 
     static let notifications: [NotificationItem] = [
-        .init(userID: "nina", text: "curtiu sua review de", itemID: "w-wotlk", quote: nil, when: "12 min", reviewID: "r9", isNewFollower: false),
-        .init(userID: "caio", text: "respondeu sua review de", itemID: "d-crise", quote: "“Pré-Crise é superior e eu morro nessa colina.”", when: "1h", reviewID: "r10", isNewFollower: false),
-        .init(userID: "gui", text: "começou a seguir você", itemID: nil, quote: nil, when: "3h", reviewID: nil, isNewFollower: true),
-        .init(userID: "leo", text: "votou na sua ordem de leitura", itemID: nil, quote: nil, when: "5h", reviewID: nil, isNewFollower: false),
-        .init(userID: "bia", text: "e mais 18 curtiram sua review de", itemID: "w-wotlk", quote: nil, when: "ontem", reviewID: "r9", isNewFollower: false),
-        .init(userID: "mari", text: "começou a seguir você", itemID: nil, quote: nil, when: "2 dias", reviewID: nil, isNewFollower: true),
-        .init(userID: "tati", text: "mencionou você em", itemID: "d-tdk", quote: "“@duda.lore precisa ver isso logo”", when: "3 dias", reviewID: "r6", isNewFollower: false),
+        .init(userID: "nina", text: L10n.text("curtiu sua review de"), itemID: "w-wotlk", quote: nil, when: "12 min", reviewID: "r9", isNewFollower: false),
+        .init(userID: "caio", text: L10n.text("respondeu sua review de"), itemID: "d-crise", quote: L10n.text("“Pré-Crise é superior e eu morro nessa colina.”"), when: "1h", reviewID: "r10", isNewFollower: false),
+        .init(userID: "gui", text: L10n.text("começou a seguir você"), itemID: nil, quote: nil, when: "3h", reviewID: nil, isNewFollower: true),
+        .init(userID: "leo", text: L10n.text("votou na sua ordem de leitura"), itemID: nil, quote: nil, when: "5h", reviewID: nil, isNewFollower: false),
+        .init(userID: "bia", text: L10n.text("e mais 18 curtiram sua review de"), itemID: "w-wotlk", quote: nil, when: L10n.text("ontem"), reviewID: "r9", isNewFollower: false),
+        .init(userID: "mari", text: L10n.text("começou a seguir você"), itemID: nil, quote: nil, when: L10n.text("2 dias"), reviewID: nil, isNewFollower: true),
+        .init(userID: "tati", text: L10n.text("mencionou você em"), itemID: "d-tdk", quote: L10n.text("“@duda.lore precisa ver isso logo”"), when: L10n.text("3 dias"), reviewID: "r6", isNewFollower: false),
     ]
 
     struct LeaderboardEntry: Identifiable {
@@ -53,17 +53,17 @@ enum StaticContent {
 
     static let comingSoonUniverses = ["Star Wars", "League of Legends", "Tolkien"]
 
-    static let compatAgreeWorks = ["Watchmen", "Warcraft III", "Aranhaverso", "Reino do Amanhã"]
-    static let compatAgreePeople = ["Thanos", "Arthas", "O Cavaleiro das Trevas"]
-    static let compatDisagreeWorks = ["Cataclysm", "Sylvanas", "Guerra Civil", "Injustice"]
+    static let compatAgreeWorks = ["Watchmen", "Warcraft III", L10n.text("Aranhaverso"), L10n.text("Reino do Amanhã")]
+    static let compatAgreePeople = ["Thanos", "Arthas", L10n.text("O Cavaleiro das Trevas")]
+    static let compatDisagreeWorks = ["Cataclysm", "Sylvanas", L10n.text("Guerra Civil"), "Injustice"]
 
-    static let wrappedArchetypeTitle = "O ARQUIVISTA"
-    static let wrappedArchetypeNote = "Você revisita obras antigas e segue a cronologia à risca. 82% dos seus registros foram na ordem canônica."
+    static let wrappedArchetypeTitle = L10n.text("O ARQUIVISTA")
+    static let wrappedArchetypeNote = L10n.text("Você revisita obras antigas e segue a cronologia à risca. 82% dos seus registros foram na ordem canônica.")
 
     /// Base de votos do Debate da semana (Home) — fixo, independente de seed
-    static let weeklyDebateOptions = ["Melhor momento da lore", "Pior retcon de todos", "Os dois ao mesmo tempo"]
+    static let weeklyDebateOptions = [L10n.text("Melhor momento da lore"), L10n.text("Pior retcon de todos"), L10n.text("Os dois ao mesmo tempo")]
     static let weeklyDebateBase = [1830, 1290, 1692]
-    static let weeklyDebateComments = "612 comentários"
+    static let weeklyDebateComments = L10n.text("612 comentários")
 
     /// Reputação em teorias dos autores de exemplo no feed de Teorias.
     static let theoryAccuracy: [String: Int] = ["joao": 71, "bia": 58, "caio": 49]

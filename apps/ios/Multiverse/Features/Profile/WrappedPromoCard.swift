@@ -12,7 +12,7 @@ struct WrappedPromoCard: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("MULTIVERSE WRAPPED").kicker(11).foregroundStyle(MV.C.paper.opacity(0.85))
-                        Text("SEU SETEMBRO").font(MVFont.display(24, width: 120)).foregroundStyle(MV.C.paper)
+                        Text(L10n.text("SEU SETEMBRO")).font(MVFont.display(24, width: 120)).foregroundStyle(MV.C.paper)
                     }
                     Spacer()
                     Text("→").font(MVFont.black(22)).foregroundStyle(MV.C.paper)

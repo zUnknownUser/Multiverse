@@ -12,20 +12,20 @@ struct WrappedShareCard: View {
             Halftone(spacing: 8, radius: 1.4, color: MV.C.paper.opacity(0.18))
 
             VStack(alignment: .leading, spacing: 28) {
-                Text("MULTIVERSE WRAPPED · SET 2026")
+                Text(L10n.text("MULTIVERSE WRAPPED · SET 2026"))
                     .font(MVFont.label(13)).textCase(.uppercase).tracking(1.4)
                     .foregroundStyle(MV.C.paper.opacity(0.85))
 
-                Text("SEU MÊS\nNO CÂNONE")
+                Text(L10n.text("SEU MÊS\nNO CÂNONE"))
                     .font(MVFont.display(64, width: 122))
                     .lineSpacing(-14)
                     .foregroundStyle(MV.C.paper)
 
                 VStack(alignment: .leading, spacing: 14) {
-                    stat("REGISTROS", "\(data.logCount)")
-                    stat("UNIVERSO DO MÊS", data.universe.name.uppercased())
-                    if let top = data.topItem { stat("NOTA MAIS ALTA", top.title) }
-                    stat("ARQUÉTIPO", data.archetypeTitle.uppercased())
+                    stat(L10n.text("REGISTROS"), "\(data.logCount)")
+                    stat(L10n.text("UNIVERSO DO MÊS"), data.universe.name.uppercased())
+                    if let top = data.topItem { stat(L10n.text("NOTA MAIS ALTA"), top.title) }
+                    stat(L10n.text("ARQUÉTIPO"), data.archetypeTitle.uppercased())
                 }
                 .padding(20)
                 .background(MV.C.ink.opacity(0.92))

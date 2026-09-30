@@ -25,7 +25,7 @@ struct SendCardSheet: View {
                         cardPreview(item: item)
                     }
 
-                    TextField("Escreva uma mensagem (opcional)…", text: $text, axis: .vertical)
+                    TextField(L10n.text("Escreva uma mensagem (opcional)…"), text: $text, axis: .vertical)
                         .font(MVFont.body(14, weight: 500))
                         .padding(12)
                         .background(MV.C.card)
@@ -35,7 +35,7 @@ struct SendCardSheet: View {
                     if isSpoilerItem {
                         HStack(alignment: .top, spacing: 8) {
                             Text("◆").foregroundStyle(MV.C.dc)
-                            Text("Quem estiver atrás na timeline vai ver essa carta escondida pelo Escudo de Spoiler, até decidir revelar.")
+                            Text(L10n.text("Quem estiver atrás na timeline vai ver essa carta escondida pelo Escudo de Spoiler, até decidir revelar."))
                                 .font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.ink)
                         }
                         .padding(12)
@@ -48,11 +48,11 @@ struct SendCardSheet: View {
                 .padding(MV.pad)
             }
             .background(MV.C.paper)
-            .navigationTitle("Mandar carta")
+            .navigationTitle(L10n.text("Mandar carta"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
+                    Button(L10n.text("Cancelar")) { dismiss() }
                 }
             }
             .safeAreaInset(edge: .bottom) { sendBar }
@@ -67,7 +67,7 @@ struct SendCardSheet: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.title).font(MVFont.bold(15)).foregroundStyle(MV.C.ink)
                 Text(uni.name.uppercased()).font(MVFont.black(10)).foregroundStyle(MV.C.muted)
-                Text(String(format: "%.1f ★", item.avg)).font(MVFont.black(13)).foregroundStyle(MV.C.ink)
+                Text((L10n.decimal(item.avg) + " ★")).font(MVFont.black(13)).foregroundStyle(MV.C.ink)
             }
             Spacer()
         }
@@ -81,7 +81,7 @@ struct SendCardSheet: View {
 
     private var friendPicker: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("PRA QUEM?").kicker(11).foregroundStyle(MV.C.muted)
+            Text(L10n.text("PRA QUEM?")).kicker(11).foregroundStyle(MV.C.muted)
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 64), spacing: 12)], spacing: 14) {
                 ForEach(friends) { friend in
                     let isSelected = selected.contains(friend.id)
@@ -110,7 +110,7 @@ struct SendCardSheet: View {
     }
 
     private var sendBar: some View {
-        Text(selected.isEmpty ? "ENVIAR" : "ENVIAR PRA \(selected.count)")
+        Text(selected.isEmpty ? L10n.text("ENVIAR") : L10n.format("ENVIAR PRA %1$@", String(describing: selected.count)))
             .font(MVFont.bold(14))
             .frame(maxWidth: .infinity).frame(height: 50)
             .foregroundStyle(MV.C.paper)

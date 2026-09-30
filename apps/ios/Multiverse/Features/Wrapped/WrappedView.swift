@@ -32,8 +32,8 @@ struct WrappedView: View {
             MV.C.marvel
             Halftone(spacing: 7, color: MV.C.paper.opacity(0.16))
             VStack(alignment: .leading, spacing: 8) {
-                Text("MULTIVERSE WRAPPED · SET 2026").kicker(11).foregroundStyle(MV.C.paper.opacity(0.85))
-                Text("SEU MÊS\nNO CÂNONE").font(MVFont.display(40, width: 122)).lineSpacing(-8).foregroundStyle(MV.C.paper)
+                Text(L10n.text("MULTIVERSE WRAPPED · SET 2026")).kicker(11).foregroundStyle(MV.C.paper.opacity(0.85))
+                Text(L10n.text("SEU MÊS\nNO CÂNONE")).font(MVFont.display(40, width: 122)).lineSpacing(-8).foregroundStyle(MV.C.paper)
                 if let handle = store.user(store.meID)?.handle {
                     Text(handle).font(MVFont.bold(14)).foregroundStyle(MV.C.paper.opacity(0.9))
                 }
@@ -48,7 +48,7 @@ struct WrappedView: View {
 
     private func countCard(data: WrappedData) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("REGISTROS").kicker(10).foregroundStyle(MV.C.muted)
+            Text(L10n.text("REGISTROS")).kicker(10).foregroundStyle(MV.C.muted)
             Text("\(data.logCount)").font(MVFont.black(64)).foregroundStyle(MV.C.ink)
             Text(data.deltaLabel).font(MVFont.bold(12)).foregroundStyle(MV.C.muted)
         }
@@ -59,7 +59,7 @@ struct WrappedView: View {
 
     private func hoursCard(data: WrappedData) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("HORAS DE LORE").kicker(9).foregroundStyle(MV.C.paper.opacity(0.75))
+            Text(L10n.text("HORAS DE LORE")).kicker(9).foregroundStyle(MV.C.paper.opacity(0.75))
             Text("\(data.hours)").font(MVFont.black(38)).foregroundStyle(MV.C.paper)
             Text(data.hoursNote).font(MVFont.body(9, weight: 700)).foregroundStyle(MV.C.paper.opacity(0.85))
         }
@@ -75,7 +75,7 @@ struct WrappedView: View {
             data.universe.color
             Halftone(color: data.universe.inkColor.opacity(0.18))
             VStack(alignment: .leading, spacing: 4) {
-                Text("UNIVERSO DO MÊS").kicker(10).foregroundStyle(data.universe.inkColor.opacity(0.85))
+                Text(L10n.text("UNIVERSO DO MÊS")).kicker(10).foregroundStyle(data.universe.inkColor.opacity(0.85))
                 Text(data.universe.name.uppercased()).font(MVFont.display(36, width: 122)).foregroundStyle(data.universe.inkColor)
                 Text(data.universeNote).font(MVFont.bold(12)).foregroundStyle(data.universe.inkColor.opacity(0.9))
             }
@@ -91,7 +91,7 @@ struct WrappedView: View {
             HStack(spacing: 12) {
                 PosterView(item: item, universe: store.universe(of: item), width: 58, height: 87, titleSize: 9)
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("NOTA MAIS ALTA").kicker(10).foregroundStyle(MV.C.muted)
+                    Text(L10n.text("NOTA MAIS ALTA")).kicker(10).foregroundStyle(MV.C.muted)
                     Text(item.title).font(MVFont.bold(16)).foregroundStyle(MV.C.ink)
                     StarsText(rating: stars, color: store.universe(of: item).color, size: 16)
                 }
@@ -105,7 +105,7 @@ struct WrappedView: View {
 
     private func archetypeCard(data: WrappedData) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("SEU ARQUÉTIPO").kicker(11).foregroundStyle(MV.C.paper.opacity(0.8))
+            Text(L10n.text("SEU ARQUÉTIPO")).kicker(11).foregroundStyle(MV.C.paper.opacity(0.8))
             Text(data.archetypeTitle.uppercased()).font(MVFont.display(24, width: 118)).foregroundStyle(MV.C.paper)
             Text(data.archetypeNote).font(MVFont.body(13, weight: 500)).foregroundStyle(MV.C.paper.opacity(0.9))
         }
@@ -118,7 +118,7 @@ struct WrappedView: View {
 
     private func topReviewCard(data: WrappedData) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("REVIEW MAIS CURTIDA").kicker(11).foregroundStyle(MV.C.muted)
+            Text(L10n.text("REVIEW MAIS CURTIDA")).kicker(11).foregroundStyle(MV.C.muted)
             Text("“\(data.topReviewText)”").font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
             HStack {
                 Text("♥ \(Logic.fmt(data.topReviewLikes))").font(MVFont.bold(12)).foregroundStyle(MV.C.marvel)
@@ -143,7 +143,7 @@ struct WrappedView: View {
     }
 
     private var shareButtonLabel: some View {
-        Text("COMPARTILHAR NOS STORIES")
+        Text(L10n.text("COMPARTILHAR NOS STORIES"))
             .font(MVFont.bold(14))
             .frame(maxWidth: .infinity).frame(height: 54)
             .foregroundStyle(MV.C.paper)

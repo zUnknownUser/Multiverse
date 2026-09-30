@@ -8,7 +8,7 @@ struct BackButtonBar: View {
     var body: some View {
         HStack {
             Button(action: action) {
-                Text("← VOLTAR")
+                Text(L10n.text("← VOLTAR"))
                     .font(MVFont.bold(12))
                     .tracking(0.4)
                     .foregroundStyle(MV.C.ink)

@@ -1,6 +1,7 @@
 name: Multiverse
 
 options:
+  developmentLanguage: pt-BR
   bundleIdPrefix: com.nexussoft.multiverse
   deploymentTarget:
     iOS: "17.0"
@@ -19,6 +20,11 @@ fileGroups:
   - Configuration
 
 settings:
+  configs:
+    Debug:
+      MULTIVERSE_API_BASE_URL: "http://localhost:3000/api/v1"
+    Release:
+      MULTIVERSE_API_BASE_URL: ""
   base:
     DEVELOPMENT_TEAM: 5RS2AA677K
     CODE_SIGN_STYLE: Automatic
@@ -96,10 +102,17 @@ targets:
     deploymentTarget: "17.0"
     sources:
       - path: MultiverseWidgets
+      - path: Multiverse/Resources/Fonts
+        excludes:
+          - "**/*.md"
+        buildPhase: resources
       - path: Multiverse/DesignSystem/Theme.swift
       - path: Multiverse/DesignSystem/Components.swift
       - path: Multiverse/Core/Models.swift
       - path: Multiverse/Core/Logic.swift
+      - path: Multiverse/Core/Localization
+      - path: Multiverse/Resources/Localizable.xcstrings
+        buildPhase: resources
       - path: Multiverse/Core/Store/WidgetBridge.swift
       - path: Multiverse/Core/Store/PremiereActivityAttributes.swift
     entitlements:

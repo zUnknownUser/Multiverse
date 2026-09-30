@@ -27,9 +27,9 @@ enum ThemePreference: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .system: return "Sistema"
-        case .light: return "Claro"
-        case .dark: return "Noir"
+        case .system: return L10n.text("Sistema")
+        case .light: return L10n.text("Claro")
+        case .dark: return L10n.text("Noir")
         }
     }
 
@@ -77,9 +77,9 @@ struct WrappedData {
 @MainActor
 @Observable
 final class AppStore {
-    /// Única fonte de dados/mutações — hoje `MockRepository`; a fase 2 (Supabase/Firebase)
-    /// troca essa instância sem que `AppStore` ou as Views precisem mudar.
+    /// Conteúdo de demonstração; perfil e onboarding usam a API NestJS via `AccountAPI`.
     private let repository: MultiverseRepository
+    private let widgetWriter: (any WidgetSnapshotWriting)?
 
     // MARK: - Catálogo (carregado por `bootstrap()`)
     var universes: [Universe] = []
@@ -97,6 +97,16 @@ final class AppStore {
     var me = Me(id: "duda", following: [], followers: 0)
     let meID: String
     private let onboardingKey: String
+    private let accountAPI: (any AccountAPI)?
+    var accountLoadError: String?
+    var onboardingError: String?
+    var onboardingTransitioning = false
+    private var remoteVersion = 0
+    private var onboardingCandidates: [User] = []
+    var minimumOnboardingFollows = 3
+    var usesAccountAPI: Bool { accountAPI != nil }
+    @ObservationIgnored private var onboardingSaveQueue: Task<OnboardingState, Error>?
+    @ObservationIgnored private var onboardingDebounce: Task<Void, Never>?
 
     private(set) var itemsByID: [String: Item] = [:]
     private(set) var usersByID: [String: User] = [:]
@@ -203,10 +213,12 @@ final class AppStore {
 
     // MARK: - Init
 
-    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil) {
+    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil) {
+        self.accountAPI = accountAPI
+        self.widgetWriter = widgetWriter
         meID = session?.userID ?? "duda"
         onboardingKey = session.map { "mv-onboarded-\($0.userID)" } ?? "mv-onboarded"
-        let onboarded = UserDefaults.standard.bool(forKey: onboardingKey)
+        let onboarded = accountAPI == nil ? UserDefaults.standard.bool(forKey: onboardingKey) : (session?.onboarding?.completed ?? false)
         isOnboarded = onboarded
         themePreference = ThemePreference(rawValue: UserDefaults.standard.string(forKey: "mv-theme") ?? "") ?? .system
         self.repository = repository ?? MockRepository(startFollowing: onboarded, session: session)
@@ -315,6 +327,10 @@ final class AppStore {
             // MockRepository nunca lança; um repositório real trataria erro de rede aqui
             // (ex.: `loadError` pra a RootView mostrar um estado de erro com "tentar de novo").
         }
+        if accountAPI != nil {
+            do { try await loadRemoteAccount() }
+            catch { accountLoadError = error.localizedDescription }
+        }
         isLoading = false
         syncWidgetData()
     }
@@ -334,10 +350,16 @@ final class AppStore {
     }
 
     func toggleSeen(_ id: String) {
-        let value = !isSeen(id)
-        checks[id] = value
+        guard !onboardingTransitioning else { return }
+        setSeen(id, seen: !isSeen(id))
+    }
+
+    /// Shared by reading orders, diary publication and the spoiler shield.
+    private func setSeen(_ id: String, seen: Bool) {
+        checks[id] = seen
+        scheduleOnboardingSave()
         let repository = self.repository
-        Task { try? await repository.setItemSeen(itemID: id, seen: value) }
+        Task { try? await repository.setItemSeen(itemID: id, seen: seen) }
         syncWidgetData()
     }
 
@@ -355,22 +377,26 @@ final class AppStore {
     /// Retorna `true` quando a ação acabou de seguir (pra a View decidir se dispara o ZAP!).
     @discardableResult
     func toggleFollow(_ id: String, silent: Bool = false) -> Bool {
+        guard !onboardingTransitioning else { return false }
         let turningOn = !follows.contains(id)
         if turningOn {
             follows.insert(id)
             if !silent, let u = usersByID[id] {
-                showToast("Seguindo \(u.name). Seu feed ganhou reviews novas.")
+                showToast(L10n.format("Seguindo %1$@. Seu feed ganhou reviews novas.", String(describing: u.name)))
             }
         } else {
             follows.remove(id)
         }
         let repository = self.repository
         Task { try? await repository.setFollowing(userID: id, following: turningOn) }
+        scheduleOnboardingSave()
         return turningOn
     }
 
     func followAll(_ ids: [String]) {
+        guard !onboardingTransitioning else { return }
         follows.formUnion(ids)
+        scheduleOnboardingSave()
         let repository = self.repository
         Task { for id in ids { try? await repository.setFollowing(userID: id, following: true) } }
     }
@@ -420,7 +446,7 @@ final class AppStore {
 
     func commentsLabel(for review: Review) -> String {
         let n = review.comments.count
-        return n > 0 ? "\(n) comentário\(n > 1 ? "s" : "")" : "Comentar"
+        return n > 0 ? L10n.format("comments.count", n) : L10n.text("Comentar")
     }
 
     func isLikedComment(reviewID: String, index: Int) -> Bool { likedComments.contains("\(reviewID):\(index)") }
@@ -469,7 +495,7 @@ final class AppStore {
     func voteWeekly(_ index: Int) {
         guard pollVote == nil else { return }
         pollVote = index
-        showToast("Voto computado. Veja o que o pessoal acha.")
+        showToast(L10n.text("Voto computado. Veja o que o pessoal acha."))
         let repository = self.repository
         Task { try? await repository.submitPollVote(topic: .weekly, optionIndex: index) }
     }
@@ -480,7 +506,7 @@ final class AppStore {
     }
     func essentialTotalLabel(for item: Item) -> String {
         let base = Logic.essentialVoteBase(item).reduce(0, +)
-        return essentialVotes[item.id] == nil ? "\(Logic.fmt(base)) votos · vote pra ver" : "\(Logic.fmt(base + 1)) votos"
+        return essentialVotes[item.id] == nil ? L10n.format("%1$@ votos · vote pra ver", String(describing: Logic.fmt(base))) : L10n.format("%1$@ votos", String(describing: Logic.fmt(base + 1)))
     }
     func voteEssential(_ itemID: String, index: Int) {
         guard essentialVotes[itemID] == nil else { return }
@@ -519,6 +545,7 @@ final class AppStore {
 
     /// Manda os números atuais pra extensão de widgets via App Group (ver `WidgetBridge`).
     func syncWidgetData() {
+        guard let widgetWriter, !isLoading, accountLoadError == nil, !Task.isCancelled, !duels.isEmpty else { return }
         let mainUniID = user(meID)?.badgeUniverse ?? "wow"
         let followedOrder = readingOrders.first { orderFollows.contains($0.id) } ?? readingOrders.first
         let progress = followedOrder.map { orderProgress($0) } ?? (done: 0, total: 0)
@@ -527,7 +554,7 @@ final class AppStore {
             .flatMap { itemsByID[$0] }
 
         let duel = currentDuel
-        WidgetBridge.save(WidgetBridge.Snapshot(
+        widgetWriter.save(WidgetBridge.Snapshot(
             universeName: universe(mainUniID)?.name ?? "",
             universePercent: universePercent(mainUniID),
             universePercentDelta: 3,
@@ -544,7 +571,7 @@ final class AppStore {
         let di = currentDuelPosition
         let base = duels[di].baseVotes
         let total = base[0] + base[1] + (duelVotes[di] != nil ? 1 : 0)
-        return "\(Logic.fmt(total)) votos"
+        return L10n.format("%1$@ votos", String(describing: Logic.fmt(total)))
     }
     func duelResultNote() -> String? {
         let di = currentDuelPosition
@@ -552,12 +579,12 @@ final class AppStore {
         let base = duels[di].baseVotes
         let total = base[0] + base[1] + 1
         let frac = Double(base[ch] + 1) / Double(total)
-        return frac >= 0.5 ? "Você está com a maioria" : "Você está com a minoria. Defenda nos comentários."
+        return frac >= 0.5 ? L10n.text("Você está com a maioria") : L10n.text("Você está com a minoria. Defenda nos comentários.")
     }
 
     func weeklyPollTotalLabel() -> String {
         let total = StaticContent.weeklyDebateBase.reduce(0, +) + (pollVote != nil ? 1 : 0)
-        return pollVote == nil ? "\(Logic.fmt(total)) votos · vote pra ver o resultado" : "\(Logic.fmt(total)) votos · você votou"
+        return pollVote == nil ? L10n.format("%1$@ votos · vote pra ver o resultado", String(describing: Logic.fmt(total))) : L10n.format("%1$@ votos · você votou", String(describing: Logic.fmt(total)))
     }
 
     func isOrderVoted(_ id: String) -> Bool { orderVotes.contains(id) }
@@ -577,18 +604,19 @@ final class AppStore {
         if turningOn { orderFollows.insert(id) } else { orderFollows.remove(id) }
         let repository = self.repository
         Task { try? await repository.setOrderFollowing(orderID: id, following: turningOn) }
+        syncWidgetData()
     }
 
     // MARK: - Obra / Personagem / Evento
 
     func logActionLabel(for item: Item) -> String {
-        if isSeen(item.id) { return "Registrar de novo" }
-        return ["Personagem", "Evento"].contains(item.type) ? "Avaliar" : "Registrar"
+        if isSeen(item.id) { return L10n.text("Registrar de novo") }
+        return ["Personagem", "Evento"].contains(item.type) ? L10n.text("Avaliar") : L10n.text("Registrar")
     }
 
     func canonInfo(for item: Item) -> (status: String, note: String) {
         if let c = canonStatus[item.id] { return (c.status, c.note) }
-        return ("Cânone", "Faz parte da continuidade principal (\(item.canon)).")
+        return ("Cânone", L10n.format("Faz parte da continuidade principal (%1$@).", String(describing: item.canon)))
     }
     func canonColors(for status: String) -> (bg: Color, fg: Color) {
         if let c = canonStatusColors[status] { return (Color(hex: c.bg), Color(hex: c.fg)) }
@@ -616,7 +644,7 @@ final class AppStore {
 
     func universeStats(_ uniID: String) -> [(count: String, label: String)] {
         guard let u = universesByID[uniID] else { return [] }
-        return [(Logic.fmt(u.total), "Itens no cânone"), (Logic.fmt(u.members), "Membros"), (Logic.fmt(u.live), "Ativos agora")]
+        return [(Logic.fmt(u.total), L10n.text("Itens no cânone")), (Logic.fmt(u.members), L10n.text("Membros")), (Logic.fmt(u.live), L10n.text("Ativos agora"))]
     }
 
     func topRatedItems(in uniID: String) -> [Item] {
@@ -645,8 +673,8 @@ final class AppStore {
             guard let it = itemsByID[entry.itemId] else { return nil }
             let fr = Array(friendRatings(for: it).prefix(4).map(\.user))
             var label = ""
-            if fr.count == 1 { label = "\((fr[0].name.components(separatedBy: " ").first ?? fr[0].name)) já passou por aqui" }
-            else if fr.count > 1 { label = "\(fr.count) amigos já passaram por aqui" }
+            if fr.count == 1 { label = L10n.format("%1$@ já passou por aqui", String(describing: (fr[0].name.components(separatedBy: " ").first ?? fr[0].name))) }
+            else if fr.count > 1 { label = L10n.format("%1$@ amigos já passaram por aqui", String(describing: fr.count)) }
             return TimelineRow(entry: entry, item: it, isSeen: isSeen(it.id), friends: fr, friendsLabel: label)
         }
     }
@@ -681,7 +709,7 @@ final class AppStore {
         let fr = friendRatings(for: item)
         guard !fr.isEmpty else { return nil }
         let avg = fr.reduce(0.0) { $0 + $1.rating } / Double(fr.count)
-        return "★ " + String(format: "%.1f", avg).replacingOccurrences(of: ".", with: ",")
+        return "★ " + L10n.decimal(avg)
     }
 
     func homeFeed(limit: Int = 8) -> [Review] {
@@ -706,8 +734,8 @@ final class AppStore {
 
     func trendingBuzz(for item: Item) -> String {
         let n = friendRatings(for: item).count
-        if n > 0 { return "\(n) amigo\(n > 1 ? "s" : "") registrou" }
-        return "\(Logic.fmt(Logic.logCount(item))) esta semana"
+        if n > 0 { return L10n.format("friends.logged", n) }
+        return L10n.format("%1$@ esta semana", String(describing: Logic.fmt(Logic.logCount(item))))
     }
 
     func review(_ id: String) -> Review? { reviews.first { $0.id == id } }
@@ -738,8 +766,8 @@ final class AppStore {
                 let uni = universesByID[it.uni]!
                 let p = Logic.posterColors(item: it, universe: uni)
                 let isCircular = it.type == "Personagem"
-                let meta = "\(uni.name) · \(it.year) · ★ \(String(format: "%.1f", it.avg)) · \(Logic.fmt(Logic.logCount(it))) registros"
-                return SearchResultRow(id: it.id, title: it.title, meta: meta, typeLabel: it.type, pillBG: uni.color, pillFG: uni.inkColor, posterBG: p.bg, posterFG: p.fg, initials: "", isCircular: isCircular, route: .item(it.id))
+                let meta = L10n.format("%1$@ · %2$@ · ★ %3$@ · %4$@ registros", String(describing: uni.name), String(describing: it.year), String(describing: L10n.decimal(it.avg)), String(describing: Logic.fmt(Logic.logCount(it))))
+                return SearchResultRow(id: it.id, title: it.title, meta: meta, typeLabel: L10n.text(it.type), pillBG: uni.color, pillFG: uni.inkColor, posterBG: p.bg, posterFG: p.fg, initials: "", isCircular: isCircular, route: .item(it.id))
             })
         }
 
@@ -751,7 +779,7 @@ final class AppStore {
                 return !q.isEmpty && matches
             }
             rows.append(contentsOf: peopleFiltered.map { u in
-                SearchResultRow(id: u.id, title: u.name, meta: "\(u.handle) · \(u.bio)", typeLabel: follows.contains(u.id) ? "Seguindo" : "Pessoa", pillBG: MV.C.card, pillFG: MV.C.ink, posterBG: Color(hex: u.avatarColor), posterFG: Logic.inkOn(hex: u.avatarColor), initials: Logic.initials(u.name), isCircular: true, route: .user(u.id))
+                SearchResultRow(id: u.id, title: u.name, meta: "\(u.handle) · \(u.bio)", typeLabel: follows.contains(u.id) ? L10n.text("Seguindo") : L10n.text("Pessoa"), pillBG: MV.C.card, pillFG: MV.C.ink, posterBG: Color(hex: u.avatarColor), posterFG: Logic.inkOn(hex: u.avatarColor), initials: Logic.initials(u.name), isCircular: true, route: .user(u.id))
             })
         }
 
@@ -791,10 +819,10 @@ final class AppStore {
 
         let stats: [(String, String)]
         if isMe {
-            stats = [("\(diary.count + 318)", "Registros"), ("312", "Seguidores"), ("\(friendsList.count)", "Seguindo")]
+            stats = [("\(diary.count + 318)", L10n.text("Registros")), ("312", L10n.text("Seguidores")), ("\(friendsList.count)", L10n.text("Seguindo"))]
         } else {
             let followers = (u.followers ?? (200 + Int(sd % 700))) + (follows.contains(userID) ? 1 : 0)
-            stats = [("\(120 + Int(sd % 600))", "Registros"), (Logic.fmt(followers), "Seguidores"), ("\(40 + Int(sd % 200))", "Seguindo")]
+            stats = [("\(120 + Int(sd % 600))", L10n.text("Registros")), (Logic.fmt(followers), L10n.text("Seguidores")), ("\(40 + Int(sd % 200))", L10n.text("Seguindo"))]
         }
 
         let progress = ["marvel", "dc", "wow"].map { k in (universesByID[k]!, pctFor(k)) }
@@ -810,7 +838,7 @@ final class AppStore {
         if !isMe {
             let cp = Logic.compat(userID)
             compatPercent = cp
-            compatLine = cp > 78 ? "Almas gêmeas de cânone." : (cp > 62 ? "Gostos parecidos, brigas saudáveis." : "Discordam bastante. Rende bons debates.")
+            compatLine = cp > 78 ? L10n.text("Almas gêmeas de cânone.") : (cp > 62 ? L10n.text("Gostos parecidos, brigas saudáveis.") : L10n.text("Discordam bastante. Rende bons debates."))
             compatByUniverse = ["marvel", "dc", "wow"].map { k in (universesByID[k]!, 30 + Int(Logic.seed(userID + k + "c") % 68)) }
             let agreeWork = StaticContent.compatAgreeWorks[Int(sd) % StaticContent.compatAgreeWorks.count]
             let agreePerson = StaticContent.compatAgreePeople[Int(sd) % StaticContent.compatAgreePeople.count]
@@ -839,7 +867,12 @@ final class AppStore {
     // MARK: - Wrapped
 
     func wrappedData() -> WrappedData {
-        let sep = diary.filter { $0.month == "Setembro" }
+        // The current Wrapped prototype represents September 2026 only.
+        let calendar = Calendar(identifier: .gregorian)
+        let sep = diary.filter {
+            let date = calendar.dateComponents([.year, .month], from: $0.loggedAt)
+            return date.year == 2026 && date.month == 9
+        }
         var byUniverse: [String: Int] = [:]
         for d in sep {
             guard let it = itemsByID[d.itemId] else { continue }
@@ -855,11 +888,11 @@ final class AppStore {
         let u = universesByID[topUni]!
         return WrappedData(
             logCount: sep.count,
-            deltaLabel: "+\(max(1, sep.count - 4)) que agosto",
+            deltaLabel: L10n.format("+%1$@ que agosto", String(describing: max(1, sep.count - 4))),
             hours: Int(hours.rounded()),
-            hoursNote: "≈ \(max(1, Int((hours / 24).rounded()))) dias em outras realidades",
+            hoursNote: L10n.format("≈ %1$@ dias em outras realidades", String(describing: max(1, Int((hours / 24).rounded())))),
             universe: u,
-            universeNote: "\(byUniverse[topUni] ?? 0) registros · \(universePercent(topUni))% do cânone visto",
+            universeNote: L10n.format("%1$@ registros · %2$@%% do cânone visto", String(describing: byUniverse[topUni] ?? 0), String(describing: universePercent(topUni))),
             topItem: topItem,
             topStars: topDiary?.rating ?? 5,
             archetypeTitle: StaticContent.wrappedArchetypeTitle,
@@ -893,22 +926,22 @@ final class AppStore {
         logDraft = d
     }
 
-    func saveLog() {
+    func saveLog(at date: Date = .now) {
         guard let d = logDraft, let itemID = d.itemID, let item = itemsByID[itemID] else { return }
-        let entry = DiaryEntry(itemId: itemID, day: 29, month: "Setembro", rating: d.rating, liked: d.liked, rewatch: d.rewatch)
+        let entry = DiaryEntry(itemId: itemID, loggedAt: date, rating: d.rating, liked: d.liked, rewatch: d.rewatch)
         diary.insert(entry, at: 0)
-        checks[itemID] = true
+        setSeen(itemID, seen: true)
 
         let trimmed = d.text.trimmingCharacters(in: .whitespacesAndNewlines)
         var newReview: Review?
         if !trimmed.isEmpty || d.rating > 0 {
-            let text = trimmed.isEmpty ? "\(Logic.verb(item.type)) hoje." : trimmed
-            let review = Review(id: "r-\(UUID().uuidString.prefix(8))", user: meID, item: itemID, rating: d.rating, text: text, spoiler: d.spoiler, likes: 0, when: "agora", comments: [])
+            let text = trimmed.isEmpty ? L10n.format("%1$@ hoje.", String(describing: Logic.verb(item.type))) : trimmed
+            let review = Review(id: "r-\(UUID().uuidString.prefix(8))", user: meID, item: itemID, rating: d.rating, text: text, spoiler: d.spoiler, likes: 0, when: L10n.text("agora"), comments: [])
             reviews.insert(review, at: 0)
             newReview = review
         }
         logDraft = nil
-        showToast("Publicado no feed do seu pessoal")
+        showToast(L10n.text("Publicado no feed do seu pessoal"))
 
         if shieldAdvanceAutomatically, let idx = timelineIndex(for: item) {
             advanceShieldPoint(universeID: item.uni, to: idx)
@@ -917,7 +950,6 @@ final class AppStore {
         let repository = self.repository
         Task {
             try? await repository.addDiaryEntry(entry)
-            try? await repository.setItemSeen(itemID: itemID, seen: true)
             if let newReview { try? await repository.publishReview(newReview) }
         }
     }
@@ -927,10 +959,10 @@ final class AppStore {
     func postComment(reviewID: String, text: String, quote: (author: String, text: String)? = nil) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let idx = reviews.firstIndex(where: { $0.id == reviewID }) else { return }
-        let comment = Comment(user: meID, text: trimmed, likes: 0, when: "agora", quotedAuthor: quote?.author, quotedText: quote?.text)
+        let comment = Comment(user: meID, text: trimmed, likes: 0, when: L10n.text("agora"), quotedAuthor: quote?.author, quotedText: quote?.text)
         reviews[idx].comments.append(comment)
         let authorID = reviews[idx].user
-        showToast(authorID == meID ? "Resposta publicada" : "\(usersByID[authorID]?.name ?? "") vai ser notificado")
+        showToast(authorID == meID ? L10n.text("Resposta publicada") : L10n.format("%1$@ vai ser notificado", String(describing: usersByID[authorID]?.name ?? "")))
         let repository = self.repository
         Task { try? await repository.postComment(reviewID: reviewID, comment: comment) }
     }
@@ -939,8 +971,10 @@ final class AppStore {
 
     @discardableResult
     func toggleOnboardingUniverse(_ id: String) -> Bool {
+        guard !onboardingTransitioning else { return false }
         let turningOn = !onboardingUniverses.contains(id)
         if turningOn { onboardingUniverses.insert(id) } else { onboardingUniverses.remove(id) }
+        scheduleOnboardingSave()
         return turningOn
     }
 
@@ -949,7 +983,8 @@ final class AppStore {
     }
 
     func onboardingPeopleSorted() -> [User] {
-        users.filter { $0.id != meID }.sorted { a, b in
+        if accountAPI != nil { return onboardingCandidates }
+        return users.filter { $0.id != meID }.sorted { a, b in
             let aPri = onboardingUniverses.contains(a.badgeUniverse) ? 1 : 0
             let bPri = onboardingUniverses.contains(b.badgeUniverse) ? 1 : 0
             if aPri != bPri { return aPri > bPri }
@@ -958,6 +993,7 @@ final class AppStore {
     }
 
     func advanceOnboarding() {
+        if accountAPI != nil { transitionRemoteOnboarding(back: false); return }
         switch onboardingPhase {
         case .step1: onboardingPhase = .step2
         case .step2: onboardingPhase = .step3
@@ -966,6 +1002,7 @@ final class AppStore {
         }
     }
     func backOnboarding() {
+        if accountAPI != nil { transitionRemoteOnboarding(back: true); return }
         switch onboardingPhase {
         case .step2: onboardingPhase = .step1
         case .step3: onboardingPhase = .step2
@@ -981,7 +1018,117 @@ final class AppStore {
             self.isOnboarded = true
             self.tab = .home
             self.homePath = []
-            self.showToast("Feed pronto. Bem-vindo ao Multiverse.")
+            self.showToast(L10n.text("Feed pronto. Bem-vindo ao Multiverse."))
+        }
+    }
+
+    // MARK: - Account API onboarding
+
+    func reloadAccount() async {
+        onboardingDebounce?.cancel()
+        _ = try? await onboardingSaveQueue?.value
+        accountLoadError = nil
+        onboardingError = nil
+        isLoading = true
+        do { try await loadRemoteAccount() }
+        catch { accountLoadError = error.localizedDescription }
+        isLoading = false
+        syncWidgetData()
+    }
+
+    private func loadRemoteAccount() async throws {
+        guard let accountAPI else { return }
+        let account = try await accountAPI.fetchAccount()
+        guard let profile = account.profile, profile.userID == meID else { throw AuthError.profileIncomplete }
+        let suggestions = account.onboarding.completed
+            ? FollowSuggestions(users: [], minimumFollows: 0)
+            : try await accountAPI.suggestions()
+        onboardingCandidates = suggestions.users.map {
+            User(id: $0.userID, name: $0.displayName, handle: "@" + $0.username,
+                 avatarColor: $0.avatarColor, bio: $0.bio, followers: nil, badgeUniverse: "")
+        }
+        minimumOnboardingFollows = suggestions.minimumFollows
+        for user in onboardingCandidates {
+            usersByID[user.id] = user
+            users.removeAll { $0.id == user.id }
+            users.append(user)
+        }
+        let me = User(id: profile.userID, name: profile.displayName, handle: "@" + profile.username,
+                      avatarColor: profile.avatarColor, bio: profile.bio, followers: nil, badgeUniverse: "")
+        usersByID[meID] = me
+        users.removeAll { $0.id == meID }; users.append(me)
+        let progress = account.onboarding
+        remoteVersion = progress.version
+        onboardingUniverses = Set(progress.universeIDs)
+        if !progress.completed {
+            let seen = Set(progress.seenItemIDs)
+            for item in items where item.type != "Personagem" { checks[item.id] = seen.contains(item.id) }
+        } else {
+            for id in progress.seenItemIDs { checks[id] = true }
+        }
+        follows = Set(progress.followedUserIDs)
+        onboardingPhase = progress.step == 1 ? .step1 : (progress.step == 2 ? .step2 : .step3)
+        isOnboarded = progress.completed
+        // People may have left since the draft was saved; don't strand the last step.
+        if !isOnboarded && onboardingPhase == .step3 && onboardingCandidates.isEmpty {
+            onboardingPhase = .step2
+        }
+    }
+
+    private func onboardingSnapshot(step: Int? = nil, completed: Bool = false) -> OnboardingState {
+        let currentStep = onboardingPhase == .step1 ? 1 : (onboardingPhase == .step2 ? 2 : 3)
+        return OnboardingState(universeIDs: onboardingUniverses.sorted(),
+                               seenItemIDs: items.filter { $0.type != "Personagem" && isSeen($0.id) }.map(\.id).sorted(),
+                               followedUserIDs: follows.sorted(), step: step ?? currentStep,
+                               completed: completed, version: remoteVersion)
+    }
+
+    private func enqueueOnboardingSave(_ snapshot: OnboardingState) -> Task<OnboardingState, Error> {
+        let previous = onboardingSaveQueue
+        let task = Task { @MainActor [self] in
+            _ = try? await previous?.value
+            guard let accountAPI else { return snapshot }
+            var payload = snapshot
+            payload.version = remoteVersion
+            let saved = try await accountAPI.saveOnboarding(payload)
+            remoteVersion = saved.version
+            return saved
+        }
+        onboardingSaveQueue = task
+        return task
+    }
+
+    private func scheduleOnboardingSave() {
+        guard accountAPI != nil, !isOnboarded, !onboardingTransitioning else { return }
+        onboardingDebounce?.cancel()
+        onboardingDebounce = Task { [weak self] in
+            do { try await Task.sleep(for: .milliseconds(500)) } catch { return }
+            guard let self else { return }
+            do { _ = try await self.enqueueOnboardingSave(self.onboardingSnapshot()).value }
+            catch { self.onboardingError = error.localizedDescription }
+        }
+    }
+
+    private func transitionRemoteOnboarding(back: Bool) {
+        guard !onboardingTransitioning else { return }
+        onboardingTransitioning = true
+        onboardingDebounce?.cancel()
+        Task { [self] in
+            defer { onboardingTransitioning = false }
+            _ = try? await onboardingSaveQueue?.value
+            let step = onboardingPhase == .step1 ? 1 : (onboardingPhase == .step2 ? 2 : 3)
+            let finish = !back && (step == 3 || (step == 2 && onboardingCandidates.isEmpty))
+            let next = back ? max(1, step - 1) : min(3, step + 1)
+            do {
+                _ = try await enqueueOnboardingSave(onboardingSnapshot(step: next, completed: finish)).value
+                onboardingError = nil
+                if finish {
+                    isOnboarded = true
+                    tab = .home
+                    homePath = []
+                    showToast(L10n.text("Feed pronto. Bem-vindo ao Multiverse."))
+                } else { onboardingPhase = next == 1 ? .step1 : (next == 2 ? .step2 : .step3) }
+            } catch { onboardingError = error.localizedDescription }
         }
     }
 
@@ -1081,14 +1228,14 @@ final class AppStore {
             return "\(era) (\(u.name))"
         }
         guard !segments.isEmpty else { return nil }
-        return "Você está em " + segments.joined(separator: " e ") + "."
+        return L10n.text("Você está em ") + segments.joined(separator: L10n.text(" e ")) + "."
     }
 
     /// "3 anos à frente de onde você está" — tenta comparar o número no rótulo da era
     /// ("Ano 27", "Ano 30"); cai pra contagem de marcos na timeline quando não dá.
     func shieldDistanceLabel(for item: Item) -> String {
         guard let idx = timelineIndex(for: item), let entries = timelines[item.uni] else {
-            return "à frente de onde você está"
+            return L10n.text("à frente de onde você está")
         }
         let point = shieldPoints[item.uni] ?? -1
         func yearNumber(_ era: String) -> Int? {
@@ -1098,10 +1245,10 @@ final class AppStore {
         let targetYear = yearNumber(entries[idx].era)
         let pointYear = (point >= 0 && point < entries.count) ? yearNumber(entries[point].era) : nil
         if let t = targetYear, let p = pointYear, t > p {
-            return "\(t - p) ano\(t - p > 1 ? "s" : "") à frente de onde você está"
+            return L10n.format("shield.yearsAhead", t - p)
         }
         let steps = idx - point
-        return "\(steps) marco\(steps > 1 ? "s" : "") à frente de onde você está"
+        return L10n.format("shield.milestonesAhead", steps)
     }
 
     func revealShielded(reviewID: String) {
@@ -1112,9 +1259,7 @@ final class AppStore {
 
     /// Botão "Já vi isso" do card do escudo: marca o item como visto e avança o ponto até ele.
     func shieldMarkSeen(_ itemID: String) {
-        checks[itemID] = true
-        let repository = self.repository
-        Task { try? await repository.setItemSeen(itemID: itemID, seen: true) }
+        setSeen(itemID, seen: true)
         if let item = itemsByID[itemID], let idx = timelineIndex(for: item) {
             advanceShieldPoint(universeID: item.uni, to: idx)
         }
@@ -1150,8 +1295,8 @@ final class AppStore {
 
     func clubMemberProgressLabel(clubID: String, userID: String, week: ClubWeek) -> String {
         let units = clubUnitsCompleted(clubID: clubID, userID: userID)
-        if week.totalUnits <= 1 { return units > 0 ? "Terminou ✓" : "Não começou" }
-        if units >= week.totalUnits { return "Terminou ✓" }
+        if week.totalUnits <= 1 { return units > 0 ? L10n.text("Terminou ✓") : L10n.text("Não começou") }
+        if units >= week.totalUnits { return L10n.text("Terminou ✓") }
         return "\(week.unitLabel) \(units)"
     }
 
@@ -1197,14 +1342,14 @@ final class AppStore {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         let myUnits = clubUnitsCompleted(clubID: clubID, userID: meID)
-        let message = ClubMessage(id: "cm-\(UUID().uuidString.prefix(8))", clubID: clubID, week: week, segment: segment, userID: meID, text: trimmed, when: "agora", hearts: 0, pows: 0, aboutUnit: myUnits)
+        let message = ClubMessage(id: "cm-\(UUID().uuidString.prefix(8))", clubID: clubID, week: week, segment: segment, userID: meID, text: trimmed, when: L10n.text("agora"), hearts: 0, pows: 0, aboutUnit: myUnits)
         clubMessages.append(message)
         let repository = self.repository
         Task { try? await repository.postClubMessage(message) }
     }
 
-    func pokeLaggingMembers() { showToast("Lembrete enviado pros atrasados do clube.") }
-    func inviteToClub() { showToast("Link de convite copiado.") }
+    func pokeLaggingMembers() { showToast(L10n.text("Lembrete enviado pros atrasados do clube.")) }
+    func inviteToClub() { showToast(L10n.text("Link de convite copiado.")) }
 
     // MARK: - Teorias
 
@@ -1239,7 +1384,7 @@ final class AppStore {
     /// "71% ACERTO" — reputação de quem postou a teoria (fixa pros 3 exemplos, determinística pro resto).
     func theoryAccuracyLabel(_ userID: String) -> String {
         let pct = StaticContent.theoryAccuracy[userID] ?? (49 + Int(Logic.seed(userID + "acc") % 40))
-        return "\(pct)% ACERTO"
+        return L10n.format("%1$@%% ACERTO", String(describing: pct))
     }
 
     // MARK: - Previsões
@@ -1270,7 +1415,7 @@ final class AppStore {
     // MARK: - Denúncia e moderação
 
     func submitReport(targetType: String, targetID: String, reason: ReportReason, alsoBlock: Bool) {
-        showToast("Denúncia enviada. Revisamos em até 24h.")
+        showToast(L10n.text("Denúncia enviada. Revisamos em até 24h."))
         let repository = self.repository
         Task { try? await repository.submitReport(ReportSubmission(targetType: targetType, targetID: targetID, reason: reason, alsoBlock: alsoBlock)) }
     }
@@ -1285,7 +1430,7 @@ final class AppStore {
     func submitCorrection(itemID: String, changeType: CorrectionChangeType, from: String, to: String, source: String, reasoning: String) {
         let suggestion = CorrectionSuggestion(id: "cs-\(UUID().uuidString.prefix(8))", itemID: itemID, userID: meID, changeType: changeType, fromValue: from, toValue: to, source: source, reasoning: reasoning, approverIDs: [], approvalsNeeded: 3)
         correctionsByItem[itemID, default: []].insert(suggestion, at: 0)
-        showToast("Sugestão enviada pra revisão.")
+        showToast(L10n.text("Sugestão enviada pra revisão."))
         let repository = self.repository
         Task { try? await repository.submitCorrection(suggestion) }
     }
@@ -1320,20 +1465,20 @@ final class AppStore {
     func sendMessage(to userID: String, text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        appendMessage(Message(id: "msg-\(UUID().uuidString.prefix(8))", conversationID: userID, senderID: meID, when: "agora", kind: .text, text: trimmed))
+        appendMessage(Message(id: "msg-\(UUID().uuidString.prefix(8))", conversationID: userID, senderID: meID, when: L10n.text("agora"), kind: .text, text: trimmed))
     }
 
     func sendCard(to userIDs: [String], itemID: String, text: String) {
         for userID in userIDs {
-            appendMessage(Message(id: "msg-\(UUID().uuidString.prefix(8))", conversationID: userID, senderID: meID, when: "agora", kind: .workCard, text: text.isEmpty ? nil : text, itemID: itemID))
+            appendMessage(Message(id: "msg-\(UUID().uuidString.prefix(8))", conversationID: userID, senderID: meID, when: L10n.text("agora"), kind: .workCard, text: text.isEmpty ? nil : text, itemID: itemID))
         }
-        showToast(userIDs.count == 1 ? "Carta enviada" : "Carta enviada pra \(userIDs.count)")
+        showToast(userIDs.count == 1 ? L10n.text("Carta enviada") : L10n.format("Carta enviada pra %1$@", String(describing: userIDs.count)))
     }
 
     func sendDuelChallenge(to userID: String, itemAID: String, itemBID: String, question: String, wager: String, myChoice: Int) {
         let payload = DuelChallengePayload(itemAID: itemAID, itemBID: itemBID, question: question, wager: wager, chooserChoice: myChoice, responderChoice: nil)
-        appendMessage(Message(id: "msg-\(UUID().uuidString.prefix(8))", conversationID: userID, senderID: meID, when: "agora", kind: .duelChallenge, duelChallenge: payload))
-        showToast("Desafio enviado")
+        appendMessage(Message(id: "msg-\(UUID().uuidString.prefix(8))", conversationID: userID, senderID: meID, when: L10n.text("agora"), kind: .duelChallenge, duelChallenge: payload))
+        showToast(L10n.text("Desafio enviado"))
     }
 
     func respondToDuelChallenge(messageID: String, in userID: String, choice: Int) {
@@ -1347,10 +1492,10 @@ final class AppStore {
     private func appendMessage(_ message: Message) {
         messagesByConversation[message.conversationID, default: []].append(message)
         if let idx = conversations.firstIndex(where: { $0.userID == message.conversationID }) {
-            conversations[idx].lastPreview = message.text ?? "mandou uma carta"
-            conversations[idx].lastWhen = "agora"
+            conversations[idx].lastPreview = message.text ?? L10n.text("mandou uma carta")
+            conversations[idx].lastWhen = L10n.text("agora")
         } else {
-            conversations.insert(Conversation(userID: message.conversationID, lastPreview: message.text ?? "mandou uma carta", lastWhen: "agora", unreadCount: 0, isRequest: !follows.contains(message.conversationID)), at: 0)
+            conversations.insert(Conversation(userID: message.conversationID, lastPreview: message.text ?? L10n.text("mandou uma carta"), lastWhen: L10n.text("agora"), unreadCount: 0, isRequest: !follows.contains(message.conversationID)), at: 0)
         }
         let repository = self.repository
         Task { try? await repository.sendMessage(message) }
@@ -1377,7 +1522,7 @@ final class AppStore {
     func postRoomMessage(itemID: String, segment: Int, text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        let message = RoomMessage(id: "rm-\(UUID().uuidString.prefix(8))", itemID: itemID, segmentIndex: segment, userID: meID, text: trimmed, when: "agora")
+        let message = RoomMessage(id: "rm-\(UUID().uuidString.prefix(8))", itemID: itemID, segmentIndex: segment, userID: meID, text: trimmed, when: L10n.text("agora"))
         roomMessages[itemID, default: []].append(message)
         let repository = self.repository
         Task { try? await repository.postRoomMessage(message) }

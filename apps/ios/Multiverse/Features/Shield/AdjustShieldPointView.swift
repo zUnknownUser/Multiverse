@@ -18,8 +18,8 @@ struct AdjustShieldPointView: View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("ONDE VOCÊ\nESTÁ?").font(MVFont.display(32, width: 122)).lineSpacing(-6).foregroundStyle(MV.C.ink)
-                    Text("Tudo que vem depois desse ponto fica escondido no app inteiro: feed, reviews, comentários e busca.")
+                    Text(L10n.text("ONDE VOCÊ\nESTÁ?")).font(MVFont.display(32, width: 122)).lineSpacing(-6).foregroundStyle(MV.C.ink)
+                    Text(L10n.text("Tudo que vem depois desse ponto fica escondido no app inteiro: feed, reviews, comentários e busca."))
                         .font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
                 }
 
@@ -30,8 +30,8 @@ struct AdjustShieldPointView: View {
 
                     HStack(spacing: 10) {
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("Avançar sozinho").font(MVFont.bold(15)).foregroundStyle(MV.C.ink)
-                            Text("Move o ponto quando você registrar algo").font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
+                            Text(L10n.text("Avançar sozinho")).font(MVFont.bold(15)).foregroundStyle(MV.C.ink)
+                            Text(L10n.text("Move o ponto quando você registrar algo")).font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
                         }
                         Spacer()
                         Toggle("", isOn: $advanceAutomatically).labelsHidden().tint(uni.color)
@@ -39,7 +39,7 @@ struct AdjustShieldPointView: View {
                     .padding(16)
                     .comicCard(shadow: MV.Shadow.s)
 
-                    Text("SALVAR PONTO")
+                    Text(L10n.text("SALVAR PONTO"))
                         .font(MVFont.bold(15))
                         .frame(maxWidth: .infinity).frame(height: 54)
                         .foregroundStyle(uni.inkColor)
@@ -122,7 +122,7 @@ struct AdjustShieldPointView: View {
                         Text(item?.title ?? "—").font(MVFont.bold(15)).foregroundStyle(isPastOrCurrent ? MV.C.ink : MV.C.muted)
                         Spacer()
                         if !isPastOrCurrent {
-                            Text("ESCONDIDO")
+                            Text(L10n.text("ESCONDIDO"))
                                 .font(MVFont.black(9)).tracking(0.3)
                                 .foregroundStyle(MV.C.muted)
                                 .padding(.horizontal, 8).padding(.vertical, 4)
@@ -131,8 +131,8 @@ struct AdjustShieldPointView: View {
                     }
                     if isCurrent {
                         HStack(spacing: 4) {
-                            Text("▼ VOCÊ ESTÁ AQUI").font(MVFont.bold(11))
-                            Text("toque nos itens acima/abaixo").font(MVFont.body(10, weight: 500)).opacity(0.8)
+                            Text(L10n.text("▼ VOCÊ ESTÁ AQUI")).font(MVFont.bold(11))
+                            Text(L10n.text("toque nos itens acima/abaixo")).font(MVFont.body(10, weight: 500)).opacity(0.8)
                         }
                         .foregroundStyle(MV.C.card)
                         .padding(.horizontal, 10).padding(.vertical, 8)
@@ -149,7 +149,7 @@ struct AdjustShieldPointView: View {
         .contentShape(Rectangle())
         .onTapGesture { pendingIndex = index }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(entry.era), \(item?.title ?? "")\(isCurrent ? ", você está aqui" : (isPastOrCurrent ? ", já visto" : ", escondido"))")
+        .accessibilityLabel(L10n.format("%1$@, %2$@%3$@", String(describing: entry.era), String(describing: item?.title ?? ""), String(describing: isCurrent ? L10n.text(", você está aqui") : (isPastOrCurrent ? L10n.text(", já visto") : L10n.text(", escondido")))))
         .accessibilityAddTraits(.isButton)
     }
 }

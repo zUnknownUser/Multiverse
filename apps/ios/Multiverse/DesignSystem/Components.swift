@@ -71,7 +71,7 @@ struct PosterView: View {
             Halftone()
             VStack(alignment: .leading) {
                 if showLabel {
-                    Text("\(item.type == "Personagem" ? "RETRATO" : "CAPA") · \(item.type.uppercased())")
+                    Text(L10n.format("%1$@ · %2$@", String(describing: item.type == "Personagem" ? L10n.text("RETRATO") : L10n.text("CAPA")), String(describing: L10n.text(item.type).uppercased())))
                         .font(MVFont.mono).foregroundStyle(p.fg)
                 }
                 Spacer(minLength: 0)

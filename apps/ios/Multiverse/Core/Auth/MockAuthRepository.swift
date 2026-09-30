@@ -18,8 +18,8 @@ actor MockAuthRepository: AuthRepository {
 
     private var settings = AccountSettings()
     private var blockedUsers = [
-        BlockedUser(id: "troll", handle: "@troll.do.flagelo", blockedOn: "12 set"),
-        BlockedUser(id: "spoiler", handle: "@spoiler.sem.aviso", blockedOn: "3 ago"),
+        BlockedUser(id: "troll", handle: "@troll.do.flagelo", blockedOn: L10n.text("12 set")),
+        BlockedUser(id: "spoiler", handle: "@spoiler.sem.aviso", blockedOn: L10n.text("3 ago")),
     ]
 
     private let simulatedLatency: Duration = .milliseconds(350)
@@ -158,6 +158,6 @@ actor MockAuthRepository: AuthRepository {
     func blockUser(handle: String) async {
         let id = handle.trimmingCharacters(in: CharacterSet(charactersIn: "@"))
         guard !blockedUsers.contains(where: { $0.handle == handle }) else { return }
-        blockedUsers.append(BlockedUser(id: id, handle: handle, blockedOn: "hoje"))
+        blockedUsers.append(BlockedUser(id: id, handle: handle, blockedOn: L10n.text("hoje")))
     }
 }

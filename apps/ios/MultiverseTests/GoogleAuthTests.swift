@@ -32,7 +32,7 @@ private final class GoogleClientStub: GoogleAuthenticationClient {
 struct GoogleAuthTests {
     @Test func googleLoginUsesFirebaseIdentityAndRestoresSession() async {
         let client = GoogleClientStub()
-        let repository = FirebaseAuthRepository(client: client)
+        let repository = FirebaseAuthRepository(client: client, accountAPI: nil)
         let store = AuthStore(repository: repository)
         await store.continueWithGoogle()
         #expect(store.session == client.result)
@@ -48,7 +48,7 @@ struct GoogleAuthTests {
     @Test func cancellationDoesNotDisplayErrorOrCreateSession() async {
         let client = GoogleClientStub()
         client.error = .cancelled
-        let store = AuthStore(repository: FirebaseAuthRepository(client: client))
+        let store = AuthStore(repository: FirebaseAuthRepository(client: client, accountAPI: nil))
         await store.continueWithGoogle()
         #expect(store.session == nil)
         #expect(store.errorMessage == nil)
@@ -58,7 +58,7 @@ struct GoogleAuthTests {
     @Test func networkFailureAllowsRetry() async {
         let client = GoogleClientStub()
         client.error = .networkUnavailable
-        let store = AuthStore(repository: FirebaseAuthRepository(client: client))
+        let store = AuthStore(repository: FirebaseAuthRepository(client: client, accountAPI: nil))
         await store.continueWithGoogle()
         #expect(store.session == nil)
         #expect(store.errorMessage != nil)
@@ -71,7 +71,7 @@ struct GoogleAuthTests {
     @Test func duplicateTapsOnlyStartOneLogin() async {
         let client = GoogleClientStub()
         client.delay = true
-        let store = AuthStore(repository: FirebaseAuthRepository(client: client))
+        let store = AuthStore(repository: FirebaseAuthRepository(client: client, accountAPI: nil))
         async let first: Void = store.continueWithGoogle()
         async let second: Void = store.continueWithGoogle()
         _ = await (first, second)
@@ -80,7 +80,7 @@ struct GoogleAuthTests {
 
     @Test func appleDoesNotCreateDemoSession() async {
         let client = GoogleClientStub()
-        let store = AuthStore(repository: FirebaseAuthRepository(client: client))
+        let store = AuthStore(repository: FirebaseAuthRepository(client: client, accountAPI: nil))
         await store.continueWithApple()
         #expect(store.session == nil)
         #expect(store.errorMessage == AuthError.unavailable.localizedDescription)
@@ -89,7 +89,7 @@ struct GoogleAuthTests {
 
     @Test func failedSignOutKeepsSession() async {
         let client = GoogleClientStub()
-        let store = AuthStore(repository: FirebaseAuthRepository(client: client))
+        let store = AuthStore(repository: FirebaseAuthRepository(client: client, accountAPI: nil))
         await store.continueWithGoogle()
         client.error = .networkUnavailable
         await store.signOut()
@@ -139,7 +139,7 @@ struct GoogleAuthTests {
         defer { defaults.removePersistentDomain(forName: suite) }
         let client = GoogleClientStub()
         client.session = client.result
-        let repository = FirebaseAuthRepository(client: client, defaults: defaults)
+        let repository = FirebaseAuthRepository(client: client, defaults: defaults, accountAPI: nil)
         var settings = AccountSettings()
         settings.publicDiary = false
         await repository.updateAccountSettings(settings)

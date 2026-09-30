@@ -13,7 +13,7 @@ struct MessagesHomeView: View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             VStack(alignment: .leading, spacing: 18) {
                 HStack {
-                    Text("MENSAGENS").font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
+                    Text(L10n.text("MENSAGENS")).font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
                     Spacer()
                     Button { showingNewMessage = true } label: {
                         Text("✎").font(.system(size: 18, weight: .bold))
@@ -27,7 +27,7 @@ struct MessagesHomeView: View {
 
                 if !store.rooms.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("SALAS AO VIVO AGORA").kicker(11).foregroundStyle(MV.C.muted)
+                        Text(L10n.text("SALAS AO VIVO AGORA")).kicker(11).foregroundStyle(MV.C.muted)
                         ScrollView(.horizontal) {
                             HStack(spacing: 10) {
                                 ForEach(liveRoomItems) { item in
@@ -42,16 +42,16 @@ struct MessagesHomeView: View {
                 tabPicker
 
                 switch tab {
-                case .amigos: conversationList(store.friendConversations, empty: "Nenhuma conversa ainda.")
+                case .amigos: conversationList(store.friendConversations, empty: L10n.text("Nenhuma conversa ainda."))
                 case .clubes: clubsConversationsPlaceholder
-                case .pedidos: conversationList(store.requestConversations, empty: "Nenhum pedido novo.")
+                case .pedidos: conversationList(store.requestConversations, empty: L10n.text("Nenhum pedido novo."))
                 }
             }
             .padding(.horizontal, MV.pad)
             .padding(.bottom, 24)
         }
         .sheet(isPresented: $showingNewMessage) {
-            FriendPickerSheet(title: "Nova conversa") { store.push(.conversation($0)) }
+            FriendPickerSheet(title: L10n.text("Nova conversa")) { store.push(.conversation($0)) }
         }
     }
 
@@ -67,7 +67,7 @@ struct MessagesHomeView: View {
                 uni.color
                 Halftone(color: uni.inkColor.opacity(0.18))
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("● AO VIVO")
+                    Text(L10n.text("● AO VIVO"))
                         .font(MVFont.bold(10))
                         .foregroundStyle(MV.C.paper)
                         .padding(.horizontal, 7).padding(.vertical, 3)
@@ -75,7 +75,7 @@ struct MessagesHomeView: View {
                         .clipShape(Capsule())
                     Spacer(minLength: 0)
                     Text(item.title.uppercased()).font(MVFont.black(15)).foregroundStyle(uni.inkColor).lineLimit(2)
-                    Text("\(Logic.fmt(online)) na sala").font(MVFont.bold(11)).foregroundStyle(uni.inkColor.opacity(0.85))
+                    Text(L10n.format("%1$@ na sala", String(describing: Logic.fmt(online)))).font(MVFont.bold(11)).foregroundStyle(uni.inkColor.opacity(0.85))
                 }
                 .padding(12)
             }
@@ -89,7 +89,7 @@ struct MessagesHomeView: View {
         HStack(spacing: 0) {
             ForEach(MessagesTab.allCases, id: \.self) { t in
                 let selected = tab == t
-                let label = t == .pedidos && !store.requestConversations.isEmpty ? "\(t.rawValue) (\(store.requestConversations.count))" : t.rawValue
+                let label = t == .pedidos && !store.requestConversations.isEmpty ? "\(L10n.text(t.rawValue)) (\(store.requestConversations.count))" : L10n.text(t.rawValue)
                 Text(label.uppercased())
                     .font(MVFont.bold(12))
                     .frame(maxWidth: .infinity).frame(height: 44)

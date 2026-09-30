@@ -8,13 +8,13 @@ struct ClubsHomeView: View {
         ScreenScaffold {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("CLUBES").font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
-                    Text("Maratone junto com sua turma, no seu ritmo.")
+                    Text(L10n.text("CLUBES")).font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
+                    Text(L10n.text("Maratone junto com sua turma, no seu ritmo."))
                         .font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.muted)
                 }
 
                 if store.clubs.isEmpty {
-                    Text("Você ainda não entrou em nenhum clube.")
+                    Text(L10n.text("Você ainda não entrou em nenhum clube."))
                         .font(MVFont.body(14)).foregroundStyle(MV.C.muted)
                         .frame(maxWidth: .infinity)
                         .padding(24)
@@ -48,9 +48,9 @@ private struct ClubSummaryRow: View {
             Button { store.push(.club(club.id)) } label: {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Text("CLUBE · \(uni.name.uppercased())").kicker(10).foregroundStyle(uni.inkColor.opacity(0.85))
+                        Text(L10n.format("CLUBE · %1$@", String(describing: uni.name.uppercased()))).kicker(10).foregroundStyle(uni.inkColor.opacity(0.85))
                         Spacer()
-                        Text("SEMANA \(club.currentWeek)/\(club.weeks.count)").font(MVFont.bold(10)).foregroundStyle(uni.inkColor.opacity(0.85))
+                        Text(L10n.format("SEMANA %1$@/%2$@", String(describing: club.currentWeek), String(describing: club.weeks.count))).font(MVFont.bold(10)).foregroundStyle(uni.inkColor.opacity(0.85))
                     }
                     Text(club.name).font(MVFont.display(20, width: 118)).foregroundStyle(uni.inkColor)
                     HStack(spacing: 10) {
@@ -60,7 +60,7 @@ private struct ClubSummaryRow: View {
                             ComicProgress(value: week.totalUnits > 0 ? Double(units) / Double(week.totalUnits) : 0, fill: uni.inkColor, height: 8)
                         }
                     }
-                    Text("\(club.memberIDs.count) membros · 1 item por semana")
+                    Text(L10n.format("%1$@ membros · 1 item por semana", String(describing: club.memberIDs.count)))
                         .font(MVFont.body(11, weight: 600)).foregroundStyle(uni.inkColor.opacity(0.85))
                 }
                 .padding(14)

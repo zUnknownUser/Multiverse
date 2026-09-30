@@ -4,7 +4,6 @@ import Foundation
 /// `Resources/sample-data.json`. É a única classe que conhece o JSON — `AppStore` e as
 /// Views só falam com o protocolo `MultiverseRepository`.
 actor MockRepository: MultiverseRepository {
-    private let sample: SampleData
     private let catalog: Catalog
 
     private var reviews: [Review]
@@ -34,10 +33,9 @@ actor MockRepository: MultiverseRepository {
 
     init(sample: SampleData = .load(), startFollowing: Bool, session: AuthSession? = nil) {
         let signedInUser = session.map {
-            User(id: $0.userID, name: $0.displayName ?? "Lorista", handle: $0.handle,
+            User(id: $0.userID, name: $0.displayName ?? L10n.text("Lorista"), handle: $0.handle,
                  avatarColor: $0.avatarColor ?? "#F4A814", bio: $0.bio ?? "", followers: 0, badgeUniverse: "")
         }
-        self.sample = sample
         catalog = Catalog(
             universes: sample.universes, items: sample.items, users: sample.users + (signedInUser.map { [$0] } ?? []),
             badgeNames: sample.badgeNames, connections: sample.connections, timelines: sample.timelines,
@@ -360,8 +358,8 @@ actor MockRepository: MultiverseRepository {
     func sendMessage(_ message: Message) async throws {
         messages.append(message)
         if let idx = conversations.firstIndex(where: { $0.userID == message.conversationID }) {
-            conversations[idx].lastPreview = message.text ?? "mandou uma carta"
-            conversations[idx].lastWhen = "agora"
+            conversations[idx].lastPreview = message.text ?? L10n.text("mandou uma carta")
+            conversations[idx].lastWhen = L10n.text("agora")
         }
     }
 
@@ -420,11 +418,11 @@ actor MockRepository: MultiverseRepository {
                 let rating = max(1, min(5, raw))
                 let text = genericTexts[Int(sd) % genericTexts.count]
                 let likes = 20 + Int(sd % 400)
-                let when = "\(2 + Int(sd % 20)) dias"
+                let when = L10n.format("%1$@ dias", String(describing: 2 + Int(sd % 20)))
                 var comments: [Comment] = []
                 if sd % 2 == 1 {
                     let commenter = pool[(i + j + 1) % pool.count]
-                    comments = [Comment(user: commenter, text: "Concordo demais.", likes: Int(sd % 9), when: "4 dias")]
+                    comments = [Comment(user: commenter, text: L10n.text("Concordo demais."), likes: Int(sd % 9), when: L10n.text("4 dias"))]
                 }
                 let author = pool[(i + j) % pool.count]
                 out.append(Review(id: "g-\(item.id)-\(j)", user: author, item: item.id, rating: rating, text: text, spoiler: false, likes: likes, when: when, comments: comments))
@@ -434,16 +432,20 @@ actor MockRepository: MultiverseRepository {
     }
 
     private static func initialDiary() -> [DiaryEntry] {
-        [
-            ("w-crimes", 27, "Setembro", 4.5, true, false),
-            ("w-wotlk", 24, "Setembro", 5, false, true),
-            ("d-crise", 19, "Setembro", 4, false, false),
-            ("m-loki", 12, "Setembro", 3.5, false, false),
-            ("w-wc3", 3, "Setembro", 5, true, false),
-            ("d-watchmen", 28, "Agosto", 5, true, false),
-            ("m-civil", 20, "Agosto", 3, false, false),
-            ("e-cataclismo", 14, "Agosto", 3.5, false, false),
-            ("d-flash", 9, "Agosto", 4, false, false),
-        ].map { DiaryEntry(itemId: $0.0, day: $0.1, month: $0.2, rating: $0.3, liked: $0.4, rewatch: $0.5) }
+        let calendar = Calendar(identifier: .gregorian)
+        return [
+            ("w-crimes", 27, 9, 4.5, true, false),
+            ("w-wotlk", 24, 9, 5, false, true),
+            ("d-crise", 19, 9, 4, false, false),
+            ("m-loki", 12, 9, 3.5, false, false),
+            ("w-wc3", 3, 9, 5, true, false),
+            ("d-watchmen", 28, 8, 5, true, false),
+            ("m-civil", 20, 8, 3, false, false),
+            ("e-cataclismo", 14, 8, 3.5, false, false),
+            ("d-flash", 9, 8, 4, false, false),
+        ].compactMap { itemID, day, month, rating, liked, rewatch in
+            guard let date = calendar.date(from: DateComponents(year: 2026, month: month, day: day, hour: 12)) else { return nil }
+            return DiaryEntry(itemId: itemID, loggedAt: date, rating: rating, liked: liked, rewatch: rewatch)
+        }
     }
 }

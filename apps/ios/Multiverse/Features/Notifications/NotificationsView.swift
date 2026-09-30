@@ -8,8 +8,8 @@ struct NotificationsView: View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             VStack(alignment: .leading, spacing: 22) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("ATIVIDADE").font(MVFont.display(28, width: 122)).foregroundStyle(MV.C.ink)
-                    Text("O que o pessoal fez com o que você postou.")
+                    Text(L10n.text("ATIVIDADE")).font(MVFont.display(28, width: 122)).foregroundStyle(MV.C.ink)
+                    Text(L10n.text("O que o pessoal fez com o que você postou."))
                         .font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.muted)
                 }
 
@@ -20,7 +20,7 @@ struct NotificationsView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("TOP LORISTAS DA SEMANA").font(MVFont.section(17)).foregroundStyle(MV.C.ink)
+                    Text(L10n.text("TOP LORISTAS DA SEMANA")).font(MVFont.section(17)).foregroundStyle(MV.C.ink)
                     VStack(spacing: 10) {
                         ForEach(StaticContent.leaderboard) { entry in
                             LeaderRow(entry: entry)
@@ -64,7 +64,7 @@ private struct NotificationRow: View {
                     Spacer(minLength: 8)
                     if notification.isNewFollower {
                         let following = store.isFollowing(user.id)
-                        Text(following ? "Seguindo" : "Seguir")
+                        Text(following ? L10n.text("Seguindo") : L10n.text("Seguir"))
                             .font(MVFont.bold(11))
                             .padding(.horizontal, 10).padding(.vertical, 7)
                             .foregroundStyle(following ? MV.C.ink : MV.C.paper)
@@ -108,11 +108,11 @@ private struct LeaderRow: View {
                 AvatarView(user: user, size: 34)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(user.name).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
-                    Text("\(entry.reviews) reviews · \(Logic.fmt(entry.likes)) curtidas")
+                    Text(L10n.format("%1$@ reviews · %2$@ curtidas", String(describing: entry.reviews), String(describing: Logic.fmt(entry.likes))))
                         .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
                 }
                 Spacer()
-                Text(following ? "Seguindo" : "Seguir")
+                Text(following ? L10n.text("Seguindo") : L10n.text("Seguir"))
                     .font(MVFont.bold(10))
                     .padding(.horizontal, 9).padding(.vertical, 6)
                     .foregroundStyle(following ? MV.C.ink : MV.C.paper)

@@ -10,14 +10,14 @@ struct AvatarAndBioView: View {
         @Bindable var auth = auth
         ScreenScaffold(showBack: true, onBack: { auth.pop() }, backTrailing: {
             AnyView(
-                Button("PULAR") { Task { await auth.finishSignUp() } }
+                Button(L10n.text("PULAR")) { Task { await auth.finishSignUp() } }
                     .font(MVFont.bold(12)).underline().foregroundStyle(MV.C.ink)
                     .buttonStyle(.plain)
             )
         }) {
             VStack(alignment: .leading, spacing: 20) {
                 AuthProgressBars(filled: 4)
-                Text("SUA CARA NO FEED").font(MVFont.display(30, width: 120)).foregroundStyle(MV.C.ink)
+                Text(L10n.text("SUA CARA NO FEED")).font(MVFont.display(30, width: 120)).foregroundStyle(MV.C.ink)
 
                 VStack(spacing: 8) {
                     ZStack(alignment: .bottomTrailing) {
@@ -39,12 +39,12 @@ struct AvatarAndBioView: View {
                         .frame(width: 36, height: 36)
                         .overlay(Circle().strokeBorder(MV.C.paper, lineWidth: 2))
                     }
-                    Text("Toque pra enviar uma foto").font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
+                    Text(L10n.text("Toque pra enviar uma foto")).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
                 }
                 .frame(maxWidth: .infinity)
 
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("OU ESCOLHA A COR DO AVATAR").kicker(11).foregroundStyle(MV.C.muted)
+                    Text(L10n.text("OU ESCOLHA A COR DO AVATAR")).kicker(11).foregroundStyle(MV.C.muted)
                     HStack(spacing: 12) {
                         ForEach(avatarColors, id: \.self) { hex in
                             let selected = auth.draft.avatarColor == hex
@@ -65,7 +65,7 @@ struct AvatarAndBioView: View {
                         Spacer()
                         Text("\(auth.draft.bio.count)/\(bioLimit)").font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
                     }
-                    TextField("Conte um pouco sobre você…", text: $auth.draft.bio, axis: .vertical)
+                    TextField(L10n.text("Conte um pouco sobre você…"), text: $auth.draft.bio, axis: .vertical)
                         .font(MVFont.body(15, weight: 500))
                         .lineLimit(3...4)
                         .padding(12)
@@ -80,10 +80,10 @@ struct AvatarAndBioView: View {
                 Spacer(minLength: 12)
 
                 VStack(spacing: 8) {
-                    PrimaryAuthButton(title: "FINALIZAR PERFIL", isLoading: auth.isLoading) {
+                    PrimaryAuthButton(title: L10n.text("FINALIZAR PERFIL"), isLoading: auth.isLoading) {
                         Task { await auth.finishSignUp() }
                     }
-                    Text("Depois disso: escolher universos e seguir loristas.")
+                    Text(L10n.text("Depois disso: escolher universos e seguir loristas."))
                         .font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
                 }
             }

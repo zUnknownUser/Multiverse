@@ -1,13 +1,14 @@
+import Foundation
 import Testing
 @testable import Multiverse
 
 struct LogicTests {
 
     @Test func fmtAbbreviatesThousands() {
-        #expect(Logic.fmt(312) == "312")
-        #expect(Logic.fmt(1240) == "1,2 mil")
-        #expect(Logic.fmt(999) == "999")
-        #expect(Logic.fmt(1000) == "1 mil")
+        #expect(Logic.fmt(312, locale: Locale(identifier: "pt-BR")) == "312")
+        #expect(Logic.fmt(1240, locale: Locale(identifier: "pt-BR")) == "1,2 mil")
+        #expect(Logic.fmt(999, locale: Locale(identifier: "pt-BR")) == "999")
+        #expect(Logic.fmt(1000, locale: Locale(identifier: "pt-BR")) == "1 mil")
     }
 
     @Test func starsRendersHalfStar() {
@@ -31,14 +32,14 @@ struct LogicTests {
     }
 
     @Test func starHintLabelsMatchRating() {
-        #expect(Logic.starHint(5) == "★★★★★ · Obra-prima")
-        #expect(Logic.starHint(1) == "★ · Tempo perdido")
+        #expect(Logic.starHint(5) == "★★★★★ · " + L10n.text("Obra-prima"))
+        #expect(Logic.starHint(1) == "★ · " + L10n.text("Tempo perdido"))
     }
 
     @Test func verbMatchesItemType() {
-        #expect(Logic.verb("Filme") == "Assisti")
-        #expect(Logic.verb("HQ") == "Li")
-        #expect(Logic.verb("Jogo") == "Joguei")
-        #expect(Logic.verb("Personagem") == "Avaliei")
+        #expect(Logic.verb("Filme") == L10n.text("Assisti"))
+        #expect(Logic.verb("HQ") == L10n.text("Li"))
+        #expect(Logic.verb("Jogo") == L10n.text("Joguei"))
+        #expect(Logic.verb("Personagem") == L10n.text("Avaliei"))
     }
 }

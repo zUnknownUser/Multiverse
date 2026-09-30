@@ -63,7 +63,9 @@ make api-dev
 ```
 
 A rota `GET http://localhost:3000/api/v1/health` verifica se o servidor responde.
-Use `make api-check` para validar a base. Configuração, estrutura e comandos:
+Perfil, @usuário e onboarding usam PostgreSQL e identidade Firebase.
+Configure banco e credenciais conforme o guia antes de usar essas rotas.
+Use `make api-check` para validar a API. Configuração, estrutura e comandos:
 [guia da API](backend/api/README.md).
 
 ### Funções Firebase existentes
@@ -119,6 +121,6 @@ nem substituem a validação de autenticação e links em um aparelho conectado 
 - [Backlog](docs/BACKLOG.md)
 - [Especificação de design](design/design_handoff_multiverse/README.md)
 
-A reorganização preserva o código e o layout; não muda as regras de negócio nem publica
-serviços externos. Dependências instaladas, artefatos de build e segredos locais seguem
+A integração preserva o layout e os módulos existentes. Nenhum serviço externo foi
+publicado automaticamente. Dependências instaladas, artefatos de build e segredos locais seguem
 fora do Git.

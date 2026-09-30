@@ -45,7 +45,7 @@ struct ItemRoomView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.title).font(MVFont.bold(16)).foregroundStyle(MV.C.ink)
                 HStack(spacing: 6) {
-                    Text("● AO VIVO").font(MVFont.black(10)).foregroundStyle(MV.C.paper)
+                    Text(L10n.text("● AO VIVO")).font(MVFont.black(10)).foregroundStyle(MV.C.paper)
                         .padding(.horizontal, 7).padding(.vertical, 3)
                         .background(MV.C.marvel).clipShape(Capsule())
                     Text("\(Logic.fmt(room.onlineCount)) online").font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
@@ -106,7 +106,7 @@ struct ItemRoomView: View {
             let messages = store.roomMessagesFor(itemID: itemID, segment: segmentIndex)
             VStack(spacing: 12) {
                 if messages.isEmpty {
-                    Text("Nenhuma mensagem aqui ainda.").font(MVFont.body(13, weight: 500)).foregroundStyle(MV.C.muted)
+                    Text(L10n.text("Nenhuma mensagem aqui ainda.")).font(MVFont.body(13, weight: 500)).foregroundStyle(MV.C.muted)
                 }
                 ForEach(messages) { message in
                     RoomMessageBubble(message: message)
@@ -120,12 +120,12 @@ struct ItemRoomView: View {
 
     private var lockedBlock: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("◆ ESCUDO").font(MVFont.black(10)).tracking(0.4).foregroundStyle(MV.C.card)
+            Text(L10n.text("◆ ESCUDO")).font(MVFont.black(10)).tracking(0.4).foregroundStyle(MV.C.card)
                 .padding(.horizontal, 8).padding(.vertical, 5)
                 .background(MV.C.dc)
                 .overlay(RoundedRectangle(cornerRadius: MV.R.xs).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                 .clipShape(RoundedRectangle(cornerRadius: MV.R.xs))
-            Text("Esse trecho está à sua frente. Avance na sala pra desbloquear a conversa.")
+            Text(L10n.text("Esse trecho está à sua frente. Avance na sala pra desbloquear a conversa."))
                 .font(MVFont.bold(14)).foregroundStyle(MV.C.ink)
         }
         .padding(14)
@@ -136,7 +136,7 @@ struct ItemRoomView: View {
     }
 
     private func advanceButton(room: Room, myProgress: Int) -> some View {
-        Button("Já cheguei em \(room.segments[myProgress + 1].lowercased())") {
+        Button(L10n.format("Já cheguei em %1$@", String(describing: room.segments[myProgress + 1].lowercased()))) {
             store.setRoomProgress(itemID: itemID, segment: myProgress + 1)
         }
         .font(MVFont.bold(13)).underline().foregroundStyle(MV.C.ink)
@@ -148,7 +148,7 @@ struct ItemRoomView: View {
         let myProgress = progress(room: room)
         let locked = segmentIndex > myProgress
         return HStack(spacing: 8) {
-            TextField(locked ? "Trecho bloqueado" : "Comentar sobre \(room.segments[segmentIndex])…", text: $draft)
+            TextField(locked ? L10n.text("Trecho bloqueado") : L10n.format("Comentar sobre %1$@…", String(describing: room.segments[segmentIndex])), text: $draft)
                 .font(MVFont.body(14, weight: 500))
                 .padding(.horizontal, 14)
                 .frame(height: 44)
@@ -157,7 +157,7 @@ struct ItemRoomView: View {
                 .clipShape(Capsule())
                 .disabled(locked)
                 .onSubmit(send)
-            Text("ENVIAR")
+            Text(L10n.text("ENVIAR"))
                 .font(MVFont.bold(12))
                 .padding(.horizontal, 16).frame(height: 44)
                 .foregroundStyle(MV.C.paper)
@@ -196,7 +196,7 @@ private struct RoomMessageBubble: View {
                         if !isMe { AvatarView(user: user, size: 28) }
                         VStack(alignment: .leading, spacing: 3) {
                             HStack {
-                                Text(isMe ? "Você" : user.name).font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
+                                Text(isMe ? L10n.text("Você") : user.name).font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
                                 Spacer()
                                 Text(message.when).font(MVFont.body(10, weight: 600)).foregroundStyle(MV.C.muted)
                             }

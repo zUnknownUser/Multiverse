@@ -13,12 +13,12 @@ struct OnboardingLoadingView: View {
         VStack(spacing: 22) {
             Spacer()
             VStack(spacing: 10) {
-                Text("MONTANDO SEU\nMULTIVERSO")
+                Text(L10n.text("MONTANDO SEU\nMULTIVERSO"))
                     .font(MVFont.display(36, width: 120))
                     .lineSpacing(-8)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(MV.C.ink)
-                Text("Puxando reviews, votos e listas de \(nFol) loristas em \(max(1, selected.count)) universo\(selected.count > 1 ? "s" : "")…")
+                Text(L10n.format("Puxando reviews, votos e listas de %1$@ loristas em %2$@ universo%3$@…", String(describing: nFol), String(describing: max(1, selected.count)), String(describing: selected.count > 1 ? "s" : "")))
                     .font(MVFont.body(13, weight: 600))
                     .foregroundStyle(MV.C.muted)
                     .multilineTextAlignment(.center)

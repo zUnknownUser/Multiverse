@@ -9,8 +9,8 @@ struct BlockedUsersView: View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             VStack(alignment: .leading, spacing: 18) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("BLOQUEADOS").font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
-                    Text("Quem está aqui não vê seu perfil, não comenta nas suas reviews e some do seu feed.")
+                    Text(L10n.text("BLOQUEADOS")).font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
+                    Text(L10n.text("Quem está aqui não vê seu perfil, não comenta nas suas reviews e some do seu feed."))
                         .font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
                 }
 
@@ -25,7 +25,7 @@ struct BlockedUsersView: View {
                     }
                 }
 
-                Text("Pra bloquear alguém, abra o perfil da pessoa e toque em ••• → Bloquear. Ela não é avisada.")
+                Text(L10n.text("Pra bloquear alguém, abra o perfil da pessoa e toque em ••• → Bloquear. Ela não é avisada."))
                     .font(MVFont.body(13, weight: 500))
                     .foregroundStyle(MV.C.ink)
                     .padding(14)
@@ -56,11 +56,11 @@ private struct BlockedUserRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(user.handle).font(MVFont.bold(15)).foregroundStyle(MV.C.ink)
-                Text("Bloqueado em \(user.blockedOn)").font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
+                Text(L10n.format("Bloqueado em %1$@", String(describing: user.blockedOn))).font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
             }
             Spacer()
 
-            Text("DESBLOQUEAR")
+            Text(L10n.text("DESBLOQUEAR"))
                 .font(MVFont.bold(11))
                 .padding(.horizontal, 12).padding(.vertical, 10)
                 .foregroundStyle(MV.C.ink)

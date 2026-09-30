@@ -8,11 +8,11 @@ struct ProPaywallView: View {
     @Environment(\.dismiss) private var dismiss
 
     private let features: [(title: String, subtitle: String)] = [
-        ("Estatísticas avançadas", "horas, notas, hábitos"),
-        ("Wrapped anual", "o resumo do seu ano inteiro"),
-        ("Temas", "Noir, Pergaminho e Gibi clássico"),
-        ("Selos e molduras exclusivos", "no seu nome em todo lugar"),
-        ("Listas e clubes sem limite", ""),
+        (L10n.text("Estatísticas avançadas"), L10n.text("horas, notas, hábitos")),
+        (L10n.text("Wrapped anual"), L10n.text("o resumo do seu ano inteiro")),
+        (L10n.text("Temas"), L10n.text("Noir, Pergaminho e Gibi clássico")),
+        (L10n.text("Selos e molduras exclusivos"), L10n.text("no seu nome em todo lugar")),
+        (L10n.text("Listas e clubes sem limite"), ""),
     ]
 
     var body: some View {
@@ -27,9 +27,10 @@ struct ProPaywallView: View {
                     Button {
                         Task { await proStore.restorePurchases() }
                     } label: {
-                        Text("Restaurar compra").font(MVFont.bold(13)).underline().foregroundStyle(MV.C.ink)
+                        Text(L10n.text("Restaurar compra")).font(MVFont.bold(13)).underline().foregroundStyle(MV.C.ink)
                     }
                     .buttonStyle(.plain)
+                    .disabled(proStore.isProcessingPurchase)
                 }
 
                 hero
@@ -52,7 +53,7 @@ struct ProPaywallView: View {
                 if proStore.isLoadingProducts {
                     ProgressView().frame(maxWidth: .infinity).padding(.vertical, 20)
                 } else if proStore.products.isEmpty {
-                    Text("Configure `Configuration/Products.storekit` no scheme do Xcode pra testar as compras (ver README).")
+                    Text(L10n.text("Os planos estão indisponíveis no momento. Tente novamente mais tarde."))
                         .font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
                         .padding(14).comicCard(shadow: 0, dashed: true)
                 } else {
@@ -65,7 +66,7 @@ struct ProPaywallView: View {
 
                 Spacer(minLength: 8)
 
-                Text("TESTAR 7 DIAS GRÁTIS")
+                Text(proStore.annualTrial?.buttonTitle ?? L10n.text("ASSINAR PRO"))
                     .font(MVFont.bold(15))
                     .frame(maxWidth: .infinity).frame(height: 54)
                     .foregroundStyle(MV.C.paper)
@@ -78,8 +79,9 @@ struct ProPaywallView: View {
                         guard let annual = proStore.products.first(where: { $0.id == ProStore.annualID }) else { return }
                         Task { await proStore.purchase(annual) }
                     }
+                    .allowsHitTesting(!proStore.isProcessingPurchase && !proStore.isLoadingProducts)
 
-                Text("Cancele quando quiser. Anúncio no feed? Nunca.")
+                Text(L10n.text("Cancele quando quiser. Anúncio no feed? Nunca."))
                     .font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
@@ -87,6 +89,7 @@ struct ProPaywallView: View {
             .padding(.bottom, 24)
         }
         .background(MV.C.paper.ignoresSafeArea())
+        .task { await proStore.loadProducts() }
         .onChange(of: proStore.isPro) { _, isPro in if isPro { dismiss() } }
     }
 
@@ -104,7 +107,7 @@ struct ProPaywallView: View {
                     .overlay(RoundedRectangle(cornerRadius: MV.R.sm).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                     .clipShape(RoundedRectangle(cornerRadius: MV.R.sm))
                     .rotationEffect(.degrees(-4))
-                Text("Pra quem leva o cânone a sério.").font(MVFont.bold(15)).foregroundStyle(MV.C.paper)
+                Text(L10n.text("Pra quem leva o cânone a sério.")).font(MVFont.bold(15)).foregroundStyle(MV.C.paper)
             }
             .padding(18)
         }
@@ -124,16 +127,16 @@ struct ProPaywallView: View {
     private func planCard(_ product: Product) -> some View {
         let isAnnual = product.id == ProStore.annualID
         return VStack(alignment: .leading, spacing: 4) {
-            if isAnnual {
-                Text("2 MESES GRÁTIS")
+            if isAnnual, let savings = proStore.annualSavingsPercent {
+                Text(L10n.format("ECONOMIZE %1$@%%", String(savings)))
                     .font(MVFont.black(9)).tracking(0.3)
                     .foregroundStyle(MV.C.paper)
                     .padding(.horizontal, 6).padding(.vertical, 3)
                     .background(MV.C.ink)
             }
-            Text(isAnnual ? "ANUAL ✓" : "MENSAL").font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
+            Text(isAnnual ? L10n.text("ANUAL ✓") : L10n.text("MENSAL")).font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
             Text(product.displayPrice).font(MVFont.black(26)).foregroundStyle(MV.C.ink)
-            Text(isAnnual ? "por mês, cobrado anual" : "por mês").font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
+            Text(isAnnual ? L10n.text("por ano") : L10n.text("por mês")).font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)

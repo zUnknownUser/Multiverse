@@ -32,11 +32,11 @@ struct ConversationView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(user.name).font(MVFont.bold(16)).foregroundStyle(MV.C.ink)
                 let pct = 40 + Int(Logic.seed(user.id) % 55)
-                Text("\(pct)% de afinidade · online agora").font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
+                Text(L10n.format("%1$@%% de afinidade · online agora", String(describing: pct))).font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
             }
             Spacer()
             Button { store.showingChallengeUserID = user.id } label: {
-                Text("DESAFIAR")
+                Text(L10n.text("DESAFIAR"))
                     .font(MVFont.bold(11))
                     .padding(.horizontal, 12).frame(height: 34)
                     .foregroundStyle(MV.C.ink)
@@ -70,7 +70,7 @@ struct ConversationView: View {
             }
             .buttonStyle(.plain)
 
-            TextField("Escreva algo…", text: $draft)
+            TextField(L10n.text("Escreva algo…"), text: $draft)
                 .font(MVFont.body(14, weight: 500))
                 .padding(.horizontal, 14)
                 .frame(height: 44)
@@ -79,7 +79,7 @@ struct ConversationView: View {
                 .clipShape(Capsule())
                 .onSubmit(send)
 
-            Text("ENVIAR")
+            Text(L10n.text("ENVIAR"))
                 .font(MVFont.bold(12))
                 .padding(.horizontal, 16).frame(height: 44)
                 .foregroundStyle(MV.C.paper)
@@ -141,14 +141,14 @@ private struct MessageBubble: View {
 
     private var shieldedCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("◆ ESCUDO DE SPOILER").font(MVFont.black(10)).tracking(0.4).foregroundStyle(MV.C.card)
+            Text(L10n.text("◆ ESCUDO DE SPOILER")).font(MVFont.black(10)).tracking(0.4).foregroundStyle(MV.C.card)
                 .padding(.horizontal, 8).padding(.vertical, 5)
                 .background(MV.C.dc)
                 .overlay(RoundedRectangle(cornerRadius: MV.R.xs).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                 .clipShape(RoundedRectangle(cornerRadius: MV.R.xs))
-            Text("\(otherUser.name) mandou uma carta sobre algo à sua frente.")
+            Text(L10n.format("%1$@ mandou uma carta sobre algo à sua frente.", String(describing: otherUser.name)))
                 .font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.ink)
-            Button("Mostrar mesmo assim") { store.revealSpoiler(message.id) }
+            Button(L10n.text("Mostrar mesmo assim")) { store.revealSpoiler(message.id) }
                 .font(MVFont.bold(12)).underline().foregroundStyle(MV.C.ink)
                 .buttonStyle(.plain)
         }
@@ -166,7 +166,7 @@ private struct MessageBubble: View {
                 PosterView(item: item, universe: uni, width: 56, height: 84, titleSize: 10, shadow: 0)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(item.title).font(MVFont.bold(13)).foregroundStyle(MV.C.ink).lineLimit(2)
-                    Text(String(format: "%.1f ★", item.avg)).font(MVFont.black(13)).foregroundStyle(MV.C.ink)
+                    Text((L10n.decimal(item.avg) + " ★")).font(MVFont.black(13)).foregroundStyle(MV.C.ink)
                 }
             }
             if let text = message.text, !text.isEmpty {
@@ -174,7 +174,7 @@ private struct MessageBubble: View {
             }
             HStack(spacing: 6) {
                 let wanted = store.isWanted(item.id)
-                Text(wanted ? "✓ NA LISTA" : "+ QUERO")
+                Text(wanted ? L10n.text("✓ NA LISTA") : L10n.text("+ QUERO"))
                     .font(MVFont.bold(10))
                     .padding(.horizontal, 10).frame(height: 30)
                     .foregroundStyle(wanted ? MV.C.paper : MV.C.ink)
@@ -183,7 +183,7 @@ private struct MessageBubble: View {
                     .clipShape(Capsule())
                     .contentShape(Rectangle())
                     .onTapGesture { store.toggleWanted(item.id) }
-                Text("VER →")
+                Text(L10n.text("VER →"))
                     .font(MVFont.bold(10))
                     .padding(.horizontal, 10).frame(height: 30)
                     .foregroundStyle(MV.C.ink)
@@ -206,7 +206,7 @@ private struct MessageBubble: View {
         let itemB = store.item(payload.itemBID)
         let responded = payload.responderChoice != nil
         return VStack(alignment: .leading, spacing: 8) {
-            Text("DUELO · \(payload.wager)").kicker(9).foregroundStyle(MV.C.muted)
+            Text(L10n.format("DUELO · %1$@", String(describing: payload.wager))).kicker(9).foregroundStyle(MV.C.muted)
             Text(payload.question).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
             HStack(spacing: 6) {
                 duelSide(title: itemA?.title ?? "?", color: MV.C.marvel, chosen: payload.chooserChoice == 0, responded: payload.responderChoice == 0)
@@ -215,19 +215,19 @@ private struct MessageBubble: View {
             }
             if !isMe && !responded {
                 HStack(spacing: 6) {
-                    Text("ESCOLHER A")
+                    Text(L10n.text("ESCOLHER A"))
                         .font(MVFont.bold(10)).padding(.horizontal, 8).frame(height: 28)
                         .foregroundStyle(MV.C.paper).background(MV.C.marvel).clipShape(Capsule())
                         .contentShape(Rectangle())
                         .onTapGesture { store.respondToDuelChallenge(messageID: message.id, in: message.conversationID, choice: 0) }
-                    Text("ESCOLHER B")
+                    Text(L10n.text("ESCOLHER B"))
                         .font(MVFont.bold(10)).padding(.horizontal, 8).frame(height: 28)
                         .foregroundStyle(MV.C.paper).background(MV.C.dc).clipShape(Capsule())
                         .contentShape(Rectangle())
                         .onTapGesture { store.respondToDuelChallenge(messageID: message.id, in: message.conversationID, choice: 1) }
                 }
             } else if responded {
-                Text("Respondido · KRAK!").font(MVFont.bold(11)).foregroundStyle(MV.C.muted)
+                Text(L10n.text("Respondido · KRAK!")).font(MVFont.bold(11)).foregroundStyle(MV.C.muted)
             }
         }
         .padding(12)

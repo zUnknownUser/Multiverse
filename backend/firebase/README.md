@@ -22,9 +22,15 @@ por esta implementação e nenhum e-mail real foi enviado nos testes.
   muda com `confirmPasswordReset`; depois tenta entrar com as novas credenciais.
 - Caso o login após redefinir falhe, o usuário volta ao login sem reutilizar o código.
 
-O nome de exibição fica no Firebase Auth. Apelido, cor e bio ainda são locais por UID.
-O selo de formato válido não significa reserva global do apelido. Login por @usuário,
-perfis públicos e unicidade exigirão o backend de perfis na próxima etapa.
+Nome de exibição, apelido, cor e bio são persistidos pela API NestJS em PostgreSQL,
+com unicidade de apelido no servidor. O app mantém a identidade no Firebase Auth e
+conclui o perfil pela API antes do onboarding. Login por @usuário continua indisponível;
+autenticação por senha usa e-mail. Veja [a configuração da API](../api/README.md).
+
+Links recebidos durante a inicialização ou outra operação de autenticação ficam em
+memória até o app poder validá-los. Se chegarem vários, prevalece o mais recente.
+O estado da sessão é conferido novamente antes de abrir a recuperação; logout descarta
+links pendentes. Nenhum token do link é gravado no armazenamento local.
 
 ## Ativação futura
 

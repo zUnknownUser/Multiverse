@@ -37,7 +37,7 @@ struct UniverseView: View {
             uni.color
             Halftone(color: uni.inkColor.opacity(0.18))
             VStack(alignment: .leading, spacing: 10) {
-                Text("UNIVERSO · \(uni.canon)").kicker(11).foregroundStyle(uni.inkColor.opacity(0.85))
+                Text(L10n.format("UNIVERSO · %1$@", String(describing: uni.canon))).kicker(11).foregroundStyle(uni.inkColor.opacity(0.85))
                 Text(uni.name.uppercased())
                     .font(MVFont.display(38, width: 125))
                     .foregroundStyle(uni.inkColor)
@@ -46,7 +46,7 @@ struct UniverseView: View {
                     .foregroundStyle(uni.inkColor.opacity(0.9))
                 VStack(alignment: .leading, spacing: 6) {
                     ComicProgress(value: Double(pct) / 100, fill: uni.inkColor, height: 10)
-                    Text("\(pct)% visto").font(MVFont.bold(12)).foregroundStyle(uni.inkColor)
+                    Text(L10n.format("%1$@%% visto", String(describing: pct))).font(MVFont.bold(12)).foregroundStyle(uni.inkColor)
                 }
             }
             .padding(16)
@@ -60,7 +60,7 @@ struct UniverseView: View {
         HStack(spacing: 8) {
             ForEach(UniverseTab.allCases, id: \.self) { t in
                 Button { tab = t } label: {
-                    Text(t.rawValue.uppercased())
+                    Text(L10n.text(t.rawValue).uppercased())
                         .font(MVFont.bold(11))
                         .padding(.horizontal, 10).padding(.vertical, 9)
                         .foregroundStyle(tab == t ? MV.C.paper : MV.C.ink)
@@ -95,7 +95,7 @@ private struct GeneralTabContent: View {
             .padding(.horizontal, MV.pad)
 
             VStack(alignment: .leading, spacing: 12) {
-                SectionHeader(title: "Mais bem avaliados").padding(.horizontal, MV.pad)
+                SectionHeader(title: L10n.text("Mais bem avaliados")).padding(.horizontal, MV.pad)
                 ScrollView(.horizontal) {
                     HStack(spacing: 12) {
                         ForEach(store.topRatedItems(in: universeID)) { item in
@@ -111,7 +111,7 @@ private struct GeneralTabContent: View {
             }
 
             VStack(alignment: .leading, spacing: 12) {
-                SectionHeader(title: "Reviews populares").padding(.horizontal, MV.pad)
+                SectionHeader(title: L10n.text("Reviews populares")).padding(.horizontal, MV.pad)
                 VStack(spacing: 12) {
                     ForEach(store.reviewsIn(universe: universeID, limit: 3)) { review in
                         FeedReviewCard(review: review)
@@ -132,7 +132,7 @@ private struct TimelineTabContent: View {
             let chips = store.timelineFriendChips(for: universeID)
             if !chips.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("ONDE SEU PESSOAL ESTÁ").kicker(11).foregroundStyle(MV.C.muted)
+                    Text(L10n.text("ONDE SEU PESSOAL ESTÁ")).kicker(11).foregroundStyle(MV.C.muted)
                     ScrollView(.horizontal) {
                         HStack(spacing: 8) {
                             ForEach(chips, id: \.user.id) { chip in
@@ -183,7 +183,7 @@ private struct TimelineRailRow: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(row.entry.era.uppercased()).kicker(10).foregroundStyle(MV.C.muted)
                         Text(row.item.title).font(MVFont.black(17)).foregroundStyle(MV.C.ink)
-                        Text("[\(row.item.type)] \(row.entry.note) · ★ \(String(format: "%.1f", row.item.avg))")
+                        Text("[\(L10n.text(row.item.type))] \(row.entry.note) · ★ \(L10n.decimal(row.item.avg))")
                             .font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted)
                         if !row.friends.isEmpty {
                             HStack(spacing: -8) {
@@ -207,7 +207,7 @@ private struct OrdersTabContent: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Ordens montadas e votadas pela comunidade. A mais votada sobe pro topo.")
+            Text(L10n.text("Ordens montadas e votadas pela comunidade. A mais votada sobe pro topo."))
                 .font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.muted)
             VStack(spacing: 12) {
                 ForEach(store.ordersList(in: universeID)) { order in
@@ -246,7 +246,7 @@ private struct OrderSummaryCard: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(order.title).font(MVFont.bold(15)).foregroundStyle(MV.C.ink)
                     if let by = store.user(order.by) {
-                        Text("por \(by.handle) · \(order.steps.count) itens · \(Logic.fmt(Int((Double(order.votes) / 3).rounded()))) seguem")
+                        Text(L10n.format("por %1$@ · %2$@ itens · %3$@ seguem", String(describing: by.handle), String(describing: order.steps.count), String(describing: Logic.fmt(Int((Double(order.votes) / 3).rounded())))))
                             .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
                     }
                     HStack(spacing: 8) {
@@ -281,7 +281,7 @@ private struct CharactersTabContent: View {
                             .clipShape(Circle())
                             .overlay(Circle().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                         Text(item.title).font(MVFont.bold(12)).foregroundStyle(MV.C.ink).lineLimit(1)
-                        Text("★ \(String(format: "%.1f", item.avg)) · \(Logic.fmt(Logic.logCount(item))) registros")
+                        Text(L10n.format("★ %1$@ · %2$@ registros", String(describing: L10n.decimal(item.avg)), String(describing: Logic.fmt(Logic.logCount(item)))))
                             .font(MVFont.body(9, weight: 600)).foregroundStyle(MV.C.muted)
                             .multilineTextAlignment(.center).lineLimit(2)
                     }
@@ -304,7 +304,7 @@ private struct RoomsTabContent: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if rooms.isEmpty {
-                Text("Nenhuma sala aberta nesse universo agora.")
+                Text(L10n.text("Nenhuma sala aberta nesse universo agora."))
                     .font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.muted)
             } else {
                 ForEach(rooms) { room in

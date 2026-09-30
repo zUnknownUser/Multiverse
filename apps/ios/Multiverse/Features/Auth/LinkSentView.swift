@@ -17,15 +17,15 @@ struct LinkSentView: View {
                 .background(RoundedRectangle(cornerRadius: MV.R.md).fill(MV.C.shadow).offset(x: MV.Shadow.m, y: MV.Shadow.m))
                 .rotationEffect(.degrees(-3))
 
-            Text("OLHE SEU E-MAIL").font(MVFont.display(34, width: 120)).foregroundStyle(MV.C.ink)
+            Text(L10n.text("OLHE SEU E-MAIL")).font(MVFont.display(34, width: 120)).foregroundStyle(MV.C.ink)
 
-            (Text("Se houver uma conta para ").font(MVFont.body(15, weight: 500))
+            (Text(L10n.text("Se houver uma conta para ")).font(MVFont.body(15, weight: 500))
                 + Text(auth.resetEmail).font(MVFont.body(15, weight: 800))
-                + Text(" com recuperação disponível, você receberá um link. Confira também o spam.").font(MVFont.body(15, weight: 500)))
+                + Text(L10n.text(" com recuperação disponível, você receberá um link. Confira também o spam.")).font(MVFont.body(15, weight: 500)))
                 .foregroundStyle(MV.C.ink)
 
             VStack(spacing: 10) {
-                Text("ABRIR APP DE E-MAIL")
+                Text(L10n.text("ABRIR APP DE E-MAIL"))
                     .font(MVFont.bold(14))
                     .frame(maxWidth: .infinity).frame(height: 54)
                     .foregroundStyle(MV.C.paper)
@@ -37,12 +37,12 @@ struct LinkSentView: View {
                     .onTapGesture {
                         if let url = URL(string: "message://") {
                             openURL(url) { accepted in
-                                if !accepted { auth.infoMessage = "Abra seu aplicativo de e-mail para acessar o link." }
+                                if !accepted { auth.infoMessage = L10n.text("Abra seu aplicativo de e-mail para acessar o link.") }
                             }
                         }
                     }
 
-                Text("VOLTAR PRO LOGIN")
+                Text(L10n.text("VOLTAR PRO LOGIN"))
                     .font(MVFont.bold(14))
                     .frame(maxWidth: .infinity).frame(height: 54)
                     .foregroundStyle(MV.C.ink)
@@ -60,14 +60,17 @@ struct LinkSentView: View {
 
             HStack {
                 Spacer()
-                Text("Não chegou?").font(MVFont.body(13, weight: 500)).foregroundStyle(MV.C.ink)
-                if auth.resendCooldown > 0 {
-                    Text("Reenviar em 0:\(String(format: "%02d", auth.resendCooldown))")
-                        .font(MVFont.bold(13)).underline().foregroundStyle(MV.C.ink)
-                } else {
-                    Button("Reenviar") { Task { await auth.requestPasswordReset() } }
-                        .font(MVFont.bold(13)).underline().foregroundStyle(MV.C.ink)
-                        .buttonStyle(.plain)
+                Text(L10n.text("Não chegou?")).font(MVFont.body(13, weight: 500)).foregroundStyle(MV.C.ink)
+                TimelineView(.periodic(from: .now, by: 1)) { _ in
+                    let remaining = auth.passwordResetResendCooldown
+                    if remaining > 0 {
+                        Text(L10n.format("Reenviar em %1$@", String(format: "%d:%02d", remaining / 60, remaining % 60)))
+                            .font(MVFont.bold(13)).underline().foregroundStyle(MV.C.ink)
+                    } else {
+                        Button(L10n.text("Reenviar")) { Task { await auth.requestPasswordReset() } }
+                            .font(MVFont.bold(13)).underline().foregroundStyle(MV.C.ink)
+                            .buttonStyle(.plain)
+                    }
                 }
                 Spacer()
             }

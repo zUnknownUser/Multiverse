@@ -1,0 +1,588 @@
+{
+  "clubs": [
+    {
+      "id": "c-cidadela",
+      "name": "Citadel Club",
+      "uni": "wow",
+      "orderID": "o-azeroth",
+      "memberIDs": [
+        "duda",
+        "nina",
+        "gui",
+        "bia"
+      ],
+      "weeks": [
+        {
+          "week": 1,
+          "itemID": "w-wcfilme",
+          "totalUnits": 1,
+          "unitLabel": "Movie",
+          "paceLabel": "Movie · 123 min",
+          "segments": [
+            "Discussion"
+          ]
+        },
+        {
+          "week": 2,
+          "itemID": "w-wc3",
+          "totalUnits": 1,
+          "unitLabel": "Campaign",
+          "paceLabel": "Game · 4 campaigns",
+          "segments": [
+            "Discussion"
+          ]
+        },
+        {
+          "week": 3,
+          "itemID": "w-arthas",
+          "totalUnits": 18,
+          "unitLabel": "Ch.",
+          "paceLabel": "Book · 400 pages · ≈57 per day",
+          "segments": [
+            "Ch. 1–8",
+            "Ch. 9–16",
+            "Ending"
+          ]
+        },
+        {
+          "week": 4,
+          "itemID": "w-wotlk",
+          "totalUnits": 1,
+          "unitLabel": "Expansion",
+          "paceLabel": "Game · ≈40h",
+          "segments": [
+            "Discussion"
+          ]
+        },
+        {
+          "week": 5,
+          "itemID": "w-cata",
+          "totalUnits": 1,
+          "unitLabel": "Expansion",
+          "paceLabel": "Game · ≈25h",
+          "segments": [
+            "Discussion"
+          ]
+        },
+        {
+          "week": 6,
+          "itemID": "w-crimes",
+          "totalUnits": 12,
+          "unitLabel": "Ch.",
+          "paceLabel": "Book · 320 pages",
+          "segments": [
+            "Ch. 1–6",
+            "Ch. 7–12"
+          ]
+        }
+      ],
+      "currentWeek": 3
+    }
+  ],
+  "clubMessages": [
+    {
+      "id": "cm1",
+      "clubID": "c-cidadela",
+      "week": 3,
+      "segment": "Ch. 9–16",
+      "userID": "gui",
+      "text": "The Mal'Ganis scene in Northrend is SO much better in the book than in the game.",
+      "when": "14:02",
+      "hearts": 0,
+      "pows": 0,
+      "aboutUnit": 10
+    },
+    {
+      "id": "cm2",
+      "clubID": "c-cidadela",
+      "week": 3,
+      "segment": "Ch. 9–16",
+      "userID": "nina",
+      "text": "Muradin realizing he's lost Arthas 😳 hurts so much",
+      "when": "14:10",
+      "hearts": 12,
+      "pows": 4,
+      "aboutUnit": 11
+    },
+    {
+      "id": "cm3",
+      "clubID": "c-cidadela",
+      "week": 3,
+      "segment": "Ch. 9–16",
+      "userID": "duda",
+      "text": "I'm on chapter 11. No chapter 12 spoilers please",
+      "when": "14:15",
+      "hearts": 0,
+      "pows": 0,
+      "aboutUnit": 11
+    },
+    {
+      "id": "cm4",
+      "clubID": "c-cidadela",
+      "week": 3,
+      "segment": "Ch. 9–16",
+      "userID": "bia",
+      "text": "The way he calls out to Frostmourne for the first time gives me chills.",
+      "when": "15:02",
+      "hearts": 6,
+      "pows": 1,
+      "aboutUnit": 12
+    },
+    {
+      "id": "cm5",
+      "clubID": "c-cidadela",
+      "week": 3,
+      "segment": "Ch. 9–16",
+      "userID": "gui",
+      "text": "Chapter 12 confirms Muradin survives, but in such a sad way.",
+      "when": "15:20",
+      "hearts": 3,
+      "pows": 0,
+      "aboutUnit": 12
+    },
+    {
+      "id": "cm6",
+      "clubID": "c-cidadela",
+      "week": 3,
+      "segment": "Ch. 9–16",
+      "userID": "nina",
+      "text": "After chapter 12, Sylvanas practically steals the show.",
+      "when": "16:01",
+      "hearts": 5,
+      "pows": 2,
+      "aboutUnit": 13
+    }
+  ],
+  "theories": [
+    {
+      "id": "th1",
+      "userID": "joao",
+      "uni": "marvel",
+      "text": "The Snap created the branch that the TVA could never prune",
+      "status": "aberta",
+      "postedDaysAgo": 12,
+      "plausibleBase": 2035,
+      "travelBase": 1145,
+      "resolvesAtItemID": "m-secret",
+      "resolutionTitle": null,
+      "resolutionNote": null,
+      "accuracyBefore": null,
+      "accuracyAfter": null
+    },
+    {
+      "id": "th2",
+      "userID": "bia",
+      "uni": "wow",
+      "text": "Sylvanas will return as an ally of the Horde",
+      "status": "confirmada",
+      "postedDaysAgo": 214,
+      "plausibleBase": 493,
+      "travelBase": 711,
+      "resolvesAtItemID": null,
+      "resolutionTitle": "The War Within",
+      "resolutionNote": "Cinematic 3 · marked by 3 reviewers",
+      "accuracyBefore": 64,
+      "accuracyAfter": 66
+    },
+    {
+      "id": "th3",
+      "userID": "caio",
+      "uni": "dc",
+      "text": "Earth-22's Batman is the same one from The Dark Knight",
+      "status": "refutada",
+      "postedDaysAgo": 340,
+      "plausibleBase": 441,
+      "travelBase": 1563,
+      "resolvesAtItemID": null,
+      "resolutionTitle": "an interview with the writer",
+      "resolutionNote": null,
+      "accuracyBefore": null,
+      "accuracyAfter": null
+    }
+  ],
+  "predictionEvents": [
+    {
+      "id": "pe-tww",
+      "uni": "wow",
+      "title": "Next expansion",
+      "closesAt": "2026-10-11T21:47:00-03:00",
+      "questions": [
+        {
+          "id": "pq1",
+          "text": "Who dies in the opening cinematic?",
+          "points": 100,
+          "options": [
+            "Anduin",
+            "Thrall",
+            "Alleria",
+            "Nobody"
+          ],
+          "correctOptionIndex": null,
+          "revealed": false
+        },
+        {
+          "id": "pq2",
+          "text": "Average community rating in week 1",
+          "points": 60,
+          "options": null,
+          "correctOptionIndex": null,
+          "revealed": false
+        },
+        {
+          "id": "pq3",
+          "text": "Which faction wins the first major battle?",
+          "points": 80,
+          "options": [
+            "Horde",
+            "Alliance",
+            "Neither—a narrative draw"
+          ],
+          "correctOptionIndex": null,
+          "revealed": false
+        },
+        {
+          "id": "pq4",
+          "text": "Will we see Sylvanas in the first week?",
+          "points": 40,
+          "options": [
+            "Yes",
+            "No"
+          ],
+          "correctOptionIndex": null,
+          "revealed": false
+        },
+        {
+          "id": "pq5",
+          "text": "How many servers will go down on launch day?",
+          "points": 50,
+          "options": [
+            "None",
+            "1 to 3",
+            "4 or more"
+          ],
+          "correctOptionIndex": null,
+          "revealed": false
+        }
+      ]
+    }
+  ],
+  "watchAvailability": [
+    {
+      "itemID": "m-ultimato",
+      "options": [
+        {
+          "service": "Disney+",
+          "initials": "DI",
+          "colorHex": "#113CCF",
+          "note": "Included in your subscription",
+          "actionLabel": "ASSISTIR"
+        },
+        {
+          "service": "Apple TV",
+          "initials": "AP",
+          "colorHex": "#16130F",
+          "note": "Rent R$14.90 · Buy R$39.90",
+          "actionLabel": "ALUGAR"
+        },
+        {
+          "service": "Amazon",
+          "initials": "AM",
+          "colorHex": "#F4A814",
+          "note": "4K Blu-ray · R$89.90",
+          "actionLabel": "COMPRAR"
+        }
+      ],
+      "readFirst": [
+        {
+          "id": "rf1",
+          "title": "The Infinity Gauntlet",
+          "subtitle": "Comic",
+          "colorHex": "#E4412F",
+          "note": "Panini · collected edition · R$59.90",
+          "actionLabel": "COMPRAR"
+        }
+      ]
+    }
+  ],
+  "correctionSuggestions": [
+    {
+      "id": "cs1",
+      "itemID": "d-crise",
+      "userID": "rafa",
+      "changeType": "Status de cânone",
+      "fromValue": "Cânone",
+      "toValue": "Retconado",
+      "source": "dc.fandom.com/wiki/Infinite_Crisis",
+      "reasoning": "Infinite Crisis (2005) undid parts of the outcome and brought Earth-2 back.",
+      "approverIDs": [
+        "tati",
+        "lu"
+      ],
+      "approvalsNeeded": 3
+    }
+  ],
+  "conversations": [
+    {
+      "userID": "nina",
+      "lastPreview": "sent a card: Cataclysm",
+      "lastWhen": "now",
+      "unreadCount": 2,
+      "isRequest": false
+    },
+    {
+      "userID": "caio",
+      "lastPreview": "challenged you to a duel · Arthas vs Thanos",
+      "lastWhen": "12 min",
+      "unreadCount": 1,
+      "isRequest": false
+    },
+    {
+      "userID": "leo",
+      "lastPreview": "You: LOL the TVA never forgives",
+      "lastWhen": "1h",
+      "unreadCount": 0,
+      "isRequest": false
+    },
+    {
+      "userID": "bia",
+      "lastPreview": "sent a theory: Sylvanas returns",
+      "lastWhen": "3h",
+      "unreadCount": 0,
+      "isRequest": false
+    },
+    {
+      "userID": "tati",
+      "lastPreview": "reacted POW! to your card",
+      "lastWhen": "yesterday",
+      "unreadCount": 0,
+      "isRequest": false
+    },
+    {
+      "userID": "rafa",
+      "lastPreview": "Pre-Crisis is better, and I'll die on that hill",
+      "lastWhen": "2 days",
+      "unreadCount": 0,
+      "isRequest": false
+    },
+    {
+      "userID": "gui",
+      "lastPreview": "Hey! I saw you're an Azeroth lorekeeper too",
+      "lastWhen": "5 days",
+      "unreadCount": 1,
+      "isRequest": true
+    },
+    {
+      "userID": "mari",
+      "lastPreview": "Loved your Civil War review",
+      "lastWhen": "1 wk",
+      "unreadCount": 1,
+      "isRequest": true
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg1",
+      "conversationID": "nina",
+      "senderID": "nina",
+      "when": "14:02",
+      "kind": "workCard",
+      "text": "Play this NOW. Seriously. Tell me what you think afterward.",
+      "itemID": "w-wotlk"
+    },
+    {
+      "id": "msg2",
+      "conversationID": "nina",
+      "senderID": "duda",
+      "when": "14:10",
+      "kind": "text",
+      "text": "Added to my list! I'm still in Year 27, no Cata spoilers please"
+    },
+    {
+      "id": "msg3",
+      "conversationID": "nina",
+      "senderID": "nina",
+      "when": "14:32",
+      "kind": "workCard",
+      "text": "You need to see this when you get there",
+      "itemID": "w-cata"
+    },
+    {
+      "id": "msg4",
+      "conversationID": "nina",
+      "senderID": "nina",
+      "when": "15:00",
+      "kind": "duelChallenge",
+      "duelChallenge": {
+        "itemAID": "c-coringa",
+        "itemBID": "c-sylvanas",
+        "question": "The best-written villain?",
+        "wager": "50 pts",
+        "chooserChoice": 1,
+        "responderChoice": null
+      }
+    },
+    {
+      "id": "msg5",
+      "conversationID": "caio",
+      "senderID": "caio",
+      "when": "12 min",
+      "kind": "duelChallenge",
+      "duelChallenge": {
+        "itemAID": "w-arthas",
+        "itemBID": "m-ultimato",
+        "question": "Which ending was more satisfying?",
+        "wager": "The loser writes a review of the winner",
+        "chooserChoice": 0,
+        "responderChoice": null
+      }
+    },
+    {
+      "id": "msg6",
+      "conversationID": "leo",
+      "senderID": "leo",
+      "when": "58 min",
+      "kind": "text",
+      "text": "The TVA arresting him again was just cruel"
+    },
+    {
+      "id": "msg7",
+      "conversationID": "leo",
+      "senderID": "duda",
+      "when": "1h",
+      "kind": "text",
+      "text": "LOL the TVA never forgives"
+    },
+    {
+      "id": "msg8",
+      "conversationID": "bia",
+      "senderID": "bia",
+      "when": "3h",
+      "kind": "text",
+      "text": "sent a theory: Sylvanas returns"
+    },
+    {
+      "id": "msg9",
+      "conversationID": "tati",
+      "senderID": "tati",
+      "when": "yesterday",
+      "kind": "text",
+      "text": "reacted POW! to your card"
+    },
+    {
+      "id": "msg10",
+      "conversationID": "rafa",
+      "senderID": "rafa",
+      "when": "2 days",
+      "kind": "text",
+      "text": "Pre-Crisis is better, and I'll die on that hill"
+    }
+  ],
+  "rooms": [
+    {
+      "itemID": "w-wotlk",
+      "segments": [
+        "Northrend",
+        "Ulduar",
+        "Citadel"
+      ],
+      "onlineCount": 1204
+    },
+    {
+      "itemID": "d-crise",
+      "segments": [
+        "Issue 1",
+        "Issue 2",
+        "Issue 3",
+        "Issue 4",
+        "Issue 5",
+        "Issue 6",
+        "Issue 7",
+        "Issue 8",
+        "Issue 9",
+        "Issue 10",
+        "Issue 11",
+        "Issue 12"
+      ],
+      "onlineCount": 312
+    },
+    {
+      "itemID": "m-loki",
+      "segments": [
+        "Episode 1",
+        "Episode 2",
+        "Episode 3",
+        "Episode 4",
+        "Episode 5",
+        "Episode 6"
+      ],
+      "onlineCount": 88
+    },
+    {
+      "itemID": "e-cataclismo",
+      "segments": [
+        "The Shattering"
+      ],
+      "onlineCount": 640
+    },
+    {
+      "itemID": "m-secret",
+      "segments": [
+        "Issue 1",
+        "Issue 2",
+        "Issue 3",
+        "Issue 4",
+        "Issue 5"
+      ],
+      "onlineCount": 18400
+    }
+  ],
+  "roomMessages": [
+    {
+      "id": "rm1",
+      "itemID": "w-wotlk",
+      "segmentIndex": 1,
+      "userID": "gui",
+      "text": "Yogg with 0 keepers is still the hardest raid fight I've ever done",
+      "when": "21:02"
+    },
+    {
+      "id": "rm2",
+      "itemID": "w-wotlk",
+      "segmentIndex": 1,
+      "userID": "nina",
+      "text": "Ulduar's soundtrack is unfairly forgotten",
+      "when": "21:04"
+    },
+    {
+      "id": "rm3",
+      "itemID": "w-wotlk",
+      "segmentIndex": 1,
+      "userID": "duda",
+      "text": "Agreed, the Celestial Planetarium music gives me chills",
+      "when": "21:05"
+    },
+    {
+      "id": "rm4",
+      "itemID": "w-wotlk",
+      "segmentIndex": 1,
+      "userID": "lu",
+      "text": "Anyone else read the books before playing this part?",
+      "when": "21:06"
+    },
+    {
+      "id": "rm5",
+      "itemID": "w-wotlk",
+      "segmentIndex": 2,
+      "userID": "gui",
+      "text": "Icecrown Citadel wraps everything up perfectly",
+      "when": "21:20"
+    }
+  ],
+  "liveEvent": {
+    "id": "le1",
+    "itemID": "m-secret",
+    "question": "That death was…",
+    "viewerCount": 18400,
+    "durationSeconds": 6432
+  }
+}

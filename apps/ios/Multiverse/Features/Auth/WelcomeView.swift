@@ -2,7 +2,6 @@ import SwiftUI
 
 struct WelcomeView: View {
     @Environment(AuthStore.self) private var auth
-    @Environment(BurstCenter.self) private var burst
 
     var body: some View {
         ZStack {
@@ -67,21 +66,23 @@ struct WelcomeView: View {
         VStack(alignment: .leading, spacing: 18) {
             Text("MULTIVERSE")
                 .font(MVFont.display(44, width: 125))
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
                 .tracking(-0.5)
                 .foregroundStyle(MV.C.ink)
 
-            Text("Registre, avalie e discuta todo o cânone dos seus universos favoritos.")
+            Text(L10n.text("Registre, avalie e discuta todo o cânone dos seus universos favoritos."))
                 .font(MVFont.body(15, weight: 500))
                 .foregroundStyle(MV.C.ink)
 
             VStack(spacing: 12) {
-                socialButton("Continuar com Apple", bg: MV.C.ink, fg: MV.C.paper, shadowColor: MV.C.marvel) {
+                socialButton(L10n.text("Continuar com Apple"), bg: MV.C.ink, fg: MV.C.paper, shadowColor: MV.C.marvel) {
                     Task { await auth.continueWithApple() }
                 }
-                socialButton("Continuar com Google", bg: MV.C.card, fg: MV.C.ink, shadowColor: MV.C.ink) {
+                socialButton(L10n.text("Continuar com Google"), bg: MV.C.card, fg: MV.C.ink, shadowColor: MV.C.ink) {
                     Task { await auth.continueWithGoogle() }
                 }
-                socialButton("Criar conta com e-mail", bg: MV.C.card, fg: MV.C.ink, shadowColor: MV.C.ink) {
+                socialButton(L10n.text("Criar conta com e-mail"), bg: MV.C.card, fg: MV.C.ink, shadowColor: MV.C.ink) {
                     auth.push(.createAccount)
                 }
             }
@@ -90,8 +91,8 @@ struct WelcomeView: View {
             HStack {
                 Spacer()
                 Button { auth.push(.signIn) } label: {
-                    (Text("Já tem conta? ").foregroundStyle(MV.C.ink)
-                        + Text("Entrar").underline().foregroundStyle(MV.C.ink).bold())
+                    (Text(L10n.text("Já tem conta? ")).foregroundStyle(MV.C.ink)
+                        + Text(L10n.text("Entrar")).underline().foregroundStyle(MV.C.ink).bold())
                         .font(MVFont.body(15, weight: 600))
                 }
                 .buttonStyle(.plain)
@@ -100,7 +101,7 @@ struct WelcomeView: View {
 
             Spacer(minLength: 8)
 
-            Text("Ao continuar, você aceita os **Termos de Uso** e a **Política de Privacidade**.")
+            Text(LocalizedStringKey(L10n.text("Ao continuar, você aceita os **Termos de Uso** e a **Política de Privacidade**.")))
                 .font(MVFont.body(11, weight: 500))
                 .foregroundStyle(MV.C.muted)
                 .multilineTextAlignment(.center)

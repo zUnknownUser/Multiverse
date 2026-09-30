@@ -1,6 +1,8 @@
 export interface Environment {
   NODE_ENV: 'development' | 'test' | 'production';
   PORT: number;
+  DATABASE_URL?: string;
+  FIREBASE_PROJECT_ID: string;
 }
 
 export function validateEnvironment(
@@ -29,5 +31,32 @@ export function validateEnvironment(
     throw new Error('PORT must be an integer between 1 and 65535.');
   }
 
-  return { NODE_ENV: nodeEnv, PORT: port };
+  const databaseURL = config.DATABASE_URL;
+  if (
+    databaseURL !== undefined &&
+    (typeof databaseURL !== 'string' ||
+      !/^postgres(?:ql)?:\/\//.test(databaseURL))
+  )
+    throw new Error('DATABASE_URL must be a PostgreSQL connection URL.');
+  if (
+    nodeEnv === 'production' &&
+    (!databaseURL ||
+      !config.FIREBASE_PROJECT_ID ||
+      config.FIREBASE_AUTH_EMULATOR_HOST)
+  )
+    throw new Error(
+      'Production requires DATABASE_URL and FIREBASE_PROJECT_ID; Auth emulator is forbidden.',
+    );
+  const projectID = config.FIREBASE_PROJECT_ID ?? 'multiverse-7f87c';
+  if (
+    typeof projectID !== 'string' ||
+    !/^[a-z][a-z0-9-]{4,62}$/.test(projectID)
+  )
+    throw new Error('Invalid FIREBASE_PROJECT_ID');
+  return {
+    NODE_ENV: nodeEnv,
+    PORT: port,
+    DATABASE_URL: databaseURL as string | undefined,
+    FIREBASE_PROJECT_ID: projectID,
+  };
 }

@@ -19,7 +19,7 @@ struct SampleData: Codable, Sendable {
     let me: Me
 
     static func load() -> SampleData {
-        let url = Bundle.main.url(forResource: "sample-data", withExtension: "json")!
+        let url = L10n.resourceURL(named: "sample-data", extension: "json")!
         return try! JSONDecoder().decode(SampleData.self, from: Data(contentsOf: url))
     }
 }
@@ -92,7 +92,8 @@ struct Me: Codable, Hashable, Sendable { let id: String; let following: [String]
 
 struct DiaryEntry: Codable, Identifiable, Hashable, Sendable {
     var id = UUID()
-    let itemId: String, day: Int, month: String
+    let itemId: String
+    let loggedAt: Date
     let rating: Double
     var liked = false, rewatch = false
 }
@@ -115,10 +116,10 @@ enum ReactionType: String, CaseIterable, Codable, Sendable {
 
     var subtitle: String {
         switch self {
-        case .pow: return "CONCORDO"
-        case .zap: return "SURPRESA"
-        case .krak: return "DISCORDO"
-        case .heh: return "RI ALTO"
+        case .pow: return L10n.text("CONCORDO")
+        case .zap: return L10n.text("SURPRESA")
+        case .krak: return L10n.text("DISCORDO")
+        case .heh: return L10n.text("RI ALTO")
         }
     }
 
@@ -296,10 +297,10 @@ enum ReportReason: String, CaseIterable, Codable, Sendable {
 
     var subtitle: String {
         switch self {
-        case .spoiler: return "Não marcou como spoiler"
-        case .offensive: return "Ataques, preconceito, assédio"
-        case .spam: return "Links, divulgação"
-        case .wrongCanon: return "Desinformação sobre a lore"
+        case .spoiler: return L10n.text("Não marcou como spoiler")
+        case .offensive: return L10n.text("Ataques, preconceito, assédio")
+        case .spam: return L10n.text("Links, divulgação")
+        case .wrongCanon: return L10n.text("Desinformação sobre a lore")
         case .other: return ""
         }
     }
@@ -366,7 +367,7 @@ struct RecursosData: Codable, Sendable {
     let liveEvent: LiveEvent
 
     static func load() -> RecursosData {
-        let url = Bundle.main.url(forResource: "recursos-data", withExtension: "json")!
+        let url = L10n.resourceURL(named: "recursos-data", extension: "json")!
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return try! decoder.decode(RecursosData.self, from: Data(contentsOf: url))

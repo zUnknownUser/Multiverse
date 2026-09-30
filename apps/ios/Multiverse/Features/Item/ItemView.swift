@@ -57,13 +57,13 @@ struct ItemView: View {
                     .foregroundStyle(MV.C.ink)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("\(item.type) · \(item.year.description) · \(item.canon)")
+                Text("\(L10n.text(item.type)) · \(item.year.description) · \(item.canon)")
                     .font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted)
 
-                Text(String(format: "%.1f", item.avg).replacingOccurrences(of: ".", with: ","))
+                Text(L10n.decimal(item.avg))
                     .font(MVFont.black(30)).foregroundStyle(MV.C.ink)
 
-                Text("\(Logic.fmt(Logic.logCount(item))) registros · \(Logic.fmt(Logic.reviewCount(item))) reviews")
+                Text(L10n.format("%1$@ registros · %2$@ reviews", String(describing: Logic.fmt(Logic.logCount(item))), String(describing: Logic.fmt(Logic.reviewCount(item)))))
                     .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
             }
         }
@@ -88,7 +88,7 @@ struct ItemView: View {
                     .frame(maxWidth: .infinity)
 
                 let wanted = store.isWanted(item.id)
-                Text(wanted ? "✓ NA LISTA" : "+ QUERO")
+                Text(wanted ? L10n.text("✓ NA LISTA") : L10n.text("+ QUERO"))
                     .font(MVFont.bold(11))
                     .frame(maxWidth: .infinity).frame(height: 46)
                     .foregroundStyle(wanted ? MV.C.paper : MV.C.ink)
@@ -99,7 +99,7 @@ struct ItemView: View {
                     .onTapGesture { store.toggleWanted(item.id) }
 
                 let liked = store.isItemLiked(item.id)
-                Text("♥ CURTIR")
+                Text(L10n.text("♥ CURTIR"))
                     .font(MVFont.bold(11))
                     .frame(maxWidth: .infinity).frame(height: 46)
                     .foregroundStyle(liked ? MV.C.card : MV.C.ink)
@@ -121,17 +121,17 @@ struct ItemView: View {
             }
             if let mine = store.myDiaryEntry(for: item.id) {
                 HStack(spacing: 6) {
-                    Text("Sua nota:").font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted)
+                    Text(L10n.text("Sua nota:")).font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted)
                     StarsText(rating: mine.rating, color: uni.color, size: 14)
                 }
             }
             if let room = store.room(for: item.id) {
                 Button { store.push(.room(item.id)) } label: {
                     HStack(spacing: 6) {
-                        Text("● SALA").font(MVFont.bold(12)).foregroundStyle(MV.C.marvel)
+                        Text(L10n.text("● SALA")).font(MVFont.bold(12)).foregroundStyle(MV.C.marvel)
                         Text("\(Logic.fmt(room.onlineCount)) online").font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted)
                         Spacer()
-                        Text("ENTRAR →").font(MVFont.bold(11)).foregroundStyle(MV.C.ink)
+                        Text(L10n.text("ENTRAR →")).font(MVFont.bold(11)).foregroundStyle(MV.C.ink)
                     }
                     .padding(.horizontal, 12).frame(height: 40)
                     .background(MV.C.card)
@@ -151,10 +151,10 @@ struct ItemView: View {
         if !friends.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("AMIGOS QUE REGISTRARAM").kicker(11).foregroundStyle(MV.C.muted)
+                    Text(L10n.text("AMIGOS QUE REGISTRARAM")).kicker(11).foregroundStyle(MV.C.muted)
                     Spacer()
                     if let avg = store.friendAvgLabel(for: item) {
-                        Text("média deles \(avg)").font(MVFont.body(11, weight: 700)).foregroundStyle(MV.C.muted)
+                        Text(L10n.format("média deles %1$@", String(describing: avg))).font(MVFont.body(11, weight: 700)).foregroundStyle(MV.C.muted)
                     }
                 }
                 ScrollView(.horizontal) {
@@ -183,7 +183,7 @@ struct ItemView: View {
         let colors = store.canonColors(for: info.status)
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 10) {
-                Text(info.status.uppercased())
+                Text(L10n.text(info.status).uppercased())
                     .font(MVFont.black(11)).tracking(0.4)
                     .foregroundStyle(colors.fg)
                     .padding(.horizontal, 10).padding(.vertical, 6)
@@ -195,11 +195,11 @@ struct ItemView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("Conta como cânone pra você?").font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
+                Text(L10n.text("Conta como cânone pra você?")).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
                 let percents = store.canonPercents(for: item)
                 let chosen = store.canonVotes[item.id]
                 HStack(spacing: 8) {
-                    ForEach(Array(["Sim", "Não", "Em parte"].enumerated()), id: \.offset) { i, label in
+                    ForEach(Array([L10n.text("Sim"), L10n.text("Não"), L10n.text("Em parte")].enumerated()), id: \.offset) { i, label in
                         CanonVoteButton(label: label, index: i, percent: percents?[i], chosen: chosen == i, color: uni.color, textColor: uni.inkColor) {
                             store.voteCanon(item.id, index: i)
                         }
@@ -215,7 +215,7 @@ struct ItemView: View {
     private func essentialSection(item: Item, uni: Universe) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("Voto da comunidade").kicker(11).foregroundStyle(uni.inkColor)
+                Text(L10n.text("Voto da comunidade")).kicker(11).foregroundStyle(uni.inkColor)
                 Spacer()
                 Text(store.essentialTotalLabel(for: item)).font(MVFont.body(11, weight: 700)).foregroundStyle(uni.inkColor.opacity(0.85))
             }
@@ -223,10 +223,10 @@ struct ItemView: View {
             .background(uni.color)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("Essencial pra entender \(uni.name)?").font(MVFont.bold(14)).foregroundStyle(MV.C.ink)
+                Text(L10n.format("Essencial pra entender %1$@?", String(describing: uni.name))).font(MVFont.bold(14)).foregroundStyle(MV.C.ink)
                 let percents = store.essentialPercents(for: item)
                 let chosen = store.essentialVotes[item.id]
-                ForEach(Array(["Essencial", "Opcional", "Pode pular"].enumerated()), id: \.offset) { i, label in
+                ForEach(Array([L10n.text("Essencial"), L10n.text("Opcional"), L10n.text("Pode pular")].enumerated()), id: \.offset) { i, label in
                     EssentialVoteRow(label: label, index: i, percent: percents?[i], chosen: chosen == i, color: uni.color) {
                         store.voteEssential(item.id, index: i)
                     }
@@ -246,7 +246,7 @@ struct ItemView: View {
         let hist = Logic.ratingHistogram(item)
         let maxVal = max(hist.max() ?? 1, 1)
         VStack(alignment: .leading, spacing: 8) {
-            Text("NOTAS DA COMUNIDADE").kicker(11).foregroundStyle(MV.C.muted)
+            Text(L10n.text("NOTAS DA COMUNIDADE")).kicker(11).foregroundStyle(MV.C.muted)
             HStack(alignment: .bottom, spacing: 4) {
                 ForEach(Array(hist.enumerated()), id: \.offset) { i, v in
                     RoundedRectangle(cornerRadius: 2)
@@ -271,13 +271,13 @@ struct ItemView: View {
         let neighbors = store.timelineNeighbors(for: item)
         if neighbors.current != nil {
             VStack(alignment: .leading, spacing: 10) {
-                SectionHeader(title: "Na linha do tempo", trailing: "VER TUDO") {
+                SectionHeader(title: L10n.text("Na linha do tempo"), trailing: L10n.text("VER TUDO")) {
                     store.push(.universe(uni.id))
                 }
                 HStack(spacing: 8) {
-                    TimelineNeighborColumn(label: "Antes", entry: neighbors.before, isCurrent: false, uni: uni)
-                    TimelineNeighborColumn(label: "Aqui · \(neighbors.current?.era ?? "")", entry: neighbors.current, isCurrent: true, uni: uni)
-                    TimelineNeighborColumn(label: "Depois", entry: neighbors.after, isCurrent: false, uni: uni)
+                    TimelineNeighborColumn(label: L10n.text("Antes"), entry: neighbors.before, isCurrent: false, uni: uni)
+                    TimelineNeighborColumn(label: L10n.format("Aqui · %1$@", String(describing: neighbors.current?.era ?? "")), entry: neighbors.current, isCurrent: true, uni: uni)
+                    TimelineNeighborColumn(label: L10n.text("Depois"), entry: neighbors.after, isCurrent: false, uni: uni)
                 }
             }
         }
@@ -290,7 +290,7 @@ struct ItemView: View {
         let connected = store.connectedItems(for: item.id)
         if !connected.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
-                Text("MAPA DE CONEXÕES").kicker(11).foregroundStyle(MV.C.muted)
+                Text(L10n.text("MAPA DE CONEXÕES")).kicker(11).foregroundStyle(MV.C.muted)
                 ConnectionMapView(center: item, connected: connected)
             }
         }
@@ -307,7 +307,7 @@ struct ItemView: View {
                 HStack(spacing: 6) {
                     ForEach([ReviewFilter.popular, .friends], id: \.self) { f in
                         Button { reviewFilter = f } label: {
-                            Text(f.rawValue)
+                            Text(L10n.text(f.rawValue))
                                 .font(MVFont.bold(11))
                                 .padding(.horizontal, 10).padding(.vertical, 6)
                                 .foregroundStyle(reviewFilter == f ? MV.C.paper : MV.C.ink)
@@ -322,7 +322,7 @@ struct ItemView: View {
 
             let revs = Array(store.reviewsForItem(item.id, friendsOnly: reviewFilter == .friends).prefix(5))
             if revs.isEmpty {
-                Text("Nenhum amigo escreveu sobre isso ainda. Seja o primeiro.")
+                Text(L10n.text("Nenhum amigo escreveu sobre isso ainda. Seja o primeiro."))
                     .font(MVFont.body(13)).foregroundStyle(MV.C.muted)
                     .frame(maxWidth: .infinity)
                     .padding(24)
@@ -336,7 +336,7 @@ struct ItemView: View {
             }
 
             Button { store.push(.correctionForm(item.id)) } label: {
-                Text("Sugerir correção").font(MVFont.bold(12)).underline().foregroundStyle(MV.C.ink)
+                Text(L10n.text("Sugerir correção")).font(MVFont.bold(12)).underline().foregroundStyle(MV.C.ink)
             }
             .buttonStyle(.plain)
         }

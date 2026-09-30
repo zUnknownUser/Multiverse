@@ -8,8 +8,8 @@ struct NextInOrderWidget: Widget {
             NextInOrderWidgetView(entry: entry)
                 .containerBackground(MV.C.card, for: .widget)
         }
-        .configurationDisplayName("Próximo na ordem")
-        .description("O próximo item da ordem de leitura que você segue.")
+        .configurationDisplayName(L10n.text("Próximo na ordem"))
+        .description(L10n.text("O próximo item da ordem de leitura que você segue."))
         .supportedFamilies([.systemSmall])
     }
 }
@@ -20,7 +20,7 @@ private struct NextInOrderWidgetView: View {
     var body: some View {
         let snapshot = entry.snapshot
         VStack(alignment: .leading, spacing: 6) {
-            Text("PRÓXIMO NA ORDEM").font(MVFont.black(10)).foregroundStyle(MV.C.muted)
+            Text(L10n.text("PRÓXIMO NA ORDEM")).font(MVFont.black(10)).foregroundStyle(MV.C.muted)
             Text((snapshot?.nextOrderItemTitle ?? "—").uppercased())
                 .font(MVFont.black(15))
                 .foregroundStyle(MV.C.ink)
@@ -28,7 +28,7 @@ private struct NextInOrderWidgetView: View {
                 .minimumScaleFactor(0.7)
             Spacer(minLength: 0)
             HStack {
-                Text("\(snapshot?.nextOrderDone ?? 0) de \(snapshot?.nextOrderTotal ?? 0)")
+                Text(L10n.format("%1$@ de %2$@", String(describing: snapshot?.nextOrderDone ?? 0), String(describing: snapshot?.nextOrderTotal ?? 0)))
                     .font(MVFont.bold(11)).foregroundStyle(MV.C.muted)
                 Spacer()
             }

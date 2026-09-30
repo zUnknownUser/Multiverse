@@ -2,7 +2,6 @@ import SwiftUI
 
 struct OnboardingView: View {
     @Environment(AppStore.self) private var store
-    @Environment(BurstCenter.self) private var burst
 
     var body: some View {
         ZStack {
@@ -60,23 +59,24 @@ struct OnboardingView: View {
     }
 
     private var isCTAEnabled: Bool {
+        if store.onboardingTransitioning { return false }
         switch store.onboardingPhase {
         case .step1: return !store.onboardingUniverses.isEmpty
         case .step2: return true
-        case .step3: return store.friendsCount >= 3
+        case .step3: return store.friendsCount >= store.minimumOnboardingFollows
         case .loading: return false
         }
     }
 
     private var ctaLabel: String {
         switch store.onboardingPhase {
-        case .step1: return "Continuar"
+        case .step1: return L10n.text("Continuar")
         case .step2:
             let n = store.onboardingConsumablePicks().filter { store.isSeen($0.id) }.count
-            return n > 0 ? "Continuar" : "Pular"
+            return n > 0 ? L10n.text("Continuar") : L10n.text("Pular")
         case .step3:
             let n = store.friendsCount
-            return n >= 3 ? "Montar meu feed" : "Siga mais \(3 - n)"
+            return n >= store.minimumOnboardingFollows ? L10n.text("Montar meu feed") : L10n.format("Siga mais %1$@", String(describing: store.minimumOnboardingFollows - n))
         case .loading: return ""
         }
     }

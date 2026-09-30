@@ -8,8 +8,8 @@ struct SignInView: View {
         ScreenScaffold(showBack: true, onBack: { auth.pop() }) {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("DE VOLTA AO\nCÂNONE").font(MVFont.display(32, width: 122)).lineSpacing(-6).foregroundStyle(MV.C.ink)
-                    Text("Seu feed tem 14 reviews novas desde a última visita.")
+                    Text(L10n.text("DE VOLTA AO\nCÂNONE")).font(MVFont.display(32, width: 122)).lineSpacing(-6).foregroundStyle(MV.C.ink)
+                    Text(L10n.text("Seu feed tem 14 reviews novas desde a última visita."))
                         .font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
                 }
 
@@ -17,10 +17,10 @@ struct SignInView: View {
                     AuthErrorBanner(message: error)
                 }
 
-                AuthField(label: "E-mail", text: $auth.signInIdentifier, placeholder: "seu@email.com", keyboardType: .emailAddress, autocapitalization: .never)
+                AuthField(label: L10n.text("E-mail"), text: $auth.signInIdentifier, placeholder: L10n.text("seu@email.com"), keyboardType: .emailAddress, autocapitalization: .never)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    AuthField(label: "Senha", text: $auth.signInPassword, isSecure: true, errored: auth.fieldError != nil)
+                    AuthField(label: L10n.text("Senha"), text: $auth.signInPassword, isSecure: true, errored: auth.fieldError != nil)
                     if let fieldError = auth.fieldError {
                         Text(fieldError).font(MVFont.bold(12)).foregroundStyle(MV.C.marvel)
                     }
@@ -28,12 +28,12 @@ struct SignInView: View {
 
                 HStack {
                     Spacer()
-                    Button("Esqueci a senha") { auth.push(.forgotPassword) }
+                    Button(L10n.text("Esqueci a senha")) { auth.push(.forgotPassword) }
                         .font(MVFont.bold(13)).underline().foregroundStyle(MV.C.ink)
                         .buttonStyle(.plain)
                 }
 
-                PrimaryAuthButton(title: auth.errorMessage != nil ? "TENTAR DE NOVO" : "ENTRAR", isLoading: auth.isLoading, enabled: !auth.signInIdentifier.isEmpty && !auth.signInPassword.isEmpty) {
+                PrimaryAuthButton(title: auth.errorMessage != nil ? L10n.text("TENTAR DE NOVO") : L10n.text("ENTRAR"), isLoading: auth.isLoading, enabled: !auth.signInIdentifier.isEmpty && !auth.signInPassword.isEmpty) {
                     Task { await auth.signIn() }
                 }
 
@@ -52,8 +52,8 @@ struct SignInView: View {
                         auth.pop()
                         auth.push(.createAccount)
                     } label: {
-                        (Text("Novo por aqui? ").foregroundStyle(MV.C.ink)
-                            + Text("Criar conta").underline().bold().foregroundStyle(MV.C.ink))
+                        (Text(L10n.text("Novo por aqui? ")).foregroundStyle(MV.C.ink)
+                            + Text(L10n.text("Criar conta")).underline().bold().foregroundStyle(MV.C.ink))
                             .font(MVFont.body(15, weight: 600))
                     }
                     .buttonStyle(.plain)
@@ -68,7 +68,7 @@ struct SignInView: View {
     private var dividerRow: some View {
         HStack(spacing: 12) {
             Rectangle().fill(MV.C.ink).frame(height: 1.5)
-            Text("OU").font(MVFont.bold(12)).foregroundStyle(MV.C.muted)
+            Text(L10n.text("OU")).font(MVFont.bold(12)).foregroundStyle(MV.C.muted)
             Rectangle().fill(MV.C.ink).frame(height: 1.5)
         }
     }

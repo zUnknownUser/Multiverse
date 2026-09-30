@@ -27,7 +27,7 @@ struct ClubDiscussionView: View {
     @ViewBuilder
     private func header(club: Club, item: Item) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("\(club.name.uppercased()) · SEMANA \(week)").kicker(11).foregroundStyle(MV.C.muted)
+            Text(L10n.format("%1$@ · SEMANA %2$@", String(describing: club.name.uppercased()), String(describing: week))).kicker(11).foregroundStyle(MV.C.muted)
             Text(item.title.uppercased()).font(MVFont.display(28, width: 120)).foregroundStyle(MV.C.ink)
         }
     }
@@ -66,16 +66,16 @@ struct ClubDiscussionView: View {
             }
             if hiddenCount > 0 {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("◆ ESCUDO")
+                    Text(L10n.text("◆ ESCUDO"))
                         .font(MVFont.black(10)).tracking(0.4)
                         .foregroundStyle(MV.C.card)
                         .padding(.horizontal, 8).padding(.vertical, 5)
                         .background(MV.C.dc)
                         .overlay(RoundedRectangle(cornerRadius: MV.R.xs).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                         .clipShape(RoundedRectangle(cornerRadius: MV.R.xs))
-                    Text("\(hiddenCount) mensagen\(hiddenCount > 1 ? "s" : "") sobre \(clubWeek.unitLabel.lowercased()) além do \(myUnits) estão escondidas até você chegar lá.")
+                    Text(L10n.format("club.hiddenMessages", hiddenCount, clubWeek.unitLabel.lowercased(), String(myUnits)))
                         .font(MVFont.bold(14)).foregroundStyle(MV.C.ink)
-                    Button("Já li o \(clubWeek.unitLabel.lowercased()) \(myUnits + 1)") {
+                    Button(L10n.format("Já li o %1$@ %2$@", String(describing: clubWeek.unitLabel.lowercased()), String(describing: myUnits + 1))) {
                         store.setMyClubUnits(clubID: clubID, units: myUnits + 1)
                     }
                     .font(MVFont.bold(13)).underline().foregroundStyle(MV.C.ink)
@@ -93,7 +93,7 @@ struct ClubDiscussionView: View {
 
     private var replyBar: some View {
         HStack(spacing: 8) {
-            TextField("Comentar sobre \(segment)…", text: $draft)
+            TextField(L10n.format("Comentar sobre %1$@…", String(describing: segment)), text: $draft)
                 .font(MVFont.body(14, weight: 500))
                 .padding(.horizontal, 14)
                 .frame(height: 44)
@@ -101,7 +101,7 @@ struct ClubDiscussionView: View {
                 .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                 .clipShape(Capsule())
                 .onSubmit(send)
-            Text("ENVIAR")
+            Text(L10n.text("ENVIAR"))
                 .font(MVFont.bold(12))
                 .padding(.horizontal, 16).frame(height: 44)
                 .foregroundStyle(MV.C.paper)
@@ -139,7 +139,7 @@ private struct ClubMessageBubble: View {
                         if !isMe { AvatarView(user: user, size: 30) }
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
-                                Text(isMe ? "Você" : user.name).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
+                                Text(isMe ? L10n.text("Você") : user.name).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
                                 Spacer()
                                 Text(message.when).font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
                             }

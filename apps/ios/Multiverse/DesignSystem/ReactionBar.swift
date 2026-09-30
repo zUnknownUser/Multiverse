@@ -6,7 +6,6 @@ struct ReactionBarModifier: ViewModifier {
     @Binding var isPresented: Bool
     var onReact: (ReactionType) -> Void
     var onQuote: (() -> Void)? = nil
-    @Environment(BurstCenter.self) private var burst
 
     func body(content: Content) -> some View {
         content
@@ -36,7 +35,7 @@ struct ReactionBarModifier: ViewModifier {
     private var bar: some View {
         HStack(spacing: 0) {
             if let onQuote {
-                pill(label: "❝ Citar", bg: MV.C.wow, fg: MV.C.ink) {
+                pill(label: L10n.text("❝ Citar"), bg: MV.C.wow, fg: MV.C.ink) {
                     isPresented = false
                     onQuote()
                 }

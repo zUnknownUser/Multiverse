@@ -4,7 +4,7 @@ import Foundation
 /// preocupação diferente (identidade, não conteúdo). FirebaseAuthRepository é a
 /// implementação real; MockAuthRepository fica disponível para desenvolvimento.
 protocol AuthRepository: Sendable {
-    func currentSession() async -> AuthSession?
+    func currentSession() async throws -> AuthSession?
 
     func signIn(identifier: String, password: String) async throws -> AuthSession
     func signInWithApple() async throws -> AuthSession
@@ -15,12 +15,12 @@ protocol AuthRepository: Sendable {
     func startSignUp(email: String, password: String) async throws
     func resendVerificationCode() async throws
     func verifyCode(_ code: String) async throws
-    func checkUsernameAvailable(_ username: String) async -> Bool
+    func checkUsernameAvailable(_ username: String) async throws -> Bool
     func completeSignUp(name: String, username: String, avatarColor: String, bio: String) async throws -> AuthSession
 
     func requestPasswordReset(email: String) async throws
+    /// Only an authenticated account whose email still needs confirmation.
     func pendingSignUpEmail() async -> String?
-    func pendingEmailIsVerified() async -> Bool
     func prepareEmailAction(_ url: URL) async throws -> EmailActionResult
     func resetPassword(_ newPassword: String) async throws
 
@@ -37,6 +37,5 @@ protocol AuthRepository: Sendable {
 // Demo implementations do not process real action links.
 extension AuthRepository {
     func pendingSignUpEmail() async -> String? { nil }
-    func pendingEmailIsVerified() async -> Bool { false }
     func prepareEmailAction(_ url: URL) async throws -> EmailActionResult { throw AuthError.invalidActionLink }
 }

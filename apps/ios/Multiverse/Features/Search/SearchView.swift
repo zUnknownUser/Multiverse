@@ -8,14 +8,14 @@ struct SearchView: View {
     var body: some View {
         ScreenScaffold {
             VStack(alignment: .leading, spacing: 16) {
-                Text("BUSCA").font(MVFont.display(28, width: 122)).foregroundStyle(MV.C.ink)
+                Text(L10n.text("BUSCA")).font(MVFont.display(28, width: 122)).foregroundStyle(MV.C.ink)
 
                 searchField
 
                 ScrollView(.horizontal) {
                     HStack(spacing: 8) {
                         ForEach(SearchFilter.allCases, id: \.self) { f in
-                            PillButton(title: f.rawValue, active: filter == f, size: 13) { filter = f }
+                            PillButton(title: L10n.text(f.rawValue), active: filter == f, size: 13) { filter = f }
                         }
                     }
                 }
@@ -24,9 +24,9 @@ struct SearchView: View {
                 if query.isEmpty {
                     Button { store.push(.exploreRooms) } label: {
                         HStack(spacing: 8) {
-                            Text("● SALAS AO VIVO").font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
+                            Text(L10n.text("● SALAS AO VIVO")).font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
                             Spacer()
-                            Text("EXPLORAR →").font(MVFont.bold(11)).foregroundStyle(MV.C.muted)
+                            Text(L10n.text("EXPLORAR →")).font(MVFont.bold(11)).foregroundStyle(MV.C.muted)
                         }
                         .padding(.horizontal, 14).frame(height: 44)
                         .background(MV.C.card)
@@ -37,11 +37,11 @@ struct SearchView: View {
                 }
 
                 let (rows, total) = store.searchResults(query: query, filter: filter)
-                Text(query.isEmpty ? "Mais registrados esta semana" : "\(total) resultados")
+                Text(query.isEmpty ? L10n.text("Mais registrados esta semana") : L10n.format("search.results", total))
                     .kicker(11).foregroundStyle(MV.C.muted)
 
                 if rows.isEmpty {
-                    Text("Nada nesse canto do multiverso.")
+                    Text(L10n.text("Nada nesse canto do multiverso."))
                         .font(MVFont.body(14)).foregroundStyle(MV.C.muted)
                         .frame(maxWidth: .infinity)
                         .padding(.top, 24)
@@ -61,7 +61,7 @@ struct SearchView: View {
     private var searchField: some View {
         HStack(spacing: 8) {
             Text("⌕").font(.system(size: 18, weight: .bold)).foregroundStyle(MV.C.muted)
-            TextField("Obra, personagem, evento, pessoa…", text: $query)
+            TextField(L10n.text("Obra, personagem, evento, pessoa…"), text: $query)
                 .font(MVFont.body(14, weight: 600))
                 .autocorrectionDisabled()
         }

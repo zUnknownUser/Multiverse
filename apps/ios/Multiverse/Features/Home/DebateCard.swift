@@ -13,7 +13,7 @@ struct DebateCard: View {
         VStack(alignment: .leading, spacing: 0) {
             Button { store.push(.item(item.id)) } label: {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("DEBATE DA SEMANA · \(uni.name.uppercased())").kicker(11).foregroundStyle(MV.C.ink)
+                    Text(L10n.format("DEBATE DA SEMANA · %1$@", String(describing: uni.name.uppercased()))).kicker(11).foregroundStyle(MV.C.ink)
                     Text(item.title.uppercased()).font(MVFont.display(26, width: 118)).foregroundStyle(MV.C.ink)
                     Text(item.desc).font(MVFont.body(13, weight: 500)).foregroundStyle(MV.C.ink.opacity(0.85))
                 }

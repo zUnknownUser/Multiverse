@@ -1,0 +1,26 @@
+// Initial catalog IDs shared with the mobile fixtures. Replace with catalog tables in the catalog milestone.
+export const UNIVERSE_IDS = ['marvel', 'dc', 'wow'];
+export const ITEM_IDS = [
+  'm-civil',
+  'm-ultimato',
+  'm-secret',
+  'm-fenix',
+  'm-aranha',
+  'm-loki',
+  'd-crise',
+  'd-watchmen',
+  'd-tdk',
+  'd-reino',
+  'd-flash',
+  'd-injustice',
+  'w-wc3',
+  'w-wotlk',
+  'w-cata',
+  'w-arthas',
+  'w-wcfilme',
+  'w-crimes',
+  'e-estalo',
+  'e-lordaeron',
+  'e-cataclismo',
+  'e-superman',
+];

@@ -19,7 +19,7 @@ struct ProStatsView: View {
     @ViewBuilder
     private var header: some View {
         HStack {
-            Text("SEUS\nNÚMEROS").font(MVFont.display(30, width: 118)).lineSpacing(-6).foregroundStyle(MV.C.ink)
+            Text(L10n.text("SEUS\nNÚMEROS")).font(MVFont.display(30, width: 118)).lineSpacing(-6).foregroundStyle(MV.C.ink)
             Spacer()
             Text("PRO")
                 .font(MVFont.display(14))
@@ -33,10 +33,10 @@ struct ProStatsView: View {
     private var lockedContent: some View {
         VStack(alignment: .leading, spacing: 18) {
             header
-            Text("Assine o Pro pra ver horas por universo, frequência, sequência de dias e mais.")
+            Text(L10n.text("Assine o Pro pra ver horas por universo, frequência, sequência de dias e mais."))
                 .font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.muted)
             Button { store.push(.pro) } label: {
-                Text("VER MULTIVERSE PRO")
+                Text(L10n.text("VER MULTIVERSE PRO"))
                     .font(MVFont.bold(14))
                     .frame(maxWidth: .infinity).frame(height: 54)
                     .foregroundStyle(MV.C.paper)
@@ -61,12 +61,12 @@ struct ProStatsView: View {
             header
 
             VStack(alignment: .leading, spacing: 10) {
-                Text("HORAS DE LORE EM 2026").kicker(11).foregroundStyle(MV.C.muted)
+                Text(L10n.format("HORAS DE LORE EM %1$@", L10n.date(.now, template: "yyyy"))).kicker(11).foregroundStyle(MV.C.muted)
                 HStack(alignment: .lastTextBaseline, spacing: 8) {
                     Text("\(totalHours)").font(MVFont.black(48)).foregroundStyle(MV.C.ink)
                     VStack(alignment: .leading, spacing: 0) {
-                        Text("≈ \(max(1, totalHours / 24)) dias").font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
-                        Text("fora da realidade").font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
+                        Text(L10n.format("stats.days", totalHours / 24)).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
+                        Text(L10n.text("fora da realidade")).font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
                     }
                 }
                 GeometryReader { geo in
@@ -93,9 +93,9 @@ struct ProStatsView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("FREQUÊNCIA").kicker(11).foregroundStyle(MV.C.muted)
+                    Text(L10n.text("FREQUÊNCIA")).kicker(11).foregroundStyle(MV.C.muted)
                     Spacer()
-                    Text("últimas 15 semanas").font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
+                    Text(L10n.text("últimas 15 semanas")).font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
                 }
                 let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 15)
                 LazyVGrid(columns: columns, spacing: 4) {
@@ -106,14 +106,14 @@ struct ProStatsView: View {
                             .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(MV.C.ink, lineWidth: 1))
                     }
                 }
-                Text("Sequência atual: \(streak) dias").font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
+                Text(L10n.format("stats.streak", streak)).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
             }
             .padding(14)
             .comicCard(shadow: MV.Shadow.s)
 
             HStack(spacing: 10) {
-                statCard(title: "SUA NOTA MÉDIA", value: myAverageRating, note: communityDeltaNote)
-                statCard(title: "TIPO FAVORITO", value: favoriteType, note: nil)
+                statCard(title: L10n.text("SUA NOTA MÉDIA"), value: myAverageRating, note: communityDeltaNote)
+                statCard(title: L10n.text("TIPO FAVORITO"), value: favoriteType, note: nil)
             }
         }
         .padding(.horizontal, MV.pad)
@@ -135,7 +135,7 @@ struct ProStatsView: View {
 
     private var hoursByUniverse: [(universe: Universe, hours: Int)] {
         var totals: [String: Double] = [:]
-        for entry in store.diary {
+        for entry in store.diary where Calendar.current.isDate(entry.loggedAt, equalTo: .now, toGranularity: .year) {
             guard let item = store.item(entry.itemId) else { continue }
             totals[item.uni, default: 0] += Logic.loreHours(item.type)
         }
@@ -143,8 +143,7 @@ struct ProStatsView: View {
     }
 
     private var frequencyGrid: [Bool] {
-        let diaryDays = Set(store.diary.map { "\($0.month)-\($0.day)" })
-        return (0..<105).map { i in Logic.seed("freq-\(i)") % 3 == 0 || diaryDays.count > i }
+        DiaryTimeline.activityDays(store.diary)
     }
 
     private func currentStreak(frequency: [Bool]) -> Int {
@@ -159,12 +158,12 @@ struct ProStatsView: View {
         let mine = store.reviews.filter { $0.user == store.meID }
         guard !mine.isEmpty else { return "—" }
         let avg = mine.reduce(0.0) { $0 + $1.rating } / Double(mine.count)
-        return String(format: "%.1f", avg).replacingOccurrences(of: ".", with: ",")
+        return L10n.decimal(avg)
     }
 
     private var communityDeltaNote: String {
         let communityAvg = store.items.reduce(0.0) { $0 + $1.avg } / Double(max(1, store.items.count))
-        return "comunidade: \(String(format: "%.1f", communityAvg).replacingOccurrences(of: ".", with: ","))"
+        return L10n.format("comunidade: %1$@", String(describing: L10n.decimal(communityAvg)))
     }
 
     private var favoriteType: String {
@@ -173,6 +172,6 @@ struct ProStatsView: View {
             guard let item = store.item(entry.itemId) else { continue }
             counts[item.type, default: 0] += 1
         }
-        return counts.max(by: { $0.value < $1.value })?.key ?? "—"
+        return L10n.text(counts.max(by: { $0.value < $1.value })?.key ?? "—")
     }
 }

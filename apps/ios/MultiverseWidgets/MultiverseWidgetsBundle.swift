@@ -29,7 +29,7 @@ struct SnapshotProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<SnapshotEntry>) -> Void) {
         let entry = SnapshotEntry(date: .now, snapshot: WidgetBridge.load())
-        // O app atualiza os widgets sob demanda (`WidgetBridge.save` chama `reloadAllTimelines`),
+        // O app atualiza os widgets sob demanda (`WidgetBridge.Session.save` chama `reloadAllTimelines`),
         // então essa próxima entrada é só uma rede de segurança.
         completion(Timeline(entries: [entry], policy: .after(.now.addingTimeInterval(3600))))
     }

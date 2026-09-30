@@ -11,11 +11,11 @@ enum Logic {
     }
 
     /// 1240 → "1,2 mil"; 312 → "312"
-    static func fmt(_ n: Int) -> String {
+    static func fmt(_ n: Int, locale: Locale = L10n.locale) -> String {
         guard n >= 1000 else { return String(n) }
         let v = (Double(n) / 100).rounded() / 10
-        let s = v == v.rounded() ? String(Int(v)) : String(v)
-        return s.replacingOccurrences(of: ".", with: ",") + " mil"
+        let s = v.formatted(.number.locale(locale).precision(.fractionLength(0...1)))
+        return s + (locale.language.languageCode?.identifier == "en" ? "K" : " mil")
     }
 
     /// 4.5 → "★★★★½"
@@ -74,15 +74,15 @@ enum Logic {
 
     /// Verbo do log por tipo
     static func verb(_ type: String) -> String {
-        ["Filme": "Assisti", "Série": "Assisti", "HQ": "Li", "Livro": "Li", "Jogo": "Joguei"][type] ?? "Avaliei"
+        ["Filme": L10n.text("Assisti"), "Série": L10n.text("Assisti"), "HQ": L10n.text("Li"), "Livro": L10n.text("Li"), "Jogo": L10n.text("Joguei")][type] ?? L10n.text("Avaliei")
     }
     static func verb3(_ type: String) -> String {
-        ["Filme": "assistiu", "Série": "assistiu", "HQ": "leu", "Livro": "leu", "Jogo": "jogou"][type] ?? "avaliou"
+        ["Filme": L10n.text("assistiu"), "Série": L10n.text("assistiu"), "HQ": L10n.text("leu"), "Livro": L10n.text("leu"), "Jogo": L10n.text("jogou")][type] ?? L10n.text("avaliou")
     }
 
     /// Rótulo das estrelas no log
     static func starHint(_ r: Double) -> String {
-        let labels = ["", "Tempo perdido", "Fraco", "Ok", "Bom", "Ótimo", "Obra-prima"]
+        let labels = ["", L10n.text("Tempo perdido"), L10n.text("Fraco"), L10n.text("Ok"), L10n.text("Bom"), L10n.text("Ótimo"), L10n.text("Obra-prima")]
         let idx = Int(r.rounded(.up)) + (r == 5 ? 1 : 0)
         return "\(stars(r)) · \(labels[min(idx, 6)])"
     }

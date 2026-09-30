@@ -1,0 +1,1109 @@
+{
+  "universes": [
+    {
+      "id": "marvel",
+      "name": "Marvel",
+      "c": "#E4412F",
+      "c2": "#C9362A",
+      "ink": "#FFFDF8",
+      "track": "rgba(255,253,248,.35)",
+      "canon": "Earth-616 + MCU",
+      "tagline": "Six decades of comics, a cinematic multiverse, and enough variants to drive the TVA mad.",
+      "base": 34,
+      "total": 1240,
+      "members": 184000,
+      "live": 1204
+    },
+    {
+      "id": "dc",
+      "name": "DC",
+      "c": "#2E5BE8",
+      "c2": "#2349C4",
+      "ink": "#FFFDF8",
+      "track": "rgba(255,253,248,.35)",
+      "canon": "Pre- and post-Crisis",
+      "tagline": "Infinite Earths, a few Crises, and a Batman for every generation.",
+      "base": 21,
+      "total": 980,
+      "members": 142000,
+      "live": 873
+    },
+    {
+      "id": "wow",
+      "name": "Warcraft",
+      "c": "#F4A814",
+      "c2": "#D99210",
+      "ink": "#16130F",
+      "track": "rgba(22,19,15,.2)",
+      "canon": "Azeroth",
+      "tagline": "Three decades of wars, expansions, books, and retcons. For the Horde or the Alliance.",
+      "base": 58,
+      "total": 312,
+      "members": 96000,
+      "live": 641
+    }
+  ],
+  "items": [
+    {
+      "id": "m-civil",
+      "uni": "marvel",
+      "type": "HQ",
+      "title": "Civil War",
+      "year": 2006,
+      "avg": 3.8,
+      "canon": "Earth-616",
+      "desc": "The Superhuman Registration Act divides heroes between Captain America and Iron Man."
+    },
+    {
+      "id": "m-ultimato",
+      "uni": "marvel",
+      "type": "Filme",
+      "title": "Avengers: Endgame",
+      "year": 2019,
+      "avg": 4.1,
+      "canon": "MCU",
+      "desc": "Five years after the Snap, the remaining Avengers risk everything on a heist through time."
+    },
+    {
+      "id": "m-secret",
+      "uni": "marvel",
+      "type": "HQ",
+      "title": "Secret Wars",
+      "year": 2015,
+      "avg": 4,
+      "canon": "Multiverse",
+      "desc": "The multiverse collapses, and Doom rebuilds the wreckage into Battleworld."
+    },
+    {
+      "id": "m-fenix",
+      "uni": "marvel",
+      "type": "HQ",
+      "title": "The Dark Phoenix Saga",
+      "year": 1980,
+      "avg": 4.6,
+      "canon": "Earth-616",
+      "desc": "Jean Grey succumbs to the Phoenix Force. The tragedy that taught comics about consequences."
+    },
+    {
+      "id": "m-aranha",
+      "uni": "marvel",
+      "type": "Filme",
+      "title": "Spider-Man: Across the Spider-Verse",
+      "year": 2023,
+      "avg": 4.7,
+      "canon": "Spider-Verse",
+      "desc": "Miles Morales travels across the multiverse and discovers that canon events come at a cost."
+    },
+    {
+      "id": "m-loki",
+      "uni": "marvel",
+      "type": "Série",
+      "title": "Loki",
+      "year": 2021,
+      "avg": 4,
+      "canon": "MCU",
+      "desc": "A variant of Loki is captured by the TVA, the bureaucracy that prunes timelines."
+    },
+    {
+      "id": "d-crise",
+      "uni": "dc",
+      "type": "HQ",
+      "title": "Crisis on Infinite Earths",
+      "year": 1985,
+      "avg": 4.3,
+      "canon": "Pre-Crisis",
+      "desc": "The Anti-Monitor devours universes. One Earth remains, and DC canon is never the same."
+    },
+    {
+      "id": "d-watchmen",
+      "uni": "dc",
+      "type": "HQ",
+      "title": "Watchmen",
+      "year": 1986,
+      "avg": 4.8,
+      "canon": "Earth-Watchmen",
+      "desc": "Who watches the watchmen? A murder mystery that deconstructs the superhero genre."
+    },
+    {
+      "id": "d-tdk",
+      "uni": "dc",
+      "type": "Filme",
+      "title": "The Dark Knight",
+      "year": 2008,
+      "avg": 4.6,
+      "canon": "Nolan trilogy",
+      "desc": "The Joker pushes Gotham to the brink and forces Batman to choose between being a hero and being necessary."
+    },
+    {
+      "id": "d-reino",
+      "uni": "dc",
+      "type": "HQ",
+      "title": "Kingdom Come",
+      "year": 1996,
+      "avg": 4.5,
+      "canon": "Earth-22",
+      "desc": "In a future of heroes without limits, Superman returns from exile."
+    },
+    {
+      "id": "d-flash",
+      "uni": "dc",
+      "type": "HQ",
+      "title": "Flashpoint",
+      "year": 2011,
+      "avg": 4,
+      "canon": "Post-Crisis → New 52",
+      "desc": "Barry Allen saves his mother and wakes up in a world at war. The event that rebooted DC."
+    },
+    {
+      "id": "d-injustice",
+      "uni": "dc",
+      "type": "Jogo",
+      "title": "Injustice",
+      "year": 2013,
+      "avg": 3.7,
+      "canon": "Earth-Injustice",
+      "desc": "After losing Lois, Superman establishes a regime."
+    },
+    {
+      "id": "w-wc3",
+      "uni": "wow",
+      "type": "Jogo",
+      "title": "Warcraft III: Reign of Chaos",
+      "year": 2002,
+      "avg": 4.8,
+      "canon": "Azeroth",
+      "desc": "The Scourge spreads, Arthas falls, and the Burning Legion arrives. The foundation of almost everything."
+    },
+    {
+      "id": "w-wotlk",
+      "uni": "wow",
+      "type": "Jogo",
+      "title": "Wrath of the Lich King",
+      "year": 2008,
+      "avg": 4.7,
+      "canon": "Azeroth",
+      "desc": "The Horde and Alliance march to Northrend to face Arthas on the Frozen Throne."
+    },
+    {
+      "id": "w-cata",
+      "uni": "wow",
+      "type": "Jogo",
+      "title": "Cataclysm",
+      "year": 2010,
+      "avg": 3.6,
+      "canon": "Azeroth",
+      "desc": "Deathwing emerges and redraws the map of Azeroth. The old world never returns."
+    },
+    {
+      "id": "w-arthas",
+      "uni": "wow",
+      "type": "Livro",
+      "title": "Arthas: Rise of the Lich King",
+      "year": 2009,
+      "avg": 4.4,
+      "canon": "Azeroth",
+      "desc": "From prince of Lordaeron to Lich King: an inside view of the fall."
+    },
+    {
+      "id": "w-wcfilme",
+      "uni": "wow",
+      "type": "Filme",
+      "title": "Warcraft",
+      "year": 2016,
+      "avg": 3.2,
+      "canon": "Adaptation",
+      "desc": "Orcs cross the Dark Portal, and first contact becomes war."
+    },
+    {
+      "id": "w-crimes",
+      "uni": "wow",
+      "type": "Livro",
+      "title": "War Crimes",
+      "year": 2014,
+      "avg": 4.3,
+      "canon": "Azeroth",
+      "desc": "Garrosh Hellscream stands trial. Every faction has blood on its hands."
+    },
+    {
+      "id": "c-arthas",
+      "uni": "wow",
+      "type": "Personagem",
+      "title": "Arthas Menethil",
+      "year": "First app. 2002",
+      "avg": 4.6,
+      "canon": "Azeroth",
+      "desc": "The paladin prince who wielded Frostmourne and became the Lich King."
+    },
+    {
+      "id": "c-thrall",
+      "uni": "wow",
+      "type": "Personagem",
+      "title": "Thrall",
+      "year": "First app. 2002",
+      "avg": 4.1,
+      "canon": "Azeroth",
+      "desc": "Former slave, shaman, and founder of the New Horde."
+    },
+    {
+      "id": "c-sylvanas",
+      "uni": "wow",
+      "type": "Personagem",
+      "title": "Sylvanas Windrunner",
+      "year": "First app. 2002",
+      "avg": 3.4,
+      "canon": "Azeroth",
+      "desc": "Ranger, Banshee Queen, Warchief. The most debated figure in the lore."
+    },
+    {
+      "id": "c-wanda",
+      "uni": "marvel",
+      "type": "Personagem",
+      "title": "Wanda Maximoff",
+      "year": "First app. 1964",
+      "avg": 4.3,
+      "canon": "Earth-616 + MCU",
+      "desc": "The Scarlet Witch. She's rewritten reality more than once."
+    },
+    {
+      "id": "c-thanos",
+      "uni": "marvel",
+      "type": "Personagem",
+      "title": "Thanos",
+      "year": "First app. 1973",
+      "avg": 4.2,
+      "canon": "Earth-616 + MCU",
+      "desc": "The Mad Titan and his obsession with balance."
+    },
+    {
+      "id": "c-loki",
+      "uni": "marvel",
+      "type": "Personagem",
+      "title": "Loki",
+      "year": "First app. 1949",
+      "avg": 4.4,
+      "canon": "Earth-616 + MCU",
+      "desc": "The god of mischief, with more variants than any other character."
+    },
+    {
+      "id": "c-batman",
+      "uni": "dc",
+      "type": "Personagem",
+      "title": "Batman",
+      "year": "First app. 1939",
+      "avg": 4.7,
+      "canon": "All Earths",
+      "desc": "Bruce Wayne. He exists on almost every Earth in the multiverse."
+    },
+    {
+      "id": "c-coringa",
+      "uni": "dc",
+      "type": "Personagem",
+      "title": "Joker",
+      "year": "First app. 1940",
+      "avg": 4.5,
+      "canon": "All Earths",
+      "desc": "No official origin. That's how he likes it."
+    },
+    {
+      "id": "c-barry",
+      "uni": "dc",
+      "type": "Personagem",
+      "title": "Barry Allen",
+      "year": "First app. 1956",
+      "avg": 4,
+      "canon": "Pre- and post-Crisis",
+      "desc": "The Flash who died in Crisis, returned, and broke the timeline."
+    },
+    {
+      "id": "e-estalo",
+      "uni": "marvel",
+      "type": "Evento",
+      "title": "The Snap",
+      "year": "MCU · 2018",
+      "avg": 4.2,
+      "canon": "MCU",
+      "desc": "Thanos snaps his fingers, and half of all life in the universe disappears."
+    },
+    {
+      "id": "e-lordaeron",
+      "uni": "wow",
+      "type": "Evento",
+      "title": "Fall of Lordaeron",
+      "year": "Year 21",
+      "avg": 4.7,
+      "canon": "Azeroth",
+      "desc": "Arthas kills his own father and delivers the kingdom to the Scourge."
+    },
+    {
+      "id": "e-cataclismo",
+      "uni": "wow",
+      "type": "Evento",
+      "title": "The Cataclysm",
+      "year": "Year 30",
+      "avg": 3.9,
+      "canon": "Azeroth",
+      "desc": "Deathwing shatters Azeroth. Lands sink, and entire regions change forever."
+    },
+    {
+      "id": "e-superman",
+      "uni": "dc",
+      "type": "Evento",
+      "title": "The Death of Superman",
+      "year": "Post-Crisis · 1992",
+      "avg": 3.9,
+      "canon": "Post-Crisis",
+      "desc": "Doomsday arrives, and Superman falls in Metropolis. Not for long."
+    }
+  ],
+  "users": [
+    {
+      "id": "duda",
+      "name": "Duda Kaminski",
+      "handle": "@duda.lore",
+      "avatarColor": "#F4A814",
+      "bio": "Level 34 lorekeeper",
+      "followers": null,
+      "badgeUniverse": "wow"
+    },
+    {
+      "id": "nina",
+      "name": "Nina S.",
+      "handle": "@nina.s",
+      "avatarColor": "#2E5BE8",
+      "bio": "Raider since Vanilla",
+      "followers": null,
+      "badgeUniverse": "wow"
+    },
+    {
+      "id": "caio",
+      "name": "Caio T.",
+      "handle": "@caio.t",
+      "avatarColor": "#E4412F",
+      "bio": "Creates reading orders",
+      "followers": null,
+      "badgeUniverse": "wow"
+    },
+    {
+      "id": "leo",
+      "name": "Leo M.",
+      "handle": "@leo.m",
+      "avatarColor": "#16130F",
+      "bio": "The entire Marvel multiverse",
+      "followers": null,
+      "badgeUniverse": "marvel"
+    },
+    {
+      "id": "bia",
+      "name": "Bia R.",
+      "handle": "@bia.r",
+      "avatarColor": "#F4A814",
+      "bio": "Sylvanas defender",
+      "followers": null,
+      "badgeUniverse": "wow"
+    },
+    {
+      "id": "rafa",
+      "name": "Rafa P.",
+      "handle": "@rafa.p",
+      "avatarColor": "#2E5BE8",
+      "bio": "Pre-Crisis DC only",
+      "followers": null,
+      "badgeUniverse": "dc"
+    },
+    {
+      "id": "tati",
+      "name": "Tati V.",
+      "handle": "@tati.v",
+      "avatarColor": "#E4412F",
+      "bio": "Batman on every Earth",
+      "followers": null,
+      "badgeUniverse": "dc"
+    },
+    {
+      "id": "gui",
+      "name": "Gui H.",
+      "handle": "@gui.h",
+      "avatarColor": "#16130F",
+      "bio": "Azeroth historian",
+      "followers": 8400,
+      "badgeUniverse": "wow"
+    },
+    {
+      "id": "mari",
+      "name": "Mari O.",
+      "handle": "@mari.o",
+      "avatarColor": "#E4412F",
+      "bio": "Pre-2000 Marvel, no MCU",
+      "followers": 5100,
+      "badgeUniverse": "marvel"
+    },
+    {
+      "id": "joao",
+      "name": "João P.",
+      "handle": "@joao.p",
+      "avatarColor": "#2E5BE8",
+      "bio": "Multiverse theories",
+      "followers": 3900,
+      "badgeUniverse": "marvel"
+    },
+    {
+      "id": "lu",
+      "name": "Lu A.",
+      "handle": "@lu.a",
+      "avatarColor": "#F4A814",
+      "bio": "Reads everything in chronological order",
+      "followers": 2700,
+      "badgeUniverse": "dc"
+    }
+  ],
+  "badgeNames": {
+    "wow": "Azeroth",
+    "marvel": "Earth-616",
+    "dc": "Multi-DC"
+  },
+  "connections": {
+    "w-wc3": [
+      "c-arthas",
+      "c-thrall",
+      "c-sylvanas",
+      "e-lordaeron"
+    ],
+    "w-wotlk": [
+      "c-arthas",
+      "c-sylvanas",
+      "w-arthas"
+    ],
+    "w-arthas": [
+      "c-arthas",
+      "e-lordaeron"
+    ],
+    "w-cata": [
+      "e-cataclismo",
+      "c-thrall"
+    ],
+    "w-crimes": [
+      "c-sylvanas",
+      "c-thrall"
+    ],
+    "e-cataclismo": [
+      "w-cata"
+    ],
+    "e-lordaeron": [
+      "c-arthas",
+      "w-wc3"
+    ],
+    "m-ultimato": [
+      "c-thanos",
+      "e-estalo",
+      "c-wanda"
+    ],
+    "m-loki": [
+      "c-loki"
+    ],
+    "m-secret": [
+      "m-aranha"
+    ],
+    "e-estalo": [
+      "c-thanos",
+      "m-ultimato"
+    ],
+    "c-thanos": [
+      "e-estalo",
+      "m-ultimato"
+    ],
+    "c-loki": [
+      "m-loki"
+    ],
+    "d-crise": [
+      "c-barry",
+      "c-batman"
+    ],
+    "d-flash": [
+      "c-barry",
+      "c-batman"
+    ],
+    "d-tdk": [
+      "c-batman",
+      "c-coringa"
+    ],
+    "d-injustice": [
+      "c-batman",
+      "c-coringa"
+    ],
+    "d-reino": [
+      "c-batman"
+    ],
+    "c-arthas": [
+      "w-wc3",
+      "w-arthas",
+      "w-wotlk"
+    ],
+    "c-sylvanas": [
+      "w-wc3",
+      "w-crimes"
+    ],
+    "c-batman": [
+      "d-tdk",
+      "d-reino",
+      "d-injustice"
+    ],
+    "c-barry": [
+      "d-crise",
+      "d-flash"
+    ],
+    "c-coringa": [
+      "d-tdk"
+    ]
+  },
+  "timelines": {
+    "wow": [
+      {
+        "era": "Year 0 · First War",
+        "itemId": "w-wcfilme",
+        "note": "The Dark Portal opens"
+      },
+      {
+        "era": "Year 20 · Third War",
+        "itemId": "w-wc3",
+        "note": "The plague arrives"
+      },
+      {
+        "era": "Year 21",
+        "itemId": "e-lordaeron",
+        "note": "The king dies"
+      },
+      {
+        "era": "Year 21–25",
+        "itemId": "w-arthas",
+        "note": "Further reading"
+      },
+      {
+        "era": "Year 27 · Northrend",
+        "itemId": "w-wotlk",
+        "note": "Assault on the Citadel"
+      },
+      {
+        "era": "Year 30",
+        "itemId": "e-cataclismo",
+        "note": "The world shatters"
+      },
+      {
+        "era": "Year 30",
+        "itemId": "w-cata",
+        "note": "Expansion"
+      },
+      {
+        "era": "Year 35",
+        "itemId": "w-crimes",
+        "note": "After Pandaria"
+      }
+    ],
+    "marvel": [
+      {
+        "era": "Earth-616 · 1980",
+        "itemId": "m-fenix",
+        "note": "Claremont era"
+      },
+      {
+        "era": "Earth-616 · 2006",
+        "itemId": "m-civil",
+        "note": "Registration"
+      },
+      {
+        "era": "MCU · Phase 3",
+        "itemId": "e-estalo",
+        "note": "Half of everything"
+      },
+      {
+        "era": "MCU · Phase 3",
+        "itemId": "m-ultimato",
+        "note": "Time heist"
+      },
+      {
+        "era": "MCU · Phase 4",
+        "itemId": "m-loki",
+        "note": "The TVA"
+      },
+      {
+        "era": "Multiverse",
+        "itemId": "m-secret",
+        "note": "Battleworld"
+      },
+      {
+        "era": "Spider-Verse",
+        "itemId": "m-aranha",
+        "note": "Canon events"
+      }
+    ],
+    "dc": [
+      {
+        "era": "Pre-Crisis",
+        "itemId": "d-crise",
+        "note": "The end of infinite Earths"
+      },
+      {
+        "era": "Earth-Watchmen",
+        "itemId": "d-watchmen",
+        "note": "Separate timeline"
+      },
+      {
+        "era": "Post-Crisis · 1992",
+        "itemId": "e-superman",
+        "note": "Doomsday"
+      },
+      {
+        "era": "Earth-22",
+        "itemId": "d-reino",
+        "note": "A possible future"
+      },
+      {
+        "era": "Post-Crisis → New 52",
+        "itemId": "d-flash",
+        "note": "Reboot"
+      },
+      {
+        "era": "Earth-Injustice",
+        "itemId": "d-injustice",
+        "note": "Regime"
+      },
+      {
+        "era": "Nolan trilogy",
+        "itemId": "d-tdk",
+        "note": "Adaptation"
+      }
+    ]
+  },
+  "readingOrders": [
+    {
+      "id": "o-azeroth",
+      "uni": "wow",
+      "title": "Azeroth from scratch",
+      "by": "caio",
+      "votes": 3240,
+      "steps": [
+        "w-wcfilme",
+        "w-wc3",
+        "w-arthas",
+        "w-wotlk",
+        "w-cata",
+        "w-crimes"
+      ]
+    },
+    {
+      "id": "o-lich",
+      "uni": "wow",
+      "title": "Just the Lich King saga",
+      "by": "nina",
+      "votes": 1810,
+      "steps": [
+        "w-wc3",
+        "e-lordaeron",
+        "w-arthas",
+        "w-wotlk"
+      ]
+    },
+    {
+      "id": "o-mcu",
+      "uni": "marvel",
+      "title": "Essential Marvel multiverse",
+      "by": "leo",
+      "votes": 12040,
+      "steps": [
+        "m-fenix",
+        "m-civil",
+        "m-ultimato",
+        "m-loki",
+        "m-secret",
+        "m-aranha"
+      ]
+    },
+    {
+      "id": "o-estalo",
+      "uni": "marvel",
+      "title": "Guide to the Snap",
+      "by": "bia",
+      "votes": 4130,
+      "steps": [
+        "e-estalo",
+        "m-ultimato",
+        "m-loki"
+      ]
+    },
+    {
+      "id": "o-crises",
+      "uni": "dc",
+      "title": "DC's Crises",
+      "by": "rafa",
+      "votes": 5620,
+      "steps": [
+        "d-crise",
+        "e-superman",
+        "d-reino",
+        "d-flash"
+      ]
+    },
+    {
+      "id": "o-bat",
+      "uni": "dc",
+      "title": "Batman on 3 Earths",
+      "by": "tati",
+      "votes": 2310,
+      "steps": [
+        "d-tdk",
+        "d-reino",
+        "d-injustice"
+      ]
+    }
+  ],
+  "lists": [
+    {
+      "id": "l-viloes",
+      "title": "Villains who had a point (sort of)",
+      "desc": "Not defending them. Just understanding their point of view.",
+      "likes": 412,
+      "comments": 58,
+      "items": [
+        "c-thanos",
+        "c-sylvanas",
+        "c-loki",
+        "c-arthas",
+        "c-coringa"
+      ]
+    },
+    {
+      "id": "l-porta",
+      "title": "Your gateway to Azeroth",
+      "desc": "For anyone who's never played and wants to know why everyone cries over Arthas.",
+      "likes": 890,
+      "comments": 104,
+      "items": [
+        "w-wc3",
+        "w-arthas",
+        "w-wotlk",
+        "w-crimes"
+      ]
+    },
+    {
+      "id": "l-crises",
+      "title": "Crises that broke the multiverse",
+      "desc": "Every event that reset, merged, or destroyed realities.",
+      "likes": 1204,
+      "comments": 211,
+      "items": [
+        "d-crise",
+        "m-secret",
+        "d-flash",
+        "e-estalo",
+        "m-aranha",
+        "e-cataclismo"
+      ]
+    }
+  ],
+  "reviews": [
+    {
+      "id": "r1",
+      "user": "nina",
+      "item": "w-wotlk",
+      "rating": 5,
+      "text": "Climbing Icecrown Citadel with my guild and watching Arthas fall is why I still play. The best storytelling Blizzard has ever done.",
+      "spoiler": false,
+      "likes": 214,
+      "when": "2h",
+      "comments": [
+        {
+          "user": "duda",
+          "text": "That final cinematic still gets me.",
+          "likes": 12
+        },
+        {
+          "user": "caio",
+          "text": "I only disagree on the Coliseum's pacing. Everything else is perfect.",
+          "likes": 4
+        }
+      ]
+    },
+    {
+      "id": "r2",
+      "user": "caio",
+      "item": "e-cataclismo",
+      "rating": 2.5,
+      "text": "They wiped out half the classic zones and replaced them with joke quests. Deathwing deserved better.",
+      "spoiler": true,
+      "likes": 96,
+      "when": "3h",
+      "comments": [
+        {
+          "user": "bia",
+          "text": "But Twilight Highlands is beautiful!",
+          "likes": 7
+        },
+        {
+          "user": "gui",
+          "text": "Come on, Durotar needed that overhaul.",
+          "likes": 15
+        },
+        {
+          "user": "caio",
+          "text": "Necessary, yes. Well done, no.",
+          "likes": 9
+        }
+      ]
+    },
+    {
+      "id": "r3",
+      "user": "leo",
+      "item": "m-aranha",
+      "rating": 5,
+      "text": "Each universe has its own visual language. Canon events are the best multiverse idea in years.",
+      "spoiler": false,
+      "likes": 388,
+      "when": "5h",
+      "comments": [
+        {
+          "user": "mari",
+          "text": "The comics already had that, but they nailed it here.",
+          "likes": 21
+        }
+      ]
+    },
+    {
+      "id": "r4",
+      "user": "bia",
+      "item": "c-sylvanas",
+      "rating": 3,
+      "text": "There's no coming back from burning Teldrassil, but Shadowlands tried to redeem her in a way nobody asked for.",
+      "spoiler": true,
+      "likes": 152,
+      "when": "7h",
+      "comments": [
+        {
+          "user": "nina",
+          "text": "Her fall was badly written, not badly conceived.",
+          "likes": 18
+        }
+      ]
+    },
+    {
+      "id": "r5",
+      "user": "rafa",
+      "item": "d-crise",
+      "rating": 4.5,
+      "text": "Dense, confusing, massive. And yet nothing in DC makes sense without it.",
+      "spoiler": false,
+      "likes": 77,
+      "when": "yesterday",
+      "comments": []
+    },
+    {
+      "id": "r6",
+      "user": "tati",
+      "item": "d-tdk",
+      "rating": 5,
+      "text": "The best Batman isn't on any official Earth. He's right here.",
+      "spoiler": false,
+      "likes": 431,
+      "when": "yesterday",
+      "comments": [
+        {
+          "user": "leo",
+          "text": "Heath Ledger carried it, but the script is razor-sharp.",
+          "likes": 30
+        }
+      ]
+    },
+    {
+      "id": "r7",
+      "user": "gui",
+      "item": "w-wc3",
+      "rating": 5,
+      "text": "Arthas's campaign is Greek tragedy with orcs. Essential to understanding everything that follows.",
+      "spoiler": false,
+      "likes": 1203,
+      "when": "2 days",
+      "comments": [
+        {
+          "user": "lu",
+          "text": "I played in the community's order. It made all the difference.",
+          "likes": 44
+        }
+      ]
+    },
+    {
+      "id": "r8",
+      "user": "mari",
+      "item": "m-civil",
+      "rating": 3.5,
+      "text": "Great idea, but the execution leans too far toward Stark.",
+      "spoiler": false,
+      "likes": 241,
+      "when": "2 days",
+      "comments": []
+    },
+    {
+      "id": "r9",
+      "user": "duda",
+      "item": "w-wotlk",
+      "rating": 5,
+      "text": "Watched it a third time. Tirion's arc wraps up everything Warcraft III started.",
+      "spoiler": false,
+      "likes": 64,
+      "when": "5 days",
+      "comments": [
+        {
+          "user": "nina",
+          "text": "Tirion deserved a book of his own.",
+          "likes": 6
+        }
+      ]
+    },
+    {
+      "id": "r10",
+      "user": "duda",
+      "item": "d-crise",
+      "rating": 4,
+      "text": "I read it after Flashpoint. It was like finding the instruction manual for chaos.",
+      "spoiler": false,
+      "likes": 31,
+      "when": "10 days",
+      "comments": [
+        {
+          "user": "caio",
+          "text": "Pre-Crisis is better, and I'll die on that hill.",
+          "likes": 11
+        }
+      ]
+    },
+    {
+      "id": "r11",
+      "user": "joao",
+      "item": "e-estalo",
+      "rating": 4,
+      "text": "Theory: the Snap created the branch that the TVA couldn't prune.",
+      "spoiler": true,
+      "likes": 318,
+      "when": "3 days",
+      "comments": []
+    }
+  ],
+  "genericReviewTexts": [
+    "I finally get why everyone brings this up in canon debates.",
+    "Uneven pacing, but huge consequences for the lore.",
+    "I revisited it after following the community order, and it made much more sense.",
+    "Beautiful, but the continuity has more holes than Swiss cheese.",
+    "Essential. It changes how you read everything else."
+  ],
+  "canonStatus": {
+    "c-sylvanas": {
+      "status": "Contestado",
+      "note": "Shadowlands rewrote her motivations after Teldrassil."
+    },
+    "w-arthas": {
+      "status": "Contestado",
+      "note": "Parts of the book contradict Shadowlands."
+    },
+    "w-wcfilme": {
+      "status": "Variante",
+      "note": "An adaptation that diverges from the games in several ways."
+    },
+    "d-tdk": {
+      "status": "Variante",
+      "note": "The Nolan trilogy, outside comic continuity."
+    },
+    "d-injustice": {
+      "status": "Variante",
+      "note": "Earth-Injustice, an alternate universe."
+    },
+    "c-loki": {
+      "status": "Variante",
+      "note": "Dozens of variants: 616, MCU, Kid Loki, Alligator Loki…"
+    },
+    "d-reino": {
+      "status": "Variante",
+      "note": "Earth-22, a possible future."
+    },
+    "d-crise": {
+      "status": "Retconado",
+      "note": "Partly undone by Infinite Crisis and Final Crisis."
+    },
+    "d-flash": {
+      "status": "Retconado",
+      "note": "The New 52 was undone by Rebirth."
+    },
+    "c-barry": {
+      "status": "Retconado",
+      "note": "His death in Crisis was undone in 2008."
+    },
+    "e-superman": {
+      "status": "Retconado",
+      "note": "He came back. Of course."
+    }
+  },
+  "canonStatusColors": {
+    "Cânone": {
+      "bg": "#16130F",
+      "fg": "#F5F1E8"
+    },
+    "Variante": {
+      "bg": "#2E5BE8",
+      "fg": "#FFFDF8"
+    },
+    "Retconado": {
+      "bg": "#E4412F",
+      "fg": "#FFFDF8"
+    },
+    "Contestado": {
+      "bg": "#F4A814",
+      "fg": "#16130F"
+    }
+  },
+  "duels": [
+    {
+      "a": "c-arthas",
+      "b": "c-thanos",
+      "question": "Whose fall was more tragic?",
+      "baseVotes": [
+        5210,
+        3890
+      ]
+    },
+    {
+      "a": "d-watchmen",
+      "b": "m-fenix",
+      "question": "The most important comic of all?",
+      "baseVotes": [
+        4120,
+        3310
+      ]
+    },
+    {
+      "a": "e-estalo",
+      "b": "e-cataclismo",
+      "question": "Which event changed its universe the most?",
+      "baseVotes": [
+        2980,
+        3440
+      ]
+    },
+    {
+      "a": "c-coringa",
+      "b": "c-sylvanas",
+      "question": "The best-written villain?",
+      "baseVotes": [
+        6010,
+        2870
+      ]
+    }
+  ],
+  "me": {
+    "id": "duda",
+    "following": [
+      "nina",
+      "caio",
+      "leo",
+      "bia",
+      "rafa",
+      "tati"
+    ],
+    "followers": 312
+  }
+}

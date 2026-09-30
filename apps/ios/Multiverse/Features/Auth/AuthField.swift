@@ -32,7 +32,7 @@ struct AuthField<Trailing: View>: View {
                 .focused($focused)
 
                 if isSecure {
-                    Button(revealed ? "OCULTAR" : "MOSTRAR") { revealed.toggle() }
+                    Button(revealed ? L10n.text("OCULTAR") : L10n.text("MOSTRAR")) { revealed.toggle() }
                         .font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
                         .buttonStyle(.plain)
                 } else {
@@ -60,7 +60,7 @@ struct AuthErrorBanner: View {
     let message: String
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            Text("OPS!")
+            Text(L10n.text("OPS!"))
                 .font(MVFont.black(12))
                 .foregroundStyle(MV.C.ink)
                 .padding(.horizontal, 8).padding(.vertical, 5)
@@ -105,7 +105,7 @@ struct PasswordStrengthMeter: View {
                 }
             }
             HStack {
-                Text("Força: \(strength.label)").font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
+                Text(L10n.format("Força: %1$@", String(describing: strength.label))).font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
                 Spacer()
                 if let trailingHint {
                     Text(trailingHint).font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
@@ -121,9 +121,9 @@ struct PasswordRequirementsList: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            row("Pelo menos 8 caracteres", met: requirements.hasEightChars)
-            row("Uma letra maiúscula", met: requirements.hasUppercase)
-            row("Um número ou símbolo", met: requirements.hasNumberOrSymbol)
+            row(L10n.text("Pelo menos 8 caracteres"), met: requirements.hasEightChars)
+            row(L10n.text("Uma letra maiúscula"), met: requirements.hasUppercase)
+            row(L10n.text("Um número ou símbolo"), met: requirements.hasNumberOrSymbol)
         }
         .padding(14)
         .comicCard(shadow: 0)

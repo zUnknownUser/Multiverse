@@ -15,7 +15,7 @@ struct TheoryDetailView: View {
                         VStack(alignment: .leading, spacing: 10) {
                             HStack(spacing: 8) {
                                 AvatarView(user: user, size: 30)
-                                Text("\(user.name) · postada há \(theory.postedDaysAgo) dias")
+                                Text(L10n.format("%1$@ · postada há %2$@ dias", String(describing: user.name), String(describing: theory.postedDaysAgo)))
                                     .font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
                             }
                             Text(theory.text.uppercased()).font(MVFont.black(22)).foregroundStyle(MV.C.ink)
@@ -50,7 +50,7 @@ struct TheoryDetailView: View {
     @ViewBuilder
     private func stamp(theory: Theory) -> some View {
         let color = theory.status == .confirmed ? MV.C.dc : MV.C.marvel
-        Text(theory.status == .confirmed ? "CONFIRMADA!" : "REFUTADA!")
+        Text(theory.status == .confirmed ? L10n.text("CONFIRMADA!") : L10n.text("REFUTADA!"))
             .font(MVFont.display(20))
             .foregroundStyle(MV.C.paper)
             .padding(.horizontal, 14).padding(.vertical, 8)
@@ -64,10 +64,10 @@ struct TheoryDetailView: View {
 
     private var pointsCard: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("VOCÊ VOTOU PLAUSÍVEL").kicker(11).foregroundStyle(MV.C.paper.opacity(0.85))
+            Text(L10n.text("VOCÊ VOTOU PLAUSÍVEL")).kicker(11).foregroundStyle(MV.C.paper.opacity(0.85))
             Text("+40").font(MVFont.black(56)).foregroundStyle(MV.C.paper)
-                + Text(" PONTOS DE LORE").font(MVFont.bold(16)).foregroundStyle(MV.C.paper)
-            Text("Junto com \(Logic.fmt(1204)) loristas.")
+                + Text(L10n.text(" PONTOS DE LORE")).font(MVFont.bold(16)).foregroundStyle(MV.C.paper)
+            Text(L10n.format("Junto com %1$@ loristas.", String(describing: Logic.fmt(1204))))
                 .font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.paper.opacity(0.9))
         }
         .padding(16)
@@ -80,13 +80,13 @@ struct TheoryDetailView: View {
 
     private func accuracyCard(before: Int, after: Int) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("SEU ACERTO EM TEORIAS").kicker(11).foregroundStyle(MV.C.muted)
+            Text(L10n.text("SEU ACERTO EM TEORIAS")).kicker(11).foregroundStyle(MV.C.muted)
             HStack(alignment: .lastTextBaseline) {
                 Text("\(before)%").font(MVFont.black(30)).foregroundStyle(MV.C.muted)
                 Text("→").font(MVFont.black(20)).foregroundStyle(MV.C.muted)
                 Text("\(after)%").font(MVFont.black(30)).foregroundStyle(MV.C.dc)
                 Spacer()
-                Text("top 12%\nde Azeroth").font(MVFont.bold(11)).multilineTextAlignment(.trailing).foregroundStyle(MV.C.muted)
+                Text(L10n.text("top 12%\nde Azeroth")).font(MVFont.bold(11)).multilineTextAlignment(.trailing).foregroundStyle(MV.C.muted)
             }
             ComicProgress(value: Double(after) / 100, fill: MV.C.dc, height: 8)
         }
@@ -96,7 +96,7 @@ struct TheoryDetailView: View {
 
     private func resolvedByCard(title: String, note: String?, confirmed: Bool) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(confirmed ? "CONFIRMADA POR" : "REFUTADA POR").kicker(11).foregroundStyle(MV.C.muted)
+            Text(confirmed ? L10n.text("CONFIRMADA POR") : L10n.text("REFUTADA POR")).kicker(11).foregroundStyle(MV.C.muted)
             HStack(spacing: 12) {
                 ZStack { MV.C.wow; Halftone() }
                     .frame(width: 52, height: 78)
@@ -115,7 +115,7 @@ struct TheoryDetailView: View {
     private var shareButton: some View {
         Group {
             if let shareImage {
-                ShareLink(item: shareImage, preview: SharePreview("Eu avisei", image: shareImage)) { shareLabel }
+                ShareLink(item: shareImage, preview: SharePreview(L10n.text("Eu avisei"), image: shareImage)) { shareLabel }
             } else {
                 shareLabel
             }
@@ -123,7 +123,7 @@ struct TheoryDetailView: View {
     }
 
     private var shareLabel: some View {
-        Text("COMPARTILHAR \"EU AVISEI\"")
+        Text(L10n.text("COMPARTILHAR \"EU AVISEI\""))
             .font(MVFont.bold(14))
             .frame(maxWidth: .infinity).frame(height: 54)
             .foregroundStyle(MV.C.paper)
@@ -151,10 +151,10 @@ private struct TheoryShareCard: View {
             MV.C.dc
             Halftone(spacing: 8, radius: 1.4, color: MV.C.paper.opacity(0.18))
             VStack(alignment: .leading, spacing: 24) {
-                Text("EU AVISEI").font(MVFont.display(48, width: 122)).foregroundStyle(MV.C.paper)
+                Text(L10n.text("EU AVISEI")).font(MVFont.display(48, width: 122)).foregroundStyle(MV.C.paper)
                 Text(theory.text.uppercased()).font(MVFont.black(26)).foregroundStyle(MV.C.paper)
                 Spacer()
-                Text("CONFIRMADA · @\(authorName)").font(MVFont.bold(16)).foregroundStyle(MV.C.paper.opacity(0.85))
+                Text(L10n.format("CONFIRMADA · @%1$@", String(describing: authorName))).font(MVFont.bold(16)).foregroundStyle(MV.C.paper.opacity(0.85))
                 Text("MULTIVERSE").font(MVFont.black(18)).foregroundStyle(MV.C.paper)
             }
             .padding(40)

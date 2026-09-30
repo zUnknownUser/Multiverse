@@ -14,7 +14,7 @@ struct PremiereLiveActivity: Widget {
                     logoBadge
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text("● AO VIVO").font(MVFont.bold(11)).foregroundStyle(MV.C.marvel)
+                    Text(L10n.text("● AO VIVO")).font(MVFont.bold(11)).foregroundStyle(MV.C.marvel)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     optionsList(state: context.state)
@@ -42,7 +42,7 @@ struct PremiereLiveActivity: Widget {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 logoBadge
-                Text("● AO VIVO")
+                Text(L10n.text("● AO VIVO"))
                     .font(MVFont.bold(11))
                     .foregroundStyle(MV.C.paper)
                     .padding(.horizontal, 8).padding(.vertical, 3)
@@ -51,7 +51,7 @@ struct PremiereLiveActivity: Widget {
                 Spacer()
                 Text(state.votingCountLabel).font(MVFont.bold(11)).foregroundStyle(MV.C.wow)
             }
-            Text("ESTREIA · \(state.question)".uppercased())
+            Text(L10n.format("ESTREIA · %1$@", String(describing: state.question)).uppercased())
                 .font(MVFont.black(15)).foregroundStyle(MV.C.paper).lineLimit(2)
             optionsList(state: state)
         }

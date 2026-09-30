@@ -6,8 +6,8 @@ import FirebaseCore
 
 @MainActor
 protocol EmailAuthenticationClient: Sendable {
+    /// Returns nil once the email is verified; profile completion belongs to AccountAPI.
     func pendingEmail() -> String?
-    func pendingEmailIsVerified() -> Bool
     func signIn(email: String, password: String) async throws -> AuthSession
     func createAccount(email: String, password: String) async throws
     func sendVerification() async throws
@@ -23,17 +23,14 @@ final class FirebaseEmailAuthenticationClient: EmailAuthenticationClient {
     func pendingEmail() -> String? {
         guard let user = Auth.auth().currentUser,
               user.providerData.contains(where: { $0.providerID == "password" }),
-              !user.isEmailVerified || user.displayName?.isEmpty != false else { return nil }
+              !user.isEmailVerified else { return nil }
         return user.email
     }
-
-    func pendingEmailIsVerified() -> Bool { Auth.auth().currentUser?.isEmailVerified == true }
 
     func signIn(email: String, password: String) async throws -> AuthSession {
         do {
             let result = try await Auth.auth().signIn(withEmail: email, password: password)
             guard result.user.isEmailVerified else { throw AuthError.emailNotVerified }
-            guard result.user.displayName?.isEmpty == false else { throw AuthError.profileIncomplete }
             Analytics.logEvent(AnalyticsEventLogin, parameters: [AnalyticsParameterMethod: "password"])
             return Self.session(result.user)
         } catch { throw Self.failure(error) }
@@ -53,7 +50,7 @@ final class FirebaseEmailAuthenticationClient: EmailAuthenticationClient {
     func sendVerification() async throws {
         guard Auth.auth().currentUser != nil else { throw AuthError.sessionExpired }
         do {
-            Auth.auth().languageCode = "pt-BR"
+            Auth.auth().languageCode = L10n.language()
             _ = try await Functions.functions(region: "us-central1")
                 .httpsCallable("requestEmailVerificationCode").call()
         } catch { throw Self.failure(error) }
@@ -87,7 +84,7 @@ final class FirebaseEmailAuthenticationClient: EmailAuthenticationClient {
 
     func sendPasswordReset(email: String) async throws {
         do {
-            Auth.auth().languageCode = "pt-BR"
+            Auth.auth().languageCode = L10n.language()
             let settings = ActionCodeSettings()
             settings.handleCodeInApp = true
             settings.setIOSBundleID(Bundle.main.bundleIdentifier ?? "com.nexussoft.multiverse")
@@ -186,5 +183,4 @@ struct EmailActionLink: Equatable {
 
 enum EmailActionResult: Equatable, Sendable {
     case resetPassword(email: String)
-    case emailVerified
 }

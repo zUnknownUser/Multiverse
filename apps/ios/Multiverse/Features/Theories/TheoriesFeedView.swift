@@ -10,14 +10,14 @@ struct TheoriesFeedView: View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             VStack(alignment: .leading, spacing: 18) {
                 HStack(alignment: .firstTextBaseline) {
-                    Text("TEORIAS").font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
+                    Text(L10n.text("TEORIAS")).font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
                     Spacer()
                 }
 
                 ScrollView(.horizontal) {
                     HStack(spacing: 8) {
                         ForEach(TheoryFeedFilter.allCases, id: \.self) { f in
-                            PillButton(title: f.rawValue, active: filter == f, size: 13) { filter = f }
+                            PillButton(title: L10n.text(f.rawValue), active: filter == f, size: 13) { filter = f }
                         }
                     }
                 }
@@ -25,7 +25,7 @@ struct TheoriesFeedView: View {
 
                 let rows = store.theoriesFiltered(filter)
                 if rows.isEmpty {
-                    Text("Nada por aqui ainda.").font(MVFont.body(14)).foregroundStyle(MV.C.muted)
+                    Text(L10n.text("Nada por aqui ainda.")).font(MVFont.body(14)).foregroundStyle(MV.C.muted)
                         .frame(maxWidth: .infinity).padding(24)
                 } else {
                     VStack(spacing: 14) {
@@ -46,9 +46,8 @@ struct TheoryCard: View {
     @Environment(AppStore.self) private var store
 
     var body: some View {
-        guard let user = store.user(theory.userID), let uni = store.universe(theory.uni) else { return AnyView(EmptyView()) }
+        guard let user = store.user(theory.userID), store.universe(theory.uni) != nil else { return AnyView(EmptyView()) }
         let percents = store.theoryPercents(theory)
-        let voted = store.isTheoryVoted(theory.id)
 
         return AnyView(
             ZStack(alignment: .topTrailing) {
@@ -71,8 +70,8 @@ struct TheoryCard: View {
                         .foregroundStyle(MV.C.ink)
 
                     VStack(spacing: 6) {
-                        voteRow(label: "Plausível", pct: percents.plausible, isPlausible: true, color: MV.C.dc)
-                        voteRow(label: "Viajou", pct: percents.travel, isPlausible: false, color: MV.C.marvel)
+                        voteRow(label: L10n.text("Plausível"), pct: percents.plausible, isPlausible: true, color: MV.C.dc)
+                        voteRow(label: L10n.text("Viajou"), pct: percents.travel, isPlausible: false, color: MV.C.marvel)
                     }
 
                     footerNote
@@ -83,9 +82,9 @@ struct TheoryCard: View {
                 .onTapGesture { if theory.status != .open { store.push(.theoryDetail(theory.id)) } }
 
                 if theory.status == .confirmed {
-                    stamp("CONFIRMADA", color: MV.C.dc)
+                    stamp(L10n.text("CONFIRMADA"), color: MV.C.dc)
                 } else if theory.status == .refuted {
-                    stamp("REFUTADA", color: MV.C.marvel)
+                    stamp(L10n.text("REFUTADA"), color: MV.C.marvel)
                 }
             }
         )
@@ -114,16 +113,16 @@ struct TheoryCard: View {
         switch theory.status {
         case .open:
             if let item = theory.resolvesAtItemID.flatMap({ store.item($0) }) {
-                Text("Resolve em: \(item.title) · \(store.theoryTotalVotesLabel(theory)) votos")
+                Text(L10n.format("Resolve em: %1$@ · %2$@ votos", String(describing: item.title), String(describing: store.theoryTotalVotesLabel(theory))))
                     .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
             }
         case .confirmed:
             if let title = theory.resolutionTitle {
-                Text("Confirmada por: \(title)" + (theory.resolutionNote.map { " · \($0)" } ?? ""))
+                Text(L10n.format("Confirmada por: %1$@", String(describing: title)) + (theory.resolutionNote.map { " · \($0)" } ?? ""))
                     .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
             }
         case .refuted:
-            Text("Refutada \(theory.resolutionTitle.map { "pelo \($0)" } ?? "") · \(store.theoryTotalVotesLabel(theory)) votos")
+            Text(L10n.format("Refutada %1$@ · %2$@ votos", String(describing: theory.resolutionTitle.map { L10n.format("pelo %@", $0) } ?? ""), String(describing: store.theoryTotalVotesLabel(theory))))
                 .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
         }
     }

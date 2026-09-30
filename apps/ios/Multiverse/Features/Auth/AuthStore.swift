@@ -14,14 +14,30 @@ enum AuthRoute: Hashable {
 @Observable
 final class AuthStore {
     private let repository: AuthRepository
+    private let resendCooldowns: EmailResendCooldown
 
-    var session: AuthSession?
+    var session: AuthSession? {
+        didSet {
+            if let session, session.needsProfile {
+                draft.name = session.displayName ?? ""
+                draft.email = session.email
+                path = [.chooseUsername]
+            }
+        }
+    }
+    var bootstrapFailed = false
     var isBootstrapping = true
     private var pendingEmailLink: URL?
+    @ObservationIgnored private var sessionLifecycleID = UUID()
 
     /// Pilha de navegação do fluxo (a raiz, Boas-vindas, não entra aqui — ver `AuthFlowView`).
     var path: [AuthRoute] = []
-    var isLoading = false
+    var isLoading = false {
+        didSet {
+            guard !isLoading, pendingEmailLink != nil else { return }
+            Task { [weak self] in await self?.processPendingEmailLink() }
+        }
+    }
     var errorMessage: String?
     var fieldError: String?
 
@@ -30,33 +46,40 @@ final class AuthStore {
     var signInPassword = ""
 
     // Criar conta
-    var draft = NewAccountDraft()
+    var draft = NewAccountDraft() {
+        didSet {
+            if draft.username != oldValue.username { invalidateUsernameCheck() }
+        }
+    }
+    @ObservationIgnored private var usernameRequestID = UUID()
     var verificationCode = ""
     var usernameAvailable: Bool?
-    var resendCooldown = 0
+    var verificationResendCooldown: Int { resendCooldowns.remaining(for: .verification, email: draft.email) }
+    var passwordResetResendCooldown: Int { resendCooldowns.remaining(for: .passwordReset, email: resetEmail) }
 
     // Esqueci a senha
     var resetEmail = ""
     var infoMessage: String?
-    @ObservationIgnored private var cooldownTask: Task<Void, Never>?
     var newPassword = ""
     var newPasswordConfirm = ""
 
-    init(repository: AuthRepository = FirebaseAuthRepository()) {
+    init(repository: AuthRepository = FirebaseAuthRepository(), resendCooldowns: EmailResendCooldown = EmailResendCooldown()) {
         self.repository = repository
+        self.resendCooldowns = resendCooldowns
     }
 
     func bootstrap() async {
-        session = await repository.currentSession()
+        isBootstrapping = true
+        bootstrapFailed = false
+        errorMessage = nil
+        do { session = try await repository.currentSession() }
+        catch { bootstrapFailed = true; errorMessage = error.localizedDescription }
         if session == nil, let pending = await repository.pendingSignUpEmail() {
             draft.email = pending
-            path = await repository.pendingEmailIsVerified() ? [.chooseUsername] : [.createAccount, .verifyCode]
+            path = [.createAccount, .verifyCode]
         }
         isBootstrapping = false
-        if let url = pendingEmailLink {
-            pendingEmailLink = nil
-            await handleEmailLink(url)
-        }
+        await processPendingEmailLink()
     }
 
     func push(_ route: AuthRoute) {
@@ -87,10 +110,11 @@ final class AuthStore {
                 draft.email = signInIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
                 path = error as? AuthError == .profileIncomplete ? [.chooseUsername] : [.verifyCode]
                 errorMessage = nil
-                if error as? AuthError == .emailNotVerified {
+                if error as? AuthError == .emailNotVerified, verificationResendCooldown == 0 {
+                    let email = draft.email
                     do {
                         try await repository.resendVerificationCode()
-                        startResendCooldown()
+                        resendCooldowns.recordSend(for: .verification, email: email)
                     } catch { errorMessage = error.localizedDescription }
                 }
             } else if error as? AuthError == .emailCredentialsInvalid {
@@ -122,14 +146,20 @@ final class AuthStore {
         guard !isLoading else { return }
         errorMessage = nil
         guard PasswordRequirements(draft.password).allMet else {
-            errorMessage = "Sua senha ainda não atende aos requisitos."
+            errorMessage = L10n.text("Sua senha ainda não atende aos requisitos.")
             return
         }
         isLoading = true
         defer { isLoading = false }
         do {
-            try await repository.startSignUp(email: draft.email, password: draft.password)
-            startResendCooldown()
+            let email = draft.email.trimmingCharacters(in: .whitespacesAndNewlines)
+            let password = draft.password
+            let pending = await repository.pendingSignUpEmail()
+            if resendCooldowns.remaining(for: .verification, email: email) == 0 || pending?.lowercased() != email.lowercased() {
+                try await repository.startSignUp(email: email, password: password)
+                resendCooldowns.recordSend(for: .verification, email: email)
+            }
+            draft.email = email
             draft.password = ""
             push(.verifyCode)
         } catch {
@@ -143,27 +173,15 @@ final class AuthStore {
     }
 
     func resendCode() async {
-        guard resendCooldown == 0, !isLoading else { return }
+        guard verificationResendCooldown == 0, !isLoading else { return }
+        let email = draft.email
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
         do {
             try await repository.resendVerificationCode()
-            startResendCooldown()
+            resendCooldowns.recordSend(for: .verification, email: email)
         } catch { errorMessage = error.localizedDescription }
-    }
-
-    private func startResendCooldown() {
-        cooldownTask?.cancel()
-        resendCooldown = 60
-        cooldownTask = Task { [weak self] in
-            while !Task.isCancelled {
-                do { try await Task.sleep(for: .seconds(1)) } catch { return }
-                guard let self else { return }
-                self.resendCooldown = max(0, self.resendCooldown - 1)
-                if self.resendCooldown == 0 { return }
-            }
-        }
     }
 
     func submitCode() async {
@@ -180,11 +198,25 @@ final class AuthStore {
         }
     }
 
+    private func invalidateUsernameCheck() {
+        usernameRequestID = UUID()
+        usernameAvailable = nil
+    }
+
     func checkUsername() async {
-        guard !draft.username.isEmpty else { usernameAvailable = nil; return }
+        guard !Task.isCancelled else { return }
+        invalidateUsernameCheck()
+        let requestID = usernameRequestID
         let username = draft.username
-        let available = await repository.checkUsernameAvailable(username)
-        if draft.username == username { usernameAvailable = available }
+        guard !username.isEmpty else { return }
+        do {
+            let available = try await repository.checkUsernameAvailable(username)
+            guard !Task.isCancelled, requestID == usernameRequestID, draft.username == username else { return }
+            usernameAvailable = available
+        } catch {
+            guard !Task.isCancelled, requestID == usernameRequestID, draft.username == username else { return }
+            errorMessage = error.localizedDescription
+        }
     }
 
     func finishSignUp() async {
@@ -195,6 +227,10 @@ final class AuthStore {
         do {
             session = try await repository.completeSignUp(name: draft.name, username: draft.username, avatarColor: draft.avatarColor, bio: draft.bio)
         } catch {
+            if error as? AuthError == .usernameTaken {
+                usernameAvailable = false
+                path = [.chooseUsername]
+            }
             errorMessage = error.localizedDescription
         }
     }
@@ -202,40 +238,59 @@ final class AuthStore {
     // MARK: - Esqueci a senha
 
     func requestPasswordReset() async {
-        guard !isLoading, path.last != .linkSent || resendCooldown == 0 else { return }
+        guard !isLoading else { return }
+        if passwordResetResendCooldown > 0 {
+            if path.last != .linkSent { push(.linkSent) }
+            return
+        }
+        let email = resetEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+        let requestID = sessionLifecycleID
         errorMessage = nil
         isLoading = true
         defer { isLoading = false }
         do {
-            try await repository.requestPasswordReset(email: resetEmail)
-            startResendCooldown()
+            try await repository.requestPasswordReset(email: email)
+            guard requestID == sessionLifecycleID else { return }
+            resetEmail = email
+            resendCooldowns.recordSend(for: .passwordReset, email: email)
             if path.last != .linkSent { push(.linkSent) }
         } catch {
+            guard requestID == sessionLifecycleID else { return }
             errorMessage = error.localizedDescription
         }
     }
 
     func handleEmailLink(_ url: URL) async {
-        if isBootstrapping { pendingEmailLink = url; return }
+        // Keep only the latest link while another authentication operation is in flight.
+        pendingEmailLink = url
+        await processPendingEmailLink()
+    }
+
+    private func processPendingEmailLink() async {
+        guard !isBootstrapping, !isLoading, let url = pendingEmailLink else { return }
+        pendingEmailLink = nil
+        let requestID = sessionLifecycleID
         guard session == nil else {
-            infoMessage = "Saia da conta antes de abrir o link de recuperação."
+            infoMessage = L10n.text("Saia da conta antes de abrir o link de recuperação.")
             return
         }
-        guard !isLoading else { return }
         isLoading = true
         errorMessage = nil
         newPassword = ""
         newPasswordConfirm = ""
         defer { isLoading = false }
         do {
-            switch try await repository.prepareEmailAction(url) {
+            let result = try await repository.prepareEmailAction(url)
+            guard requestID == sessionLifecycleID else { return }
+            switch result {
             case .resetPassword(let email):
                 resetEmail = email
                 path = [.signIn, .forgotPassword, .linkSent, .newPassword]
-            case .emailVerified:
-                path = [.chooseUsername]
             }
-        } catch { errorMessage = error.localizedDescription }
+        } catch {
+            guard requestID == sessionLifecycleID else { return }
+            errorMessage = error.localizedDescription
+        }
     }
 
     func returnToLogin() {
@@ -249,31 +304,38 @@ final class AuthStore {
         guard !isLoading else { return }
         errorMessage = nil
         guard newPassword == newPasswordConfirm else {
-            errorMessage = "As senhas precisam ser iguais."
+            errorMessage = L10n.text("As senhas precisam ser iguais.")
             return
         }
         guard PasswordRequirements(newPassword).allMet else {
-            errorMessage = "Sua senha ainda não atende aos requisitos."
+            errorMessage = L10n.text("Sua senha ainda não atende aos requisitos.")
             return
         }
+        let requestID = sessionLifecycleID
+        let email = resetEmail
         isLoading = true
         defer { isLoading = false }
         do {
             let password = newPassword
             try await repository.resetPassword(password)
+            guard requestID == sessionLifecycleID else { return }
             newPassword = ""
             newPasswordConfirm = ""
             do {
-                session = try await repository.signIn(identifier: resetEmail, password: password)
-                path = []
+                let restored = try await repository.signIn(identifier: email, password: password)
+                guard requestID == sessionLifecycleID else { return }
+                session = restored
+                path = session?.needsProfile == true ? [.chooseUsername] : []
             } catch {
+                guard requestID == sessionLifecycleID else { return }
                 // The code is consumed: a failed subsequent login must not retry the reset.
-                signInIdentifier = resetEmail
+                signInIdentifier = email
                 signInPassword = ""
                 returnToLogin()
-                infoMessage = "Senha alterada. Entre com sua nova senha."
+                infoMessage = L10n.text("Senha alterada. Entre com sua nova senha.")
             }
         } catch {
+            guard requestID == sessionLifecycleID else { return }
             errorMessage = error.localizedDescription
         }
     }
@@ -295,9 +357,14 @@ final class AuthStore {
     }
 
     private func reset() {
-        cooldownTask?.cancel()
-        resendCooldown = 0
+        pendingEmailLink = nil
+        sessionLifecycleID = UUID()
+        invalidateUsernameCheck()
+        resendCooldowns.clear()
         resetEmail = ""
+        bootstrapFailed = false
+        errorMessage = nil
+        infoMessage = nil
         session = nil
         path = []
         signInIdentifier = ""; signInPassword = ""

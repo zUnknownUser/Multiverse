@@ -12,7 +12,7 @@ struct SettingsView: View {
     var body: some View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             VStack(alignment: .leading, spacing: 26) {
-                Text("AJUSTES").font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
+                Text(L10n.text("AJUSTES")).font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
 
                 proPromoRow
                 accountSection
@@ -21,7 +21,7 @@ struct SettingsView: View {
                 notificationsSection
 
                 HStack(spacing: 10) {
-                    Text("SAIR DA CONTA")
+                    Text(L10n.text("SAIR DA CONTA"))
                         .font(MVFont.bold(13))
                         .frame(maxWidth: .infinity).frame(height: 50)
                         .foregroundStyle(MV.C.ink)
@@ -31,7 +31,7 @@ struct SettingsView: View {
                         .contentShape(Rectangle())
                         .onTapGesture { showSignOutSheet = true }
 
-                    Text("EXCLUIR CONTA")
+                    Text(L10n.text("EXCLUIR CONTA"))
                         .font(MVFont.bold(13))
                         .frame(maxWidth: .infinity).frame(height: 50)
                         .foregroundStyle(MV.C.marvel)
@@ -55,13 +55,13 @@ struct SettingsView: View {
 
     private var accountSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("CONTA").kicker(11).foregroundStyle(MV.C.muted)
+            Text(L10n.text("CONTA")).kicker(11).foregroundStyle(MV.C.muted)
             VStack(spacing: 0) {
-                infoRow("Usuário", value: store.user(store.meID)?.handle ?? "")
+                infoRow(L10n.text("Usuário"), value: store.user(store.meID)?.handle ?? "")
                 Divider().overlay(MV.C.divider)
-                infoRow("E-mail", value: maskedEmail)
+                infoRow(L10n.text("E-mail"), value: maskedEmail)
                 Divider().overlay(MV.C.divider)
-                infoRow("Senha", value: "Alterar")
+                infoRow(L10n.text("Senha"), value: L10n.text("Alterar"))
             }
             .comicCard(shadow: MV.Shadow.s)
         }
@@ -70,8 +70,8 @@ struct SettingsView: View {
     private var proPromoRow: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(proStore.isPro ? "VOCÊ É PRO" : "MULTIVERSE PRO").font(MVFont.black(14)).foregroundStyle(MV.C.paper)
-                Text(proStore.isPro ? "Seus números, temas e mais liberados." : "Estatísticas, temas e Wrapped anual.")
+                Text(proStore.isPro ? L10n.text("VOCÊ É PRO") : "MULTIVERSE PRO").font(MVFont.black(14)).foregroundStyle(MV.C.paper)
+                Text(proStore.isPro ? L10n.text("Seus números, temas e mais liberados.") : L10n.text("Estatísticas, temas e Wrapped anual."))
                     .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.paper.opacity(0.85))
             }
             Spacer()
@@ -87,7 +87,7 @@ struct SettingsView: View {
 
     private var themeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("TEMA").kicker(11).foregroundStyle(MV.C.muted)
+            Text(L10n.text("TEMA")).kicker(11).foregroundStyle(MV.C.muted)
             HStack(spacing: 0) {
                 ForEach(ThemePreference.allCases, id: \.self) { option in
                     let selected = store.themePreference == option
@@ -107,16 +107,16 @@ struct SettingsView: View {
 
     private var privacySection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("PRIVACIDADE").kicker(11).foregroundStyle(MV.C.muted)
+            Text(L10n.text("PRIVACIDADE")).kicker(11).foregroundStyle(MV.C.muted)
             VStack(spacing: 0) {
-                toggleRow("Diário público", note: "Qualquer pessoa vê o que você registra", isOn: Binding(get: { settings.publicDiary }, set: { settings.publicDiary = $0 }))
+                toggleRow(L10n.text("Diário público"), note: L10n.text("Qualquer pessoa vê o que você registra"), isOn: Binding(get: { settings.publicDiary }, set: { settings.publicDiary = $0 }))
                 Divider().overlay(MV.C.divider)
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Quem pode comentar").font(MVFont.bold(15)).foregroundStyle(MV.C.ink)
+                    Text(L10n.text("Quem pode comentar")).font(MVFont.bold(15)).foregroundStyle(MV.C.ink)
                     HStack(spacing: 0) {
                         ForEach(CommentPermission.allCases, id: \.self) { option in
                             let selected = settings.whoCanComment == option
-                            Text(option.rawValue.uppercased())
+                            Text(L10n.text(option.rawValue).uppercased())
                                 .font(MVFont.bold(11))
                                 .frame(maxWidth: .infinity).frame(height: 40)
                                 .foregroundStyle(selected ? MV.C.paper : MV.C.ink)
@@ -130,9 +130,9 @@ struct SettingsView: View {
                 }
                 .padding(16)
                 Divider().overlay(MV.C.divider)
-                toggleRow("Esconder spoilers", note: "Borra reviews marcadas com spoiler", isOn: Binding(get: { settings.hideSpoilers }, set: { settings.hideSpoilers = $0 }))
+                toggleRow(L10n.text("Esconder spoilers"), note: L10n.text("Borra reviews marcadas com spoiler"), isOn: Binding(get: { settings.hideSpoilers }, set: { settings.hideSpoilers = $0 }))
                 Divider().overlay(MV.C.divider)
-                infoRow("Usuários bloqueados", value: "\(blockedCount)") { store.push(.blockedUsers) }
+                infoRow(L10n.text("Usuários bloqueados"), value: "\(blockedCount)") { store.push(.blockedUsers) }
             }
             .comicCard(shadow: MV.Shadow.s)
         }
@@ -140,11 +140,11 @@ struct SettingsView: View {
 
     private var notificationsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("NOTIFICAÇÕES").kicker(11).foregroundStyle(MV.C.muted)
+            Text(L10n.text("NOTIFICAÇÕES")).kicker(11).foregroundStyle(MV.C.muted)
             VStack(spacing: 0) {
-                toggleRow("Curtidas e respostas", isOn: Binding(get: { settings.likesAndReplies }, set: { settings.likesAndReplies = $0 }))
+                toggleRow(L10n.text("Curtidas e respostas"), isOn: Binding(get: { settings.likesAndReplies }, set: { settings.likesAndReplies = $0 }))
                 Divider().overlay(MV.C.divider)
-                toggleRow("Duelos e debates novos", isOn: Binding(get: { settings.newDuelsAndDebates }, set: { settings.newDuelsAndDebates = $0 }))
+                toggleRow(L10n.text("Duelos e debates novos"), isOn: Binding(get: { settings.newDuelsAndDebates }, set: { settings.newDuelsAndDebates = $0 }))
             }
             .comicCard(shadow: MV.Shadow.s)
         }
@@ -189,11 +189,11 @@ private struct SignOutSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Capsule().fill(MV.C.ink).frame(width: 44, height: 5).frame(maxWidth: .infinity)
-            Text("SAIR DA CONTA?").font(MVFont.display(28, width: 118)).foregroundStyle(MV.C.ink)
-            Text("Seu diário, reviews e votos continuam salvos. É só entrar de novo com \(store.user(store.meID)?.handle ?? "").")
+            Text(L10n.text("SAIR DA CONTA?")).font(MVFont.display(28, width: 118)).foregroundStyle(MV.C.ink)
+            Text(L10n.format("Seu diário, reviews e votos continuam salvos. É só entrar de novo com %1$@.", String(describing: store.user(store.meID)?.handle ?? "")))
                 .font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
 
-            Text("SAIR")
+            Text(L10n.text("SAIR"))
                 .font(MVFont.bold(15))
                 .frame(maxWidth: .infinity).frame(height: 54)
                 .foregroundStyle(MV.C.paper)
@@ -204,7 +204,7 @@ private struct SignOutSheet: View {
                 .contentShape(Rectangle())
                 .onTapGesture { Task { await auth.signOut() } }
 
-            Text("CANCELAR")
+            Text(L10n.text("CANCELAR"))
                 .font(MVFont.bold(15))
                 .frame(maxWidth: .infinity).frame(height: 54)
                 .foregroundStyle(MV.C.ink)

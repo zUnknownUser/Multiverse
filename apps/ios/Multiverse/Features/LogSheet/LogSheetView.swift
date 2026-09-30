@@ -4,7 +4,6 @@ import SwiftUI
 /// numa Obra. `AppStore.logDraft` guia se mostramos a grade de escolha ou o formulário.
 struct LogSheetView: View {
     @Environment(AppStore.self) private var store
-    @Environment(BurstCenter.self) private var burst
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -38,7 +37,7 @@ private struct PickItemContent: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("O QUE VOCÊ VIU, LEU OU JOGOU?")
+            Text(L10n.text("O QUE VOCÊ VIU, LEU OU JOGOU?"))
                 .font(MVFont.section(18)).foregroundStyle(MV.C.ink)
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(StaticContent.logQuickPickIDs, id: \.self) { id in
@@ -70,7 +69,7 @@ private struct LogFormContent: View {
                 ratingPicker(uni: uni, rating: rating)
                 togglePills
                 reviewField
-                Text("Vai aparecer no feed dos seus 312 seguidores e na página de \(item.title).")
+                Text(L10n.format("Vai aparecer no feed dos seus 312 seguidores e na página de %1$@.", String(describing: item.title)))
                     .font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
                 publishButton(item: item, uni: uni)
             }
@@ -84,9 +83,9 @@ private struct LogFormContent: View {
         HStack(spacing: 12) {
             PosterView(item: item, universe: uni, width: 52, height: 78, titleSize: 8)
             VStack(alignment: .leading, spacing: 3) {
-                Text("\(Logic.verb(item.type)) · Hoje, 29 set").font(MVFont.body(11, weight: 700)).foregroundStyle(MV.C.muted)
+                Text(L10n.format("%1$@ · Hoje, %2$@", String(describing: Logic.verb(item.type)), L10n.date(.now, template: "d MMM"))).font(MVFont.body(11, weight: 700)).foregroundStyle(MV.C.muted)
                 Text(item.title).font(MVFont.bold(17)).foregroundStyle(MV.C.ink)
-                Text("\(uni.name) · \(item.type)").font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
+                Text("\(uni.name) · \(L10n.text(item.type))").font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
             }
             Spacer()
         }
@@ -95,7 +94,7 @@ private struct LogFormContent: View {
     @ViewBuilder
     private func ratingPicker(uni: Universe, rating: Double) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("NOTA").kicker(11).foregroundStyle(MV.C.muted)
+            Text(L10n.text("NOTA")).kicker(11).foregroundStyle(MV.C.muted)
             HStack(spacing: 8) {
                 ForEach(1...5, id: \.self) { n in
                     let full = rating >= Double(n)
@@ -111,16 +110,16 @@ private struct LogFormContent: View {
                         .onTapGesture { store.setLogRating(n) }
                 }
             }
-            Text(rating > 0 ? Logic.starHint(rating) : "Toque de novo pra meia estrela")
+            Text(rating > 0 ? Logic.starHint(rating) : L10n.text("Toque de novo pra meia estrela"))
                 .font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted)
         }
     }
 
     private var togglePills: some View {
         HStack(spacing: 8) {
-            pill("♥ Curti", isOn: store.logDraft?.liked ?? false) { toggle(\.liked) }
-            pill("↻ Revisitei", isOn: store.logDraft?.rewatch ?? false) { toggle(\.rewatch) }
-            pill("⚠ Contém spoiler", isOn: store.logDraft?.spoiler ?? false) { toggle(\.spoiler) }
+            pill(L10n.text("♥ Curti"), isOn: store.logDraft?.liked ?? false) { toggle(\.liked) }
+            pill(L10n.text("↻ Revisitei"), isOn: store.logDraft?.rewatch ?? false) { toggle(\.rewatch) }
+            pill(L10n.text("⚠ Contém spoiler"), isOn: store.logDraft?.spoiler ?? false) { toggle(\.spoiler) }
         }
     }
 
@@ -144,9 +143,9 @@ private struct LogFormContent: View {
 
     private var reviewField: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("SUA REVIEW").kicker(11).foregroundStyle(MV.C.muted)
+            Text(L10n.text("SUA REVIEW")).kicker(11).foregroundStyle(MV.C.muted)
             TextField(
-                "Escreva sua review… teorias de cânone são bem-vindas.",
+                L10n.text("Escreva sua review… teorias de cânone são bem-vindas."),
                 text: Binding(get: { store.logDraft?.text ?? "" }, set: { text in
                     guard var draft = store.logDraft else { return }
                     draft.text = text
@@ -165,7 +164,7 @@ private struct LogFormContent: View {
     }
 
     private func publishButton(item: Item, uni: Universe) -> some View {
-        Text("PUBLICAR")
+        Text(L10n.text("PUBLICAR"))
             .font(MVFont.bold(15))
             .frame(maxWidth: .infinity).frame(height: 54)
             .foregroundStyle(uni.inkColor)

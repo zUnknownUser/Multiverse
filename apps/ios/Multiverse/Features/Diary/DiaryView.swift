@@ -4,29 +4,28 @@ struct DiaryView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
-    private var groupedByMonth: [(month: String, entries: [DiaryEntry])] {
-        var order: [String] = []
-        var groups: [String: [DiaryEntry]] = [:]
-        for entry in store.diary {
-            if groups[entry.month] == nil { order.append(entry.month) }
-            groups[entry.month, default: []].append(entry)
-        }
-        return order.map { ($0, groups[$0] ?? []) }
+    private var groupedByMonth: [DiaryMonth] { DiaryTimeline.months(store.diary) }
+
+    private var yearRange: String {
+        let dates = store.diary.map(\.loggedAt)
+        let first = L10n.date(dates.min() ?? .now, template: "yyyy")
+        let last = L10n.date(dates.max() ?? .now, template: "yyyy")
+        return first == last ? first : "\(first)–\(last)"
     }
 
     var body: some View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             VStack(alignment: .leading, spacing: 22) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("DIÁRIO").font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
-                    Text("\(store.diary.count) registros em 2026 · visível pros seus seguidores")
+                    Text(L10n.text("DIÁRIO")).font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
+                    Text(L10n.format("%1$@ registros em %2$@ · visível pros seus seguidores", String(describing: store.diary.count), yearRange))
                         .font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.muted)
                 }
 
-                ForEach(groupedByMonth, id: \.month) { group in
+                ForEach(groupedByMonth) { group in
                     VStack(alignment: .leading, spacing: 10) {
                         HStack(spacing: 8) {
-                            Text(group.month.uppercased())
+                            Text(L10n.date(group.start, template: Calendar.current.isDate(group.start, equalTo: .now, toGranularity: .year) ? "LLLL" : "LLLL yyyy").uppercased())
                                 .font(MVFont.black(11)).tracking(0.4)
                                 .foregroundStyle(MV.C.paper)
                                 .padding(.horizontal, 8).padding(.vertical, 4)
@@ -58,11 +57,11 @@ private struct DiaryRow: View {
         return AnyView(
             Button { store.push(.item(item.id)) } label: {
                 HStack(alignment: .top, spacing: 12) {
-                    Text("\(entry.day)").font(MVFont.black(24)).foregroundStyle(MV.C.ink).frame(width: 34, alignment: .leading)
+                    Text("\(Calendar.current.component(.day, from: entry.loggedAt))").font(MVFont.black(24)).foregroundStyle(MV.C.ink).frame(width: 34, alignment: .leading)
                     PosterView(item: item, universe: uni, width: 34, height: 51, titleSize: 7, showLabel: false)
                     VStack(alignment: .leading, spacing: 4) {
                         Text(item.title).font(MVFont.bold(14)).foregroundStyle(MV.C.ink)
-                        Text("\(item.type) · \(uni.name)").font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
+                        Text("\(L10n.text(item.type)) · \(uni.name)").font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
                         StarsText(rating: entry.rating, color: uni.color, size: 13)
                     }
                     Spacer()

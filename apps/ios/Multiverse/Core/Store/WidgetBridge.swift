@@ -3,19 +3,17 @@ import Foundation
 import WidgetKit
 #endif
 
-/// Ponte de dados entre o app e a extensão de widgets (`MultiverseWidgets/`), via App Group.
-/// Este arquivo é compilado nos dois targets (ver `project.yml`) — é a única coisa que os
-/// widgets sabem sobre o app.
-///
-/// **Setup no Xcode (não dá pra fazer sem Team ID real):** Signing & Capabilities → "+ Capability"
-/// → App Groups → crie/marque o mesmo grupo nos targets `Multiverse` e `MultiverseWidgets`,
-/// e troque `appGroupID` abaixo pelo identificador real gerado (geralmente
-/// `group.<bundle-id-do-app>`).
+@MainActor
+protocol WidgetSnapshotWriting {
+    func save(_ snapshot: WidgetBridge.Snapshot)
+}
+
+/// Contrato compartilhado pelo app e pelos widgets através do App Group.
 enum WidgetBridge {
     static let appGroupID = "group.com.nexussoft.multiverse"
     private static let key = "widget-snapshot"
 
-    struct Snapshot: Codable {
+    struct Snapshot: Codable, Equatable, Sendable {
         var universeName: String
         var universePercent: Int
         var universePercentDelta: Int
@@ -28,16 +26,70 @@ enum WidgetBridge {
         var duelVotesLabel: String
     }
 
-    static func save(_ snapshot: Snapshot) {
-        guard let defaults = UserDefaults(suiteName: appGroupID), let data = try? JSONEncoder().encode(snapshot) else { return }
+    private struct Envelope: Codable {
+        let sessionID: UUID
+        var snapshot: Snapshot?
+    }
+
+    /// Cada sessão recebe um escritor próprio. Carregamentos de stores anteriores
+    /// não podem repor os dados após logout ou troca de conta, mesmo se ignorarem cancelamento.
+    @MainActor
+    final class Session: WidgetSnapshotWriting {
+        private let id: UUID
+        private let defaults: UserDefaults
+        private let reload: @MainActor () -> Void
+
+        fileprivate init(id: UUID, defaults: UserDefaults, reload: @escaping @MainActor () -> Void) {
+            self.id = id
+            self.defaults = defaults
+            self.reload = reload
+        }
+
+        func save(_ snapshot: Snapshot) {
+            guard envelope(in: defaults)?.sessionID == id,
+                  let data = try? JSONEncoder().encode(Envelope(sessionID: id, snapshot: snapshot)) else { return }
+            defaults.set(data, forKey: key)
+            reload()
+        }
+    }
+
+    @MainActor
+    static func beginSession(
+        defaults: UserDefaults? = UserDefaults(suiteName: appGroupID),
+        reload: @escaping @MainActor () -> Void = reloadTimelines
+    ) -> Session? {
+        guard let defaults else { return nil }
+        let id = UUID()
+        guard let data = try? JSONEncoder().encode(Envelope(sessionID: id, snapshot: nil)) else { return nil }
+        // Identidade e conteúdo mudam juntos; nunca expomos o snapshot da sessão anterior.
         defaults.set(data, forKey: key)
+        reload()
+        return Session(id: id, defaults: defaults, reload: reload)
+    }
+
+    @MainActor
+    static func clear(
+        defaults: UserDefaults? = UserDefaults(suiteName: appGroupID),
+        reload: @escaping @MainActor () -> Void = reloadTimelines
+    ) {
+        defaults?.removeObject(forKey: key)
+        reload()
+    }
+
+    static func load(defaults: UserDefaults? = UserDefaults(suiteName: appGroupID)) -> Snapshot? {
+        guard let defaults else { return nil }
+        return envelope(in: defaults)?.snapshot
+    }
+
+    private static func envelope(in defaults: UserDefaults) -> Envelope? {
+        guard let data = defaults.data(forKey: key) else { return nil }
+        return try? JSONDecoder().decode(Envelope.self, from: data)
+    }
+
+    @MainActor
+    static func reloadTimelines() {
         #if canImport(WidgetKit)
         WidgetCenter.shared.reloadAllTimelines()
         #endif
-    }
-
-    static func load() -> Snapshot? {
-        guard let defaults = UserDefaults(suiteName: appGroupID), let data = defaults.data(forKey: key) else { return nil }
-        return try? JSONDecoder().decode(Snapshot.self, from: data)
     }
 }

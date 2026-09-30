@@ -75,7 +75,7 @@ struct ProfileView: View {
             if data.isMe {
                 HStack(spacing: 10) {
                     Button { store.push(.diary) } label: {
-                        Text("DIÁRIO").font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
+                        Text(L10n.text("DIÁRIO")).font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
                             .frame(maxWidth: .infinity).padding(.vertical, 12)
                             .background(MV.C.paper)
                             .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
@@ -83,7 +83,7 @@ struct ProfileView: View {
                     }
                     .buttonStyle(.plain)
                     Button { store.openLogBlank() } label: {
-                        Text("+ REGISTRAR").font(MVFont.bold(12)).foregroundStyle(MV.C.paper)
+                        Text(L10n.text("+ REGISTRAR")).font(MVFont.bold(12)).foregroundStyle(MV.C.paper)
                             .frame(maxWidth: .infinity).padding(.vertical, 12)
                             .background(MV.C.marvel)
                             .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.paper, lineWidth: MV.stroke))
@@ -94,7 +94,7 @@ struct ProfileView: View {
             } else {
                 let following = store.isFollowing(userID)
                 HStack(spacing: 10) {
-                    Text(following ? "SEGUINDO" : "SEGUIR")
+                    Text(following ? L10n.text("SEGUINDO") : L10n.text("SEGUIR"))
                         .font(MVFont.bold(13))
                         .frame(maxWidth: .infinity).padding(.vertical, 12)
                         .foregroundStyle(following ? MV.C.paper : MV.C.ink)
@@ -104,14 +104,14 @@ struct ProfileView: View {
                         .burstOnTap("ZAP!", color: MV.C.dc, when: !following) {
                             store.toggleFollow(userID)
                         }
-                    Text("MENSAGEM")
+                    Text(L10n.text("MENSAGEM"))
                         .font(MVFont.bold(13))
                         .frame(maxWidth: .infinity).padding(.vertical, 12)
                         .foregroundStyle(MV.C.paper)
                         .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.paper, lineWidth: MV.stroke))
                         .contentShape(Rectangle())
                         .onTapGesture { store.push(.conversation(userID)) }
-                    Text("DESAFIAR")
+                    Text(L10n.text("DESAFIAR"))
                         .font(MVFont.bold(13))
                         .frame(maxWidth: .infinity).padding(.vertical, 12)
                         .foregroundStyle(MV.C.ink)
@@ -131,7 +131,7 @@ struct ProfileView: View {
     @ViewBuilder
     private func canonSection(data: AppStore.ProfileData) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("CÂNONE CONSUMIDO").font(MVFont.section(17)).foregroundStyle(MV.C.ink)
+            Text(L10n.text("CÂNONE CONSUMIDO")).font(MVFont.section(17)).foregroundStyle(MV.C.ink)
             VStack(spacing: 8) {
                 ForEach(data.progress, id: \.universe.id) { entry in
                     HStack {
@@ -147,7 +147,7 @@ struct ProfileView: View {
     @ViewBuilder
     private func badgesSection(data: AppStore.ProfileData) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("SELOS").font(MVFont.section(17)).foregroundStyle(MV.C.ink)
+            Text(L10n.text("SELOS")).font(MVFont.section(17)).foregroundStyle(MV.C.ink)
             HStack(spacing: 10) {
                 ForEach(data.badges, id: \.universe.id) { badge in
                     BadgeDiamond(badge: badge)
@@ -160,7 +160,7 @@ struct ProfileView: View {
     private func favoritesSection(data: AppStore.ProfileData) -> some View {
         if !data.favorites.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
-                Text("FAVORITOS").font(MVFont.section(17)).foregroundStyle(MV.C.ink)
+                Text(L10n.text("FAVORITOS")).font(MVFont.section(17)).foregroundStyle(MV.C.ink)
                 HStack(spacing: 10) {
                     ForEach(data.favorites) { item in
                         Button { store.push(.item(item.id)) } label: {
@@ -177,7 +177,7 @@ struct ProfileView: View {
     private func reviewsSection(data: AppStore.ProfileData) -> some View {
         if !data.recentReviews.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
-                Text("REVIEWS RECENTES").font(MVFont.section(17)).foregroundStyle(MV.C.ink)
+                Text(L10n.text("REVIEWS RECENTES")).font(MVFont.section(17)).foregroundStyle(MV.C.ink)
                 VStack(spacing: 10) {
                     ForEach(data.recentReviews) { review in
                         CompactReviewRow(review: review)
@@ -195,7 +195,7 @@ struct ProfileView: View {
     @ViewBuilder
     private func listsSection() -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("LISTAS").font(MVFont.section(17)).foregroundStyle(MV.C.ink)
+            Text(L10n.text("LISTAS")).font(MVFont.section(17)).foregroundStyle(MV.C.ink)
             VStack(spacing: 10) {
                 ForEach(store.profileLists(), id: \.list.id) { entry in
                     ListSummaryRow(list: entry.list, stackColors: entry.stackColors)
@@ -225,7 +225,7 @@ private struct BadgeDiamond: View {
                     .foregroundStyle(badge.achieved ? badge.universe.inkColor : MV.C.muted)
             }
             .opacity(badge.achieved ? 1 : 0.75)
-            Text(badge.achieved ? "Conquistado" : "faltam \(badge.remainingPct)%")
+            Text(badge.achieved ? L10n.text("Conquistado") : L10n.format("faltam %1$@%%", String(describing: badge.remainingPct)))
                 .font(MVFont.body(9, weight: 700))
                 .foregroundStyle(MV.C.muted)
                 .multilineTextAlignment(.center)
@@ -250,7 +250,7 @@ private struct CompactReviewRow: View {
                 VStack(alignment: .leading, spacing: 4) {
                     StarsText(rating: review.rating, color: uni.color, size: 13)
                     Text(review.text).font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.ink).lineLimit(2)
-                    Text("♥ \(Logic.fmt(store.reviewLikeCount(review))) · \(review.comments.count) comentários")
+                    Text(L10n.format("♥ %1$@ · %2$@ comentários", String(describing: Logic.fmt(store.reviewLikeCount(review))), String(describing: review.comments.count)))
                         .font(MVFont.body(10, weight: 700)).foregroundStyle(MV.C.muted)
                 }
                 Spacer()
@@ -281,7 +281,7 @@ private struct ListSummaryRow: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(list.title).font(MVFont.bold(13)).foregroundStyle(MV.C.ink).lineLimit(2)
-                Text("\(list.items.count) itens · ♥ \(Logic.fmt(store.listLikeCount(list))) · \(list.comments) comentários")
+                Text(L10n.format("%1$@ itens · ♥ %2$@ · %3$@ comentários", String(describing: list.items.count), String(describing: Logic.fmt(store.listLikeCount(list))), String(describing: list.comments)))
                     .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
             }
             Spacer()

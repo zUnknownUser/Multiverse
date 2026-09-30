@@ -2,7 +2,7 @@ import SwiftUI
 
 private enum ChallengeKind: String, CaseIterable { case duelo = "Duelo", previsao = "Previsão", quiz = "Quiz de Lore" }
 
-private let wagerOptions = ["Café", "Emoji de perdedor", "Assistir o que o outro escolher", "Nada, só orgulho"]
+private let wagerOptions = [L10n.text("Café"), L10n.text("Emoji de perdedor"), L10n.text("Assistir o que o outro escolher"), L10n.text("Nada, só orgulho")]
 
 /// "Chamar pro duelo" — recurso 5g. Aberta do perfil ou do card de Duelo da Home.
 struct DuelChallengeSheet: View {
@@ -22,14 +22,14 @@ struct DuelChallengeSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     if let user = store.user(userID) {
-                        Text("DESAFIAR \(user.name.uppercased())")
+                        Text(L10n.format("DESAFIAR %1$@", String(describing: user.name.uppercased())))
                             .font(MVFont.display(24, width: 115)).foregroundStyle(MV.C.ink)
                     }
 
                     kindPicker
 
-                    Text("PERGUNTA").kicker(11).foregroundStyle(MV.C.muted)
-                    TextField("Ex.: qual filme é melhor?", text: $question)
+                    Text(L10n.text("PERGUNTA")).kicker(11).foregroundStyle(MV.C.muted)
+                    TextField(L10n.text("Ex.: qual filme é melhor?"), text: $question)
                         .font(MVFont.body(14, weight: 500))
                         .padding(12)
                         .background(MV.C.card)
@@ -38,22 +38,22 @@ struct DuelChallengeSheet: View {
 
                     vsRow
 
-                    Text("APOSTA").kicker(11).foregroundStyle(MV.C.muted)
+                    Text(L10n.text("APOSTA")).kicker(11).foregroundStyle(MV.C.muted)
                     WrapPills(options: wagerOptions, selected: wager) { wager = $0 }
 
-                    Text("SEU LADO").kicker(11).foregroundStyle(MV.C.muted)
+                    Text(L10n.text("SEU LADO")).kicker(11).foregroundStyle(MV.C.muted)
                     HStack(spacing: 8) {
-                        sideChoice(label: itemTitle(itemAID) ?? "Lado A", color: MV.C.marvel, index: 0)
-                        sideChoice(label: itemTitle(itemBID) ?? "Lado B", color: MV.C.dc, index: 1)
+                        sideChoice(label: itemTitle(itemAID) ?? L10n.text("Lado A"), color: MV.C.marvel, index: 0)
+                        sideChoice(label: itemTitle(itemBID) ?? L10n.text("Lado B"), color: MV.C.dc, index: 1)
                     }
                 }
                 .padding(MV.pad)
             }
             .background(MV.C.paper)
-            .navigationTitle("Chamar pro duelo")
+            .navigationTitle(L10n.text("Chamar pro duelo"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancelar") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button(L10n.text("Cancelar")) { dismiss() } }
             }
             .safeAreaInset(edge: .bottom) { sendBar }
             .onAppear(perform: prefill)
@@ -74,7 +74,7 @@ struct DuelChallengeSheet: View {
         HStack(spacing: 0) {
             ForEach(ChallengeKind.allCases, id: \.self) { k in
                 let selected = kind == k
-                Text(k.rawValue.uppercased())
+                Text(L10n.text(k.rawValue).uppercased())
                     .font(MVFont.bold(11))
                     .frame(maxWidth: .infinity).frame(height: 40)
                     .foregroundStyle(selected ? MV.C.paper : MV.C.ink)
@@ -105,7 +105,7 @@ struct DuelChallengeSheet: View {
                 if let item = store.item(selection.wrappedValue) {
                     Text(item.title).font(MVFont.bold(12)).lineLimit(2).multilineTextAlignment(.center)
                 } else {
-                    Text("Escolher item").font(MVFont.bold(12))
+                    Text(L10n.text("Escolher item")).font(MVFont.bold(12))
                 }
             }
             .foregroundStyle(MV.C.ink)
@@ -131,7 +131,7 @@ struct DuelChallengeSheet: View {
     }
 
     private var sendBar: some View {
-        Text("MANDAR DESAFIO · KRAK!")
+        Text(L10n.text("MANDAR DESAFIO · KRAK!"))
             .font(MVFont.bold(14))
             .frame(maxWidth: .infinity).frame(height: 50)
             .foregroundStyle(MV.C.paper)

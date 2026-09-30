@@ -16,23 +16,23 @@ struct SuggestCorrectionView: View {
             if let item = store.item(itemID) {
                 let uni = store.universe(of: item)
                 VStack(alignment: .leading, spacing: 18) {
-                    Text("SUGERIR CORREÇÃO").kicker(11).foregroundStyle(MV.C.muted)
+                    Text(L10n.text("SUGERIR CORREÇÃO")).kicker(11).foregroundStyle(MV.C.muted)
 
                     HStack(spacing: 12) {
                         PosterView(item: item, universe: uni, width: 60, height: 90, titleSize: 9)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(item.title.uppercased()).font(MVFont.black(18)).foregroundStyle(MV.C.ink)
-                            Text("\(uni.name) · \(item.type) · \(item.year.description)")
+                            Text("\(uni.name) · \(L10n.text(item.type)) · \(item.year.description)")
                                 .font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted)
                         }
                     }
 
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("O QUE MUDA?").kicker(11).foregroundStyle(MV.C.muted)
+                        Text(L10n.text("O QUE MUDA?")).kicker(11).foregroundStyle(MV.C.muted)
                         let columns = [GridItem(.flexible()), GridItem(.flexible())]
                         LazyVGrid(columns: columns, spacing: 8) {
                             ForEach(CorrectionChangeType.allCases, id: \.self) { type in
-                                PillButton(title: type.rawValue, active: changeType == type, size: 13) { changeType = type }
+                                PillButton(title: L10n.text(type.rawValue), active: changeType == type, size: 13) { changeType = type }
                             }
                         }
                         if changeType == .canonStatus {
@@ -47,18 +47,18 @@ struct SuggestCorrectionView: View {
                     .comicCard(shadow: 0)
 
                     if changeType == .canonStatus {
-                        fieldRow(label: "De", text: $fromValue, placeholder: item.canon)
-                        fieldRow(label: "Para", text: $toValue, placeholder: "Ex.: Retconado")
+                        fieldRow(label: L10n.text("De"), text: $fromValue, placeholder: item.canon)
+                        fieldRow(label: L10n.text("Para"), text: $toValue, placeholder: L10n.text("Ex.: Retconado"))
                     } else {
-                        fieldRow(label: "De", text: $fromValue, placeholder: "Valor atual")
-                        fieldRow(label: "Para", text: $toValue, placeholder: "Novo valor")
+                        fieldRow(label: L10n.text("De"), text: $fromValue, placeholder: L10n.text("Valor atual"))
+                        fieldRow(label: L10n.text("Para"), text: $toValue, placeholder: L10n.text("Novo valor"))
                     }
 
-                    fieldRow(label: "Fonte", text: $source, placeholder: "dc.fandom.com/wiki/…", keyboard: .URL)
+                    fieldRow(label: L10n.text("Fonte"), text: $source, placeholder: "dc.fandom.com/wiki/…", keyboard: .URL)
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("POR QUÊ?").kicker(11).foregroundStyle(MV.C.ink)
-                        TextField("Explique com base em quê.", text: $reasoning, axis: .vertical)
+                        Text(L10n.text("POR QUÊ?")).kicker(11).foregroundStyle(MV.C.ink)
+                        TextField(L10n.text("Explique com base em quê."), text: $reasoning, axis: .vertical)
                             .font(MVFont.body(14, weight: 500))
                             .lineLimit(3...5)
                             .padding(12)
@@ -69,11 +69,11 @@ struct SuggestCorrectionView: View {
 
                     existingSuggestions(uni: uni)
 
-                    PrimaryAuthButton(title: "ENVIAR SUGESTÃO", enabled: !toValue.isEmpty && !source.isEmpty && !reasoning.isEmpty) {
+                    PrimaryAuthButton(title: L10n.text("ENVIAR SUGESTÃO"), enabled: !toValue.isEmpty && !source.isEmpty && !reasoning.isEmpty) {
                         store.submitCorrection(itemID: itemID, changeType: changeType, from: fromValue.isEmpty ? item.canon : fromValue, to: toValue, source: source, reasoning: reasoning)
                         dismiss()
                     }
-                    Text("+15 de reputação se aprovada").font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted).frame(maxWidth: .infinity, alignment: .center)
+                    Text(L10n.text("+15 de reputação se aprovada")).font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted).frame(maxWidth: .infinity, alignment: .center)
                 }
                 .padding(.horizontal, MV.pad)
                 .padding(.bottom, 24)
@@ -83,7 +83,7 @@ struct SuggestCorrectionView: View {
     }
 
     private func statusChip(_ text: String, bg: Color, fg: Color = MV.C.ink) -> some View {
-        Text(text.uppercased())
+        Text(L10n.text(text).uppercased())
             .font(MVFont.black(11)).tracking(0.3)
             .foregroundStyle(fg)
             .padding(.horizontal, 10).padding(.vertical, 6)
@@ -115,15 +115,15 @@ struct SuggestCorrectionView: View {
                 ForEach(existing) { suggestion in
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
-                            Text("EM REVISÃO").kicker(10).foregroundStyle(MV.C.paper.opacity(0.85))
+                            Text(L10n.text("EM REVISÃO")).kicker(10).foregroundStyle(MV.C.paper.opacity(0.85))
                             Spacer()
-                            Text("\(suggestion.approverIDs.count) de \(suggestion.approvalsNeeded) aprovaram").font(MVFont.bold(12)).foregroundStyle(MV.C.paper)
+                            Text(L10n.format("%1$@ de %2$@ aprovaram", String(describing: suggestion.approverIDs.count), String(describing: suggestion.approvalsNeeded))).font(MVFont.bold(12)).foregroundStyle(MV.C.paper)
                         }
                         HStack(spacing: 6) {
                             ForEach(suggestion.approverIDs, id: \.self) { id in
                                 if let u = store.user(id) { AvatarView(user: u, size: 26) }
                             }
-                            Text("Revisores com selo Lorista de \(store.badgeNames[uni.id] ?? uni.name)")
+                            Text(L10n.format("Revisores com selo Lorista de %1$@", String(describing: store.badgeNames[uni.id] ?? uni.name)))
                                 .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.paper.opacity(0.85))
                         }
                     }

@@ -7,12 +7,12 @@ struct OnboardingStep1View: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Bem-vindo ao Multiverse · 1 de 3").kicker(11).foregroundStyle(MV.C.muted)
-                    Text("Quais universos são seus?")
+                    Text(L10n.text("Bem-vindo ao Multiverse · 1 de 3")).kicker(11).foregroundStyle(MV.C.muted)
+                    Text(L10n.text("Quais universos são seus?"))
                         .font(MVFont.display(30, width: 120))
                         .lineSpacing(-4)
                         .foregroundStyle(MV.C.ink)
-                    Text("Escolha onde você quer registrar, avaliar e discutir cânone.")
+                    Text(L10n.text("Escolha onde você quer registrar, avaliar e discutir cânone."))
                         .font(MVFont.body(14)).foregroundStyle(MV.C.muted)
                 }
 
@@ -47,10 +47,10 @@ private struct UniverseSelectRow: View {
                 .foregroundStyle(selected ? universe.inkColor : MV.C.ink)
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text("\(Logic.fmt(universe.members)) loristas")
+                Text(L10n.format("%1$@ loristas", String(describing: Logic.fmt(universe.members))))
                     .font(MVFont.body(11, weight: 700))
                     .foregroundStyle(selected ? universe.inkColor.opacity(0.85) : MV.C.muted)
-                Text("\(Logic.fmt(universe.total)) itens")
+                Text(L10n.format("%1$@ itens", String(describing: Logic.fmt(universe.total))))
                     .font(MVFont.body(11, weight: 700))
                     .foregroundStyle(selected ? universe.inkColor.opacity(0.85) : MV.C.muted)
             }
@@ -90,7 +90,7 @@ private struct ComingSoonRow: View {
                 .font(MVFont.archivo(16, weight: 900, width: 115))
                 .foregroundStyle(MV.C.muted)
             Spacer()
-            Text("EM BREVE")
+            Text(L10n.text("EM BREVE"))
                 .font(MVFont.black(9)).tracking(0.6)
                 .foregroundStyle(MV.C.muted)
         }

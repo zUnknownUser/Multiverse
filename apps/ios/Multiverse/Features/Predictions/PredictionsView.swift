@@ -30,7 +30,7 @@ struct PredictionsView: View {
 
     private var header: some View {
         HStack {
-            Text("PREVISÕES").font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
+            Text(L10n.text("PREVISÕES")).font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
             Spacer()
             Text("\(Logic.fmt(store.predictionPoints)) PTS")
                 .font(MVFont.black(13))
@@ -42,7 +42,6 @@ struct PredictionsView: View {
         }
     }
 
-    @ViewBuilder
     private func countdownCard(event: PredictionEvent) -> some View {
         guard let uni = store.universe(event.uni) else { return AnyView(EmptyView()) }
         let remaining = max(0, Int(event.closesAt.timeIntervalSince(now)))
@@ -54,12 +53,12 @@ struct PredictionsView: View {
                 Halftone(color: MV.C.paper.opacity(0.1))
                 VStack(alignment: .leading, spacing: 12) {
                     Text("\(uni.name.uppercased()) · \(event.title.uppercased())").kicker(11).foregroundStyle(uni.color)
-                    Text("AS APOSTAS FECHAM EM").font(MVFont.display(24, width: 118)).foregroundStyle(MV.C.paper)
+                    Text(L10n.text("AS APOSTAS FECHAM EM")).font(MVFont.display(24, width: 118)).foregroundStyle(MV.C.paper)
                     HStack(spacing: 8) {
-                        countUnit("\(d)", "DIAS")
-                        countUnit(String(format: "%02d", h), "HORAS")
+                        countUnit("\(d)", L10n.text("DIAS"))
+                        countUnit(String(format: "%02d", h), L10n.text("HORAS"))
                         countUnit(String(format: "%02d", m), "MIN")
-                        countUnit(String(format: "%02d", s), "SEG")
+                        countUnit(String(format: "%02d", s), L10n.text("SEG"))
                     }
                 }
                 .padding(16)
@@ -82,13 +81,13 @@ struct PredictionsView: View {
 
     private var leagueSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(title: "Liga dos amigos", trailing: "Ver tudo") {}
+            SectionHeader(title: L10n.text("Liga dos amigos"), trailing: L10n.text("Ver tudo")) {}
             HStack(spacing: 10) {
                 ForEach(Array(store.predictionLeague().prefix(3).enumerated()), id: \.element.user.id) { index, entry in
                     VStack(spacing: 6) {
                         Text("#\(index + 1)").font(MVFont.black(14)).foregroundStyle(MV.C.ink)
                         AvatarView(user: entry.user, size: 40)
-                        Text(entry.isMe ? "Você" : entry.user.name.components(separatedBy: " ").first ?? entry.user.name)
+                        Text(entry.isMe ? L10n.text("Você") : entry.user.name.components(separatedBy: " ").first ?? entry.user.name)
                             .font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
                         Text("\(Logic.fmt(entry.points)) pts").font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
                     }
@@ -114,9 +113,9 @@ private struct QuestionCard: View {
         let answer = store.predictionAnswer(for: question.id)
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("PERGUNTA \(number) DE \(total)").kicker(10).foregroundStyle(MV.C.muted)
+                Text(L10n.format("PERGUNTA %1$@ DE %2$@", String(describing: number), String(describing: total))).kicker(10).foregroundStyle(MV.C.muted)
                 Spacer()
-                Text("VALE \(question.points) PTS").font(MVFont.bold(10)).foregroundStyle(MV.C.muted)
+                Text(L10n.format("VALE %1$@ PTS", String(describing: question.points))).font(MVFont.bold(10)).foregroundStyle(MV.C.muted)
             }
             Text(question.text.uppercased()).font(MVFont.black(16)).foregroundStyle(MV.C.ink)
 
@@ -128,7 +127,7 @@ private struct QuestionCard: View {
                     }
                 }
                 if let answer, case .choice(let picked) = answer {
-                    Text("Resultado revelado no lançamento. Você apostou em \(options[picked]).")
+                    Text(L10n.format("Resultado revelado no lançamento. Você apostou em %1$@.", String(describing: options[picked])))
                         .font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
                 }
             } else {
@@ -161,7 +160,7 @@ private struct QuestionCard: View {
             }
             .tint(MV.C.wow)
             Text("5").font(MVFont.bold(13)).foregroundStyle(MV.C.muted)
-            Text(String(format: "%.1f", sliderValue)).font(MVFont.black(15)).foregroundStyle(MV.C.ink).frame(width: 36)
+            Text(L10n.decimal(sliderValue)).font(MVFont.black(15)).foregroundStyle(MV.C.ink).frame(width: 36)
         }
         .onAppear {
             if case .slider(let v)? = answer { sliderValue = v } else { sliderValue = 3.9 }

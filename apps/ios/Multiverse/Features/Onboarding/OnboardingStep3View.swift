@@ -9,19 +9,19 @@ struct OnboardingStep3View: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("3 de 3").kicker(11).foregroundStyle(MV.C.muted)
-                    Text("Siga pelo menos 3 loristas")
+                    Text(L10n.text("3 de 3")).kicker(11).foregroundStyle(MV.C.muted)
+                    Text(L10n.format("onboarding.followMinimum", store.minimumOnboardingFollows))
                         .font(MVFont.display(26, width: 118))
                         .lineSpacing(-3)
                         .foregroundStyle(MV.C.ink)
-                    Text("Seu feed é feito das reviews, votos e listas deles.")
+                    Text(L10n.text("Seu feed é feito das reviews, votos e listas deles."))
                         .font(MVFont.body(14)).foregroundStyle(MV.C.muted)
                 }
 
                 Button {
                     store.followAll(people.map(\.id))
                 } label: {
-                    Text("Seguir todos").font(MVFont.bold(12)).underline().foregroundStyle(MV.C.ink)
+                    Text(L10n.text("Seguir todos")).font(MVFont.bold(12)).underline().foregroundStyle(MV.C.ink)
                 }
                 .buttonStyle(.plain)
 
@@ -53,12 +53,12 @@ private struct OnboardingPersonRow: View {
                         BadgeChip(label: badge, universe: uni)
                     }
                 }
-                Text("\(Logic.compat(user.id))% afinidade · \(user.bio)")
+                Text(store.usesAccountAPI ? user.bio : L10n.format("%1$@%% afinidade · %2$@", String(describing: Logic.compat(user.id)), String(describing: user.bio)))
                     .font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
                     .lineLimit(1)
             }
             Spacer()
-            Text(following ? "Seguindo" : "Seguir")
+            Text(following ? L10n.text("Seguindo") : L10n.text("Seguir"))
                 .font(MVFont.bold(12))
                 .padding(.horizontal, 12).padding(.vertical, 8)
                 .foregroundStyle(following ? MV.C.ink : MV.C.paper)

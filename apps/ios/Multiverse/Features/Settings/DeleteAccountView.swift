@@ -8,14 +8,14 @@ struct DeleteAccountView: View {
     @State private var exportURL: URL?
     @State private var isDeleting = false
 
-    private let confirmationWord = "EXCLUIR"
+    private let confirmationWord = L10n.text("EXCLUIR")
 
     var body: some View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("ZONA DE PERIGO").kicker(11).foregroundStyle(MV.C.paper.opacity(0.85))
-                    Text("EXCLUIR SUA\nCONTA").font(MVFont.display(30, width: 118)).lineSpacing(-6).foregroundStyle(MV.C.paper)
+                    Text(L10n.text("ZONA DE PERIGO")).kicker(11).foregroundStyle(MV.C.paper.opacity(0.85))
+                    Text(L10n.text("EXCLUIR SUA\nCONTA")).font(MVFont.display(30, width: 118)).lineSpacing(-6).foregroundStyle(MV.C.paper)
                 }
                 .padding(18)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -24,19 +24,19 @@ struct DeleteAccountView: View {
                 .overlay(RoundedRectangle(cornerRadius: MV.R.xl).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                 .background(RoundedRectangle(cornerRadius: MV.R.xl).fill(MV.C.shadow).offset(x: MV.Shadow.m, y: MV.Shadow.m))
 
-                Text("Isso é permanente. Vai sumir tudo:").font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
+                Text(L10n.text("Isso é permanente. Vai sumir tudo:")).font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
 
                 VStack(alignment: .leading, spacing: 14) {
-                    lossRow("\(store.diary.count) registros no diário")
-                    lossRow("\(myReviewCount) reviews e seus comentários")
-                    lossRow("\(store.lists.count) listas e \(store.readingOrders.count) ordens de leitura")
-                    if let badge = topBadgeName { lossRow("Selo Lorista de \(badge)") }
+                    lossRow(L10n.format("%1$@ registros no diário", String(describing: store.diary.count)))
+                    lossRow(L10n.format("%1$@ reviews e seus comentários", String(describing: myReviewCount)))
+                    lossRow(L10n.format("%1$@ listas e %2$@ ordens de leitura", String(describing: store.lists.count), String(describing: store.readingOrders.count)))
+                    if let badge = topBadgeName { lossRow(L10n.format("Selo Lorista de %1$@", String(describing: badge))) }
                 }
                 .padding(16)
                 .comicCard(shadow: MV.Shadow.s)
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("DIGITE \(confirmationWord) PRA CONFIRMAR").kicker(11).foregroundStyle(MV.C.ink)
+                    Text(L10n.format("DIGITE %1$@ PRA CONFIRMAR", String(describing: confirmationWord))).kicker(11).foregroundStyle(MV.C.ink)
                     TextField("", text: $confirmationText)
                         .font(MVFont.black(18))
                         .textInputAutocapitalization(.characters)
@@ -50,18 +50,20 @@ struct DeleteAccountView: View {
 
                 if let exportURL {
                     ShareLink(item: exportURL) {
-                        Text("Baixar meus dados antes (JSON)").font(MVFont.bold(13)).underline().foregroundStyle(MV.C.ink)
+                        Text(L10n.text("Baixar meus dados antes (JSON)")).font(MVFont.bold(13)).underline().foregroundStyle(MV.C.ink)
                     }
                 }
 
                 Spacer(minLength: 12)
 
-                PrimaryAuthButton(title: "EXCLUIR PRA SEMPRE", isLoading: isDeleting, enabled: confirmationText == confirmationWord) {
+                PrimaryAuthButton(title: L10n.text("EXCLUIR PRA SEMPRE"), isLoading: isDeleting, enabled: confirmationText == confirmationWord) {
                     Task {
                         isDeleting = true
-                        try? await auth.deleteAccount()
-                        store.isOnboarded = false
-                        isDeleting = false
+                        defer { isDeleting = false }
+                        do {
+                            try await auth.deleteAccount()
+                            store.isOnboarded = false
+                        } catch { auth.errorMessage = error.localizedDescription }
                     }
                 }
             }

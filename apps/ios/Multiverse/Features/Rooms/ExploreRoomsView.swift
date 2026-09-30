@@ -12,7 +12,7 @@ struct ExploreRoomsView: View {
     var body: some View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             VStack(alignment: .leading, spacing: 18) {
-                Text("SALAS").font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
+                Text(L10n.text("SALAS")).font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
                     .padding(.horizontal, MV.pad)
 
                 if let event = store.liveEvent, let item = store.item(event.itemID) {
@@ -44,7 +44,7 @@ struct ExploreRoomsView: View {
         HStack(spacing: 8) {
             ForEach(RoomFilter.allCases, id: \.self) { f in
                 let selected = filter == f
-                Text(f.rawValue.uppercased())
+                Text(L10n.text(f.rawValue).uppercased())
                     .font(MVFont.bold(11))
                     .padding(.horizontal, 12).frame(height: 34)
                     .foregroundStyle(selected ? MV.C.paper : MV.C.ink)
@@ -64,19 +64,19 @@ struct ExploreRoomsView: View {
                 uni.color
                 Halftone(color: uni.inkColor.opacity(0.18))
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("HOJE 21H").font(MVFont.black(11)).foregroundStyle(uni.color)
+                    Text(L10n.text("HOJE 21H")).font(MVFont.black(11)).foregroundStyle(uni.color)
                         .padding(.horizontal, 8).padding(.vertical, 4)
                         .background(uni.inkColor)
                         .clipShape(Capsule())
-                    Text("ESTREIA AO VIVO").kicker(10).foregroundStyle(uni.inkColor.opacity(0.75))
+                    Text(L10n.text("ESTREIA AO VIVO")).kicker(10).foregroundStyle(uni.inkColor.opacity(0.75))
                     Text(item.title.uppercased()).font(MVFont.black(20)).foregroundStyle(uni.inkColor)
-                    Text(store.isAheadOfShield(item) ? "Chat e enquetes ao vivo · Escudo de Spoiler ativo" : event.question)
+                    Text(store.isAheadOfShield(item) ? L10n.text("Chat e enquetes ao vivo · Escudo de Spoiler ativo") : event.question)
                         .font(MVFont.body(12, weight: 600)).foregroundStyle(uni.inkColor.opacity(0.85))
                 }
                 .padding(16)
             }
             HStack(spacing: 8) {
-                Text(notifyMe ? "✓ AVISANDO" : "ME AVISE")
+                Text(notifyMe ? L10n.text("✓ AVISANDO") : L10n.text("ME AVISE"))
                     .font(MVFont.bold(12))
                     .frame(maxWidth: .infinity).frame(height: 42)
                     .foregroundStyle(notifyMe ? MV.C.paper : MV.C.ink)
@@ -85,7 +85,7 @@ struct ExploreRoomsView: View {
                     .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
                     .contentShape(Rectangle())
                     .onTapGesture { notifyMe.toggle() }
-                Text("CONVIDAR")
+                Text(L10n.text("CONVIDAR"))
                     .font(MVFont.bold(12))
                     .frame(maxWidth: .infinity).frame(height: 42)
                     .foregroundStyle(MV.C.ink)
@@ -121,12 +121,12 @@ private struct RoomRow: View {
                             HStack(spacing: 6) {
                                 Text(item.title).font(MVFont.bold(14)).foregroundStyle(MV.C.ink).lineLimit(1)
                                 if room.onlineCount > 0 {
-                                    Text("AO VIVO").font(MVFont.black(9)).foregroundStyle(MV.C.paper)
+                                    Text(L10n.text("AO VIVO")).font(MVFont.black(9)).foregroundStyle(MV.C.paper)
                                         .padding(.horizontal, 6).padding(.vertical, 2)
                                         .background(MV.C.marvel).clipShape(Capsule())
                                 }
                             }
-                            Text(room.onlineCount > 0 ? "\(Logic.fmt(room.onlineCount)) online" : "sem atividade agora")
+                            Text(room.onlineCount > 0 ? "\(Logic.fmt(room.onlineCount)) online" : L10n.text("sem atividade agora"))
                                 .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
                             if !friendsHere.isEmpty {
                                 HStack(spacing: -6) {
@@ -134,7 +134,7 @@ private struct RoomRow: View {
                                         AvatarView(user: friend, size: 20, border: 1.5)
                                     }
                                 }
-                                Text("Você está em: \(store.roomProgress[room.itemID].map { "\($0 + 1)/\(room.segments.count)" } ?? "não entrou")")
+                                Text(L10n.format("Você está em: %1$@", String(describing: store.roomProgress[room.itemID].map { "\($0 + 1)/\(room.segments.count)" } ?? L10n.text("não entrou"))))
                                     .font(MVFont.body(10, weight: 600)).foregroundStyle(MV.C.muted)
                             }
                         }

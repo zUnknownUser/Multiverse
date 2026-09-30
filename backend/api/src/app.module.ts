@@ -1,9 +1,24 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { FirebaseAuthGuard } from './auth/firebase-auth.guard.js';
+import { FirebaseTokenVerifier } from './auth/firebase-token-verifier.js';
+import { DatabaseService } from './database/database.service.js';
+import { AccountsService } from './accounts/accounts.service.js';
+import { AccountLifecycleService } from './accounts/account-lifecycle.service.js';
+import { AccountsController } from './accounts/accounts.controller.js';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnvironment } from './config/environment.js';
 import { HealthModule } from './health/health.module.js';
 
 @Module({
+  controllers: [AccountsController],
+  providers: [
+    DatabaseService,
+    FirebaseTokenVerifier,
+    AccountsService,
+    AccountLifecycleService,
+    { provide: APP_GUARD, useClass: FirebaseAuthGuard },
+  ],
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,

@@ -35,12 +35,12 @@ struct AttachCardSheet: View {
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(MV.C.paper)
-            .searchable(text: $query, prompt: "Buscar obra…")
-            .navigationTitle("Mandar carta")
+            .searchable(text: $query, prompt: L10n.text("Buscar obra…"))
+            .navigationTitle(L10n.text("Mandar carta"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
+                    Button(L10n.text("Cancelar")) { dismiss() }
                 }
             }
         }

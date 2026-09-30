@@ -11,7 +11,7 @@ struct ShieldStatusBanner: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("ESCUDO ATIVO")
+                    Text(L10n.text("ESCUDO ATIVO"))
                         .font(MVFont.black(12)).tracking(0.4)
                         .foregroundStyle(MV.C.card)
                         .padding(.horizontal, 10).padding(.vertical, 6)
@@ -21,15 +21,15 @@ struct ShieldStatusBanner: View {
                         .rotationEffect(.degrees(-3))
                     Spacer()
                     Button { store.push(.adjustShieldPoint) } label: {
-                        Text("Ajustar").font(MVFont.bold(13)).underline().foregroundStyle(MV.C.paper)
+                        Text(L10n.text("Ajustar")).font(MVFont.bold(13)).underline().foregroundStyle(MV.C.paper)
                     }
                     .buttonStyle(.plain)
                 }
 
                 if let status = store.shieldStatusLine() {
                     (Text(status).font(MVFont.body(14, weight: 500))
-                        + Text("  \(store.shieldHiddenCount) reviews").font(MVFont.bold(14))
-                        + Text(" sobre o que vem depois estão escondidas.").font(MVFont.body(14, weight: 500)))
+                        + Text(L10n.format("  %1$@ reviews", String(describing: store.shieldHiddenCount))).font(MVFont.bold(14))
+                        + Text(L10n.text(" sobre o que vem depois estão escondidas.")).font(MVFont.body(14, weight: 500)))
                         .foregroundStyle(MV.C.paper)
                 }
             }

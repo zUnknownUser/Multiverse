@@ -8,8 +8,8 @@ struct DuelOfDayWidget: Widget {
             DuelOfDayWidgetView(entry: entry)
                 .containerBackground(MV.C.ink, for: .widget)
         }
-        .configurationDisplayName("Duelo do dia")
-        .description("A votação em aberto no seu círculo.")
+        .configurationDisplayName(L10n.text("Duelo do dia"))
+        .description(L10n.text("A votação em aberto no seu círculo."))
         .supportedFamilies([.systemMedium])
     }
 }
@@ -21,7 +21,7 @@ private struct DuelOfDayWidgetView: View {
         let snapshot = entry.snapshot
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("DUELO DO DIA").font(MVFont.black(11)).foregroundStyle(MV.C.paper)
+                Text(L10n.text("DUELO DO DIA")).font(MVFont.black(11)).foregroundStyle(MV.C.paper)
                 Spacer()
                 Text(snapshot?.duelVotesLabel ?? "").font(MVFont.bold(10)).foregroundStyle(MV.C.wow)
             }

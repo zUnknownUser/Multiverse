@@ -34,8 +34,8 @@ struct LivePremiereView: View {
     private let stickerTimer = Timer.publish(every: 3.1, on: .main, in: .common).autoconnect()
 
     private let sampleChatLines = [
-        "NÃO ACREDITO NISSO", "KRAK! essa cena", "alguém mais chorando?", "essa trilha sonora ㅤ",
-        "voltou a ligação da era 3!!", "ok isso foi surpreendente", "reassistindo já no fim disso"
+        L10n.text("NÃO ACREDITO NISSO"), L10n.text("KRAK! essa cena"), L10n.text("alguém mais chorando?"), L10n.text("essa trilha sonora ㅤ"),
+        L10n.text("voltou a ligação da era 3!!"), L10n.text("ok isso foi surpreendente"), L10n.text("reassistindo já no fim disso")
     ]
 
     var body: some View {
@@ -66,7 +66,7 @@ struct LivePremiereView: View {
                         .transition(.opacity)
                 }
             } else {
-                Text("Nenhuma estreia ao vivo agora.").font(MVFont.bold(14)).foregroundStyle(.white)
+                Text(L10n.text("Nenhuma estreia ao vivo agora.")).font(MVFont.bold(14)).foregroundStyle(.white)
             }
         }
         .preferredColorScheme(.dark)
@@ -84,20 +84,20 @@ struct LivePremiereView: View {
         VStack(spacing: 14) {
             HStack {
                 Button { dismiss() } label: {
-                    Text("SAIR").font(MVFont.bold(12)).foregroundStyle(.white.opacity(0.85))
+                    Text(L10n.text("SAIR")).font(MVFont.bold(12)).foregroundStyle(.white.opacity(0.85))
                 }
                 .buttonStyle(.plain)
                 Spacer()
             }
             Spacer()
-            Text("◆ ESCUDO DE SPOILER").font(MVFont.black(11)).tracking(0.4).foregroundStyle(.black)
+            Text(L10n.text("◆ ESCUDO DE SPOILER")).font(MVFont.black(11)).tracking(0.4).foregroundStyle(.black)
                 .padding(.horizontal, 10).padding(.vertical, 6)
                 .background(MV.C.dc).clipShape(Capsule())
-            Text("A estreia de \(item.title) está à sua frente na timeline.")
+            Text(L10n.format("A estreia de %1$@ está à sua frente na timeline.", String(describing: item.title)))
                 .font(MVFont.bold(16)).foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
-            Button("Mostrar mesmo assim") { revealedAnyway = true }
+            Button(L10n.text("Mostrar mesmo assim")) { revealedAnyway = true }
                 .font(MVFont.bold(13)).underline().foregroundStyle(.white)
                 .buttonStyle(.plain)
             Spacer()
@@ -117,22 +117,22 @@ struct LivePremiereView: View {
 
     private var elapsedLabel: String {
         let h = elapsedSeconds / 3600, m = (elapsedSeconds % 3600) / 60, s = elapsedSeconds % 60
-        return String(format: "%02d:%02d:%02d de filme", h, m, s)
+        return String(format: L10n.text("%02d:%02d:%02d de filme"), h, m, s)
     }
 
     @ViewBuilder
     private func topBar(event: LiveEvent) -> some View {
         HStack {
             Button { dismiss() } label: {
-                Text("SAIR").font(MVFont.bold(12)).foregroundStyle(.white.opacity(0.85))
+                Text(L10n.text("SAIR")).font(MVFont.bold(12)).foregroundStyle(.white.opacity(0.85))
             }
             .buttonStyle(.plain)
             Spacer()
             HStack(spacing: 6) {
-                Text("● AO VIVO").font(MVFont.black(11)).foregroundStyle(.white)
+                Text(L10n.text("● AO VIVO")).font(MVFont.black(11)).foregroundStyle(.white)
                     .padding(.horizontal, 8).padding(.vertical, 4)
                     .background(MV.C.marvel).clipShape(Capsule())
-                Text("\(Logic.fmt(event.viewerCount)) assistindo").font(MVFont.body(11, weight: 600)).foregroundStyle(.white.opacity(0.75))
+                Text(L10n.format("%1$@ assistindo", String(describing: Logic.fmt(event.viewerCount)))).font(MVFont.body(11, weight: 600)).foregroundStyle(.white.opacity(0.75))
             }
         }
         .padding(.horizontal, MV.pad)
@@ -151,7 +151,7 @@ struct LivePremiereView: View {
         let simNo = 100 - simYes
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("⚡ RELÂMPAGO").font(MVFont.black(11)).foregroundStyle(.black)
+                Text(L10n.text("⚡ RELÂMPAGO")).font(MVFont.black(11)).foregroundStyle(.black)
                     .padding(.horizontal, 8).padding(.vertical, 4)
                     .background(MV.C.wow).clipShape(Capsule())
                 Spacer()
@@ -161,8 +161,8 @@ struct LivePremiereView: View {
             }
             Text(event.question).font(MVFont.bold(15)).foregroundStyle(.white)
             HStack(spacing: 8) {
-                pollOption(label: "SIM", percent: simYes, index: 0, revealed: revealed)
-                pollOption(label: "NÃO", percent: simNo, index: 1, revealed: revealed)
+                pollOption(label: L10n.text("SIM"), percent: simYes, index: 0, revealed: revealed)
+                pollOption(label: L10n.text("NÃO"), percent: simNo, index: 1, revealed: revealed)
             }
         }
         .padding(14)
@@ -219,7 +219,7 @@ struct LivePremiereView: View {
         let key = "live:\(event.id)"
         return HStack(spacing: 10) {
             ForEach(ReactionType.allCases, id: \.self) { type in
-                Text(type.rawValue)
+                Text(L10n.text(type.rawValue))
                     .font(MVFont.black(14))
                     .foregroundStyle(type.textColor)
                     .frame(maxWidth: .infinity).frame(height: 46)
@@ -236,7 +236,7 @@ struct LivePremiereView: View {
 
     private var commentField: some View {
         HStack(spacing: 8) {
-            TextField("Comentar ao vivo…", text: $comment)
+            TextField(L10n.text("Comentar ao vivo…"), text: $comment)
                 .font(MVFont.body(13, weight: 500))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 14)

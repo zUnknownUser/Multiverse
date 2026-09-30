@@ -11,7 +11,7 @@ struct ListDetailView: View {
             if let list = store.lists.first(where: { $0.id == listID }) {
                 let liked = store.isListLiked(list.id)
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("LISTA DE @\(store.user(store.meID)?.handle.dropFirst() ?? "")").kicker(11).foregroundStyle(MV.C.muted)
+                    Text(L10n.format("LISTA DE @%1$@", String(describing: store.user(store.meID)?.handle.dropFirst() ?? ""))).kicker(11).foregroundStyle(MV.C.muted)
                     Text(list.title).font(MVFont.display(28, width: 118)).foregroundStyle(MV.C.ink)
                     Text(list.desc).font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
 
@@ -26,7 +26,7 @@ struct ListDetailView: View {
                             .burstOnTap("POW!", color: MV.C.marvel, when: !liked) {
                                 store.toggleListLiked(list.id)
                             }
-                        Text("\(list.comments) comentários").font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted)
+                        Text(L10n.format("comments.count", list.comments)).font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted)
                     }
 
                     LazyVGrid(columns: columns, spacing: 14) {

@@ -29,7 +29,7 @@ struct FriendPickerSheet: View {
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancelar") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button(L10n.text("Cancelar")) { dismiss() } }
             }
         }
     }

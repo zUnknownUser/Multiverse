@@ -17,8 +17,8 @@ struct ReportSheet: View {
         VStack(alignment: .leading, spacing: 18) {
             Capsule().fill(MV.C.ink).frame(width: 44, height: 5).frame(maxWidth: .infinity)
 
-            Text("DENUNCIAR \(targetType.uppercased())").font(MVFont.display(24, width: 118)).foregroundStyle(MV.C.ink)
-            Text("de \(authorHandle) sobre \(targetTitle)").font(MVFont.body(13, weight: 500)).foregroundStyle(MV.C.muted)
+            Text(L10n.format("DENUNCIAR %1$@", String(describing: targetType.uppercased()))).font(MVFont.display(24, width: 118)).foregroundStyle(MV.C.ink)
+            Text(L10n.format("de %1$@ sobre %2$@", String(describing: authorHandle), String(describing: targetTitle))).font(MVFont.body(13, weight: 500)).foregroundStyle(MV.C.muted)
 
             VStack(spacing: 10) {
                 ForEach(ReportReason.allCases, id: \.self) { option in
@@ -27,12 +27,12 @@ struct ReportSheet: View {
             }
 
             HStack {
-                Text("Também bloquear essa pessoa").font(MVFont.bold(14)).foregroundStyle(MV.C.ink)
+                Text(L10n.text("Também bloquear essa pessoa")).font(MVFont.bold(14)).foregroundStyle(MV.C.ink)
                 Spacer()
                 Toggle("", isOn: $alsoBlock).labelsHidden().tint(MV.C.marvel)
             }
 
-            Text("ENVIAR DENÚNCIA")
+            Text(L10n.text("ENVIAR DENÚNCIA"))
                 .font(MVFont.bold(15))
                 .frame(maxWidth: .infinity).frame(height: 54)
                 .foregroundStyle(MV.C.paper)
@@ -43,7 +43,7 @@ struct ReportSheet: View {
                 .contentShape(Rectangle())
                 .onTapGesture(perform: send)
 
-            Text("Revisamos em até 24h. A pessoa não sabe quem denunciou.")
+            Text(L10n.text("Revisamos em até 24h. A pessoa não sabe quem denunciou."))
                 .font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
                 .frame(maxWidth: .infinity, alignment: .center)
         }
@@ -62,7 +62,7 @@ struct ReportSheet: View {
             }
             .frame(width: 22, height: 22)
             VStack(alignment: .leading, spacing: 2) {
-                Text(option.rawValue).font(MVFont.bold(14)).foregroundStyle(MV.C.ink)
+                Text(L10n.text(option.rawValue)).font(MVFont.bold(14)).foregroundStyle(MV.C.ink)
                 if !option.subtitle.isEmpty {
                     Text(option.subtitle).font(MVFont.body(12, weight: 500)).foregroundStyle(selected ? MV.C.ink.opacity(0.7) : MV.C.muted)
                 }

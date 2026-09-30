@@ -15,7 +15,7 @@ struct AffinityCard: View {
                 Halftone(color: MV.C.ink.opacity(0.15))
                 VStack(spacing: 2) {
                     Text("\(percent)%").font(MVFont.black(44)).foregroundStyle(MV.C.ink)
-                    Text("AFINIDADE COM VOCÊ").kicker(11).foregroundStyle(MV.C.ink.opacity(0.8))
+                    Text(L10n.text("AFINIDADE COM VOCÊ")).kicker(11).foregroundStyle(MV.C.ink.opacity(0.8))
                     Text(line).font(MVFont.body(12, weight: 700)).foregroundStyle(MV.C.ink)
                 }
                 .padding(.vertical, 18)
@@ -30,8 +30,8 @@ struct AffinityCard: View {
                     }
                 }
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Concordam em: \(agree)").font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.ink)
-                    Text("Brigam por: \(disagree)").font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.ink)
+                    Text(L10n.format("Concordam em: %1$@", String(describing: agree))).font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.ink)
+                    Text(L10n.format("Brigam por: %1$@", String(describing: disagree))).font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.ink)
                 }
             }
             .padding(14)

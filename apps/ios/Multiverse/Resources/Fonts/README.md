@@ -1,17 +1,12 @@
 # Fonte Archivo
 
-Este projeto foi feito neste ambiente **sem acesso à internet**, então o arquivo de fonte
-variável não pôde ser baixado. `Theme.swift` (`MVFont.archivo`) já cai pro system font em
-peso `.black` se a Archivo não estiver registrada, então o app funciona sem este passo —
-mas pra ficar pixel-perfeito, no Mac:
+A fonte variável Archivo está incluída no app e nos widgets. O arquivo original
+`Archivo[wdth,wght].ttf` foi renomeado para `Archivo-VariableFont_wdth,wght.ttf`
+para corresponder ao registro existente em `UIAppFonts`; o conteúdo não foi alterado.
 
-1. Baixe **Archivo** no Google Fonts: https://fonts.google.com/specimen/Archivo
-2. Extraia `Archivo-VariableFont_wdth,wght.ttf` e coloque nesta pasta
-   (`Multiverse/Resources/Fonts/`).
-3. Rode `xcodegen generate` de novo — o arquivo é pego automaticamente porque
-   `project.yml` inclui `Multiverse/Resources` inteiro como recurso do target.
-4. Confirme que `Info.plist` já lista `Archivo-VariableFont_wdth,wght.ttf` em `UIAppFonts`
-   (já está configurado).
-5. No app, confira se `UIFont(name: "Archivo", size: 16)` resolve. Se o nome interno da
-   fonte for diferente (ex.: `"Archivo-Variable"`), ajuste as strings de fallback em
-   `MVFont.archivo(_:weight:width:)` em `DesignSystem/Theme.swift`.
+Origem: [Google Fonts / Archivo](https://github.com/google/fonts/tree/95f4904fc8bcf26d3420fe315560c96417c6dec7/ofl/archivo).
+A licença acompanha o arquivo em `Archivo-OFL.txt` e é copiada para os dois bundles.
+
+`project.yml` inclui a fonte nos recursos dos targets. Após alterar os recursos,
+execute `xcodegen generate`. `FontResourcesTests` verifica o empacotamento, o registro
+via UIKit e os eixos de peso/largura usados por `MVFont`.

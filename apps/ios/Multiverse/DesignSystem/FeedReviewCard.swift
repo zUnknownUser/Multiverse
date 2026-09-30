@@ -59,7 +59,7 @@ struct FeedReviewCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 header(user: user, item: item, uni: uni)
                 StarsText(rating: review.rating, color: uni.color, size: 15)
-                    .accessibilityLabel("\(review.rating.formatted()) de 5 estrelas")
+                    .accessibilityLabel(L10n.format("%1$@ de 5 estrelas", String(describing: review.rating.formatted())))
                 textBlock(hidden: hidden)
                 posterButton
             }
@@ -68,7 +68,7 @@ struct FeedReviewCard: View {
                 VStack(alignment: .leading, spacing: 8) {
                     header(user: user, item: item, uni: uni)
                     StarsText(rating: review.rating, color: uni.color, size: 15)
-                        .accessibilityLabel("\(review.rating.formatted()) de 5 estrelas")
+                        .accessibilityLabel(L10n.format("%1$@ de 5 estrelas", String(describing: review.rating.formatted())))
                     textBlock(hidden: hidden)
                 }
                 Spacer(minLength: 6)
@@ -78,7 +78,7 @@ struct FeedReviewCard: View {
     }
 
     private func accessibilitySummary(user: User, item: Item) -> String {
-        "Review de \(user.name), \(Logic.verb3(item.type)) \(item.title), nota \(review.rating.formatted()) de 5."
+        L10n.format("Review de %1$@, %2$@ %3$@, nota %4$@ de 5.", String(describing: user.name), String(describing: Logic.verb3(item.type)), String(describing: item.title), String(describing: review.rating.formatted()))
     }
 
     @ViewBuilder
@@ -92,12 +92,12 @@ struct FeedReviewCard: View {
                     Text(user.name).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Perfil de \(user.name)")
+                .accessibilityLabel(L10n.format("Perfil de %1$@", String(describing: user.name)))
                 if let badgeUni = store.universe(user.badgeUniverse), let badgeName = store.badgeNames[user.badgeUniverse] {
                     BadgeChip(label: badgeName, universe: badgeUni)
                 }
                 if showFollowingTag {
-                    Text("SEGUINDO").font(MVFont.black(8)).tracking(0.4)
+                    Text(L10n.text("SEGUINDO")).font(MVFont.black(8)).tracking(0.4)
                         .foregroundStyle(MV.C.card)
                         .padding(.horizontal, 4).padding(.vertical, 2)
                         .background(RoundedRectangle(cornerRadius: MV.R.xs).fill(MV.C.ink))
@@ -107,7 +107,7 @@ struct FeedReviewCard: View {
                     Text("•••").font(MVFont.black(14)).foregroundStyle(MV.C.muted).padding(4)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Mais opções")
+                .accessibilityLabel(L10n.text("Mais opções"))
             }
             HStack(spacing: 4) {
                 Text(Logic.verb3(item.type)).font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.ink)
@@ -116,7 +116,7 @@ struct FeedReviewCard: View {
                         .lineLimit(isAccessibilitySize ? 2 : 1)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Ver \(item.title)")
+                .accessibilityLabel(L10n.format("Ver %1$@", String(describing: item.title)))
             }
         }
         .sheet(isPresented: $showReportSheet) {
@@ -138,14 +138,14 @@ struct FeedReviewCard: View {
                 Button {
                     store.revealSpoiler(review.id)
                 } label: {
-                    Text("SPOILER · TOQUE PARA VER")
+                    Text(L10n.text("SPOILER · TOQUE PARA VER"))
                         .font(MVFont.black(9)).tracking(0.6)
                         .foregroundStyle(MV.C.card)
                         .padding(.horizontal, 10).padding(.vertical, 6)
                         .background(Capsule().fill(MV.C.ink))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Contém spoiler. Toque pra revelar o texto.")
+                .accessibilityLabel(L10n.text("Contém spoiler. Toque pra revelar o texto."))
             }
         }
     }
@@ -156,7 +156,7 @@ struct FeedReviewCard: View {
             .accessibilityLabel(reactionsAccessibilityLabel(review))
 
         let commentButton = PillButton(title: store.commentsLabel(for: review)) { store.push(.review(review.id)) }
-            .accessibilityLabel("Ver comentários, \(review.comments.count)")
+            .accessibilityLabel(L10n.format("Ver comentários, %1$@", String(describing: review.comments.count)))
 
         let timeLabel = Text(review.when).font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
 
@@ -180,7 +180,7 @@ struct FeedReviewCard: View {
 
     private func reactionsAccessibilityLabel(_ review: Review) -> String {
         let counts = store.reactionCounts(for: review.id)
-        guard !counts.isEmpty else { return "Segure pra reagir" }
-        return "Reações: " + counts.map { "\($0.type.subtitle.capitalized) \($0.count)" }.joined(separator: ", ")
+        guard !counts.isEmpty else { return L10n.text("Segure pra reagir") }
+        return L10n.text("Reações: ") + counts.map { "\($0.type.subtitle.capitalized) \($0.count)" }.joined(separator: ", ")
     }
 }

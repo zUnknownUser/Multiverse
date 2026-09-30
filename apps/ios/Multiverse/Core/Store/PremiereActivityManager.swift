@@ -10,10 +10,10 @@ enum PremiereActivityManager {
         let attributes = PremiereActivityAttributes(itemTitle: itemTitle)
         let state = PremiereActivityAttributes.ContentState(
             question: question,
-            optionALabel: "Obra-prima", optionAPercent: 0,
-            optionBLabel: "Bom, mas…", optionBPercent: 0,
-            optionCLabel: "Retcon criminoso", optionCPercent: 0,
-            votingCountLabel: "0 votando", chosenIndex: nil
+            optionALabel: L10n.text("Obra-prima"), optionAPercent: 0,
+            optionBLabel: L10n.text("Bom, mas…"), optionBPercent: 0,
+            optionCLabel: L10n.text("Retcon criminoso"), optionCPercent: 0,
+            votingCountLabel: L10n.text("0 votando"), chosenIndex: nil
         )
         do {
             _ = try Activity.request(attributes: attributes, content: .init(state: state, staleDate: nil))

@@ -7,6 +7,8 @@ struct AuthSession: Sendable, Equatable, Codable {
     var displayName: String? = nil
     var avatarColor: String? = nil
     var bio: String? = nil
+    var needsProfile = false
+    var onboarding: OnboardingState? = nil
 }
 
 enum AuthError: LocalizedError, Equatable {
@@ -23,41 +25,48 @@ enum AuthError: LocalizedError, Equatable {
     case emailNotVerified, profileIncomplete, sessionExpired, emailAuthenticationFailed
     case invalidCode
     case usernameTaken
+    case apiNotConfigured, apiUnavailable, invalidProfile, onboardingConflict, suggestionsChanged, deletionPending
     case noPasswordForSocialAccount
 
     var errorDescription: String? {
         switch self {
-        case .verificationCodeExpired: return "Este código expirou. Solicite um novo código."
-        case .verificationUnavailable: return "O envio de códigos está indisponível no momento. Tente novamente mais tarde."
-        case .invalidEmail: return "Informe um e-mail válido."
-        case .emailCredentialsInvalid: return "E-mail ou senha incorretos."
-        case .emailAlreadyRegistered: return "Este e-mail já está cadastrado. Entre na sua conta ou recupere a senha."
-        case .weakPassword: return "A senha não atende aos requisitos. Escolha uma senha mais forte."
-        case .accountDisabled: return "Esta conta está desativada."
-        case .tooManyRequests: return "Muitas tentativas. Aguarde um pouco antes de tentar novamente."
-        case .emailProviderDisabled: return "O login por e-mail ainda não está habilitado. Tente novamente mais tarde."
-        case .invalidActionLink: return "Este link é inválido, expirou ou já foi usado. Solicite um novo link."
-        case .emailNotVerified: return "Confirme seu e-mail com o código de seis dígitos enviado."
-        case .profileIncomplete: return "Complete seu nome para continuar."
-        case .sessionExpired: return "Sua sessão expirou. Entre novamente."
-        case .emailAuthenticationFailed: return "Não foi possível concluir. Tente novamente."
+        case .apiNotConfigured: return L10n.text("A conexão com o servidor ainda não foi configurada.")
+        case .apiUnavailable: return L10n.text("Não foi possível acessar o servidor. Tente novamente.")
+        case .invalidProfile: return L10n.text("Confira os dados do perfil e tente novamente.")
+        case .onboardingConflict: return L10n.text("Seu progresso mudou em outro aparelho. Recarregue para continuar.")
+        case .suggestionsChanged: return L10n.text("As sugestões de pessoas mudaram. Atualize e tente novamente.")
+        case .deletionPending: return L10n.text("A exclusão da conta está em processamento. Tente novamente em instantes.")
+        case .verificationCodeExpired: return L10n.text("Este código expirou. Solicite um novo código.")
+        case .verificationUnavailable: return L10n.text("O envio de códigos está indisponível no momento. Tente novamente mais tarde.")
+        case .invalidEmail: return L10n.text("Informe um e-mail válido.")
+        case .emailCredentialsInvalid: return L10n.text("E-mail ou senha incorretos.")
+        case .emailAlreadyRegistered: return L10n.text("Este e-mail já está cadastrado. Entre na sua conta ou recupere a senha.")
+        case .weakPassword: return L10n.text("A senha não atende aos requisitos. Escolha uma senha mais forte.")
+        case .accountDisabled: return L10n.text("Esta conta está desativada.")
+        case .tooManyRequests: return L10n.text("Muitas tentativas. Aguarde um pouco antes de tentar novamente.")
+        case .emailProviderDisabled: return L10n.text("O login por e-mail ainda não está habilitado. Tente novamente mais tarde.")
+        case .invalidActionLink: return L10n.text("Este link é inválido, expirou ou já foi usado. Solicite um novo link.")
+        case .emailNotVerified: return L10n.text("Confirme seu e-mail com o código de seis dígitos enviado.")
+        case .profileIncomplete: return L10n.text("Complete seu nome para continuar.")
+        case .sessionExpired: return L10n.text("Sua sessão expirou. Entre novamente.")
+        case .emailAuthenticationFailed: return L10n.text("Não foi possível concluir. Tente novamente.")
         case .cancelled: return ""
-        case .unavailable: return "Esta opção estará disponível em breve. Por enquanto, continue com Google."
-        case .googleSignInFailed: return "Não foi possível entrar com Google. Tente novamente."
-        case .networkUnavailable: return "Confira sua conexão e tente novamente."
-        case .recentLoginRequired: return "Para excluir sua conta, saia e entre novamente."
+        case .unavailable: return L10n.text("Esta opção estará disponível em breve. Por enquanto, continue com Google.")
+        case .googleSignInFailed: return L10n.text("Não foi possível entrar com Google. Tente novamente.")
+        case .networkUnavailable: return L10n.text("Confira sua conexão e tente novamente.")
+        case .recentLoginRequired: return L10n.text("Para excluir sua conta, saia e entre novamente.")
         case .invalidCredentials(let n):
             return n > 0
-                ? "Senha incorreta. Mais \(n) tentativa\(n > 1 ? "s" : "") antes de um bloqueio de 5 minutos."
-                : "Senha incorreta."
+                ? L10n.format("auth.remainingAttempts", n)
+                : L10n.text("Senha incorreta.")
         case .lockedOut(let minutes):
-            return "Muitas tentativas. Tente de novo em \(minutes) minutos."
+            return L10n.format("auth.lockoutMinutes", minutes)
         case .invalidCode:
-            return "Código incorreto. Confira e tente de novo."
+            return L10n.text("Código incorreto. Confira e tente de novo.")
         case .usernameTaken:
-            return "Esse usuário já existe."
+            return L10n.text("Esse usuário já existe.")
         case .noPasswordForSocialAccount:
-            return "Entrou com Apple ou Google? Você não tem senha no Multiverse. Volte e use o mesmo botão de antes."
+            return L10n.text("Entrou com Apple ou Google? Você não tem senha no Multiverse. Volte e use o mesmo botão de antes.")
         }
     }
 }
@@ -98,10 +107,10 @@ enum PasswordStrength: Int, CaseIterable {
 
     var label: String {
         switch self {
-        case .fraca: return "fraca"
-        case .media: return "média"
-        case .boa: return "boa"
-        case .excelente: return "excelente"
+        case .fraca: return L10n.text("fraca")
+        case .media: return L10n.text("média")
+        case .boa: return L10n.text("boa")
+        case .excelente: return L10n.text("excelente")
         }
     }
 

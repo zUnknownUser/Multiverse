@@ -42,7 +42,7 @@ struct ThreadView: View {
                     .frame(width: 44, height: 66)
                     .comicCard(bg: p.bg, radius: MV.R.sm, shadow: MV.Shadow.s)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("\(uni.name) · \(item.type)").font(MVFont.body(11, weight: 700)).foregroundStyle(MV.C.muted)
+                    Text("\(uni.name) · \(L10n.text(item.type))").font(MVFont.body(11, weight: 700)).foregroundStyle(MV.C.muted)
                     Text(item.title).font(MVFont.bold(16)).foregroundStyle(MV.C.ink)
                 }
                 Spacer()
@@ -54,7 +54,7 @@ struct ThreadView: View {
     @ViewBuilder
     private func commentsSection(review: Review) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(review.comments.isEmpty ? "SEM COMENTÁRIOS AINDA" : "\(review.comments.count) COMENTÁRIOS")
+            Text(review.comments.isEmpty ? L10n.text("SEM COMENTÁRIOS AINDA") : L10n.format("comments.uppercase", review.comments.count))
                 .font(MVFont.section(16)).foregroundStyle(MV.C.ink)
             VStack(spacing: 12) {
                 ForEach(Array(review.comments.enumerated()), id: \.offset) { index, comment in
@@ -76,7 +76,7 @@ struct ThreadView: View {
             if let quoting {
                 HStack(alignment: .top, spacing: 8) {
                     Rectangle().fill(MV.C.wow).frame(width: 3)
-                    (Text("CITANDO \(quoting.author.uppercased()): ").font(MVFont.black(11))
+                    (Text(L10n.format("CITANDO %1$@: ", String(describing: quoting.author.uppercased()))).font(MVFont.black(11))
                         + Text("\"\(quoting.text)\"").font(MVFont.body(12, weight: 600)).italic())
                         .foregroundStyle(MV.C.ink)
                         .lineLimit(2)
@@ -94,7 +94,7 @@ struct ThreadView: View {
             }
             HStack(spacing: 8) {
                 AvatarView(user: me, size: 34)
-                TextField("Responder… (teorias bem-vindas)", text: $draft)
+                TextField(L10n.text("Responder… (teorias bem-vindas)"), text: $draft)
                     .font(MVFont.body(14, weight: 500))
                     .focused($focused)
                     .padding(.horizontal, 14)
@@ -103,7 +103,7 @@ struct ThreadView: View {
                     .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                     .clipShape(Capsule())
                     .onSubmit { send(review: review) }
-                Text("ENVIAR")
+                Text(L10n.text("ENVIAR"))
                     .font(MVFont.bold(12))
                     .padding(.horizontal, 14)
                     .frame(height: 42)
@@ -152,8 +152,8 @@ private struct ReviewDetailCard: View {
                                 BadgeChip(label: badge, universe: badgeUni)
                             }
                         }
-                        if let item, let uni {
-                            Text("sobre \(item.title) · \(review.when)").font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
+                        if let item, uni != nil {
+                            Text(L10n.format("sobre %1$@ · %2$@", String(describing: item.title), String(describing: review.when))).font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
                         } else {
                             Text(review.when).font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
                         }
@@ -164,12 +164,12 @@ private struct ReviewDetailCard: View {
 
                 if !hidden {
                     HStack(spacing: 0) {
-                        Text("❝ Citar").font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
+                        Text(L10n.text("❝ Citar")).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
                             .padding(.horizontal, 12).padding(.vertical, 8)
                             .background(MV.C.wow)
                             .contentShape(Rectangle())
                             .onTapGesture(perform: onQuote)
-                        Text("Copiar").font(MVFont.bold(13)).foregroundStyle(MV.C.paper)
+                        Text(L10n.text("Copiar")).font(MVFont.bold(13)).foregroundStyle(MV.C.paper)
                             .padding(.horizontal, 12).padding(.vertical, 8)
                             .background(MV.C.ink)
                             .contentShape(Rectangle())
@@ -181,7 +181,7 @@ private struct ReviewDetailCard: View {
                                 store.setReaction(.pow, for: review.id)
                             }
                         if item != nil {
-                            Text("Mandar").font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
+                            Text(L10n.text("Mandar")).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
                                 .padding(.horizontal, 12).padding(.vertical, 8)
                                 .background(MV.C.card)
                                 .contentShape(Rectangle())
@@ -202,7 +202,7 @@ private struct ReviewDetailCard: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     if hidden {
                         Button { store.revealSpoiler(review.id) } label: {
-                            Text("SPOILER · TOQUE PARA VER")
+                            Text(L10n.text("SPOILER · TOQUE PARA VER"))
                                 .font(MVFont.black(10)).tracking(0.6)
                                 .foregroundStyle(MV.C.card)
                                 .padding(.horizontal, 10).padding(.vertical, 6)
@@ -243,7 +243,7 @@ private struct CommentRow: View {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 6) {
                         Text(user.name).font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
-                        Text(comment.when ?? "agora").font(MVFont.body(10, weight: 600)).foregroundStyle(MV.C.muted)
+                        Text(comment.when ?? L10n.text("agora")).font(MVFont.body(10, weight: 600)).foregroundStyle(MV.C.muted)
                     }
                     if let quotedAuthor = comment.quotedAuthor, let quotedText = comment.quotedText {
                         (Text("\(quotedAuthor.uppercased()): ").font(MVFont.black(10))

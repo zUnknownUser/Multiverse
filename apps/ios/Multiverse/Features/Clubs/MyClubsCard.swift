@@ -6,7 +6,7 @@ struct MyClubsCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(title: "Seus clubes", trailing: "VER TUDO") { store.goToTab(.clubs) }
+            SectionHeader(title: L10n.text("Seus clubes"), trailing: L10n.text("VER TUDO")) { store.goToTab(.clubs) }
             VStack(spacing: 10) {
                 ForEach(store.clubs) { club in
                     row(club: club)
@@ -15,7 +15,6 @@ struct MyClubsCard: View {
         }
     }
 
-    @ViewBuilder
     private func row(club: Club) -> some View {
         guard let uni = store.universe(club.uni), let week = store.currentClubWeek(club), let item = store.item(week.itemID) else {
             return AnyView(EmptyView())
@@ -28,7 +27,7 @@ struct MyClubsCard: View {
                     PosterView(item: item, universe: uni, width: 44, height: 66, titleSize: 8, showLabel: false)
                     VStack(alignment: .leading, spacing: 3) {
                         Text(club.name).font(MVFont.bold(14)).foregroundStyle(MV.C.ink)
-                        Text("Semana \(club.currentWeek) de \(club.weeks.count) · \(item.title)")
+                        Text(L10n.format("Semana %1$@ de %2$@ · %3$@", String(describing: club.currentWeek), String(describing: club.weeks.count), String(describing: item.title)))
                             .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
                         ComicProgress(value: week.totalUnits > 0 ? Double(units) / Double(week.totalUnits) : 0, fill: uni.color, height: 8)
                     }

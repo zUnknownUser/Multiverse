@@ -11,9 +11,9 @@ struct WhereToWatchSection: View {
         if let availability = store.watchAvailabilityByItem[itemID] {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Text("ONDE ASSISTIR").font(MVFont.section(18)).foregroundStyle(MV.C.ink)
+                    Text(L10n.text("ONDE ASSISTIR")).font(MVFont.section(18)).foregroundStyle(MV.C.ink)
                     Spacer()
-                    Text("BRASIL").font(MVFont.bold(10))
+                    Text(L10n.text("BRASIL")).font(MVFont.bold(10))
                         .padding(.horizontal, 8).padding(.vertical, 5)
                         .foregroundStyle(MV.C.ink)
                         .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
@@ -26,7 +26,7 @@ struct WhereToWatchSection: View {
                 }
 
                 if !availability.readFirst.isEmpty {
-                    Text("LEIA ANTES").font(MVFont.section(16)).foregroundStyle(MV.C.ink)
+                    Text(L10n.text("LEIA ANTES")).font(MVFont.section(16)).foregroundStyle(MV.C.ink)
                     VStack(spacing: 10) {
                         ForEach(availability.readFirst) { option in
                             ReadFirstRow(option: option)
@@ -35,7 +35,7 @@ struct WhereToWatchSection: View {
                 }
 
                 HStack {
-                    Text("Me avise quando entrar num serviço que eu assino")
+                    Text(L10n.text("Me avise quando entrar num serviço que eu assino"))
                         .font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
                     Spacer()
                     Toggle("", isOn: $notifyOnServiceIOwn).labelsHidden().tint(MV.C.wow)
@@ -43,7 +43,7 @@ struct WhereToWatchSection: View {
                 .padding(14)
                 .comicCard(shadow: MV.Shadow.s)
 
-                Text("LINK DE AFILIADO · o Multiverse pode ganhar uma comissão, sem custo extra pra você. Isso ajuda a manter o app sem anúncios.")
+                Text(L10n.text("LINK DE AFILIADO · o Multiverse pode ganhar uma comissão, sem custo extra pra você. Isso ajuda a manter o app sem anúncios."))
                     .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
             }
         } else {
@@ -65,7 +65,7 @@ private struct WatchOptionRow: View {
                 Text(option.note).font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
             }
             Spacer()
-            Text(option.actionLabel)
+            Text(L10n.text(option.actionLabel))
                 .font(MVFont.bold(12))
                 .padding(.horizontal, 12).padding(.vertical, 10)
                 .foregroundStyle(option.actionLabel == "ASSISTIR" ? MV.C.paper : MV.C.ink)
@@ -90,7 +90,7 @@ private struct ReadFirstRow: View {
                 Text(option.subtitle + " · " + option.note).font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
             }
             Spacer()
-            Text(option.actionLabel)
+            Text(L10n.text(option.actionLabel))
                 .font(MVFont.bold(12))
                 .padding(.horizontal, 12).padding(.vertical, 10)
                 .foregroundStyle(MV.C.ink)

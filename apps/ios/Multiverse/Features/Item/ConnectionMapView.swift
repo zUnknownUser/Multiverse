@@ -26,7 +26,7 @@ struct ConnectionMapView: View {
                     .stroke(MV.C.ink, lineWidth: 2)
                 }
 
-                Text("AQUI")
+                Text(L10n.text("AQUI"))
                     .font(MVFont.black(11))
                     .foregroundStyle(MV.C.paper)
                     .frame(width: centerNodeSize, height: centerNodeSize)

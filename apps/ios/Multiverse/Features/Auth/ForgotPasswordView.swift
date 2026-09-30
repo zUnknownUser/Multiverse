@@ -8,24 +8,24 @@ struct ForgotPasswordView: View {
         ScreenScaffold(showBack: true, onBack: { auth.pop() }) {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("ESQUECEU A\nSENHA?").font(MVFont.display(32, width: 122)).lineSpacing(-6).foregroundStyle(MV.C.ink)
-                    Text("Acontece até com o Arthas. Informe seu e-mail e mandamos um link pra criar uma senha nova.")
+                    Text(L10n.text("ESQUECEU A\nSENHA?")).font(MVFont.display(32, width: 122)).lineSpacing(-6).foregroundStyle(MV.C.ink)
+                    Text(L10n.text("Acontece até com o Arthas. Informe seu e-mail e mandamos um link pra criar uma senha nova."))
                         .font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
                 }
 
-                AuthField(label: "E-mail da conta", text: $auth.resetEmail, keyboardType: .emailAddress, autocapitalization: .never)
+                AuthField(label: L10n.text("E-mail da conta"), text: $auth.resetEmail, keyboardType: .emailAddress, autocapitalization: .never)
 
                 if let error = auth.errorMessage {
                     AuthErrorBanner(message: error)
                 }
 
-                PrimaryAuthButton(title: "ENVIAR LINK", isLoading: auth.isLoading, enabled: !auth.resetEmail.isEmpty) {
+                PrimaryAuthButton(title: L10n.text("ENVIAR LINK"), isLoading: auth.isLoading, enabled: !auth.resetEmail.isEmpty) {
                     Task { await auth.requestPasswordReset() }
                 }
 
                 Spacer(minLength: 12)
 
-                Text("Entrou com Apple ou Google? Você não tem senha no Multiverse. Volte e use o mesmo botão de antes.")
+                Text(L10n.text("Entrou com Apple ou Google? Você não tem senha no Multiverse. Volte e use o mesmo botão de antes."))
                     .font(MVFont.body(13, weight: 500))
                     .foregroundStyle(MV.C.ink)
                     .padding(14)

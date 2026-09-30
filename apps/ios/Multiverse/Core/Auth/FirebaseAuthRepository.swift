@@ -19,7 +19,7 @@ final class FirebaseGoogleAuthenticationClient: GoogleAuthenticationClient {
     func currentSession() -> AuthSession? {
         guard let user = Auth.auth().currentUser else { return nil }
         if user.providerData.contains(where: { $0.providerID == "password" }),
-           !user.isEmailVerified || user.displayName?.isEmpty != false { return nil }
+           !user.isEmailVerified { return nil }
         return session(for: user)
     }
 
@@ -96,26 +96,41 @@ final class FirebaseGoogleAuthenticationClient: GoogleAuthenticationClient {
 }
 
 /// Firebase Google/e-mail authentication. Email confirmation uses callable functions.
-/// Apple remains unavailable; profile details and settings are local until the profile backend exists.
+/// Profiles are authoritative in the API. Local profile storage is used only by injected demo/test clients.
 @MainActor
 final class FirebaseAuthRepository: AuthRepository {
     private let client: any GoogleAuthenticationClient
     private let defaults: UserDefaults
     private let emailClient: any EmailAuthenticationClient
     private var resetCode: String?
+    private var resetRequestID = UUID()
+    private let accountAPI: (any AccountAPI)?
 
-    init(client: any GoogleAuthenticationClient = FirebaseGoogleAuthenticationClient(), defaults: UserDefaults = .standard, emailClient: any EmailAuthenticationClient = FirebaseEmailAuthenticationClient()) {
+    init(client: any GoogleAuthenticationClient = FirebaseGoogleAuthenticationClient(), defaults: UserDefaults = .standard, emailClient: any EmailAuthenticationClient = FirebaseEmailAuthenticationClient(), accountAPI: (any AccountAPI)? = AccountAPIClient()) {
         self.client = client
         self.defaults = defaults
         self.emailClient = emailClient
+        self.accountAPI = accountAPI
     }
 
-    func currentSession() async -> AuthSession? { client.currentSession().map(decorated) }
-    func signInWithGoogle() async throws -> AuthSession { try await client.signIn() }
-    func signOut() async throws { try client.signOut(); resetCode = nil }
+    func currentSession() async throws -> AuthSession? {
+        guard let session = client.currentSession() else { return nil }
+        return try await resolved(session)
+    }
+    func signInWithGoogle() async throws -> AuthSession { try await resolved(client.signIn()) }
+    func signOut() async throws {
+        try client.signOut()
+        invalidateResetAction()
+    }
     func deleteAccount() async throws {
         let id = client.currentSession()?.userID
-        try await client.deleteAccount()
+        if let accountAPI {
+            try await accountAPI.deleteAccount()
+            try client.signOut()
+        } else {
+            try await client.deleteAccount()
+        }
+        invalidateResetAction()
         if let id {
             for key in ["mv-onboarded-\(id)", "mv-account-settings-\(id)", "mv-blocked-users-\(id)", "mv-local-profile-\(id)"] {
                 defaults.removeObject(forKey: key)
@@ -124,23 +139,29 @@ final class FirebaseAuthRepository: AuthRepository {
     }
 
     func signIn(identifier: String, password: String) async throws -> AuthSession {
-        decorated(try await emailClient.signIn(email: Self.normalizedEmail(identifier), password: password))
+        try await resolved(emailClient.signIn(email: Self.normalizedEmail(identifier), password: password))
     }
     func signInWithApple() async throws -> AuthSession { throw AuthError.unavailable }
     func pendingSignUpEmail() async -> String? { emailClient.pendingEmail() }
-    func pendingEmailIsVerified() async -> Bool { emailClient.pendingEmailIsVerified() }
     func startSignUp(email: String, password: String) async throws {
         try await emailClient.createAccount(email: Self.normalizedEmail(email), password: password)
     }
     func resendVerificationCode() async throws { try await emailClient.sendVerification() }
     func verifyCode(_ code: String) async throws { try await emailClient.confirmVerification(code: code) }
-    func checkUsernameAvailable(_ username: String) async -> Bool {
-        // Local nickname validation only; global handles require the future profile backend.
-        username.range(of: "^[a-zA-Z0-9_.]{3,24}$", options: .regularExpression) != nil
+    func checkUsernameAvailable(_ username: String) async throws -> Bool {
+        guard username.range(of: "^[a-zA-Z0-9_.]{3,24}$", options: .regularExpression) != nil else { return false }
+        if let accountAPI { return try await accountAPI.usernameAvailable(username) }
+        return true
     }
     func completeSignUp(name: String, username: String, avatarColor: String, bio: String) async throws -> AuthSession {
         let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { throw AuthError.profileIncomplete }
+        if let accountAPI {
+            guard let session = client.currentSession() else { throw AuthError.sessionExpired }
+            let profile = try await accountAPI.saveProfile(name: name, username: username, avatarColor: avatarColor, bio: bio)
+            guard profile.userID == session.userID else { throw AuthError.sessionExpired }
+            return sessionWithProfile(session, profile: profile, onboarding: nil)
+        }
         let session = try await emailClient.completeProfile(name: name)
         let profile = LocalAuthProfile(handle: username.isEmpty ? "" : "@" + username, avatarColor: avatarColor, bio: bio)
         if let data = try? JSONEncoder().encode(profile) {
@@ -152,13 +173,15 @@ final class FirebaseAuthRepository: AuthRepository {
         try await emailClient.sendPasswordReset(email: Self.normalizedEmail(email))
     }
     func prepareEmailAction(_ url: URL) async throws -> EmailActionResult {
-        resetCode = nil
+        invalidateResetAction()
+        let requestID = resetRequestID
         guard let options = FirebaseApp.app()?.options, let projectID = options.projectID,
               let apiKey = options.apiKey else { throw AuthError.invalidActionLink }
         let link = try EmailActionLink(url: url, projectID: projectID, apiKey: apiKey)
         switch link.mode {
         case .resetPassword:
             let email = try await emailClient.validateResetCode(link.code)
+            guard requestID == resetRequestID else { throw AuthError.invalidActionLink }
             resetCode = link.code
             return .resetPassword(email: email)
         case .verifyEmail:
@@ -167,8 +190,29 @@ final class FirebaseAuthRepository: AuthRepository {
     }
     func resetPassword(_ newPassword: String) async throws {
         guard let code = resetCode else { throw AuthError.invalidActionLink }
+        let requestID = resetRequestID
         try await emailClient.confirmPasswordReset(code: code, password: newPassword)
+        if requestID == resetRequestID { invalidateResetAction() }
+    }
+    private func invalidateResetAction() {
         resetCode = nil
+        resetRequestID = UUID()
+    }
+    private func resolved(_ session: AuthSession) async throws -> AuthSession {
+        guard let accountAPI else { return decorated(session) }
+        let account = try await accountAPI.fetchAccount()
+        guard let profile = account.profile else {
+            var pending = session
+            pending.needsProfile = true
+            return pending
+        }
+        guard profile.userID == session.userID else { throw AuthError.sessionExpired }
+        return sessionWithProfile(session, profile: profile, onboarding: account.onboarding)
+    }
+    private func sessionWithProfile(_ session: AuthSession, profile: RemoteProfile, onboarding: OnboardingState?) -> AuthSession {
+        AuthSession(userID: session.userID, email: session.email, handle: "@" + profile.username,
+                    displayName: profile.displayName, avatarColor: profile.avatarColor, bio: profile.bio,
+                    onboarding: onboarding)
     }
     private static func normalizedEmail(_ value: String) throws -> String {
         let email = value.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -197,7 +241,7 @@ final class FirebaseAuthRepository: AuthRepository {
     func blockUser(handle: String) async {
         var users = await fetchBlockedUsers()
         guard !users.contains(where: { $0.handle == handle }) else { return }
-        users.append(BlockedUser(id: handle, handle: handle, blockedOn: "hoje"))
+        users.append(BlockedUser(id: handle, handle: handle, blockedOn: L10n.text("hoje")))
         write(users, key: "mv-blocked-users")
     }
     func unblockUser(_ id: String) async {

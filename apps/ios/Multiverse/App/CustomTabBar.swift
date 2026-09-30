@@ -4,10 +4,9 @@ import SwiftUI
 /// Avisos saiu daqui — agora é o sino no topo da Home (ver `AppStore.openNotifications()`).
 struct CustomTabBar: View {
     @Environment(AppStore.self) private var store
-    @Environment(BurstCenter.self) private var burst
     var onPlusTapped: () -> Void
 
-    private let items: [(AppTab, String)] = [(.home, "Início"), (.search, "Busca"), (.clubs, "Clubes"), (.profile, "Perfil")]
+    private let items: [(AppTab, String)] = [(.home, L10n.text("Início")), (.search, L10n.text("Busca")), (.clubs, L10n.text("Clubes")), (.profile, L10n.text("Perfil"))]
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -34,7 +33,7 @@ struct CustomTabBar: View {
             }
             .buttonStyle(.plain)
             .offset(y: -18)
-            .accessibilityLabel("Registrar")
+            .accessibilityLabel(L10n.text("Registrar"))
         }
         .fixedSize(horizontal: false, vertical: true)
     }
