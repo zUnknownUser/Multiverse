@@ -1,0 +1,33 @@
+# Xcode
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# Gerado pelo XcodeGen — project.yml é a fonte de verdade
+*.xcodeproj/
+*.xcworkspace/
+
+# Build
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# CocoaPods / SPM (não usamos Pods, mas por segurança)
+Pods/
+.build/
+
+# macOS
+.DS_Store
+
+# Segredos / ambiente local
+.env
+.env.local
+*.mobileprovision
+*.p12
+*.cer
+
+# Descompactados só pra referência de design — o conteúdo já está em design_handoff_multiverse/
+*.zip

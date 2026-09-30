@@ -1,0 +1,118 @@
+import SwiftUI
+
+struct OnboardingView: View {
+    @Environment(AppStore.self) private var store
+    @Environment(BurstCenter.self) private var burst
+
+    var body: some View {
+        ZStack {
+            MV.C.paper.ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                progressBars
+                    .padding(.top, 62)
+                    .padding(.horizontal, MV.pad)
+
+                Group {
+                    switch store.onboardingPhase {
+                    case .step1: OnboardingStep1View()
+                    case .step2: OnboardingStep2View()
+                    case .step3: OnboardingStep3View()
+                    case .loading: OnboardingLoadingView()
+                    }
+                }
+                .frame(maxHeight: .infinity)
+
+                if store.onboardingPhase != .loading {
+                    footerButtons
+                        .padding(.horizontal, MV.pad)
+                        .padding(.bottom, 34)
+                }
+            }
+
+            BurstOverlay()
+        }
+        .coordinateSpace(name: "screen")
+    }
+
+    private var progressBars: some View {
+        HStack(spacing: 8) {
+            ForEach(1...3, id: \.self) { i in
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(barFilled(i) ? MV.C.ink : Color.clear)
+                    .frame(height: 6)
+                    .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(MV.C.ink, lineWidth: 1.5))
+            }
+        }
+    }
+
+    private func barFilled(_ i: Int) -> Bool {
+        switch store.onboardingPhase {
+        case .loading: return true
+        case .step1: return i <= 1
+        case .step2: return i <= 2
+        case .step3: return i <= 3
+        }
+    }
+
+    private var canGoBack: Bool {
+        store.onboardingPhase == .step2 || store.onboardingPhase == .step3
+    }
+
+    private var isCTAEnabled: Bool {
+        switch store.onboardingPhase {
+        case .step1: return !store.onboardingUniverses.isEmpty
+        case .step2: return true
+        case .step3: return store.friendsCount >= 3
+        case .loading: return false
+        }
+    }
+
+    private var ctaLabel: String {
+        switch store.onboardingPhase {
+        case .step1: return "Continuar"
+        case .step2:
+            let n = store.onboardingConsumablePicks().filter { store.isSeen($0.id) }.count
+            return n > 0 ? "Continuar" : "Pular"
+        case .step3:
+            let n = store.friendsCount
+            return n >= 3 ? "Montar meu feed" : "Siga mais \(3 - n)"
+        case .loading: return ""
+        }
+    }
+
+    private var footerButtons: some View {
+        HStack(spacing: 12) {
+            if canGoBack {
+                Button { store.backOnboarding() } label: {
+                    Text("←")
+                        .font(MVFont.black(20))
+                        .foregroundStyle(MV.C.ink)
+                        .frame(width: 54, height: 54)
+                        .background(MV.C.card)
+                        .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+                        .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
+                }
+                .buttonStyle(.plain)
+            }
+            Text(ctaLabel)
+                .font(MVFont.bold(15))
+                .foregroundStyle(isCTAEnabled ? MV.C.card : MV.C.muted)
+                .frame(maxWidth: .infinity)
+                .frame(height: 54)
+                .background(isCTAEnabled ? MV.C.marvel : MV.C.desk)
+                .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+                .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
+                .background(
+                    RoundedRectangle(cornerRadius: MV.R.md)
+                        .fill(isCTAEnabled ? MV.C.ink : .clear)
+                        .offset(x: MV.Shadow.m, y: MV.Shadow.m)
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    guard isCTAEnabled else { return }
+                    store.advanceOnboarding()
+                }
+        }
+    }
+}

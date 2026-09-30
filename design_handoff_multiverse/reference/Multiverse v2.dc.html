@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#E6E0D2;font-family:'Archivo',system-ui,sans-serif;color:#16130F}
+a{color:#16130F}a:hover{color:#E4412F}
+@keyframes mvUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes mvFade{from{opacity:0}to{opacity:1}}
+@keyframes mvPow{0%{opacity:0;transform:translate(-50%,-100%) scale(.3) rotate(-14deg)}25%{opacity:1;transform:translate(-50%,-100%) scale(1.2) rotate(-6deg)}100%{opacity:0;transform:translate(-50%,-170%) scale(1) rotate(-4deg)}}
+@keyframes mvPulse{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes mvPop{0%{transform:scale(.6);opacity:0}100%{transform:none;opacity:1}}
+@keyframes mvToast{0%{opacity:0;transform:translate(-50%,10px)}12%{opacity:1;transform:translate(-50%,0)}85%{opacity:1}100%{opacity:0}}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;box-sizing:border-box">
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div ref="{{ screenRef }}" style="position:absolute;inset:0;background:#F5F1E8;font-family:'Archivo',system-ui,sans-serif;color:#16130F;overflow:hidden">
+<div ref="{{ scrollRef }}" style="position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:56px 0 110px;box-sizing:border-box">
+
+<sc-if value="{{ canBack }}" hint-placeholder-val="{{ false }}">
+<div style="padding:4px 16px 12px;display:flex">
+<button onClick="{{ back }}" style="font:800 12px 'Archivo',sans-serif;text-transform:uppercase;letter-spacing:.06em;background:#FFFDF8;border:2px solid #16130F;border-radius:999px;padding:8px 14px;cursor:pointer;color:#16130F;box-shadow:2px 2px 0 #16130F">← Voltar</button>
+</div>
+</sc-if>
+
+<!-- HOME -->
+<sc-if value="{{ sHome }}" hint-placeholder-val="{{ true }}">
+<div style="padding:4px 16px 0;display:flex;align-items:flex-end;justify-content:space-between">
+<div style="display:flex;flex-direction:column;gap:3px">
+<div style="font-weight:900;font-stretch:125%;font-size:30px;letter-spacing:-.02em;line-height:.9">MULTIVERSE</div>
+<div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase">{{ homeSub }}</div>
+</div>
+<div onClick="{{ goMe }}" style="width:40px;height:40px;border-radius:50%;background:#F4A814;border:2px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;cursor:pointer">DK</div>
+</div>
+
+<div style="padding:16px 16px 0"><div onClick="{{ openWrapped }}" style="display:flex;align-items:center;gap:10px;background-color:#16130F;color:#F5F1E8;border-radius:10px;padding:10px 12px;cursor:pointer;background-image:radial-gradient(rgba(245,241,232,.14) 1px,transparent 1.3px);background-size:6px 6px"><span style="flex:none;background:#E4412F;border:2px solid #F5F1E8;border-radius:4px;padding:2px 6px;font-weight:900;font-size:10px;letter-spacing:.08em;transform:rotate(-4deg)">NOVO</span><span style="flex:1;font-weight:800;font-size:13px">Seu setembro no Multiverse está pronto</span><span style="font-weight:900">→</span></div></div>
+<div style="padding:16px 16px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+<sc-for list="{{ unis }}" as="u" hint-placeholder-count="3">
+<div onClick="{{ u.open }}" style="background-color:{{ u.c }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;color:{{ u.ink }};border:2px solid #16130F;border-radius:10px;padding:10px;height:104px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;box-shadow:3px 3px 0 #16130F">
+<div style="display:flex;flex-direction:column;gap:2px"><div style="font-weight:900;font-stretch:100%;font-size:14px;text-transform:uppercase;line-height:.95;overflow-wrap:anywhere">{{ u.name }}</div><div style="font-size:10px;font-weight:700">{{ u.live }}</div></div>
+<div style="display:flex;flex-direction:column;gap:5px">
+<div style="font-weight:900;font-size:22px;line-height:1">{{ u.pctLabel }}</div>
+<div style="height:6px;background:{{ u.track }};border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ u.pctLabel }};background:{{ u.ink }}"></div></div>
+</div>
+</div>
+</sc-for>
+</div>
+
+<div style="padding:26px 0 0">
+<div style="padding:0 16px;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+<div style="font-weight:900;font-stretch:115%;font-size:20px;text-transform:uppercase">Em alta no seu círculo</div>
+<div onClick="{{ goSearch }}" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;text-decoration:underline">Ver tudo</div>
+</div>
+<div style="display:flex;gap:12px;overflow-x:auto;padding:0 16px 8px">
+<sc-for list="{{ trending }}" as="p" hint-placeholder-count="4">
+<div onClick="{{ p.open }}" style="flex:none;width:96px;cursor:pointer;display:flex;flex-direction:column;gap:6px">
+<div style="height:144px;border:2px solid #16130F;border-radius:8px;background-color:{{ p.bg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;color:{{ p.ink }};padding:8px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;box-shadow:3px 3px 0 #16130F">
+<span style="font:700 8px ui-monospace,Menlo,monospace;letter-spacing:.04em">CAPA · {{ p.typeU }}</span>
+<span style="font-weight:900;font-stretch:95%;font-size:12px;line-height:.95;text-transform:uppercase;text-wrap:balance;overflow-wrap:anywhere;hyphens:auto" lang="pt">{{ p.title }}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:11px;font-weight:800">{{ p.avgLabel }}</span><span style="font-size:10px;font-weight:600">{{ p.buzz }}</span></div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="padding:18px 16px 0">
+<div style="border:2px solid #16130F;border-radius:12px;overflow:hidden;background:#FFFDF8;box-shadow:4px 4px 0 #16130F">
+<div style="background:#16130F;color:#F5F1E8;padding:10px 14px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase">Duelo do dia · {{ duel.pos }}</span><span style="font-size:10px;font-weight:700">{{ duel.total }}</span></div>
+<div style="padding:12px 14px 2px;font-weight:900;font-stretch:112%;font-size:19px;line-height:1;text-transform:uppercase">{{ duel.q }}</div>
+<div style="position:relative;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 14px 14px">
+<sc-for list="{{ duel.sides }}" as="d" hint-placeholder-count="2">
+<div onClick="{{ d.vote }}" style="position:relative;height:170px;border:2px solid #16130F;border-radius:10px;background-color:{{ d.bg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;color:{{ d.ink }};padding:10px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;overflow:hidden;opacity:{{ d.op }};transform:{{ d.tf }};transition:transform .25s,opacity .25s">
+<span style="font:700 8px ui-monospace,Menlo,monospace">{{ d.typeU }} · {{ d.uniName }}</span>
+<div style="display:flex;flex-direction:column;gap:6px">
+<sc-if value="{{ d.showPct }}" hint-placeholder-val="{{ false }}"><span style="font-weight:900;font-size:34px;line-height:1;animation:mvPop .3s ease-out">{{ d.pct }}</span></sc-if>
+<span style="font-weight:900;font-size:14px;line-height:.95;text-transform:uppercase;overflow-wrap:anywhere">{{ d.title }}</span>
+</div>
+</div>
+</sc-for>
+<div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#F5F1E8;border:2px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-stretch:125%;font-size:15px;pointer-events:none">VS</div>
+</div>
+<sc-if value="{{ duel.voted }}" hint-placeholder-val="{{ false }}"><div style="padding:0 14px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:11px;font-weight:700">{{ duel.note }}</span><button onClick="{{ duel.next }}" style="flex:none;font:900 11px 'Archivo',sans-serif;text-transform:uppercase;border:2px solid #16130F;border-radius:999px;padding:7px 12px;background:#16130F;color:#F5F1E8;cursor:pointer">Próximo duelo →</button></div></sc-if>
+<sc-if value="{{ duel.notVoted }}" hint-placeholder-val="{{ true }}"><div style="padding:0 14px 14px;font-size:11px;font-weight:700">Toque num lado pra votar</div></sc-if>
+</div>
+</div>
+<div style="padding:18px 16px 0">
+<div style="border:2px solid #16130F;border-radius:12px;overflow:hidden;background:#FFFDF8;box-shadow:4px 4px 0 #16130F">
+<div style="background:#F4A814;padding:14px 14px 12px;border-bottom:2px solid #16130F;display:flex;flex-direction:column;gap:6px">
+<div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase">Debate da semana · Warcraft</div>
+<div onClick="{{ openCata }}" style="font-weight:900;font-stretch:125%;font-size:28px;line-height:.9;text-transform:uppercase;cursor:pointer">O Cataclismo</div>
+<div style="font-size:13px;font-weight:600;line-height:1.35">Deathwing rasga Azeroth ao meio. O que isso foi pra lore?</div>
+</div>
+<div style="padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ poll }}" as="o" hint-placeholder-count="3">
+<div onClick="{{ o.vote }}" style="position:relative;border:2px solid #16130F;border-radius:8px;height:40px;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:#FFFDF8">
+<div style="position:absolute;left:0;top:0;bottom:0;width:{{ o.w }};background:{{ o.fill }};transition:width .5s cubic-bezier(.2,.8,.2,1)"></div>
+<span style="position:relative;font-weight:800;font-size:13px">{{ o.label }}</span>
+<span style="position:relative;font-weight:900;font-size:13px">{{ o.pct }}</span>
+</div>
+</sc-for>
+<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700"><span>{{ pollNote }}</span><span onClick="{{ openCata }}" style="text-decoration:underline;cursor:pointer">{{ pollComments }}</span></div>
+</div>
+</div>
+</div>
+
+<div style="padding:26px 16px 0">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><div style="font-weight:900;font-stretch:115%;font-size:20px;text-transform:uppercase">Do seu pessoal</div><span style="font-size:11px;font-weight:700">{{ followingLabel }}</span></div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<sc-for list="{{ feed }}" as="f" hint-placeholder-count="3">
+<div style="background:#FFFDF8;border:2px solid #16130F;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;box-shadow:3px 3px 0 #16130F">
+<div style="display:flex;gap:12px">
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:7px">
+<div style="display:flex;align-items:center;gap:8px">
+<div onClick="{{ f.openUser }}" style="width:28px;height:28px;flex:none;border-radius:50%;background:{{ f.avBg }};color:{{ f.avInk }};border:2px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:10px;cursor:pointer">{{ f.ini }}</div>
+<div style="font-size:12px;line-height:1.25"><b onClick="{{ f.openUser }}" style="font-weight:800;cursor:pointer">{{ f.name }}</b> <span style="font-size:8px;font-weight:900;letter-spacing:.06em;background:{{ f.bc }};color:{{ f.bInk }};border:1.5px solid #16130F;border-radius:3px;padding:0 4px;vertical-align:2px;white-space:nowrap">{{ f.badge }}</span> {{ f.verb }} <span onClick="{{ f.openTarget }}" style="font-weight:800;text-decoration:underline;cursor:pointer">{{ f.target }}</span></div>
+</div>
+<div style="font-size:15px;letter-spacing:1px;color:{{ f.starC }};font-weight:900;-webkit-text-stroke:.5px #16130F">{{ f.stars }}</div>
+<div onClick="{{ f.reveal }}" style="position:relative;cursor:pointer">
+<div onClick="{{ f.openThread }}" style="font-size:13px;line-height:1.4;filter:{{ f.blur }};text-wrap:pretty">{{ f.text }}</div>
+<sc-if value="{{ f.isHidden }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="background:#16130F;color:#F5F1E8;font-size:10px;font-weight:800;letter-spacing:.1em;padding:5px 9px;border-radius:999px">SPOILER · TOQUE PARA VER</span></div></sc-if>
+</div>
+</div>
+<div onClick="{{ f.openTarget }}" style="flex:none;width:58px;height:87px;border:2px solid #16130F;border-radius:6px;background-color:{{ f.pBg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;color:{{ f.pInk }};padding:5px;box-sizing:border-box;display:flex;align-items:flex-end;cursor:pointer"><span style="font-weight:900;font-size:8px;line-height:1;text-transform:uppercase;overflow-wrap:anywhere;min-width:0">{{ f.target }}</span></div>
+</div>
+<div style="display:flex;gap:8px;align-items:center;border-top:1.5px solid rgba(22,19,15,.15);padding-top:9px">
+<button onClick="{{ f.like }}" style="font:800 12px 'Archivo',sans-serif;border:2px solid #16130F;border-radius:999px;padding:5px 11px;background:{{ f.likeBg }};color:{{ f.likeFg }};cursor:pointer">♥ {{ f.likes }}</button>
+<button onClick="{{ f.openThread }}" style="font:800 12px 'Archivo',sans-serif;border:2px solid #16130F;border-radius:999px;padding:5px 11px;background:#FFFDF8;color:#16130F;cursor:pointer">{{ f.cLabel }}</button>
+<span style="margin-left:auto;font-size:11px;font-weight:700">{{ f.when }}</span>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<sc-if value="{{ feedEmpty }}" hint-placeholder-val="{{ false }}"><div style="margin:14px 16px 0;padding:22px 18px;border:2px dashed #16130F;border-radius:12px;display:flex;flex-direction:column;gap:8px"><div style="font-weight:900;font-stretch:115%;font-size:20px;text-transform:uppercase;line-height:.95">Silêncio no multiverso</div><div style="font-size:13px;font-weight:500;line-height:1.4">Seu feed ganha vida quando você segue gente. Comece pelos loristas abaixo.</div></div></sc-if>
+<div style="padding:24px 16px 0">
+<div style="font-weight:900;font-stretch:115%;font-size:20px;text-transform:uppercase;margin-bottom:4px">Loristas pra seguir</div>
+<div style="font-size:12px;font-weight:600;margin-bottom:12px">Quanto mais gente você segue, melhor fica o seu feed.</div>
+<div style="display:flex;gap:10px;overflow-x:auto;margin:0 -16px;padding:0 16px 8px">
+<sc-for list="{{ suggest }}" as="s" hint-placeholder-count="3">
+<div style="flex:none;width:138px;background:#FFFDF8;border:2px solid #16130F;border-radius:12px;padding:12px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">
+<div onClick="{{ s.open }}" style="width:52px;height:52px;border-radius:50%;background:{{ s.avBg }};color:{{ s.avInk }};border:2px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;cursor:pointer">{{ s.ini }}</div>
+<div style="font-weight:800;font-size:13px">{{ s.name }}</div>
+<div style="font-size:10px;font-weight:600;line-height:1.3;min-height:26px">{{ s.bio }}</div><div style="font-size:10px;font-weight:900;background:{{ s.bc }};color:{{ s.bInk }};border:1.5px solid #16130F;border-radius:4px;padding:2px 6px">{{ s.compat }} afinidade</div>
+<button onClick="{{ s.follow }}" style="width:100%;height:34px;border:2px solid #16130F;border-radius:8px;background:{{ s.fBg }};color:{{ s.fFg }};font:800 11px 'Archivo',sans-serif;text-transform:uppercase;cursor:pointer">{{ s.fLabel }}</button>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<!-- SEARCH -->
+<sc-if value="{{ sSearch }}" hint-placeholder-val="{{ false }}">
+<div style="padding:4px 16px 0;display:flex;flex-direction:column;gap:14px">
+<div style="font-weight:900;font-stretch:125%;font-size:30px;line-height:.9">BUSCA</div>
+<div style="display:flex;align-items:center;gap:8px;background:#FFFDF8;border:2px solid #16130F;border-radius:12px;padding:0 12px;height:48px;box-shadow:3px 3px 0 #16130F">
+<span style="font-weight:900;font-size:16px">⌕</span>
+<input value="{{ query }}" onChange="{{ onQuery }}" placeholder="Obra, personagem, evento, pessoa…" style="flex:1;border:0;outline:none;background:transparent;font:600 15px 'Archivo',sans-serif;color:#16130F;min-width:0">
+</div>
+<div style="display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px 4px">
+<sc-for list="{{ filters }}" as="c" hint-placeholder-count="5">
+<button onClick="{{ c.pick }}" style="flex:none;font:800 12px 'Archivo',sans-serif;border:2px solid #16130F;border-radius:999px;padding:8px 13px;background:{{ c.bg }};color:{{ c.fg }};cursor:pointer">{{ c.label }}</button>
+</sc-for>
+</div>
+<div style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">{{ resultsLabel }}</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ results }}" as="r" hint-placeholder-count="5">
+<div onClick="{{ r.open }}" style="display:flex;gap:12px;align-items:center;background:#FFFDF8;border:2px solid #16130F;border-radius:10px;padding:8px;cursor:pointer">
+<div style="flex:none;width:44px;height:{{ r.ph }};border:2px solid #16130F;border-radius:{{ r.pr }};background:{{ r.bg }};color:{{ r.ink }};display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px">{{ r.ini }}</div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+<div style="font-weight:800;font-size:14px;line-height:1.2">{{ r.title }}</div>
+<div style="font-size:11px;font-weight:600">{{ r.meta }}</div>
+</div>
+<span style="flex:none;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:{{ r.c }};color:{{ r.cInk }};border:2px solid #16130F;border-radius:999px;padding:3px 8px">{{ r.type }}</span>
+</div>
+</sc-for>
+<sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}"><div style="padding:30px 0;text-align:center;font-weight:700;font-size:14px">Nada nesse canto do multiverso.</div></sc-if>
+</div>
+</div>
+</sc-if>
+
+<!-- ACTIVITY -->
+<sc-if value="{{ sActivity }}" hint-placeholder-val="{{ false }}">
+<div style="padding:4px 16px 0;display:flex;flex-direction:column;gap:4px">
+<div style="font-weight:900;font-stretch:125%;font-size:30px;line-height:.9">ATIVIDADE</div>
+<div style="font-size:12px;font-weight:600">O que o pessoal fez com o que você postou.</div>
+</div>
+<div style="padding:16px 16px 0;display:flex;flex-direction:column">
+<sc-for list="{{ notifs }}" as="n" hint-placeholder-count="5">
+<div onClick="{{ n.open }}" style="display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-bottom:1.5px solid rgba(22,19,15,.15);cursor:pointer">
+<div style="flex:none;width:34px;height:34px;border-radius:50%;background:{{ n.avBg }};color:{{ n.avInk }};border:2px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px">{{ n.ini }}</div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+<div style="font-size:13px;line-height:1.3"><b style="font-weight:800">{{ n.name }}</b> {{ n.text }} <b style="font-weight:800">{{ n.target }}</b></div>
+<sc-if value="{{ n.hasQuote }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;line-height:1.35;border-left:3px solid #16130F;padding-left:8px;font-weight:500">{{ n.quote }}</div></sc-if>
+<div style="font-size:11px;font-weight:700">{{ n.when }}</div>
+</div>
+<sc-if value="{{ n.hasFollow }}" hint-placeholder-val="{{ false }}"><button onClick="{{ n.follow }}" style="flex:none;height:32px;padding:0 12px;border:2px solid #16130F;border-radius:8px;background:{{ n.fBg }};color:{{ n.fFg }};font:800 11px 'Archivo',sans-serif;text-transform:uppercase;cursor:pointer">{{ n.fLabel }}</button></sc-if>
+<sc-if value="{{ n.hasPoster }}" hint-placeholder-val="{{ false }}"><div style="flex:none;width:30px;height:45px;border:2px solid #16130F;border-radius:4px;background-color:{{ n.pBg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px"></div></sc-if>
+</div>
+</sc-for>
+</div>
+<div style="padding:26px 16px 0">
+<div style="font-weight:900;font-stretch:115%;font-size:18px;text-transform:uppercase;margin-bottom:12px">Top loristas da semana</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ leaders }}" as="s" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:10px;background:#FFFDF8;border:2px solid #16130F;border-radius:10px;padding:8px 10px">
+<div style="flex:none;width:22px;font-weight:900;font-size:18px">{{ s.rank }}</div>
+<div onClick="{{ s.open }}" style="flex:none;width:32px;height:32px;border-radius:50%;background:{{ s.avBg }};color:{{ s.avInk }};border:2px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;cursor:pointer">{{ s.ini }}</div>
+<div onClick="{{ s.open }}" style="flex:1;min-width:0;cursor:pointer"><div style="font-weight:800;font-size:13px">{{ s.name }}</div><div style="font-size:11px;font-weight:600">{{ s.score }}</div></div>
+<button onClick="{{ s.follow }}" style="flex:none;height:30px;padding:0 10px;border:2px solid #16130F;border-radius:8px;background:{{ s.fBg }};color:{{ s.fFg }};font:800 10px 'Archivo',sans-serif;text-transform:uppercase;cursor:pointer">{{ s.fLabel }}</button>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<!-- DIARY -->
+<sc-if value="{{ sDiary }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 16px;display:flex;flex-direction:column;gap:6px">
+<div style="font-weight:900;font-stretch:125%;font-size:30px;line-height:.9">DIÁRIO</div>
+<div style="font-size:12px;font-weight:600">{{ diaryCount }}</div>
+</div>
+<sc-for list="{{ diary }}" as="g" hint-placeholder-count="2">
+<div style="padding:20px 16px 0">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="background:#16130F;color:#F5F1E8;font-weight:900;font-stretch:120%;font-size:13px;padding:4px 10px;border-radius:6px">{{ g.month }}</span><div style="flex:1;height:2px;background:#16130F"></div></div>
+<sc-for list="{{ g.entries }}" as="e" hint-placeholder-count="3">
+<div onClick="{{ e.open }}" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(22,19,15,.18);cursor:pointer">
+<div style="width:34px;flex:none;font-weight:900;font-stretch:110%;font-size:24px;text-align:center">{{ e.day }}</div>
+<div style="flex:none;width:34px;height:51px;border:2px solid #16130F;border-radius:4px;background-color:{{ e.bg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px"></div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><div style="font-weight:800;font-size:14px;line-height:1.15">{{ e.title }}</div><div style="font-size:11px;font-weight:600">{{ e.meta }}</div></div>
+<div style="flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:3px"><span style="font-size:13px;font-weight:900;color:{{ e.c }};letter-spacing:1px;-webkit-text-stroke:.5px #16130F">{{ e.stars }}</span><span style="font-size:11px;font-weight:800">{{ e.badges }}</span></div>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</sc-if>
+
+<!-- PROFILE -->
+<sc-if value="{{ sProfile }}" hint-placeholder-val="{{ false }}">
+<div style="margin:0 16px;background:#16130F;color:#F5F1E8;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:14px">
+<div style="width:64px;height:64px;flex:none;border-radius:50%;background:{{ pu.avBg }};color:{{ pu.avInk }};border:3px solid #F5F1E8;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px">{{ pu.ini }}</div>
+<div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+<div style="font-weight:900;font-stretch:115%;font-size:22px;text-transform:uppercase;line-height:.95">{{ pu.name }}</div>
+<div style="font-size:12px;font-weight:600">{{ pu.handle }} · {{ pu.bio }}</div>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+<sc-for list="{{ pu.stats }}" as="s" hint-placeholder-count="3">
+<div style="border:2px solid #F5F1E8;border-radius:8px;padding:8px"><div style="font-weight:900;font-size:20px;line-height:1">{{ s.n }}</div><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:3px">{{ s.l }}</div></div>
+</sc-for>
+</div>
+<sc-if value="{{ pu.notMe }}" hint-placeholder-val="{{ false }}">
+<button onClick="{{ pu.follow }}" style="height:44px;border:2px solid #F5F1E8;border-radius:10px;background:{{ pu.fBg }};color:{{ pu.fFg }};font:900 13px 'Archivo',sans-serif;text-transform:uppercase;letter-spacing:.05em;cursor:pointer">{{ pu.fLabel }}</button>
+</sc-if>
+<sc-if value="{{ pu.isMe }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<button onClick="{{ openDiary }}" style="height:42px;border:2px solid #F5F1E8;border-radius:10px;background:#F5F1E8;color:#16130F;font:900 12px 'Archivo',sans-serif;text-transform:uppercase;cursor:pointer">Diário</button>
+<button onClick="{{ openLogBlank }}" style="height:42px;border:2px solid #F5F1E8;border-radius:10px;background:transparent;color:#F5F1E8;font:900 12px 'Archivo',sans-serif;text-transform:uppercase;cursor:pointer">+ Registrar</button>
+</div>
+</sc-if>
+</div>
+<sc-if value="{{ pu.isMe }}" hint-placeholder-val="{{ true }}"><div onClick="{{ openWrapped }}" style="margin:16px 16px 0;border:2px solid #16130F;border-radius:12px;padding:14px;cursor:pointer;display:flex;align-items:center;gap:12px;background-color:#E4412F;background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;color:#FFFDF8;box-shadow:3px 3px 0 #16130F"><div style="flex:1;display:flex;flex-direction:column;gap:3px"><div style="font-size:10px;font-weight:800;letter-spacing:.12em">MULTIVERSE WRAPPED</div><div style="font-weight:900;font-stretch:120%;font-size:22px;line-height:.9;text-transform:uppercase">Seu setembro</div></div><span style="font-weight:900;font-size:22px">→</span></div></sc-if>
+<sc-if value="{{ pu.notMe }}" hint-placeholder-val="{{ false }}">
+<div style="margin:16px 16px 0;border:2px solid #16130F;border-radius:12px;background:#FFFDF8;overflow:hidden;box-shadow:3px 3px 0 #16130F">
+<div style="display:flex;align-items:center;gap:14px;padding:14px;border-bottom:2px solid #16130F;background-color:#F4A814;background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px">
+<div style="font-weight:900;font-stretch:125%;font-size:44px;line-height:.85">{{ pu.compat }}</div>
+<div style="display:flex;flex-direction:column;gap:2px"><div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">Afinidade com você</div><div style="font-weight:800;font-size:13px;line-height:1.25">{{ pu.compatLine }}</div></div>
+</div>
+<div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ pu.compatUni }}" as="c" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:10px;font-size:12px;font-weight:800"><span style="width:62px">{{ c.name }}</span><div style="flex:1;height:10px;border:2px solid #16130F;border-radius:4px;overflow:hidden"><div style="height:100%;width:{{ c.pct }};background:{{ c.c }}"></div></div><span style="width:34px;text-align:right">{{ c.pct }}</span></div></sc-for>
+<div style="display:flex;flex-direction:column;gap:4px;margin-top:4px;font-size:12px;line-height:1.35"><div><b style="font-weight:800">Concordam em:</b> {{ pu.agree }}</div><div><b style="font-weight:800">Brigam por:</b> {{ pu.disagree }}</div></div>
+</div>
+</div>
+</sc-if>
+<div style="padding:24px 16px 0">
+<div style="font-weight:900;font-stretch:115%;font-size:18px;text-transform:uppercase;margin-bottom:12px">Cânone consumido</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ pu.progress }}" as="u" hint-placeholder-count="3">
+<div onClick="{{ u.open }}" style="cursor:pointer;display:flex;flex-direction:column;gap:5px">
+<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:800"><span>{{ u.name }}</span><span>{{ u.pctLabel }}</span></div>
+<div style="height:16px;border:2px solid #16130F;border-radius:5px;background:#FFFDF8;overflow:hidden"><div style="height:100%;width:{{ u.pctLabel }};background-color:{{ u.c }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;border-right:2px solid #16130F"></div></div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="padding:26px 16px 0">
+<div style="font-weight:900;font-stretch:115%;font-size:18px;text-transform:uppercase;margin-bottom:12px">Selos</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+<sc-for list="{{ pu.badges }}" as="b" hint-placeholder-count="3">
+<div style="border:2px {{ b.bs }} #16130F;border-radius:12px;padding:14px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;background:#FFFDF8;opacity:{{ b.op }}">
+<div style="width:38px;height:38px;transform:rotate(45deg);border:2px solid #16130F;background:{{ b.c }};display:flex;align-items:center;justify-content:center;margin-bottom:4px"><span style="transform:rotate(-45deg);font-weight:900;font-size:14px;color:{{ b.cInk }}">{{ b.mark }}</span></div>
+<div style="font-weight:900;font-size:11px;line-height:1.1;text-transform:uppercase">{{ b.title }}</div>
+<div style="font-size:10px;font-weight:600">{{ b.sub }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="padding:26px 16px 0">
+<div style="font-weight:900;font-stretch:115%;font-size:18px;text-transform:uppercase;margin-bottom:12px">Favoritos</div>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px">
+<sc-for list="{{ pu.favs }}" as="p" hint-placeholder-count="4">
+<div onClick="{{ p.open }}" style="aspect-ratio:2/3;border:2px solid #16130F;border-radius:6px;background-color:{{ p.bg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;color:{{ p.ink }};padding:6px;box-sizing:border-box;display:flex;align-items:flex-end;cursor:pointer;box-shadow:2px 2px 0 #16130F"><span style="font-weight:900;font-size:9px;line-height:1;text-transform:uppercase;overflow-wrap:anywhere;min-width:0">{{ p.title }}</span></div>
+</sc-for>
+</div>
+</div>
+<div style="padding:26px 16px 0">
+<div style="font-weight:900;font-stretch:115%;font-size:18px;text-transform:uppercase;margin-bottom:12px">Reviews recentes</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ pu.reviews }}" as="r" hint-placeholder-count="2">
+<div onClick="{{ r.openThread }}" style="display:flex;gap:12px;background:#FFFDF8;border:2px solid #16130F;border-radius:10px;padding:10px;cursor:pointer">
+<div style="flex:none;width:40px;height:60px;border:2px solid #16130F;border-radius:4px;background-color:{{ r.pBg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px"></div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+<div style="display:flex;justify-content:space-between;gap:8px"><span style="font-weight:800;font-size:13px">{{ r.target }}</span><span style="color:{{ r.starC }};font-weight:900;font-size:12px;-webkit-text-stroke:.5px #16130F;flex:none">{{ r.stars }}</span></div>
+<div style="font-size:12px;line-height:1.35;filter:{{ r.blur }};display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ r.text }}</div>
+<div style="font-size:11px;font-weight:800">♥ {{ r.likes }} · {{ r.cLabel }}</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+<sc-if value="{{ pu.isMe }}" hint-placeholder-val="{{ true }}">
+<div style="padding:26px 16px 0">
+<div style="font-weight:900;font-stretch:115%;font-size:18px;text-transform:uppercase;margin-bottom:12px">Listas</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ lists }}" as="l" hint-placeholder-count="3">
+<div onClick="{{ l.open }}" style="background:#FFFDF8;border:2px solid #16130F;border-radius:12px;padding:12px;display:flex;gap:12px;align-items:center;cursor:pointer;box-shadow:3px 3px 0 #16130F">
+<div style="flex:none;display:flex"><sc-for list="{{ l.stack }}" as="s" hint-placeholder-count="4"><div style="width:34px;height:51px;margin-right:-14px;border:2px solid #16130F;border-radius:4px;background-color:{{ s.bg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px"></div></sc-for></div>
+<div style="flex:1;min-width:0;padding-left:18px;display:flex;flex-direction:column;gap:3px"><div style="font-weight:800;font-size:14px;line-height:1.2">{{ l.title }}</div><div style="font-size:11px;font-weight:600">{{ l.meta }}</div></div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+</sc-if>
+
+<!-- WRAPPED -->
+<sc-if value="{{ sWrapped }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 16px;display:flex;flex-direction:column;gap:12px">
+<div style="border:2px solid #16130F;border-radius:14px;padding:20px 18px;background-color:#E4412F;background-image:radial-gradient(rgba(22,19,15,.22) 1px,transparent 1.4px);background-size:7px 7px;color:#FFFDF8;box-shadow:4px 4px 0 #16130F;display:flex;flex-direction:column;gap:8px">
+<div style="font-size:11px;font-weight:800;letter-spacing:.14em">MULTIVERSE WRAPPED · SET 2026</div>
+<div style="font-weight:900;font-stretch:125%;font-size:44px;line-height:.82;text-transform:uppercase">Seu mês no cânone</div>
+<div style="font-size:13px;font-weight:700">@duda.lore</div>
+</div>
+<div style="display:grid;grid-template-columns:1.2fr 1fr;gap:12px">
+<div style="border:2px solid #16130F;border-radius:14px;padding:14px;background:#FFFDF8;display:flex;flex-direction:column;justify-content:space-between;min-height:150px"><div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">Registros</div><div style="font-weight:900;font-stretch:125%;font-size:72px;line-height:.8">{{ wr.count }}</div><div style="font-size:11px;font-weight:700">{{ wr.delta }}</div></div>
+<div style="border:2px solid #16130F;border-radius:14px;padding:14px;background:#16130F;color:#F5F1E8;display:flex;flex-direction:column;justify-content:space-between"><div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">Horas de lore</div><div style="font-weight:900;font-stretch:125%;font-size:44px;line-height:.85">{{ wr.hours }}</div><div style="font-size:11px;font-weight:700">{{ wr.hoursNote }}</div></div>
+</div>
+<div style="border:2px solid #16130F;border-radius:14px;padding:16px;background-color:{{ wr.uc }};color:{{ wr.uInk }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;display:flex;flex-direction:column;gap:6px;box-shadow:4px 4px 0 #16130F">
+<div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase">Universo do mês</div>
+<div style="font-weight:900;font-stretch:125%;font-size:38px;line-height:.85;text-transform:uppercase">{{ wr.uni }}</div>
+<div style="font-size:13px;font-weight:700">{{ wr.uniNote }}</div>
+</div>
+<div onClick="{{ wr.openTop }}" style="border:2px solid #16130F;border-radius:14px;padding:12px;background:#FFFDF8;display:flex;gap:12px;align-items:center;cursor:pointer">
+<div style="flex:none;width:56px;height:84px;border:2px solid #16130F;border-radius:6px;background-color:{{ wr.topBg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px"></div>
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0"><div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">Nota mais alta</div><div style="font-weight:900;font-size:17px;line-height:1;text-transform:uppercase">{{ wr.top }}</div><div style="font-size:14px;font-weight:900;color:{{ wr.topC }};-webkit-text-stroke:.5px #16130F">{{ wr.topStars }}</div></div>
+</div>
+<div style="border:2px solid #16130F;border-radius:14px;padding:14px;background:#2E5BE8;color:#FFFDF8;display:flex;flex-direction:column;gap:6px">
+<div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase">Seu arquétipo</div>
+<div style="font-weight:900;font-stretch:125%;font-size:30px;line-height:.85;text-transform:uppercase">{{ wr.arch }}</div>
+<div style="font-size:13px;font-weight:600;line-height:1.35">{{ wr.archNote }}</div>
+</div>
+<div style="border:2px solid #16130F;border-radius:14px;padding:14px;background:#FFFDF8;display:flex;flex-direction:column;gap:6px"><div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">Review mais curtida</div><div style="font-size:14px;line-height:1.4;font-weight:600">“{{ wr.rev }}”</div><div style="font-size:12px;font-weight:800">♥ {{ wr.revLikes }} · {{ wr.revWork }}</div></div>
+<button onClick="{{ wr.share }}" style="height:54px;border:2px solid #16130F;border-radius:12px;background:#16130F;color:#F5F1E8;font:900 15px 'Archivo',sans-serif;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;box-shadow:3px 3px 0 #E4412F">Compartilhar nos stories</button>
+</div>
+</sc-if>
+
+<!-- UNIVERSE -->
+<sc-if value="{{ sUni }}" hint-placeholder-val="{{ false }}">
+<div style="margin:0 16px;background-color:{{ u.c }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;color:{{ u.ink }};border:2px solid #16130F;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px;box-shadow:4px 4px 0 #16130F">
+<div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase">Universo · {{ u.canon }}</div>
+<div style="font-weight:900;font-stretch:125%;font-size:40px;line-height:.85;text-transform:uppercase">{{ u.name }}</div>
+<div style="font-size:13px;font-weight:600;line-height:1.35;text-wrap:pretty">{{ u.tagline }}</div>
+<div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+<div style="flex:1;height:10px;background:{{ u.track }};border-radius:5px;overflow:hidden"><div style="height:100%;width:{{ u.pctLabel }};background:{{ u.ink }}"></div></div>
+<span style="font-weight:900;font-size:14px">{{ u.pctLabel }} visto</span>
+</div>
+</div>
+<div style="display:flex;gap:6px;padding:16px 16px 0;overflow-x:auto">
+<sc-for list="{{ uniTabs }}" as="t" hint-placeholder-count="4">
+<button onClick="{{ t.pick }}" style="flex:none;font:800 12px 'Archivo',sans-serif;text-transform:uppercase;letter-spacing:.04em;border:2px solid #16130F;border-radius:8px;padding:8px 11px;background:{{ t.bg }};color:{{ t.fg }};cursor:pointer">{{ t.label }}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{ uGeral }}" hint-placeholder-val="{{ true }}">
+<div style="padding:16px 16px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+<sc-for list="{{ u.stats }}" as="s" hint-placeholder-count="3">
+<div style="background:#FFFDF8;border:2px solid #16130F;border-radius:8px;padding:8px"><div style="font-weight:900;font-size:20px;line-height:1">{{ s.n }}</div><div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-top:3px">{{ s.l }}</div></div>
+</sc-for>
+</div>
+<div style="padding:22px 0 0">
+<div style="padding:0 16px;font-weight:900;font-stretch:115%;font-size:18px;text-transform:uppercase;margin-bottom:10px">Mais bem avaliados</div>
+<div style="display:flex;gap:12px;overflow-x:auto;padding:0 16px 8px">
+<sc-for list="{{ uWorks }}" as="p" hint-placeholder-count="4">
+<div onClick="{{ p.open }}" style="flex:none;width:96px;cursor:pointer;display:flex;flex-direction:column;gap:6px">
+<div style="height:144px;border:2px solid #16130F;border-radius:8px;background-color:{{ p.bg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;color:{{ p.ink }};padding:8px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;box-shadow:3px 3px 0 #16130F">
+<span style="font:700 8px ui-monospace,Menlo,monospace">CAPA · {{ p.typeU }}</span>
+<span style="font-weight:900;font-stretch:95%;font-size:12px;line-height:.95;text-transform:uppercase;overflow-wrap:anywhere;hyphens:auto" lang="pt">{{ p.title }}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:11px;font-weight:800">{{ p.avgLabel }}</span><span style="font-size:10px;font-weight:600">{{ p.countLabel }}</span></div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="padding:18px 16px 0">
+<div style="font-weight:900;font-stretch:115%;font-size:18px;text-transform:uppercase;margin-bottom:10px">Reviews populares</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ uReviews }}" as="r" hint-placeholder-count="2">
+<div style="background:#FFFDF8;border:2px solid #16130F;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:8px">
+<div onClick="{{ r.openUser }}" style="width:26px;height:26px;flex:none;border-radius:50%;background:{{ r.avBg }};color:{{ r.avInk }};border:2px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:9px;cursor:pointer">{{ r.ini }}</div>
+<div style="flex:1;min-width:0;font-size:12px;line-height:1.2"><b style="font-weight:800">{{ r.name }}</b> sobre <span onClick="{{ r.openTarget }}" style="font-weight:800;text-decoration:underline;cursor:pointer">{{ r.target }}</span></div>
+<span style="color:{{ r.starC }};font-weight:900;font-size:13px;-webkit-text-stroke:.5px #16130F;flex:none">{{ r.stars }}</span>
+</div>
+<div onClick="{{ r.reveal }}" style="position:relative;cursor:pointer"><div onClick="{{ r.openThread }}" style="font-size:13px;line-height:1.4;filter:{{ r.blur }};text-wrap:pretty">{{ r.text }}</div><sc-if value="{{ r.isHidden }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="background:#16130F;color:#F5F1E8;font-size:10px;font-weight:800;letter-spacing:.1em;padding:5px 9px;border-radius:999px">SPOILER · TOQUE PARA VER</span></div></sc-if></div>
+<div style="display:flex;gap:8px;align-items:center"><button onClick="{{ r.like }}" style="font:800 12px 'Archivo',sans-serif;border:2px solid #16130F;border-radius:999px;padding:5px 11px;background:{{ r.likeBg }};color:{{ r.likeFg }};cursor:pointer">♥ {{ r.likes }}</button><button onClick="{{ r.openThread }}" style="font:800 12px 'Archivo',sans-serif;border:2px solid #16130F;border-radius:999px;padding:5px 11px;background:#FFFDF8;color:#16130F;cursor:pointer">{{ r.cLabel }}</button></div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ uLinha }}" hint-placeholder-val="{{ false }}">
+<div style="padding:16px 16px 0"><div style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Onde seu pessoal está</div><div style="display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px 4px">
+<sc-for list="{{ tlFriends }}" as="f" hint-placeholder-count="4"><div onClick="{{ f.open }}" style="flex:none;display:flex;align-items:center;gap:6px;border:2px solid #16130F;border-radius:999px;padding:3px 10px 3px 3px;background:#FFFDF8;cursor:pointer"><div style="width:24px;height:24px;border-radius:50%;background:{{ f.avBg }};color:{{ f.avInk }};border:1.5px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:9px">{{ f.ini }}</div><span style="font-size:11px;font-weight:800;white-space:nowrap">{{ f.where }}</span></div></sc-for>
+</div></div>
+<div style="padding:18px 16px 0;display:flex;flex-direction:column">
+<sc-for list="{{ timeline }}" as="t" hint-placeholder-count="5">
+<div onClick="{{ t.open }}" style="display:flex;gap:14px;cursor:pointer">
+<div style="flex:none;width:22px;display:flex;flex-direction:column;align-items:center">
+<div style="width:20px;height:20px;border:2px solid #16130F;border-radius:50%;background:{{ t.dot }};box-sizing:border-box;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:{{ t.dotInk }}">{{ t.mark }}</div>
+<div style="flex:1;width:2px;background:#16130F;min-height:20px"></div>
+</div>
+<div style="flex:1;min-width:0;padding-bottom:20px;display:flex;flex-direction:column;gap:4px">
+<div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">{{ t.when }}</div>
+<div style="font-weight:900;font-stretch:110%;font-size:17px;line-height:1;text-transform:uppercase">{{ t.title }}</div>
+<div style="display:flex;gap:6px;align-items:center;font-size:11px;font-weight:600;flex-wrap:wrap"><span style="border:1.5px solid #16130F;border-radius:4px;padding:1px 6px;font-weight:800">{{ t.type }}</span>{{ t.note }} · {{ t.avgLabel }}</div><sc-if value="{{ t.hasFr }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;margin-top:2px"><sc-for list="{{ t.fr }}" as="a" hint-placeholder-count="3"><div style="width:22px;height:22px;margin-right:-6px;border-radius:50%;background:{{ a.avBg }};color:{{ a.avInk }};border:1.5px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:8px">{{ a.ini }}</div></sc-for><span style="margin-left:12px;font-size:10px;font-weight:700">{{ t.frLabel }}</span></div></sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ uOrdens }}" hint-placeholder-val="{{ false }}">
+<div style="padding:18px 16px 0;display:flex;flex-direction:column;gap:12px">
+<div style="font-size:13px;font-weight:600;line-height:1.4">Ordens montadas e votadas pela comunidade. A mais votada sobe pro topo.</div>
+<sc-for list="{{ uOrders }}" as="o" hint-placeholder-count="2">
+<div style="background:#FFFDF8;border:2px solid #16130F;border-radius:12px;padding:12px;display:flex;gap:12px;box-shadow:3px 3px 0 #16130F">
+<button onClick="{{ o.vote }}" style="flex:none;width:52px;border:2px solid #16130F;border-radius:10px;background:{{ o.vBg }};color:{{ o.vFg }};font:900 12px 'Archivo',sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><span style="font-size:16px">▲</span>{{ o.votes }}</button>
+<div onClick="{{ o.open }}" style="flex:1;min-width:0;cursor:pointer;display:flex;flex-direction:column;gap:7px">
+<div style="font-weight:900;font-stretch:112%;font-size:17px;line-height:1;text-transform:uppercase">{{ o.title }}</div>
+<div style="font-size:11px;font-weight:600">{{ o.meta }}</div>
+<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:8px;border:2px solid #16130F;border-radius:4px;overflow:hidden"><div style="height:100%;width:{{ o.pct }};background:{{ o.c }}"></div></div><span style="font-weight:900;font-size:11px">{{ o.doneLabel }}</span></div>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ uPers }}" hint-placeholder-val="{{ false }}">
+<div style="padding:18px 16px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+<sc-for list="{{ uChars }}" as="c" hint-placeholder-count="3">
+<div onClick="{{ c.open }}" style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">
+<div style="width:92px;height:92px;border-radius:50%;border:2px solid #16130F;background-color:{{ c.bg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px;box-sizing:border-box;box-shadow:3px 3px 0 #16130F"><span style="font:700 8px ui-monospace,Menlo,monospace;color:{{ c.ink }}">RETRATO</span></div>
+<div style="font-weight:800;font-size:13px;line-height:1.15">{{ c.title }}</div>
+<div style="font-size:11px;font-weight:700">{{ c.avgLabel }} · {{ c.countLabel }}</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</sc-if>
+
+<!-- WORK -->
+<sc-if value="{{ sWork }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 16px;display:flex;gap:14px">
+<div style="flex:none;width:118px;height:177px;border:2px solid #16130F;border-radius:10px;background-color:{{ w.bg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;color:{{ w.ink }};padding:10px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;box-shadow:4px 4px 0 #16130F">
+<span style="font:700 9px ui-monospace,Menlo,monospace">{{ w.phLabel }}</span>
+<span style="font-weight:900;font-stretch:100%;font-size:15px;line-height:.92;text-transform:uppercase;overflow-wrap:anywhere;hyphens:auto" lang="pt">{{ w.title }}</span>
+</div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding-top:2px">
+<div onClick="{{ w.openUni }}" style="align-self:flex-start;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;background:{{ w.c }};color:{{ w.cInk }};border:2px solid #16130F;border-radius:999px;padding:3px 9px;cursor:pointer">{{ w.uniName }}</div>
+<div style="font-weight:900;font-stretch:105%;font-size:22px;line-height:.92;text-transform:uppercase;text-wrap:balance;overflow-wrap:anywhere;hyphens:auto" lang="pt">{{ w.title }}</div>
+<div style="font-size:12px;font-weight:700">{{ w.type }} · {{ w.year }} · {{ w.canon }}</div>
+<div style="display:flex;align-items:baseline;gap:6px;margin-top:auto"><span style="font-weight:900;font-size:30px;line-height:1">{{ w.avg }}</span><span style="font-size:11px;font-weight:700">{{ w.countLabel }}</span></div>
+</div>
+</div>
+<div style="padding:16px 16px 0;display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px">
+<button onClick="{{ w.log }}" style="height:46px;border:2px solid #16130F;border-radius:10px;background:{{ w.c }};color:{{ w.cInk }};font:900 13px 'Archivo',sans-serif;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;box-shadow:3px 3px 0 #16130F">{{ w.logLabel }}</button>
+<button onClick="{{ w.toggleWant }}" style="height:46px;border:2px solid #16130F;border-radius:10px;background:{{ w.wantBg }};color:{{ w.wantFg }};font:800 11px 'Archivo',sans-serif;text-transform:uppercase;cursor:pointer">{{ w.wantLabel }}</button>
+<button onClick="{{ w.toggleLike }}" style="height:46px;border:2px solid #16130F;border-radius:10px;background:{{ w.likeBg }};color:{{ w.likeFg }};font:800 11px 'Archivo',sans-serif;text-transform:uppercase;cursor:pointer">♥ Curtir</button>
+</div>
+<sc-if value="{{ w.hasMine }}" hint-placeholder-val="{{ false }}"><div style="margin:10px 16px 0;font-size:12px;font-weight:700">Sua nota: <span style="color:{{ w.c }};font-size:15px;letter-spacing:1px;font-weight:900;-webkit-text-stroke:.5px #16130F">{{ w.mine }}</span></div></sc-if>
+
+<sc-if value="{{ w.hasFriends }}" hint-placeholder-val="{{ true }}">
+<div style="margin:18px 16px 0;border:2px solid #16130F;border-radius:12px;background:#FFFDF8;padding:12px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">Amigos que registraram</span><span style="font-size:11px;font-weight:800">média deles {{ w.friendAvg }}</span></div>
+<div style="display:flex;gap:12px;overflow-x:auto">
+<sc-for list="{{ w.friends }}" as="f" hint-placeholder-count="4">
+<div onClick="{{ f.open }}" style="flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;width:48px">
+<div style="width:40px;height:40px;border-radius:50%;background:{{ f.avBg }};color:{{ f.avInk }};border:2px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px">{{ f.ini }}</div>
+<span style="font-size:10px;font-weight:900;color:{{ w.c }};-webkit-text-stroke:.4px #16130F;white-space:nowrap">{{ f.stars }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<div style="padding:16px 16px 0;font-size:14px;line-height:1.45;font-weight:500;text-wrap:pretty">{{ w.desc }}</div>
+<div style="margin:16px 16px 0;border:2px solid #16130F;border-radius:12px;background:#FFFDF8;padding:12px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:10px"><span style="flex:none;font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;background:{{ w.csBg }};color:{{ w.csFg }};border:2px solid #16130F;border-radius:4px;padding:3px 8px;transform:rotate(-2deg)">{{ w.cs }}</span><span style="font-size:12px;font-weight:600;line-height:1.3;flex:1">{{ w.csNote }}</span></div>
+<div style="font-weight:800;font-size:13px">Conta como cânone pra você?</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
+<sc-for list="{{ w.canonVote }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.vote }}" style="height:48px;border:2px solid #16130F;border-radius:8px;background:{{ o.bg }};color:{{ o.fg }};font:800 12px 'Archivo',sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0 4px">{{ o.label }}<span style="font-size:13px;font-weight:900">{{ o.pct }}</span></button></sc-for>
+</div>
+</div>
+
+<div style="margin:18px 16px 0;border:2px solid #16130F;border-radius:12px;background:#FFFDF8;overflow:hidden">
+<div style="padding:10px 12px;border-bottom:2px solid #16130F;display:flex;justify-content:space-between;align-items:baseline;background:{{ w.c }};color:{{ w.cInk }}"><span style="font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase">Voto da comunidade</span><span style="font-size:11px;font-weight:700">{{ w.debateTotal }}</span></div>
+<div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+<div style="font-weight:800;font-size:14px">Essencial pra entender {{ w.uniName }}?</div>
+<sc-for list="{{ w.debate }}" as="o" hint-placeholder-count="3">
+<div onClick="{{ o.vote }}" style="position:relative;border:2px solid #16130F;border-radius:8px;height:36px;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:0 12px">
+<div style="position:absolute;left:0;top:0;bottom:0;width:{{ o.w }};background:{{ o.fill }};transition:width .5s cubic-bezier(.2,.8,.2,1)"></div>
+<span style="position:relative;font-weight:800;font-size:13px">{{ o.label }}</span><span style="position:relative;font-weight:900;font-size:13px">{{ o.pct }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="padding:20px 16px 0">
+<div style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Notas da comunidade</div>
+<div style="display:flex;align-items:flex-end;gap:4px;height:60px;border-bottom:2px solid #16130F">
+<sc-for list="{{ w.hist }}" as="h" hint-placeholder-count="10"><div style="flex:1;height:{{ h.h }};background:{{ h.c }};border:2px solid #16130F;border-bottom:0;border-radius:3px 3px 0 0"></div></sc-for>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-top:4px"><span>½</span><span>★★★★★</span></div>
+</div>
+
+<sc-if value="{{ w.hasPlace }}" hint-placeholder-val="{{ true }}">
+<div style="margin:20px 16px 0;border:2px solid #16130F;border-radius:12px;background:#FFFDF8;overflow:hidden">
+<div style="padding:10px 12px;border-bottom:2px solid #16130F;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">Na linha do tempo</span><span onClick="{{ w.openTL }}" style="font-size:11px;font-weight:800;text-decoration:underline;cursor:pointer">Ver tudo</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr">
+<sc-for list="{{ w.place }}" as="p" hint-placeholder-count="3">
+<div onClick="{{ p.open }}" style="padding:10px;background:{{ p.bg }};color:{{ p.fg }};border-right:{{ p.br }};cursor:pointer;display:flex;flex-direction:column;gap:3px;min-width:0">
+<span style="font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase">{{ p.label }}</span><span style="font-weight:800;font-size:12px;line-height:1.15">{{ p.title }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ w.hasConn }}" hint-placeholder-val="{{ true }}">
+<div style="padding:20px 16px 0">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">Mapa de conexões</span><span style="font-size:11px;font-weight:700">toque pra navegar</span></div>
+<div style="position:relative;height:270px;border:2px solid #16130F;border-radius:12px;overflow:hidden;background-color:#FFFDF8;background-image:radial-gradient(rgba(22,19,15,.12) 1px,transparent 1.3px);background-size:10px 10px">
+<sc-for list="{{ w.edges }}" as="e" hint-placeholder-count="4"><div style="position:absolute;left:{{ e.x }};top:{{ e.y }};width:{{ e.len }};height:2px;background:#16130F;transform-origin:0 50%;transform:{{ e.rot }}"></div></sc-for>
+<sc-for list="{{ w.nodes }}" as="n" hint-placeholder-count="4">
+<div onClick="{{ n.open }}" style="position:absolute;left:{{ n.x }};top:{{ n.y }};transform:{{ n.tf }};display:flex;flex-direction:column;align-items:center;gap:4px;width:88px;cursor:pointer">
+<div style="width:{{ n.s }};height:{{ n.s }};border-radius:{{ n.r }};border:2px solid #16130F;background-color:{{ n.bg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;box-shadow:2px 2px 0 #16130F;display:flex;align-items:center;justify-content:center;color:{{ n.ink }};font-weight:900;font-size:9px;box-sizing:border-box">{{ n.kind }}</div>
+<span style="font-size:10px;font-weight:800;line-height:1.05;text-align:center;background:#FFFDF8;padding:1px 3px;border-radius:3px">{{ n.title }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<div style="padding:24px 16px 0">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+<div style="font-weight:900;font-stretch:115%;font-size:18px;text-transform:uppercase">Reviews</div>
+<div style="display:flex;border:2px solid #16130F;border-radius:8px;overflow:hidden">
+<sc-for list="{{ w.sorts }}" as="s" hint-placeholder-count="2"><button onClick="{{ s.pick }}" style="border:0;padding:6px 10px;background:{{ s.bg }};color:{{ s.fg }};font:800 11px 'Archivo',sans-serif;text-transform:uppercase;cursor:pointer">{{ s.label }}</button></sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ w.reviews }}" as="r" hint-placeholder-count="2">
+<div style="background:#FFFDF8;border:2px solid #16130F;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:8px">
+<div onClick="{{ r.openUser }}" style="width:26px;height:26px;flex:none;border-radius:50%;background:{{ r.avBg }};color:{{ r.avInk }};border:2px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:9px;cursor:pointer">{{ r.ini }}</div>
+<div onClick="{{ r.openUser }}" style="flex:1;min-width:0;font-size:12px;font-weight:800;cursor:pointer;display:flex;gap:6px;align-items:center">{{ r.name }}<span style="font-size:8px;font-weight:900;letter-spacing:.06em;background:{{ r.bc }};color:{{ r.bInk }};border:1.5px solid #16130F;border-radius:3px;padding:0 4px;white-space:nowrap">{{ r.badge }}</span><sc-if value="{{ r.isFriend }}" hint-placeholder-val="{{ false }}"><span style="font-size:9px;letter-spacing:.08em;border:1.5px solid #16130F;border-radius:4px;padding:1px 5px">SEGUINDO</span></sc-if></div>
+<span style="color:{{ r.starC }};font-weight:900;font-size:13px;-webkit-text-stroke:.5px #16130F;flex:none">{{ r.stars }}</span>
+</div>
+<div onClick="{{ r.reveal }}" style="position:relative;cursor:pointer"><div onClick="{{ r.openThread }}" style="font-size:13px;line-height:1.4;filter:{{ r.blur }};text-wrap:pretty">{{ r.text }}</div><sc-if value="{{ r.isHidden }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="background:#16130F;color:#F5F1E8;font-size:10px;font-weight:800;letter-spacing:.1em;padding:5px 9px;border-radius:999px">SPOILER · TOQUE PARA VER</span></div></sc-if></div>
+<div style="display:flex;gap:8px;align-items:center"><button onClick="{{ r.like }}" style="font:800 12px 'Archivo',sans-serif;border:2px solid #16130F;border-radius:999px;padding:5px 11px;background:{{ r.likeBg }};color:{{ r.likeFg }};cursor:pointer">♥ {{ r.likes }}</button><button onClick="{{ r.openThread }}" style="font:800 12px 'Archivo',sans-serif;border:2px solid #16130F;border-radius:999px;padding:5px 11px;background:#FFFDF8;color:#16130F;cursor:pointer">{{ r.cLabel }}</button><span style="margin-left:auto;font-size:11px;font-weight:700">{{ r.when }}</span></div>
+</div>
+</sc-for>
+<sc-if value="{{ w.noReviews }}" hint-placeholder-val="{{ false }}"><div style="padding:18px;text-align:center;font-size:13px;font-weight:700;border:2px dashed #16130F;border-radius:12px">Nenhum amigo escreveu sobre isso ainda. Seja o primeiro.</div></sc-if>
+</div>
+</div>
+</sc-if>
+
+<!-- REVIEW THREAD -->
+<sc-if value="{{ sReview }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ rv.openTarget }}" style="margin:0 16px;display:flex;gap:12px;align-items:center;cursor:pointer">
+<div style="flex:none;width:44px;height:66px;border:2px solid #16130F;border-radius:5px;background-color:{{ rv.pBg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px"></div>
+<div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">{{ rv.uniName }} · {{ rv.type }}</div><div style="font-weight:900;font-stretch:112%;font-size:19px;line-height:.95;text-transform:uppercase">{{ rv.target }}</div></div>
+</div>
+<div style="margin:16px 16px 0;background:#FFFDF8;border:2px solid #16130F;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:4px 4px 0 #16130F">
+<div style="display:flex;align-items:center;gap:10px">
+<div onClick="{{ rv.openUser }}" style="width:36px;height:36px;flex:none;border-radius:50%;background:{{ rv.avBg }};color:{{ rv.avInk }};border:2px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;cursor:pointer">{{ rv.ini }}</div>
+<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px;display:flex;gap:6px;align-items:center">{{ rv.name }}<span style="font-size:8px;font-weight:900;letter-spacing:.06em;background:{{ rv.bc }};color:{{ rv.bInk }};border:1.5px solid #16130F;border-radius:3px;padding:0 4px;white-space:nowrap">{{ rv.badge }}</span></div><div style="font-size:11px;font-weight:600">{{ rv.when }}</div></div>
+<span style="color:{{ rv.starC }};font-weight:900;font-size:17px;-webkit-text-stroke:.5px #16130F">{{ rv.stars }}</span>
+</div>
+<div onClick="{{ rv.reveal }}" style="position:relative;cursor:pointer"><div style="font-size:15px;line-height:1.45;filter:{{ rv.blur }};text-wrap:pretty">{{ rv.text }}</div><sc-if value="{{ rv.isHidden }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="background:#16130F;color:#F5F1E8;font-size:10px;font-weight:800;letter-spacing:.1em;padding:5px 9px;border-radius:999px">SPOILER · TOQUE PARA VER</span></div></sc-if></div>
+<div style="display:flex;gap:8px"><button onClick="{{ rv.like }}" style="font:800 13px 'Archivo',sans-serif;border:2px solid #16130F;border-radius:999px;padding:7px 14px;background:{{ rv.likeBg }};color:{{ rv.likeFg }};cursor:pointer">♥ {{ rv.likes }} curtidas</button></div>
+</div>
+<div style="padding:22px 16px 0">
+<div style="font-weight:900;font-stretch:115%;font-size:18px;text-transform:uppercase;margin-bottom:10px">{{ rv.cLabel }}</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ rv.comments }}" as="c" hint-placeholder-count="2">
+<div style="display:flex;gap:10px">
+<div onClick="{{ c.openUser }}" style="width:30px;height:30px;flex:none;border-radius:50%;background:{{ c.avBg }};color:{{ c.avInk }};border:2px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:10px;cursor:pointer">{{ c.ini }}</div>
+<div style="flex:1;min-width:0;background:#FFFDF8;border:2px solid #16130F;border-radius:4px 12px 12px 12px;padding:9px 11px;display:flex;flex-direction:column;gap:4px">
+<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800"><span>{{ c.name }}</span><span style="font-size:10px;font-weight:700">{{ c.when }}</span></div>
+<div style="font-size:13px;line-height:1.4">{{ c.text }}</div>
+</div>
+<button onClick="{{ c.like }}" style="flex:none;align-self:center;width:40px;border:0;background:transparent;font:800 12px 'Archivo',sans-serif;color:{{ c.likeC }};cursor:pointer;display:flex;flex-direction:column;align-items:center">♥<span>{{ c.likes }}</span></button>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:16px;display:flex;gap:8px;align-items:center">
+<div style="width:30px;height:30px;flex:none;border-radius:50%;background:#F4A814;border:2px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:10px">DK</div>
+<input value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onDraftKey }}" placeholder="Responder… (teorias bem-vindas)" style="flex:1;min-width:0;height:42px;border:2px solid #16130F;border-radius:999px;background:#FFFDF8;padding:0 14px;font:600 14px 'Archivo',sans-serif;color:#16130F;outline:none;box-sizing:border-box">
+<button onClick="{{ sendComment }}" style="flex:none;height:42px;padding:0 14px;border:2px solid #16130F;border-radius:999px;background:#16130F;color:#F5F1E8;font:900 12px 'Archivo',sans-serif;text-transform:uppercase;cursor:pointer">Enviar</button>
+</div>
+</div>
+</sc-if>
+
+<!-- ORDER -->
+<sc-if value="{{ sOrder }}" hint-placeholder-val="{{ false }}">
+<div style="margin:0 16px;background:{{ o.c }};color:{{ o.ink }};border:2px solid #16130F;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px;box-shadow:4px 4px 0 #16130F">
+<div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase">Ordem da comunidade · {{ o.uniName }}</div>
+<div style="font-weight:900;font-stretch:120%;font-size:28px;line-height:.9;text-transform:uppercase">{{ o.title }}</div>
+<div style="font-size:12px;font-weight:700">{{ o.meta }}</div>
+<div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:10px;background:{{ o.track }};border-radius:5px;overflow:hidden"><div style="height:100%;width:{{ o.pct }};background:{{ o.ink }}"></div></div><span style="font-weight:900;font-size:13px">{{ o.doneLabel }}</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+<button onClick="{{ o.vote }}" style="height:42px;border:2px solid #16130F;border-radius:10px;background:{{ o.vBg }};color:{{ o.vFg }};font:900 12px 'Archivo',sans-serif;text-transform:uppercase;cursor:pointer">▲ {{ o.votes }}</button>
+<button onClick="{{ o.follow }}" style="height:42px;border:2px solid #16130F;border-radius:10px;background:{{ o.fBg }};color:{{ o.fFg }};font:900 12px 'Archivo',sans-serif;text-transform:uppercase;cursor:pointer">{{ o.fLabel }}</button>
+</div>
+</div>
+<div style="padding:18px 16px 0;display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ o.steps }}" as="s" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:10px;background:#FFFDF8;border:2px solid #16130F;border-radius:10px;padding:8px 10px">
+<div style="flex:none;width:24px;font-weight:900;font-size:18px;text-align:center">{{ s.n }}</div>
+<div onClick="{{ s.open }}" style="flex:none;width:32px;height:48px;border:2px solid #16130F;border-radius:4px;background:{{ s.bg }};cursor:pointer"></div>
+<div onClick="{{ s.open }}" style="flex:1;min-width:0;cursor:pointer;display:flex;flex-direction:column;gap:2px"><div style="font-weight:800;font-size:13px;line-height:1.15;text-decoration:{{ s.deco }}">{{ s.title }}</div><div style="font-size:11px;font-weight:600">{{ s.meta }}</div></div>
+<button onClick="{{ s.toggle }}" style="flex:none;width:34px;height:34px;border:2px solid #16130F;border-radius:8px;background:{{ s.checkBg }};color:{{ s.checkFg }};font:900 16px 'Archivo',sans-serif;cursor:pointer">{{ s.mark }}</button>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<!-- LIST -->
+<sc-if value="{{ sList }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
+<div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase">Lista de {{ l.by }}</div>
+<div style="font-weight:900;font-stretch:120%;font-size:30px;line-height:.9;text-transform:uppercase">{{ l.title }}</div>
+<div style="font-size:13px;font-weight:500;line-height:1.4">{{ l.desc }}</div>
+<div style="display:flex;gap:8px;margin-top:4px">
+<button onClick="{{ l.like }}" style="font:800 12px 'Archivo',sans-serif;border:2px solid #16130F;border-radius:999px;padding:7px 13px;background:{{ l.likeBg }};color:{{ l.likeFg }};cursor:pointer">♥ {{ l.likes }}</button>
+<span style="font:800 12px 'Archivo',sans-serif;border:2px solid #16130F;border-radius:999px;padding:7px 13px;background:#FFFDF8">{{ l.comments }} comentários</span>
+</div>
+</div>
+<div style="padding:20px 16px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+<sc-for list="{{ l.items }}" as="p" hint-placeholder-count="6">
+<div onClick="{{ p.open }}" style="cursor:pointer;display:flex;flex-direction:column;gap:5px">
+<div style="position:relative;aspect-ratio:2/3;border:2px solid #16130F;border-radius:8px;background-color:{{ p.bg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;color:{{ p.ink }};padding:7px;box-sizing:border-box;display:flex;align-items:flex-end;box-shadow:3px 3px 0 #16130F">
+<span style="position:absolute;top:-8px;left:-8px;width:24px;height:24px;border-radius:50%;background:#16130F;color:#F5F1E8;font-weight:900;font-size:11px;display:flex;align-items:center;justify-content:center">{{ p.n }}</span>
+<span style="font-weight:900;font-size:11px;line-height:.95;text-transform:uppercase;overflow-wrap:anywhere;hyphens:auto;min-width:0" lang="pt">{{ p.title }}</span>
+</div>
+<div style="font-size:10px;font-weight:700">{{ p.avgLabel }} · {{ p.uniName }}</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</div>
+
+<!-- TAB BAR -->
+<div style="position:absolute;left:0;right:0;bottom:0;height:88px;background:#F5F1E8;border-top:2px solid #16130F;display:flex;align-items:flex-start;justify-content:space-around;padding:8px 8px 0;box-sizing:border-box;z-index:10">
+<sc-for list="{{ tabsL }}" as="t" hint-placeholder-count="2">
+<button onClick="{{ t.go }}" style="position:relative;width:70px;height:40px;border:2px solid {{ t.bd }};border-radius:10px;background:{{ t.bg }};color:{{ t.fg }};font:800 11px 'Archivo',sans-serif;text-transform:uppercase;letter-spacing:.03em;cursor:pointer">{{ t.label }}</button>
+</sc-for>
+<button onClick="{{ openLogBlank }}" style="width:54px;height:54px;margin-top:-18px;border:2px solid #16130F;border-radius:50%;background:#E4412F;color:#FFFDF8;font:900 28px/1 'Archivo',sans-serif;cursor:pointer;box-shadow:3px 3px 0 #16130F">+</button>
+<sc-for list="{{ tabsR }}" as="t" hint-placeholder-count="2">
+<button onClick="{{ t.go }}" style="position:relative;width:70px;height:40px;border:2px solid {{ t.bd }};border-radius:10px;background:{{ t.bg }};color:{{ t.fg }};font:800 11px 'Archivo',sans-serif;text-transform:uppercase;letter-spacing:.03em;cursor:pointer">{{ t.label }}<sc-if value="{{ t.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:-8px;right:-6px;min-width:20px;height:20px;border-radius:10px;background:#E4412F;color:#FFFDF8;border:2px solid #16130F;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;box-sizing:border-box">{{ t.badge }}</span></sc-if></button>
+</sc-for>
+</div>
+
+<!-- LOG SHEET -->
+<sc-if value="{{ logOpen }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ closeLog }}" style="position:absolute;inset:0;background:rgba(22,19,15,.5);z-index:30;animation:mvFade .2s ease-out"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:31;background:#F5F1E8;border-top:2px solid #16130F;border-radius:20px 20px 0 0;padding:14px 16px 40px;display:flex;flex-direction:column;gap:14px;animation:mvUp .28s cubic-bezier(.2,.8,.2,1);max-height:88%;overflow-y:auto;box-sizing:border-box">
+<div style="align-self:center;width:44px;height:5px;border-radius:3px;background:#16130F"></div>
+<sc-if value="{{ logPicking }}" hint-placeholder-val="{{ false }}">
+<div style="font-weight:900;font-stretch:120%;font-size:22px;line-height:.95;text-transform:uppercase">O que você viu, leu ou jogou?</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+<sc-for list="{{ logPicks }}" as="p" hint-placeholder-count="9">
+<div onClick="{{ p.pick }}" style="aspect-ratio:2/3;border:2px solid #16130F;border-radius:8px;background-color:{{ p.bg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;color:{{ p.ink }};padding:7px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer">
+<span style="font:700 8px ui-monospace,Menlo,monospace">{{ p.typeU }}</span><span style="font-weight:900;font-size:11px;line-height:.95;text-transform:uppercase;overflow-wrap:anywhere;hyphens:auto;min-width:0" lang="pt">{{ p.title }}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ logReady }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:12px;align-items:center">
+<div style="flex:none;width:52px;height:78px;border:2px solid #16130F;border-radius:6px;background-color:{{ lw.bg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px"></div>
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+<div style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">{{ lw.verb }} · Hoje, 29 set</div>
+<div style="font-weight:900;font-stretch:112%;font-size:20px;line-height:.95;text-transform:uppercase">{{ lw.title }}</div>
+<div style="font-size:12px;font-weight:600">{{ lw.uniName }} · {{ lw.type }}</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">Sua nota</span><span style="font-size:11px;font-weight:700">{{ starHint }}</span></div>
+<div style="display:flex;gap:6px">
+<sc-for list="{{ starBtns }}" as="s" hint-placeholder-count="5"><button onClick="{{ s.set }}" style="flex:1;height:50px;border:2px solid #16130F;border-radius:10px;background:{{ s.bg }};color:{{ s.fg }};font:900 22px 'Archivo',sans-serif;cursor:pointer">{{ s.g }}</button></sc-for>
+</div>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<sc-for list="{{ logToggles }}" as="t" hint-placeholder-count="3"><button onClick="{{ t.toggle }}" style="font:800 12px 'Archivo',sans-serif;border:2px solid #16130F;border-radius:999px;padding:8px 13px;background:{{ t.bg }};color:{{ t.fg }};cursor:pointer">{{ t.label }}</button></sc-for>
+</div>
+<textarea value="{{ logReview }}" onChange="{{ onReview }}" placeholder="Escreva sua review… teorias de cânone são bem-vindas." style="height:92px;resize:none;border:2px solid #16130F;border-radius:10px;background:#FFFDF8;padding:10px 12px;font:500 14px/1.4 'Archivo',sans-serif;color:#16130F;outline:none;box-sizing:border-box"></textarea>
+<div style="font-size:11px;font-weight:700">{{ audience }}</div>
+<button onClick="{{ saveLog }}" style="height:52px;border:2px solid #16130F;border-radius:12px;background:{{ lw.c }};color:{{ lw.cInk }};font:900 15px 'Archivo',sans-serif;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;box-shadow:3px 3px 0 #16130F">Publicar</button>
+</sc-if>
+</div>
+</sc-if>
+
+{{ burstEl }}
+<!-- ONBOARDING -->
+<sc-if value="{{ obOn }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;z-index:35;background:#F5F1E8;display:flex;flex-direction:column;padding:62px 16px 34px;box-sizing:border-box">
+<sc-if value="{{ obLoading }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px">
+<div style="font-weight:900;font-stretch:125%;font-size:40px;line-height:.85;text-transform:uppercase">Montando seu multiverso</div>
+<div style="font-size:13px;font-weight:600">{{ obLoadingNote }}</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+<sc-for list="{{ obSkel }}" as="s" hint-placeholder-count="6"><div style="aspect-ratio:2/3;border:2px solid #16130F;border-radius:8px;background-color:{{ s.c }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;animation:mvPulse 1.1s ease-in-out infinite;animation-delay:{{ s.d }}"></div></sc-for>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ obSteps }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;gap:6px;margin-bottom:18px"><sc-for list="{{ obBars }}" as="b" hint-placeholder-count="3"><div style="flex:1;height:6px;border-radius:3px;border:1.5px solid #16130F;background:{{ b.bg }}"></div></sc-for></div>
+<div style="font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase">{{ obKicker }}</div>
+<div style="font-weight:900;font-stretch:125%;font-size:32px;line-height:.88;text-transform:uppercase;margin:6px 0">{{ obTitle }}</div>
+<div style="font-size:13px;font-weight:600;line-height:1.4;margin-bottom:16px">{{ obSub }}</div>
+<div style="flex:1;overflow-y:auto;margin:0 -16px;padding:4px 16px 12px">
+<sc-if value="{{ ob1 }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ obUnis }}" as="u" hint-placeholder-count="3"><div onClick="{{ u.toggle }}" style="height:72px;border:2px solid #16130F;border-radius:12px;background-color:{{ u.bg }};background-image:radial-gradient(rgba(22,19,15,.16) 1px,transparent 1.3px);background-size:6px 6px;color:{{ u.fg }};padding:0 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:{{ u.sh }};transform:{{ u.tf }};transition:box-shadow .15s,transform .15s"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:900;font-stretch:120%;font-size:22px;text-transform:uppercase;line-height:1">{{ u.name }}</span><span style="font-size:11px;font-weight:700">{{ u.members }}</span></div><span style="width:30px;height:30px;border-radius:50%;border:2px solid #16130F;background:#FFFDF8;color:#16130F;display:flex;align-items:center;justify-content:center;font-weight:900">{{ u.mark }}</span></div></sc-for>
+<sc-for list="{{ obSoon }}" as="s" hint-placeholder-count="3"><div style="height:50px;border:2px dashed rgba(22,19,15,.45);border-radius:12px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;color:rgba(22,19,15,.6)"><span style="font-weight:900;font-size:15px;text-transform:uppercase">{{ s.name }}</span><span style="font-size:10px;font-weight:800;letter-spacing:.08em">EM BREVE</span></div></sc-for>
+</div></sc-if>
+<sc-if value="{{ ob2 }}" hint-placeholder-val="{{ false }}"><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+<sc-for list="{{ obPicks }}" as="p" hint-placeholder-count="9"><div onClick="{{ p.toggle }}" style="position:relative;aspect-ratio:2/3;border:2px solid #16130F;border-radius:8px;background-color:{{ p.bg }};background-image:radial-gradient(rgba(22,19,15,.2) 1px,transparent 1.3px);background-size:6px 6px;color:{{ p.ink }};padding:7px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;overflow:hidden;transform:{{ p.tf }};transition:transform .15s"><span style="font:700 8px ui-monospace,Menlo,monospace">{{ p.typeU }}</span><span style="font-weight:900;font-size:11px;line-height:.95;text-transform:uppercase;overflow-wrap:anywhere">{{ p.title }}</span><sc-if value="{{ p.on }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;background:rgba(22,19,15,.55);display:flex;align-items:center;justify-content:center"><span style="width:36px;height:36px;border-radius:50%;background:#FFFDF8;border:2px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#16130F;animation:mvPop .2s ease-out">✓</span></div></sc-if></div></sc-for>
+</div></sc-if>
+<sc-if value="{{ ob3 }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:800">{{ obFolLabel }}</span><span onClick="{{ obFollowAll }}" style="font-size:11px;font-weight:800;text-transform:uppercase;text-decoration:underline;cursor:pointer">Seguir todos</span></div>
+<sc-for list="{{ obPeople }}" as="s" hint-placeholder-count="6"><div style="display:flex;align-items:center;gap:10px;background:#FFFDF8;border:2px solid #16130F;border-radius:10px;padding:8px 10px">
+<div style="flex:none;width:38px;height:38px;border-radius:50%;background:{{ s.avBg }};color:{{ s.avInk }};border:2px solid #16130F;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px">{{ s.ini }}</div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><div style="display:flex;gap:6px;align-items:center;font-weight:800;font-size:13px">{{ s.name }}<span style="font-size:8px;font-weight:900;letter-spacing:.06em;background:{{ s.bc }};color:{{ s.bInk }};border:1.5px solid #16130F;border-radius:3px;padding:0 4px;white-space:nowrap">{{ s.badge }}</span></div><div style="font-size:11px;font-weight:600">{{ s.compat }} afinidade · {{ s.bio }}</div></div>
+<button onClick="{{ s.follow }}" style="flex:none;height:32px;padding:0 12px;border:2px solid #16130F;border-radius:8px;background:{{ s.fBg }};color:{{ s.fFg }};font:800 11px 'Archivo',sans-serif;text-transform:uppercase;cursor:pointer">{{ s.fLabel }}</button>
+</div></sc-for>
+</div></sc-if>
+</div>
+<div style="display:flex;gap:10px;align-items:center;padding-top:10px">
+<sc-if value="{{ obCanBack }}" hint-placeholder-val="{{ false }}"><button onClick="{{ obBack }}" style="flex:none;height:54px;width:54px;border:2px solid #16130F;border-radius:12px;background:#FFFDF8;color:#16130F;font:900 18px 'Archivo',sans-serif;cursor:pointer">←</button></sc-if>
+<button onClick="{{ obNext }}" style="flex:1;height:54px;border:2px solid #16130F;border-radius:12px;background:{{ obNextBg }};color:{{ obNextFg }};font:900 15px 'Archivo',sans-serif;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;box-shadow:{{ obNextSh }}">{{ obNextLabel }}</button>
+</div>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:50%;bottom:104px;transform:translateX(-50%);z-index:40;background:#16130F;color:#F5F1E8;font-weight:800;font-size:13px;padding:11px 16px;border-radius:999px;white-space:nowrap;animation:mvToast 2.4s ease forwards">{{ toast }}</div>
+</sc-if>
+</div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;home&quot;,&quot;onboarding&quot;,&quot;wrapped-me&quot;,&quot;search&quot;,&quot;activity&quot;,&quot;profile&quot;,&quot;uni-wow&quot;,&quot;work-w-wotlk&quot;,&quot;work-c-arthas&quot;,&quot;review-r2&quot;,&quot;order-o-azeroth&quot;,&quot;user-gui&quot;],&quot;default&quot;:&quot;home&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;spoilerBlur&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const U = {
+  marvel: { name: 'Marvel', c: '#E4412F', c2: '#C9362A', ink: '#FFFDF8', track: 'rgba(255,253,248,.35)', canon: 'Terra-616 + MCU', tagline: 'Seis décadas de HQs, um multiverso cinematográfico e variantes o suficiente pra enlouquecer a TVA.', base: 34, total: 1240, members: 184000, live: 1204 },
+  dc: { name: 'DC', c: '#2E5BE8', c2: '#2349C4', ink: '#FFFDF8', track: 'rgba(255,253,248,.35)', canon: 'Pré e pós-Crise', tagline: 'Infinitas Terras, algumas Crises e um Batman pra cada geração.', base: 21, total: 980, members: 142000, live: 873 },
+  wow: { name: 'Warcraft', c: '#F4A814', c2: '#D99210', ink: '#16130F', track: 'rgba(22,19,15,.2)', canon: 'Azeroth', tagline: 'Três décadas de guerras, expansões, livros e retcons. Pela Horda ou pela Aliança.', base: 58, total: 312, members: 96000, live: 641 },
+};
+const W = [
+  ['m-civil','marvel','HQ','Guerra Civil',2006,3.8,'Terra-616','A Lei de Registro de Super-Humanos divide os heróis entre Capitão América e Homem de Ferro.'],
+  ['m-ultimato','marvel','Filme','Vingadores: Ultimato',2019,4.1,'MCU','Cinco anos após o Estalo, os Vingadores restantes arriscam tudo num assalto através do tempo.'],
+  ['m-secret','marvel','HQ','Guerras Secretas',2015,4.0,'Multiverso','O multiverso colapsa e Doom remonta os destroços no Mundo Bélico.'],
+  ['m-fenix','marvel','HQ','A Saga da Fênix Negra',1980,4.6,'Terra-616','Jean Grey sucumbe à Força Fênix. A tragédia que ensinou os quadrinhos a ter consequência.'],
+  ['m-aranha','marvel','Filme','Através do Aranhaverso',2023,4.7,'Aranhaverso','Miles Morales atravessa o multiverso e descobre que eventos canônicos cobram um preço.'],
+  ['m-loki','marvel','Série','Loki',2021,4.0,'MCU','Uma variante de Loki é capturada pela TVA, a burocracia que poda linhas do tempo.'],
+  ['d-crise','dc','HQ','Crise nas Infinitas Terras',1985,4.3,'Pré-Crise','O Antimonitor devora universos. No fim sobra uma Terra, e o cânone da DC nunca mais foi o mesmo.'],
+  ['d-watchmen','dc','HQ','Watchmen',1986,4.8,'Terra-Watchmen','Quem vigia os vigilantes? Um mistério de assassinato que desmonta o gênero de super-herói.'],
+  ['d-tdk','dc','Filme','O Cavaleiro das Trevas',2008,4.6,'Trilogia Nolan','O Coringa leva Gotham ao limite e força Batman a escolher entre ser herói e ser necessário.'],
+  ['d-reino','dc','HQ','Reino do Amanhã',1996,4.5,'Terra-22','Num futuro de heróis sem limites, Superman volta do exílio.'],
+  ['d-flash','dc','HQ','Flashpoint',2011,4.0,'Pós-Crise → Novos 52','Barry Allen salva a mãe e acorda num mundo em guerra. O evento que reiniciou a DC.'],
+  ['d-injustice','dc','Jogo','Injustice',2013,3.7,'Terra-Injustice','Depois de perder Lois, Superman instala um regime.'],
+  ['w-wc3','wow','Jogo','Warcraft III: Reign of Chaos',2002,4.8,'Azeroth','O Flagelo se espalha, Arthas cai e a Legião Ardente chega. A base de quase tudo.'],
+  ['w-wotlk','wow','Jogo','Wrath of the Lich King',2008,4.7,'Azeroth','Horda e Aliança marcham até Nortúndria para enfrentar Arthas no Trono de Gelo.'],
+  ['w-cata','wow','Jogo','Cataclysm',2010,3.6,'Azeroth','Deathwing emerge e redesenha o mapa de Azeroth. O mundo antigo nunca mais volta.'],
+  ['w-arthas','wow','Livro','Arthas: A Ascensão do Lich King',2009,4.4,'Azeroth','De príncipe de Lordaeron a Lich King: a queda contada de dentro.'],
+  ['w-wcfilme','wow','Filme','Warcraft: O Primeiro Encontro',2016,3.2,'Adaptação','Orcs atravessam o Portal Negro e o primeiro contato vira guerra.'],
+  ['w-crimes','wow','Livro','Crimes de Guerra',2014,4.3,'Azeroth','Garrosh Grito Infernal vai a julgamento. Todas as facções têm sangue nas mãos.'],
+  ['c-arthas','wow','Personagem','Arthas Menethil','1ª ap. 2002',4.6,'Azeroth','Príncipe paladino que empunhou Gélido Lamento e virou o Lich King.'],
+  ['c-thrall','wow','Personagem','Thrall','1ª ap. 2002',4.1,'Azeroth','Ex-escravo, xamã e fundador da Nova Horda.'],
+  ['c-sylvanas','wow','Personagem','Sylvanas Correventos','1ª ap. 2002',3.4,'Azeroth','Patrulheira, Rainha Banshee, Chefe Guerreira. A mais debatida da lore.'],
+  ['c-wanda','marvel','Personagem','Wanda Maximoff','1ª ap. 1964',4.3,'Terra-616 + MCU','A Feiticeira Escarlate. Reescreveu a realidade mais de uma vez.'],
+  ['c-thanos','marvel','Personagem','Thanos','1ª ap. 1973',4.2,'Terra-616 + MCU','O Titã Louco e sua obsessão pelo equilíbrio.'],
+  ['c-loki','marvel','Personagem','Loki','1ª ap. 1949',4.4,'Terra-616 + MCU','Deus da trapaça, com mais variantes que qualquer outro personagem.'],
+  ['c-batman','dc','Personagem','Batman','1ª ap. 1939',4.7,'Todas as Terras','Bruce Wayne. Existe em praticamente todas as Terras do multiverso.'],
+  ['c-coringa','dc','Personagem','Coringa','1ª ap. 1940',4.5,'Todas as Terras','Nenhuma origem oficial. É assim que ele prefere.'],
+  ['c-barry','dc','Personagem','Barry Allen','1ª ap. 1956',4.0,'Pré e pós-Crise','O Flash que morreu na Crise, voltou e quebrou a linha do tempo.'],
+  ['e-estalo','marvel','Evento','O Estalo','MCU · 2018',4.2,'MCU','Thanos estala os dedos e metade da vida no universo desaparece.'],
+  ['e-lordaeron','wow','Evento','Queda de Lordaeron','Ano 21',4.7,'Azeroth','Arthas mata o próprio pai e entrega o reino ao Flagelo.'],
+  ['e-cataclismo','wow','Evento','O Cataclismo','Ano 30',3.9,'Azeroth','Deathwing rompe Azeroth. Terras afundam e regiões inteiras mudam pra sempre.'],
+  ['e-superman','dc','Evento','A Morte do Superman','Pós-Crise · 1992',3.9,'Pós-Crise','Doomsday chega e o Superman cai em Metrópolis. Não por muito tempo.'],
+].map(([id, uni, type, title, year, avg, canon, desc]) => ({ id, uni, type, title, year, avg, canon, desc }));
+const WM = Object.fromEntries(W.map(w => [w.id, w]));
+const US = {
+  duda: { n: 'Duda Kaminski', h: '@duda.lore', c: '#F4A814', bio: 'Lorista nível 34' },
+  nina: { n: 'Nina S.', h: '@nina.s', c: '#2E5BE8', bio: 'Raider desde Vanilla' },
+  caio: { n: 'Caio T.', h: '@caio.t', c: '#E4412F', bio: 'Monta ordens de leitura' },
+  leo: { n: 'Leo M.', h: '@leo.m', c: '#16130F', bio: 'Multiverso Marvel inteiro' },
+  bia: { n: 'Bia R.', h: '@bia.r', c: '#F4A814', bio: 'Defensora da Sylvanas' },
+  rafa: { n: 'Rafa P.', h: '@rafa.p', c: '#2E5BE8', bio: 'Só DC pré-Crise' },
+  tati: { n: 'Tati V.', h: '@tati.v', c: '#E4412F', bio: 'Batman em todas as Terras' },
+  gui: { n: 'Gui H.', h: '@gui.h', c: '#16130F', bio: 'Historiador de Azeroth', fol: 8400 },
+  mari: { n: 'Mari O.', h: '@mari.o', c: '#E4412F', bio: 'Marvel pré-2000, sem MCU', fol: 5100 },
+  joao: { n: 'João P.', h: '@joao.p', c: '#2E5BE8', bio: 'Teorias de multiverso', fol: 3900 },
+  lu: { n: 'Lu A.', h: '@lu.a', c: '#F4A814', bio: 'Lê tudo em ordem cronológica', fol: 2700 },
+};
+const CONN = {
+  'w-wc3': ['c-arthas','c-thrall','c-sylvanas','e-lordaeron'], 'w-wotlk': ['c-arthas','c-sylvanas','w-arthas'], 'w-arthas': ['c-arthas','e-lordaeron'], 'w-cata': ['e-cataclismo','c-thrall'], 'w-crimes': ['c-sylvanas','c-thrall'], 'e-cataclismo': ['w-cata'], 'e-lordaeron': ['c-arthas','w-wc3'],
+  'm-ultimato': ['c-thanos','e-estalo','c-wanda'], 'm-loki': ['c-loki'], 'm-secret': ['m-aranha'], 'e-estalo': ['c-thanos','m-ultimato'], 'c-thanos': ['e-estalo','m-ultimato'], 'c-loki': ['m-loki'],
+  'd-crise': ['c-barry','c-batman'], 'd-flash': ['c-barry','c-batman'], 'd-tdk': ['c-batman','c-coringa'], 'd-injustice': ['c-batman','c-coringa'], 'd-reino': ['c-batman'],
+  'c-arthas': ['w-wc3','w-arthas','w-wotlk'], 'c-sylvanas': ['w-wc3','w-crimes'], 'c-batman': ['d-tdk','d-reino','d-injustice'], 'c-barry': ['d-crise','d-flash'], 'c-coringa': ['d-tdk'],
+};
+const TL = {
+  wow: [['Ano 0 · Primeira Guerra','w-wcfilme','O Portal Negro se abre'],['Ano 20 · Terceira Guerra','w-wc3','A praga chega'],['Ano 21','e-lordaeron','O rei morre'],['Ano 21–25','w-arthas','Leitura de apoio'],['Ano 27 · Nortúndria','w-wotlk','Assalto à Cidadela'],['Ano 30','e-cataclismo','O mundo se parte'],['Ano 30','w-cata','Expansão'],['Ano 35','w-crimes','Pós-Pandária']],
+  marvel: [['Terra-616 · 1980','m-fenix','Era Claremont'],['Terra-616 · 2006','m-civil','Registro'],['MCU · Fase 3','e-estalo','Metade de tudo'],['MCU · Fase 3','m-ultimato','Assalto no tempo'],['MCU · Fase 4','m-loki','A TVA'],['Multiverso','m-secret','Mundo Bélico'],['Aranhaverso','m-aranha','Eventos canônicos']],
+  dc: [['Pré-Crise','d-crise','Fim das infinitas Terras'],['Terra-Watchmen','d-watchmen','Linha à parte'],['Pós-Crise · 1992','e-superman','Doomsday'],['Terra-22','d-reino','Futuro possível'],['Pós-Crise → Novos 52','d-flash','Reinício'],['Terra-Injustice','d-injustice','Regime'],['Trilogia Nolan','d-tdk','Adaptação']],
+};
+const ORD = [
+  { id: 'o-azeroth', uni: 'wow', title: 'Azeroth do zero', by: 'caio', votes: 3240, steps: ['w-wcfilme','w-wc3','w-arthas','w-wotlk','w-cata','w-crimes'] },
+  { id: 'o-lich', uni: 'wow', title: 'Só a saga do Lich King', by: 'nina', votes: 1810, steps: ['w-wc3','e-lordaeron','w-arthas','w-wotlk'] },
+  { id: 'o-mcu', uni: 'marvel', title: 'Multiverso Marvel essencial', by: 'leo', votes: 12040, steps: ['m-fenix','m-civil','m-ultimato','m-loki','m-secret','m-aranha'] },
+  { id: 'o-estalo', uni: 'marvel', title: 'Guia do Estalo', by: 'bia', votes: 4130, steps: ['e-estalo','m-ultimato','m-loki'] },
+  { id: 'o-crises', uni: 'dc', title: 'As Crises da DC', by: 'rafa', votes: 5620, steps: ['d-crise','e-superman','d-reino','d-flash'] },
+  { id: 'o-bat', uni: 'dc', title: 'Batman em 3 Terras', by: 'tati', votes: 2310, steps: ['d-tdk','d-reino','d-injustice'] },
+];
+const LISTS = [
+  { id: 'l-viloes', title: 'Vilões que tinham razão (um pouco)', desc: 'Não é defesa. É só entender o ponto de vista.', likes: 412, comments: 58, items: ['c-thanos','c-sylvanas','c-loki','c-arthas','c-coringa'] },
+  { id: 'l-porta', title: 'Porta de entrada pra Azeroth', desc: 'Pra quem nunca jogou e quer entender por que todo mundo chora com o Arthas.', likes: 890, comments: 104, items: ['w-wc3','w-arthas','w-wotlk','w-crimes'] },
+  { id: 'l-crises', title: 'Crises que quebraram o multiverso', desc: 'Todo evento que resetou, fundiu ou destruiu realidades.', likes: 1204, comments: 211, items: ['d-crise','m-secret','d-flash','e-estalo','m-aranha','e-cataclismo'] },
+];
+const BADGE = { duda: 'wow', nina: 'wow', caio: 'wow', leo: 'marvel', bia: 'wow', rafa: 'dc', tati: 'dc', gui: 'wow', mari: 'marvel', joao: 'marvel', lu: 'dc' };
+const BN = { wow: 'Azeroth', marvel: 'Terra-616', dc: 'Multi-DC' };
+const CANON = {
+  'c-sylvanas': ['Contestado', 'Shadowlands reescreveu as motivações dela depois de Teldrassil.'], 'w-arthas': ['Contestado', 'Partes do livro contradizem Shadowlands.'],
+  'w-wcfilme': ['Variante', 'Adaptação: diverge dos jogos em vários pontos.'], 'd-tdk': ['Variante', 'Trilogia Nolan, fora da continuidade das HQs.'], 'd-injustice': ['Variante', 'Terra-Injustice, universo alternativo.'], 'c-loki': ['Variante', 'Dezenas de variantes: 616, MCU, Kid Loki, Loki Jacaré…'], 'd-reino': ['Variante', 'Terra-22, um futuro possível.'],
+  'd-crise': ['Retconado', 'Desfeito em partes por Crise Infinita e Crise Final.'], 'd-flash': ['Retconado', 'Os Novos 52 foram desfeitos por Renascimento.'], 'c-barry': ['Retconado', 'A morte na Crise foi desfeita em 2008.'], 'e-superman': ['Retconado', 'Ele voltou. Claro.'],
+};
+const CS_STYLE = { 'Cânone': ['#16130F', '#F5F1E8'], 'Variante': ['#2E5BE8', '#FFFDF8'], 'Retconado': ['#E4412F', '#FFFDF8'], 'Contestado': ['#F4A814', '#16130F'] };
+const DUELS = [['c-arthas', 'c-thanos', 'Qual queda foi mais trágica?', [5210, 3890]], ['d-watchmen', 'm-fenix', 'A HQ mais importante de todas?', [4120, 3310]], ['e-estalo', 'e-cataclismo', 'Qual evento mudou mais o universo?', [2980, 3440]], ['c-coringa', 'c-sylvanas', 'Vilão mais bem escrito?', [6010, 2870]]];
+const R0 = [
+  ['r1','nina','w-wotlk',5,'Subir a Cidadela da Coroa de Gelo com a guilda e ver o Arthas cair é o motivo de eu ainda jogar isso. Melhor narrativa que a Blizzard já fez.',0,214,'2h',[['duda','Aquele cinematic final ainda me pega.',12],['caio','Discordo só no ritmo da Coliseu, o resto é perfeito.',4]]],
+  ['r2','caio','e-cataclismo',2.5,'Apagaram metade das zonas clássicas e trocaram por quests de piada. Deathwing merecia mais.',1,96,'3h',[['bia','Mas o Twilight Highlands é lindo!',7],['gui','A reforma de Durotar foi necessária, vai.',15],['caio','Necessária sim, bem feita não.',9]]],
+  ['r3','leo','m-aranha',5,'Cada universo com uma linguagem visual própria. Os "eventos canônicos" são a melhor ideia de multiverso em anos.',0,388,'5h',[['mari','Nos quadrinhos já tinha isso, mas aqui ficou redondo.',21]]],
+  ['r4','bia','c-sylvanas',3,'Queimar Teldrassil não tem volta, mas Shadowlands tentou limpar a barra dela de um jeito que ninguém pediu.',1,152,'7h',[['nina','A queda dela foi mal escrita, não mal pensada.',18]]],
+  ['r5','rafa','d-crise',4.5,'Denso, confuso, gigantesco. E ainda assim nada na DC faz sentido sem ele.',0,77,'ontem',[]],
+  ['r6','tati','d-tdk',5,'O melhor Batman não está em nenhuma Terra oficial. Está aqui.',0,431,'ontem',[['leo','Heath Ledger carregou, mas o roteiro é cirúrgico.',30]]],
+  ['r7','gui','w-wc3',5,'A campanha do Arthas é tragédia grega com orcs. Obrigatório pra entender qualquer coisa depois.',0,1203,'2 dias',[['lu','Joguei na ordem da comunidade, fez toda diferença.',44]]],
+  ['r8','mari','m-civil',3.5,'A ideia é ótima, a execução pende demais pro lado do Stark.',0,241,'2 dias',[]],
+  ['r9','duda','w-wotlk',5,'Revi pela terceira vez. O arco do Tirion fecha tudo que Warcraft III abriu.',0,64,'5 dias',[['nina','Tirion merecia um livro só dele.',6]]],
+  ['r10','duda','d-crise',4,'Li depois de Flashpoint e foi como ver o manual de instruções do caos.',0,31,'10 dias',[['caio','Pré-Crise é superior e eu morro nessa colina.',11]]],
+  ['r11','joao','e-estalo',4,'Teoria: o Estalo criou a divergência que a TVA depois não conseguiu podar.',1,318,'3 dias',[]],
+];
+const GEN = ['Entendi finalmente por que todo mundo cita isso nas discussões de cânone.','Ritmo irregular, mas as consequências pra lore são enormes.','Revisitei depois da ordem da comunidade e fez muito mais sentido.','Bonito, mas a continuidade é um queijo suíço.','Obrigatório. Muda o jeito que você lê todo o resto.'];
+const seed = s => [...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+const fmt = n => n >= 1000 ? String(Math.round(n / 100) / 10).replace('.', ',') + ' mil' : String(n);
+const stars = n => n ? '★'.repeat(Math.floor(n)) + (n % 1 ? '½' : '') : '';
+const inkOn = c => c === '#F4A814' ? '#16130F' : '#FFFDF8';
+const ini = n => n.split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase();
+const verbOf = t => ({ Filme: 'Assisti', 'Série': 'Assisti', HQ: 'Li', Livro: 'Li', Jogo: 'Joguei' }[t] || 'Avaliei');
+const verb3 = t => ({ Filme: 'assistiu', 'Série': 'assistiu', HQ: 'leu', Livro: 'leu', Jogo: 'jogou' }[t] || 'avaliou');
+const poster = w => { const u = U[w.uni], k = seed(w.id) % 3; return k === 1 ? { bg: '#16130F', ink: u.c } : { bg: k ? u.c2 : u.c, ink: u.ink }; };
+const cnt = w => 800 + seed(w.id) % 13000;
+const av = id => { const x = US[id], b = BADGE[id]; return { name: x.n, ini: ini(x.n), avBg: x.c, avInk: inkOn(x.c), badge: BN[b].toUpperCase(), bc: U[b].c, bInk: U[b].ink }; };
+const compatOf = u => 48 + seed(u + 'duda') % 47;
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    let reviews = R0.map(([id, user, work, r, text, sp, likes, when, cs], i) => ({ id, user, work, r, text, spoiler: !!sp, likes, when, ts: 100 - i, comments: cs.map(([u, t, l]) => ({ user: u, text: t, likes: l, when: '1h' })) }));
+    const pool = ['gui', 'mari', 'joao', 'lu'];
+    W.forEach((w, i) => [0, 1].forEach(j => { const sd = seed(w.id + j); reviews.push({ id: `g-${w.id}-${j}`, user: pool[(i + j) % 4], work: w.id, r: Math.max(1, Math.min(5, Math.round((w.avg + (sd % 3 - 1) * 0.5) * 2) / 2)), text: GEN[sd % 5], spoiler: false, likes: 20 + sd % 400, when: `${2 + sd % 20} dias`, ts: -i - j, comments: sd % 2 ? [{ user: pool[(i + j + 1) % 4], text: 'Concordo demais.', likes: sd % 9, when: '4 dias' }] : [] }); }));
+    const s = p.startScreen || 'home';
+    let done = false; try { done = localStorage.getItem('mv-onboarded') === '1'; } catch (e) {}
+    const ob = s === 'onboarding' || (!done && s === 'home') ? 1 : 0;
+    let tab = 'home', stack = [];
+    if (s === 'onboarding') tab = 'home'; else if (['home', 'search', 'activity', 'profile'].includes(s)) tab = s;
+    else { const [t, ...rest] = s.split('-'); stack = [{ t: t === 'uni' ? 'uni' : t, id: rest.join('-') }]; }
+    this.state = {
+      tab, stack, uniTab: 'geral', query: '', filter: 'Tudo', sort: 'pop', vote: null, debate: {}, log: null, toast: null, toastN: 0, draft: '', unread: 4,
+      reviews, revealed: {}, likedR: {}, likedC: {}, want: { 'w-cata': true }, likedW: {}, checks: {}, orderVotes: {}, orderFollow: { 'o-azeroth': true }, likedL: {},
+      follows: ob ? {} : { nina: 1, caio: 1, leo: 1, bia: 1, rafa: 1, tati: 1 },
+      ob, obUnis: {}, duelIdx: 0, duelVotes: {}, canonVotes: {}, burst: null,
+      diary: [['w-crimes',27,'Setembro',4.5,1],['w-wotlk',24,'Setembro',5,0,1],['d-crise',19,'Setembro',4],['m-loki',12,'Setembro',3.5],['w-wc3',3,'Setembro',5,1],['d-watchmen',28,'Agosto',5,1],['m-civil',20,'Agosto',3],['e-cataclismo',14,'Agosto',3.5],['d-flash',9,'Agosto',4]].map(([id, d, m, r, like, re]) => ({ id, d, m, r, like, re })),
+    };
+    this.scrollRef = React.createRef();
+    this.screenRef = React.createRef();
+  }
+  componentDidUpdate(pp, ps) {
+    const k = s => s.tab + JSON.stringify(s.stack.slice(-1)) + s.uniTab;
+    if (k(ps) !== k(this.state) && this.scrollRef.current) this.scrollRef.current.scrollTop = 0;
+  }
+  componentWillUnmount() { clearTimeout(this.tt); clearTimeout(this.bt); clearTimeout(this.ot); }
+  pow(e, txt, c) {
+    const root = this.screenRef.current; if (!root || !e || !e.currentTarget) return;
+    const r = root.getBoundingClientRect(), b = e.currentTarget.getBoundingClientRect(), sc = r.width / root.offsetWidth || 1;
+    clearTimeout(this.bt);
+    this.setState(s => ({ burst: { x: (b.left - r.left + b.width / 2) / sc, y: (b.top - r.top) / sc, txt, c: c || '#F4A814', k: (s.burst ? s.burst.k : 0) + 1 } }));
+    this.bt = setTimeout(() => this.setState({ burst: null }), 750);
+  }
+  connMap(w) {
+    const ids = (CONN[w.id] || []).slice(0, 6), cx = 183, cy = 120, n = ids.length;
+    const pt = i => { const a = (-90 + i * 360 / n + (n === 2 ? 90 : 0)) * Math.PI / 180; return [cx + Math.cos(a) * 118, cy + Math.sin(a) * 84]; };
+    const node = (id, x, y, main) => { const ww = WM[id], p = poster(ww), ch = ww.type === 'Personagem', s = main ? 62 : 46; return { x: x + 'px', y: y + 'px', s: s + 'px', tf: `translate(-50%,-${s / 2}px)`, r: ch ? '50%' : ww.type === 'Evento' ? '4px' : '8px', bg: p.bg, ink: p.ink, kind: main ? 'AQUI' : ww.type.slice(0, 3).toUpperCase(), title: ww.title, open: () => { if (!main) this.push('work', id); } }; };
+    return { nodes: [...ids.map((id, i) => { const [x, y] = pt(i); return node(id, x, y); }), node(w.id, cx, cy, true)],
+      edges: ids.map((id, i) => { const [x, y] = pt(i), dx = x - cx, dy = y - cy; return { x: cx + 'px', y: cy + 'px', len: Math.hypot(dx, dy) + 'px', rot: `rotate(${Math.atan2(dy, dx)}rad)` }; }) };
+  }
+  canonRows(w) {
+    const sd = seed(w.id + 'cn'), base = [50 + sd % 40, 10 + (sd >> 3) % 30, 5 + (sd >> 6) % 20].map(x => x * 17), ch = this.state.canonVotes[w.id], tot = base.reduce((a, b) => a + b, 0) + (ch != null ? 1 : 0), c = U[w.uni];
+    return ['Sim', 'Não', 'Em parte'].map((label, i) => ({ label, pct: ch == null ? '' : Math.round((base[i] + (ch === i ? 1 : 0)) / tot * 100) + '%', bg: ch === i ? c.c : '#FFFDF8', fg: ch === i ? c.ink : '#16130F', vote: e => { if (ch == null) this.pow(e, 'ZAP!', c.c); this.setState(s => ({ canonVotes: { ...s.canonVotes, [w.id]: i } })); } }));
+  }
+  finishOb() {
+    this.setState({ ob: 'loading' });
+    this.ot = setTimeout(() => { this.setState({ ob: 0, tab: 'home', stack: [] }); try { localStorage.setItem('mv-onboarded', '1'); } catch (e) {} this.toast('Feed pronto. Bem-vindo ao Multiverse.'); }, 1700);
+  }
+  toast(msg) { clearTimeout(this.tt); this.setState(s => ({ toast: msg, toastN: s.toastN + 1 })); this.tt = setTimeout(() => this.setState({ toast: null }), 2400); }
+  push(t, id) { this.setState(s => ({ stack: [...s.stack, { t, id }], uniTab: t === 'uni' ? 'geral' : s.uniTab, sort: 'pop', draft: '' })); }
+  isSeen(id) { const c = this.state.checks[id]; return c === true || (c !== false && this.state.diary.some(d => d.id === id)); }
+  toggleFollow(u, e) { const on = !this.state.follows[u]; if (on) this.pow(e, 'ZAP!', '#2E5BE8'); this.setState(s => ({ follows: { ...s.follows, [u]: on ? 1 : 0 } })); if (on && !this.state.ob) this.toast(`Seguindo ${US[u].n}. Seu feed ganhou reviews novas.`); }
+  followBtn(u, dark) { const on = !!this.state.follows[u]; return { follow: e => this.toggleFollow(u, e), fLabel: on ? 'Seguindo' : 'Seguir', fBg: on ? (dark ? 'transparent' : '#FFFDF8') : (dark ? '#F5F1E8' : '#16130F'), fFg: on ? (dark ? '#F5F1E8' : '#16130F') : (dark ? '#16130F' : '#F5F1E8') }; }
+  pc(w, extra) { const u = U[w.uni]; return { ...poster(w), id: w.id, title: w.title, typeU: w.type.toUpperCase(), uniName: u.name, year: w.year, avgLabel: '★ ' + w.avg.toFixed(1).replace('.', ','), countLabel: fmt(cnt(w)) + ' registros', open: () => this.push('work', w.id), ...extra }; }
+  rv(r) {
+    const w = WM[r.work], u = U[w.uni], st = this.state, liked = !!st.likedR[r.id];
+    const hide = (this.props.spoilerBlur ?? true) && r.spoiler && !st.revealed[r.id];
+    const nC = r.comments.length;
+    return { ...av(r.user), id: r.id, stars: stars(r.r), starC: u.c, text: r.text, blur: hide ? 'blur(6px)' : 'none', isHidden: hide,
+      reveal: () => this.setState(s => ({ revealed: { ...s.revealed, [r.id]: true } })),
+      likes: fmt(r.likes + (liked ? 1 : 0)), likeBg: liked ? '#E4412F' : '#FFFDF8', likeFg: liked ? '#FFFDF8' : '#16130F',
+      like: e => { if (!liked) this.pow(e, 'POW!', '#E4412F'); this.setState(s => ({ likedR: { ...s.likedR, [r.id]: !s.likedR[r.id] } })); },
+      cLabel: nC ? `${nC} comentário${nC > 1 ? 's' : ''}` : 'Comentar', when: r.when, isFriend: !!st.follows[r.user],
+      verb: verb3(w.type), target: w.title, type: w.type, uniName: u.name, ...(() => { const p = poster(w); return { pBg: p.bg, pInk: p.ink }; })(),
+      openTarget: () => this.push('work', w.id), openUser: () => r.user === 'duda' ? this.setState({ tab: 'profile', stack: [] }) : this.push('user', r.user), openThread: () => { if (!hide) this.push('review', r.id); } };
+  }
+  uniPct(k) { return Math.min(99, U[k].base + W.filter(w => w.uni === k && this.isSeen(w.id)).length); }
+  friendRatings(w) {
+    const st = this.state;
+    return Object.keys(st.follows).filter(f => st.follows[f] && f !== 'duda').map(f => {
+      const rv = st.reviews.find(r => r.user === f && r.work === w.id); const sd = seed(w.id + f);
+      if (rv) return { f, r: rv.r }; if (sd % 3) return null;
+      return { f, r: Math.max(1, Math.min(5, Math.round((w.avg + (sd % 5 - 2) * 0.5) * 2) / 2)) };
+    }).filter(Boolean);
+  }
+  pollRows(opts, base, chosen, onVote, c) {
+    const tot = base.reduce((a, b) => a + b, 0) + (chosen != null ? 1 : 0);
+    return opts.map((label, i) => { const v = base[i] + (chosen === i ? 1 : 0), pct = Math.round(v / tot * 100); return { label, vote: e => { if (chosen == null) this.pow(e, 'BAM!', c); onVote(i); }, w: chosen == null ? '0%' : pct + '%', pct: chosen == null ? '' : pct + '%', fill: chosen === i ? c : 'rgba(22,19,15,.12)' }; });
+  }
+  renderVals() {
+    const st = this.state, top = st.stack[st.stack.length - 1], scr = top ? top.t : st.tab;
+    const go = tab => () => this.setState({ tab, stack: [], unread: tab === 'activity' ? 0 : st.unread });
+    const friends = Object.keys(st.follows).filter(f => st.follows[f]);
+    const uniCard = k => { const u = U[k], pct = this.uniPct(k); return { ...u, key: k, pctLabel: pct + '%', live: `${fmt(u.live)} ativos agora`, open: () => this.push('uni', k) }; };
+    const v = { scrollRef: this.scrollRef, canBack: st.stack.length > 0, back: () => this.setState(s => ({ stack: s.stack.slice(0, -1), draft: '' })),
+      sWrapped: scr === 'wrapped', screenRef: this.screenRef, openWrapped: () => this.push('wrapped', 'me'), sHome: scr === 'home', sSearch: scr === 'search', sActivity: scr === 'activity', sDiary: scr === 'diary', sProfile: scr === 'profile' || scr === 'user', sUni: scr === 'uni', sWork: scr === 'work', sOrder: scr === 'order', sList: scr === 'list', sReview: scr === 'review',
+      goMe: go('profile'), goSearch: go('search'), openCata: () => this.push('work', 'e-cataclismo'), openDiary: () => this.push('diary'),
+      unis: ['marvel', 'dc', 'wow'].map(uniCard), hasToast: !!st.toast, toast: st.toast,
+      homeSub: `${friends.length} amigos · 3 universos`, followingLabel: `seguindo ${friends.length}`,
+    };
+    const tabs = [['Início', 'home'], ['Busca', 'search'], ['Avisos', 'activity'], ['Perfil', 'profile']].map(([label, k]) => { const on = !top && st.tab === k; return { label, go: go(k), bg: on ? '#16130F' : 'transparent', fg: on ? '#F5F1E8' : '#16130F', bd: on ? '#16130F' : 'transparent', hasBadge: k === 'activity' && st.unread > 0, badge: st.unread }; });
+    v.tabsL = tabs.slice(0, 2); v.tabsR = tabs.slice(2);
+
+    if (v.sHome) {
+      v.trending = ['w-wotlk', 'm-aranha', 'c-sylvanas', 'd-tdk', 'e-cataclismo', 'd-watchmen'].map(id => { const w = WM[id], n = this.friendRatings(w).length; return this.pc(w, { buzz: n ? `${n} amigo${n > 1 ? 's' : ''} registrou` : fmt(cnt(w)) + ' esta semana' }); });
+      v.poll = this.pollRows(['Melhor momento da lore', 'Pior retcon de todos', 'Os dois ao mesmo tempo'], [1830, 1290, 1692], st.vote, i => { if (st.vote == null) this.toast('Voto computado. Veja o que o pessoal acha.'); this.setState({ vote: i }); }, '#F4A814');
+      v.pollNote = st.vote == null ? `${fmt(4812)} votos · vote pra ver o resultado` : `${fmt(4813)} votos · você votou`;
+      v.pollComments = '612 comentários';
+      v.feed = st.reviews.filter(r => st.follows[r.user] || r.user === 'duda').sort((a, b) => b.ts - a.ts).slice(0, 8).map(r => this.rv(r));
+      v.suggest = ['gui', 'mari', 'joao', 'lu'].map(u => ({ ...av(u), bio: US[u].bio, compat: compatOf(u) + '%', open: () => this.push('user', u), ...this.followBtn(u) }));
+      v.feedEmpty = friends.length === 0;
+      const di = st.duelIdx % DUELS.length, [da, db, dq, dbase] = DUELS[di], ch = st.duelVotes[di], dtot = dbase[0] + dbase[1] + (ch != null ? 1 : 0);
+      v.duel = { q: dq, pos: `${di + 1}/${DUELS.length}`, total: fmt(dtot) + ' votos', voted: ch != null, notVoted: ch == null,
+        note: ch != null ? ((dbase[ch] + 1) / dtot >= 0.5 ? 'Você está com a maioria' : 'Você está com a minoria. Defenda nos comentários.') : '',
+        next: () => this.setState(s => ({ duelIdx: s.duelIdx + 1 })),
+        sides: [da, db].map((id, i) => { const w = WM[id], p = poster(w), pct = Math.round((dbase[i] + (ch === i ? 1 : 0)) / dtot * 100); return { title: w.title, typeU: w.type.toUpperCase(), uniName: U[w.uni].name, bg: p.bg, ink: p.ink, showPct: ch != null, pct: pct + '%', op: ch != null && ch !== i ? '.55' : '1', tf: ch === i ? 'rotate(-1.5deg) scale(1.02)' : 'none', vote: e => { if (ch != null) return; this.pow(e, 'KRAK!', U[w.uni].c); this.setState(s => ({ duelVotes: { ...s.duelVotes, [di]: i } })); } }; }) };
+    }
+    if (v.sSearch) {
+      const q = st.query.trim().toLowerCase(), f = st.filter;
+      v.query = st.query; v.onQuery = e => this.setState({ query: e.target.value });
+      v.filters = ['Tudo', 'Obras', 'Personagens', 'Eventos', 'Pessoas'].map(label => ({ label, pick: () => this.setState({ filter: label }), bg: f === label ? '#16130F' : '#FFFDF8', fg: f === label ? '#F5F1E8' : '#16130F' }));
+      let items = [];
+      if (f !== 'Pessoas') items = W.filter(w => (f === 'Tudo' || (f === 'Obras' && !['Personagem', 'Evento'].includes(w.type)) || (f === 'Personagens' && w.type === 'Personagem') || (f === 'Eventos' && w.type === 'Evento')) && (!q || (w.title + U[w.uni].name).toLowerCase().includes(q))).sort((a, b) => cnt(b) - cnt(a)).map(w => { const u = U[w.uni], p = poster(w), ch = w.type === 'Personagem'; return { title: w.title, meta: `${u.name} · ${w.year} · ★ ${w.avg.toFixed(1)} · ${fmt(cnt(w))} registros`, type: w.type, c: u.c, cInk: u.ink, bg: p.bg, ink: p.ink, ini: '', ph: ch ? '44px' : '64px', pr: ch ? '50%' : '4px', open: () => this.push('work', w.id) }; });
+      if (f === 'Tudo' || f === 'Pessoas') items = items.concat(Object.keys(US).filter(u => u !== 'duda' && (!q || (US[u].n + US[u].h).toLowerCase().includes(q)) && (f === 'Pessoas' || q)).map(u => ({ title: US[u].n, meta: `${US[u].h} · ${US[u].bio}`, type: st.follows[u] ? 'Seguindo' : 'Pessoa', c: '#FFFDF8', cInk: '#16130F', bg: US[u].c, ink: inkOn(US[u].c), ini: ini(US[u].n), ph: '44px', pr: '50%', open: () => this.push('user', u) })));
+      v.results = items.slice(0, 14); v.noResults = !items.length;
+      v.resultsLabel = q ? `${items.length} resultados` : 'Mais registrados esta semana';
+    }
+    if (v.sActivity) {
+      const N = [['nina', 'curtiu sua review de', 'w-wotlk', null, '12 min', 'r9'], ['caio', 'respondeu sua review de', 'd-crise', '“Pré-Crise é superior e eu morro nessa colina.”', '1h', 'r10'], ['gui', 'começou a seguir você', null, null, '3h', null, 1], ['leo', 'votou na sua ordem de leitura', null, null, '5h'], ['bia', 'e mais 18 curtiram sua review de', 'w-wotlk', null, 'ontem', 'r9'], ['mari', 'começou a seguir você', null, null, '2 dias', null, 1], ['tati', 'mencionou você em', 'd-tdk', '“@duda.lore precisa ver isso logo”', '3 dias', 'r6']];
+      v.notifs = N.map(([u, text, wid, quote, when, rid, fol]) => { const w = wid && WM[wid]; return { ...av(u), text, target: w ? w.title : '', quote, hasQuote: !!quote, when, hasFollow: !!fol, ...this.followBtn(u), hasPoster: !!w && !fol, pBg: w ? poster(w).bg : '', open: () => rid ? this.push('review', rid) : this.push('user', u) }; });
+      v.leaders = ['gui', 'leo', 'mari', 'joao'].map((u, i) => ({ ...av(u), rank: i + 1, score: `${[48, 36, 29, 22][i]} reviews · ${fmt([9120, 6400, 4880, 3100][i])} curtidas`, open: () => this.push('user', u), ...this.followBtn(u) }));
+    }
+    if (v.sDiary) {
+      const groups = {}; st.diary.forEach(d => (groups[d.m] = groups[d.m] || []).push(d));
+      v.diaryCount = `${st.diary.length} registros em 2026 · visível pros seus seguidores`;
+      v.diary = Object.keys(groups).map(m => ({ month: m.toUpperCase(), entries: groups[m].map(d => { const w = WM[d.id]; return { day: d.d, title: w.title, meta: `${w.type} · ${U[w.uni].name}`, bg: poster(w).bg, c: U[w.uni].c, stars: stars(d.r), badges: (d.like ? '♥ ' : '') + (d.re ? '↻' : ''), open: () => this.push('work', d.id) }; }) }));
+    }
+    if (v.sProfile) {
+      const uid = scr === 'user' ? top.id : 'duda', me = uid === 'duda', x = US[uid], sd = seed(uid);
+      const myRevs = st.reviews.filter(r => r.user === uid).sort((a, b) => b.ts - a.ts);
+      const pctFor = k => me ? this.uniPct(k) : Math.max(10 + seed(uid + k) % 85, BADGE[uid] === k ? 62 : 0), cp = compatOf(uid);
+      v.pu = { ...av(uid), handle: x.h, bio: x.bio, isMe: me, notMe: !me, ...this.followBtn(uid, true),
+        stats: me ? [{ n: st.diary.length + 318, l: 'Registros' }, { n: 312, l: 'Seguidores' }, { n: friends.length, l: 'Seguindo' }] : [{ n: 120 + sd % 600, l: 'Registros' }, { n: fmt((x.fol || 200 + sd % 700) + (st.follows[uid] ? 1 : 0)), l: 'Seguidores' }, { n: 40 + sd % 200, l: 'Seguindo' }],
+        progress: ['marvel', 'dc', 'wow'].map(k => { const u = U[k], pct = pctFor(k); return { name: u.name, c: u.c, pctLabel: pct + '%', open: () => this.push('uni', k) }; }),
+        favs: (me ? ['w-wc3', 'd-watchmen', 'm-fenix', 'c-arthas'] : [...new Set(myRevs.map(r => r.work))].slice(0, 4)).map(id => this.pc(WM[id])),
+        reviews: myRevs.slice(0, 4).map(r => this.rv(r)),
+        compat: cp + '%', compatLine: cp > 78 ? 'Almas gêmeas de cânone.' : cp > 62 ? 'Gostos parecidos, brigas saudáveis.' : 'Discordam bastante. Rende bons debates.',
+        compatUni: ['marvel', 'dc', 'wow'].map(k => ({ name: U[k].name, c: U[k].c, pct: (30 + seed(uid + k + 'c') % 68) + '%' })),
+        agree: ['Watchmen', 'Warcraft III', 'Aranhaverso', 'Reino do Amanhã'][sd % 4] + ', ' + ['Thanos', 'Arthas', 'O Cavaleiro das Trevas'][sd % 3],
+        disagree: ['Cataclysm', 'Sylvanas', 'Guerra Civil', 'Injustice'][(sd >> 2) % 4],
+        badges: ['wow', 'marvel', 'dc'].map(k => { const pct = pctFor(k), got = pct >= 50; return { title: 'Lorista de ' + BN[k], sub: got ? 'Conquistado' : `faltam ${50 - pct}%`, c: got ? U[k].c : '#FFFDF8', cInk: got ? U[k].ink : '#16130F', mark: got ? '★' : '?', bs: got ? 'solid' : 'dashed', op: got ? '1' : '.75' }; }) };
+      v.lists = LISTS.map(l => ({ title: l.title, meta: `${l.items.length} itens · ♥ ${fmt(l.likes)} · ${l.comments} comentários`, stack: l.items.slice(0, 4).map(id => ({ bg: poster(WM[id]).bg })), open: () => this.push('list', l.id) }));
+    }
+    if (v.sWrapped) {
+      const sep = st.diary.filter(d => d.m === 'Setembro'), byU = {};
+      sep.forEach(d => { const k = WM[d.id].uni; byU[k] = (byU[k] || 0) + 1; });
+      const tu = Object.keys(byU).sort((a, b) => byU[b] - byU[a])[0] || 'wow', topD = [...sep].sort((a, b) => b.r - a.r)[0], tw = topD ? WM[topD.id] : WM['w-wotlk'];
+      const mr = st.reviews.filter(r => r.user === 'duda').sort((a, b) => b.likes - a.likes)[0];
+      const hrs = sep.reduce((a, d) => a + ({ Jogo: 38, Filme: 2.5, 'Série': 5, HQ: 3, Livro: 9 }[WM[d.id].type] || 1), 0);
+      v.wr = { count: sep.length, delta: `+${Math.max(1, sep.length - 4)} que agosto`, hours: Math.round(hrs), hoursNote: `≈ ${Math.max(1, Math.round(hrs / 24))} dias em outras realidades`,
+        uni: U[tu].name, uc: U[tu].c, uInk: U[tu].ink, uniNote: `${byU[tu] || 0} registros · ${this.uniPct(tu)}% do cânone visto`,
+        top: tw.title, topBg: poster(tw).bg, topC: U[tw.uni].c, topStars: stars(topD ? topD.r : 5), openTop: () => this.push('work', tw.id),
+        arch: 'O Arquivista', archNote: 'Você revisita obras antigas e segue a cronologia à risca. 82% dos seus registros foram na ordem canônica.',
+        rev: mr ? mr.text : '', revLikes: mr ? mr.likes + (st.likedR[mr.id] ? 1 : 0) : 0, revWork: mr ? WM[mr.work].title : '',
+        share: e => { this.pow(e, 'SHARE!', '#E4412F'); this.toast('Card salvo · pronto pros stories'); } };
+    }
+    if (v.sUni) {
+      const k = top.id, u = U[k], pct = this.uniPct(k);
+      v.u = { ...u, pctLabel: pct + '%', stats: [{ n: fmt(u.total), l: 'Itens no cânone' }, { n: fmt(u.members), l: 'Membros' }, { n: fmt(u.live), l: 'Ativos agora' }] };
+      v.uniTabs = [['geral', 'Geral'], ['linha', 'Linha do tempo'], ['ordens', 'Ordens'], ['pers', 'Personagens']].map(([id, label]) => ({ label, pick: () => this.setState({ uniTab: id }), bg: st.uniTab === id ? '#16130F' : '#FFFDF8', fg: st.uniTab === id ? '#F5F1E8' : '#16130F' }));
+      v.uGeral = st.uniTab === 'geral'; v.uLinha = st.uniTab === 'linha'; v.uOrdens = st.uniTab === 'ordens'; v.uPers = st.uniTab === 'pers';
+      const inU = W.filter(w => w.uni === k);
+      v.uWorks = inU.filter(w => w.type !== 'Personagem').sort((a, b) => b.avg - a.avg).map(w => this.pc(w));
+      v.uReviews = st.reviews.filter(r => WM[r.work].uni === k).sort((a, b) => b.likes - a.likes).slice(0, 3).map(r => this.rv(r));
+      v.timeline = TL[k].map(([when, id, note]) => { const w = WM[id], s = this.isSeen(id); const fr = this.friendRatings(w).slice(0, 4); return { hasFr: fr.length > 0, fr: fr.map(f => av(f.f)), frLabel: fr.length === 1 ? US[fr[0].f].n.split(' ')[0] + ' já passou por aqui' : `${fr.length} amigos já passaram por aqui`, when, title: w.title, type: w.type, note, avgLabel: '★ ' + w.avg.toFixed(1), dot: s ? u.c : '#FFFDF8', dotInk: u.ink, mark: s ? '✓' : '', open: () => this.push('work', id) }; });
+      v.tlFriends = friends.map(f => { let last = -1; TL[k].forEach((t, i) => { if (this.friendRatings(WM[t[1]]).some(x => x.f === f)) last = i; }); return last < 0 ? null : { ...av(f), where: `${US[f].n.split(' ')[0]} · ${TL[k][last][0].split(' · ')[0]}`, open: () => this.push('user', f) }; }).filter(Boolean);
+      v.uOrders = ORD.filter(o => o.uni === k).sort((a, b) => b.votes - a.votes).map(o => { const d = o.steps.filter(s => this.isSeen(s)).length, on = !!st.orderVotes[o.id]; return { title: o.title, meta: `por ${US[o.by].h} · ${o.steps.length} itens · ${fmt(Math.round(o.votes / 3))} seguem`, pct: Math.round(d / o.steps.length * 100) + '%', doneLabel: `${d}/${o.steps.length}`, c: u.c, votes: fmt(o.votes + (on ? 1 : 0)), vBg: on ? u.c : '#FFFDF8', vFg: on ? u.ink : '#16130F', vote: e => { if (!on) this.pow(e, 'BOOM!', '#F4A814'); this.setState(s => ({ orderVotes: { ...s.orderVotes, [o.id]: !s.orderVotes[o.id] } })); }, open: () => this.push('order', o.id) }; });
+      v.uChars = inU.filter(w => w.type === 'Personagem').map(w => this.pc(w));
+    }
+    if (v.sWork) {
+      const w = WM[top.id], u = U[w.uni], p = poster(w), sd = seed(w.id), seen = this.isSeen(w.id);
+      const mine = st.diary.find(d => d.id === w.id), want = !!st.want[w.id], liked = !!st.likedW[w.id];
+      const fr = this.friendRatings(w), place = TL[w.uni].findIndex(t => t[1] === w.id);
+      const csx = CANON[w.id] || ['Cânone', `Faz parte da continuidade principal (${w.canon}).`];
+      const peaks = [1, 2, 3, 4, 6, 9, 12, 16, 13, 8].map((b, i) => Math.max(1, b + Math.round((w.avg - 4) * (i - 5)) + (sd >> i) % 3));
+      const mx = Math.max(...peaks);
+      const dBase = [40 + sd % 40, 20 + (sd >> 3) % 30, 5 + (sd >> 5) % 20].map(x => x * 23);
+      const chosen = st.debate[w.id];
+      let revs = st.reviews.filter(r => r.work === w.id);
+      revs = st.sort === 'amigos' ? revs.filter(r => st.follows[r.user] || r.user === 'duda').sort((a, b) => b.ts - a.ts) : revs.sort((a, b) => b.likes - a.likes);
+      v.w = { ...p, title: w.title, type: w.type, year: w.year, canon: w.canon, desc: w.desc, uniName: u.name, c: u.c, cInk: u.ink, phLabel: w.type === 'Personagem' ? 'RETRATO' : 'CAPA · ' + w.type.toUpperCase(),
+        avg: w.avg.toFixed(1).replace('.', ','), countLabel: `${fmt(cnt(w))} registros · ${fmt(Math.round(cnt(w) / 4))} reviews`,
+        openUni: () => this.push('uni', w.uni), log: () => this.setState({ log: { id: w.id, r: mine ? mine.r : 0, like: false, re: seen, spoiler: false, text: '' } }),
+        logLabel: seen ? 'Registrar de novo' : (w.type === 'Personagem' || w.type === 'Evento' ? 'Avaliar' : 'Registrar'),
+        hasMine: !!mine, mine: mine ? stars(mine.r) : '',
+        wantLabel: want ? '✓ Na lista' : '+ Quero', wantBg: want ? '#16130F' : '#FFFDF8', wantFg: want ? '#F5F1E8' : '#16130F', toggleWant: () => this.setState(s => ({ want: { ...s.want, [w.id]: !s.want[w.id] } })),
+        likeBg: liked ? '#E4412F' : '#FFFDF8', likeFg: liked ? '#FFFDF8' : '#16130F', toggleLike: () => this.setState(s => ({ likedW: { ...s.likedW, [w.id]: !s.likedW[w.id] } })),
+        hasFriends: fr.length > 0, friends: fr.map(f => ({ ...av(f.f), stars: stars(f.r), open: () => this.push('user', f.f) })), friendAvg: fr.length ? '★ ' + (fr.reduce((a, b) => a + b.r, 0) / fr.length).toFixed(1).replace('.', ',') : '',
+        debate: this.pollRows(['Essencial', 'Opcional', 'Pode pular'], dBase, chosen, i => this.setState(s => ({ debate: { ...s.debate, [w.id]: i } })), u.c),
+        debateTotal: chosen == null ? `${fmt(dBase.reduce((a, b) => a + b, 0))} votos · vote pra ver` : `${fmt(dBase.reduce((a, b) => a + b, 0) + 1)} votos`,
+        hist: peaks.map((b, i) => ({ h: Math.round(b / mx * 100) + '%', c: i >= 8 ? u.c : '#FFFDF8' })),
+        hasPlace: place >= 0, openTL: () => this.setState(s => ({ stack: [...s.stack, { t: 'uni', id: w.uni }], uniTab: 'linha' })),
+        place: place < 0 ? [] : [place - 1, place, place + 1].map((i, j) => { const t = TL[w.uni][i]; return t ? { label: j === 1 ? 'Aqui · ' + t[0] : j ? 'Depois' : 'Antes', title: WM[t[1]].title, bg: j === 1 ? u.c : '#FFFDF8', fg: j === 1 ? u.ink : '#16130F', br: j < 2 ? '2px solid #16130F' : '0', open: () => j !== 1 && this.push('work', t[1]) } : { label: j ? 'Depois' : 'Antes', title: '—', bg: '#FFFDF8', fg: '#16130F', br: j < 2 ? '2px solid #16130F' : '0', open: () => {} }; }),
+        hasConn: !!CONN[w.id], ...this.connMap(w),
+        cs: csx[0], csNote: csx[1], csBg: CS_STYLE[csx[0]][0], csFg: CS_STYLE[csx[0]][1], canonVote: this.canonRows(w),
+        sorts: [['pop', 'Populares'], ['amigos', 'Amigos']].map(([k, label]) => ({ label, pick: () => this.setState({ sort: k }), bg: st.sort === k ? '#16130F' : '#FFFDF8', fg: st.sort === k ? '#F5F1E8' : '#16130F' })),
+        reviews: revs.slice(0, 5).map(r => this.rv(r)), noReviews: !revs.length };
+    }
+    if (v.sReview) {
+      const r = st.reviews.find(x => x.id === top.id);
+      if (r) {
+        const base = this.rv(r);
+        v.rv = { ...base, isHidden: base.isHidden, openThread: undefined, comments: r.comments.map((c, i) => { const key = r.id + ':' + i, on = !!st.likedC[key]; return { ...av(c.user), text: c.text, when: c.when, likes: c.likes + (on ? 1 : 0), likeC: on ? '#E4412F' : '#16130F', like: () => this.setState(s => ({ likedC: { ...s.likedC, [key]: !s.likedC[key] } })), openUser: () => c.user !== 'duda' && this.push('user', c.user) }; }) };
+        v.rv.cLabel = r.comments.length ? `${r.comments.length} comentário${r.comments.length > 1 ? 's' : ''}` : 'Sem comentários ainda';
+        const send = () => { const t = st.draft.trim(); if (!t) return; this.setState(s => ({ draft: '', reviews: s.reviews.map(x => x.id === r.id ? { ...x, comments: [...x.comments, { user: 'duda', text: t, likes: 0, when: 'agora' }] } : x) })); this.toast(r.user === 'duda' ? 'Resposta publicada' : `${US[r.user].n} vai ser notificado`); };
+        v.draft = st.draft; v.onDraft = e => this.setState({ draft: e.target.value }); v.onDraftKey = e => { if (e.key === 'Enter') send(); }; v.sendComment = send;
+      }
+    }
+    if (v.sOrder) {
+      const o = ORD.find(x => x.id === top.id), u = U[o.uni], d = o.steps.filter(s => this.isSeen(s)).length, on = !!st.orderVotes[o.id], fo = !!st.orderFollow[o.id];
+      v.o = { title: o.title, uniName: u.name, c: u.c, ink: u.ink, track: u.track, meta: `por ${US[o.by].h} · ${o.steps.length} itens · ${fmt(Math.round(o.votes / 3))} seguem`, pct: Math.round(d / o.steps.length * 100) + '%', doneLabel: `${d} de ${o.steps.length}`,
+        votes: fmt(o.votes + (on ? 1 : 0)), vBg: on ? '#16130F' : '#FFFDF8', vFg: on ? '#F5F1E8' : '#16130F', vote: e => { if (!on) this.pow(e, 'BOOM!', '#F4A814'); this.setState(s => ({ orderVotes: { ...s.orderVotes, [o.id]: !s.orderVotes[o.id] } })); },
+        fLabel: fo ? '✓ Seguindo' : 'Seguir ordem', fBg: fo ? '#16130F' : '#FFFDF8', fFg: fo ? '#F5F1E8' : '#16130F', follow: () => this.setState(s => ({ orderFollow: { ...s.orderFollow, [o.id]: !s.orderFollow[o.id] } })),
+        steps: o.steps.map((id, i) => { const w = WM[id], s = this.isSeen(id); return { n: i + 1, title: w.title, meta: `${w.type} · ${w.year} · ★ ${w.avg.toFixed(1)}`, bg: poster(w).bg, deco: s ? 'line-through' : 'none', mark: s ? '✓' : '', checkBg: s ? u.c : '#FFFDF8', checkFg: u.ink, open: () => this.push('work', id), toggle: () => this.setState(ss => ({ checks: { ...ss.checks, [id]: !s } })) }; }) };
+    }
+    if (v.sList) {
+      const l = LISTS.find(x => x.id === top.id), on = !!st.likedL[l.id];
+      v.l = { title: l.title, desc: l.desc, by: '@duda.lore', comments: l.comments, likes: fmt(l.likes + (on ? 1 : 0)), likeBg: on ? '#E4412F' : '#FFFDF8', likeFg: on ? '#FFFDF8' : '#16130F', like: () => this.setState(s => ({ likedL: { ...s.likedL, [l.id]: !s.likedL[l.id] } })), items: l.items.map((id, i) => this.pc(WM[id], { n: i + 1 })) };
+    }
+
+    const lg = st.log;
+    v.logOpen = !!lg; v.logPicking = !!lg && !lg.id; v.logReady = !!lg && !!lg.id;
+    v.openLogBlank = () => this.setState({ log: { id: null, r: 0, like: false, re: false, spoiler: false, text: '' } });
+    v.closeLog = () => this.setState({ log: null });
+    if (v.logPicking) v.logPicks = ['w-cata', 'm-aranha', 'd-tdk', 'w-arthas', 'c-sylvanas', 'e-estalo', 'd-reino', 'm-fenix', 'd-injustice'].map(id => this.pc(WM[id], { pick: () => this.setState(s => ({ log: { ...s.log, id, re: this.isSeen(id) } })) }));
+    if (v.logReady) {
+      const w = WM[lg.id], u = U[w.uni], set = (k, val) => this.setState(s => ({ log: { ...s.log, [k]: val } }));
+      v.lw = { title: w.title, type: w.type, uniName: u.name, bg: poster(w).bg, c: u.c, cInk: u.ink, verb: verbOf(w.type) };
+      v.starBtns = [1, 2, 3, 4, 5].map(n => { const full = lg.r >= n, half = lg.r === n - 0.5; return { g: half ? '½' : '★', bg: full || half ? u.c : '#FFFDF8', fg: full || half ? u.ink : 'rgba(22,19,15,.25)', set: () => set('r', lg.r === n ? n - 0.5 : n) }; });
+      v.starHint = lg.r ? `${stars(lg.r)} · ${['', 'Tempo perdido', 'Fraco', 'Ok', 'Bom', 'Ótimo', 'Obra-prima'][Math.ceil(lg.r) + (lg.r === 5 ? 1 : 0)]}` : 'Toque de novo pra meia estrela';
+      v.logToggles = [['like', '♥ Curti'], ['re', '↻ Revisitei'], ['spoiler', '⚠ Contém spoiler']].map(([k, label]) => ({ label, bg: lg[k] ? '#16130F' : '#FFFDF8', fg: lg[k] ? '#F5F1E8' : '#16130F', toggle: () => set(k, !lg[k]) }));
+      v.logReview = lg.text; v.onReview = e => set('text', e.target.value);
+      v.audience = `Vai aparecer no feed dos seus 312 seguidores e na página de ${w.title}.`;
+      v.saveLog = () => {
+        this.setState(s => ({ log: null, diary: [{ id: w.id, d: 29, m: 'Setembro', r: lg.r, like: lg.like, re: lg.re }, ...s.diary], checks: { ...s.checks, [w.id]: true },
+          reviews: lg.text.trim() || lg.r ? [{ id: 'r' + Date.now(), user: 'duda', work: w.id, r: lg.r, text: lg.text.trim() || `${verbOf(w.type)} hoje.`, spoiler: lg.spoiler, likes: 0, when: 'agora', ts: 1000 + s.diary.length, comments: [] }, ...s.reviews] : s.reviews }));
+        this.toast('Publicado no feed do seu pessoal');
+      };
+    }
+    v.burstEl = st.burst ? React.createElement('div', { key: 'b' + st.burst.k, style: { position: 'absolute', left: st.burst.x, top: st.burst.y, zIndex: 45, pointerEvents: 'none', animation: 'mvPow .75s cubic-bezier(.2,.8,.2,1) forwards', fontFamily: "'Archivo',sans-serif", fontWeight: 900, fontStretch: '125%', fontSize: 20, lineHeight: 1, color: inkOn(st.burst.c), background: st.burst.c, border: '2px solid #16130F', padding: '5px 10px', borderRadius: 4, boxShadow: '3px 3px 0 #16130F', whiteSpace: 'nowrap' } }, st.burst.txt) : null;
+    v.obOn = !!st.ob;
+    if (st.ob) {
+      const step = st.ob, selU = ['marvel', 'dc', 'wow'].filter(k => st.obUnis[k]), nFol = friends.length;
+      v.obLoading = step === 'loading'; v.obSteps = !v.obLoading; v.ob1 = step === 1; v.ob2 = step === 2; v.ob3 = step === 3;
+      v.obBars = [1, 2, 3].map(i => ({ bg: step === 'loading' || i <= step ? '#16130F' : 'transparent' }));
+      v.obCanBack = step === 2 || step === 3; v.obBack = () => this.setState(s => ({ ob: s.ob - 1 }));
+      let ok = true, label = 'Continuar';
+      if (step === 1) {
+        v.obKicker = 'Bem-vindo ao Multiverse · 1 de 3'; v.obTitle = 'Quais universos são seus?'; v.obSub = 'Escolha onde você quer registrar, avaliar e discutir cânone.';
+        v.obUnis = ['marvel', 'dc', 'wow'].map(k => { const u = U[k], on = !!st.obUnis[k]; return { name: u.name, members: `${fmt(u.members)} loristas · ${fmt(u.total)} itens`, bg: on ? u.c : '#FFFDF8', fg: on ? u.ink : '#16130F', mark: on ? '✓' : '+', sh: on ? '4px 4px 0 #16130F' : 'none', tf: on ? 'translate(-2px,-2px)' : 'none', toggle: e => { if (!on) this.pow(e, 'POW!', u.c); this.setState(s => ({ obUnis: { ...s.obUnis, [k]: !on } })); } }; });
+        v.obSoon = [{ name: 'Star Wars' }, { name: 'Warhammer 40k' }, { name: 'Tolkien' }];
+        ok = selU.length > 0;
+      } else if (step === 2) {
+        const picks = W.filter(w => selU.includes(w.uni) && w.type !== 'Personagem').slice(0, 15), n = picks.filter(w => st.checks[w.id] === true).length;
+        v.obKicker = '2 de 3'; v.obTitle = 'O que você já consumiu?'; v.obSub = n ? `${n} marcados. Sem nota por enquanto, dá pra avaliar depois.` : 'Marque em lote tudo que você já viu, leu ou jogou.';
+        v.obPicks = picks.map(w => { const p = poster(w), on = st.checks[w.id] === true; return { ...p, title: w.title, typeU: w.type.toUpperCase(), on, tf: on ? 'scale(.94)' : 'none', toggle: () => this.setState(s => ({ checks: { ...s.checks, [w.id]: !on } })) }; });
+        label = n ? 'Continuar' : 'Pular';
+      } else if (step === 3) {
+        v.obKicker = '3 de 3'; v.obTitle = 'Siga pelo menos 3 loristas'; v.obSub = 'Seu feed é feito das reviews, votos e listas deles.';
+        const ppl = Object.keys(US).filter(u => u !== 'duda').sort((a, b) => (selU.includes(BADGE[b]) - selU.includes(BADGE[a])) || compatOf(b) - compatOf(a));
+        v.obPeople = ppl.map(u => ({ ...av(u), bio: US[u].bio, compat: compatOf(u) + '%', ...this.followBtn(u) }));
+        v.obFollowAll = () => this.setState(s => ({ follows: Object.fromEntries(ppl.map(u => [u, 1])) }));
+        v.obFolLabel = `Seguindo ${nFol}`;
+        ok = nFol >= 3; label = ok ? 'Montar meu feed' : `Siga mais ${3 - nFol}`;
+      } else {
+        v.obLoadingNote = `Puxando reviews, votos e listas de ${nFol} loristas em ${Math.max(1, selU.length)} universo${selU.length > 1 ? 's' : ''}…`;
+        const cs = (selU.length ? selU : ['wow']).map(k => U[k].c);
+        v.obSkel = [0, 1, 2, 3, 4, 5].map(i => ({ c: cs[i % cs.length], d: i * 0.12 + 's' }));
+      }
+      v.obNextLabel = label; v.obNextBg = ok ? '#E4412F' : '#E6E0D2'; v.obNextFg = ok ? '#FFFDF8' : '#6B655B'; v.obNextSh = ok ? '3px 3px 0 #16130F' : 'none';
+      v.obNext = () => { if (!ok) return; if (step === 3) this.finishOb(); else this.setState({ ob: step + 1 }); };
+    }
+    return v;
+  }
+}
+</script>
+</body>
+</html>
