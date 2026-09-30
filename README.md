@@ -1,6 +1,6 @@
 # Multiverse
 
-App iOS e backend Firebase no mesmo repositório. Cada parte tem suas próprias
+App iOS, API NestJS e funções Firebase no mesmo repositório. Cada parte tem suas próprias
 configurações, dependências e comandos de execução.
 
 ## Estrutura
@@ -13,6 +13,7 @@ apps/ios/
 ├── Multiverse/              # App e recursos
 ├── MultiverseWidgets/       # Widgets e Live Activity
 └── MultiverseTests/         # Testes iOS
+backend/api/                # API NestJS + TypeScript (Node.js 24 LTS)
 backend/firebase/
 ├── firebase.json            # Configuração de publicação
 ├── functions/               # Funções TypeScript e testes
@@ -54,6 +55,19 @@ Detalhes de assinatura, arquitetura e autenticação: [guia iOS](apps/ios/README
 
 ## Backend — VS Code ou outra IDE
 
+A API NestJS fica em `backend/api/`. Para começar, com Node.js 24 LTS (24.15+):
+
+```sh
+make api-install
+make api-dev
+```
+
+A rota `GET http://localhost:3000/api/v1/health` verifica se o servidor responde.
+Use `make api-check` para validar a base. Configuração, estrutura e comandos:
+[guia da API](backend/api/README.md).
+
+### Funções Firebase existentes
+
 Abra `backend/firebase/` na IDE de sua preferência, ou abra a raiz para ver o monorepo.
 As funções usam Node.js 22 e npm. Na raiz:
 
@@ -85,6 +99,7 @@ Na raiz do monorepo:
 make ios-build
 make ios-test
 make backend-test
+make api-check
 ```
 
 Para escolher outro simulador instalado:
@@ -93,13 +108,14 @@ Para escolher outro simulador instalado:
 make ios-test IOS_DESTINATION='platform=iOS Simulator,name=iPhone 16'
 ```
 
-`make test` executa as duas suítes. Os testes automatizados não enviam códigos reais
+`make test` executa as suítes do iOS, das funções Firebase e da API. Os testes automatizados não enviam códigos reais
 nem substituem a validação de autenticação e links em um aparelho conectado ao Firebase.
 
 ## Documentação e referências
 
 - [Arquitetura e configuração iOS](apps/ios/README.md)
 - [Configuração e ativação do backend](backend/firebase/README.md)
+- [API NestJS](backend/api/README.md)
 - [Backlog](docs/BACKLOG.md)
 - [Especificação de design](design/design_handoff_multiverse/README.md)
 
