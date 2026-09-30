@@ -12,6 +12,7 @@ actor MockRepository: MultiverseRepository {
     private var follows: Set<String>
     private var itemToggles = ItemToggles()
     private var reviewToggles = ReviewToggles()
+    private var reactions: [String: ReactionType] = [:]
     private var pollVotes = PollVotes()
     private var orderState = OrderState()
     private var likedLists: Set<String> = []
@@ -102,6 +103,15 @@ actor MockRepository: MultiverseRepository {
 
     func setSpoilerRevealed(reviewID: String) async throws {
         reviewToggles.revealedSpoilers.insert(reviewID)
+    }
+
+    func fetchReactions() async throws -> [String: ReactionType] {
+        await delay()
+        return reactions
+    }
+
+    func setReaction(reviewID: String, type: ReactionType?) async throws {
+        reactions[reviewID] = type
     }
 
     // MARK: - Itens

@@ -1,10 +1,12 @@
 import SwiftUI
+import UIKit
 
 struct ThreadView: View {
     let reviewID: String
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var draft = ""
+    @State private var quoting: (author: String, text: String)?
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -16,7 +18,7 @@ struct ThreadView: View {
                     if store.isShieldedReview(review) {
                         ShieldedReviewCard(review: review)
                     } else {
-                        ReviewDetailCard(review: review)
+                        ReviewDetailCard(review: review, onQuote: { quote(author: store.user(review.user)?.name ?? "", text: review.text) })
                         commentsSection(review: review)
                     }
                 }
@@ -56,37 +58,63 @@ struct ThreadView: View {
                 .font(MVFont.section(16)).foregroundStyle(MV.C.ink)
             VStack(spacing: 12) {
                 ForEach(Array(review.comments.enumerated()), id: \.offset) { index, comment in
-                    CommentRow(review: review, comment: comment, index: index)
+                    CommentRow(review: review, comment: comment, index: index, onQuote: { quote(author: store.user(comment.user)?.name ?? "", text: comment.text) })
                 }
             }
         }
     }
 
+    private func quote(author: String, text: String) {
+        quoting = (author, text)
+        focused = true
+    }
+
     @ViewBuilder
     private func replyBar(review: Review) -> some View {
         let me = store.user(store.meID)!
-        HStack(spacing: 8) {
-            AvatarView(user: me, size: 34)
-            TextField("Responder… (teorias bem-vindas)", text: $draft)
-                .font(MVFont.body(14, weight: 500))
-                .focused($focused)
-                .padding(.horizontal, 14)
-                .frame(height: 42)
-                .background(MV.C.card)
-                .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-                .clipShape(Capsule())
-                .onSubmit { send(review: review) }
-            Text("ENVIAR")
-                .font(MVFont.bold(12))
-                .padding(.horizontal, 14)
-                .frame(height: 42)
-                .foregroundStyle(MV.C.paper)
-                .background(MV.C.ink)
-                .clipShape(Capsule())
-                .contentShape(Rectangle())
-                .onTapGesture { send(review: review) }
+        VStack(spacing: 8) {
+            if let quoting {
+                HStack(alignment: .top, spacing: 8) {
+                    Rectangle().fill(MV.C.wow).frame(width: 3)
+                    (Text("CITANDO \(quoting.author.uppercased()): ").font(MVFont.black(11))
+                        + Text("\"\(quoting.text)\"").font(MVFont.body(12, weight: 600)).italic())
+                        .foregroundStyle(MV.C.ink)
+                        .lineLimit(2)
+                    Spacer()
+                    Button { self.quoting = nil } label: {
+                        Text("✕").font(.system(size: 13, weight: .bold)).foregroundStyle(MV.C.muted)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(10)
+                .background(MV.C.wow.opacity(0.25))
+                .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
+                .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.wow, lineWidth: MV.stroke))
+                .padding(.horizontal, MV.pad)
+            }
+            HStack(spacing: 8) {
+                AvatarView(user: me, size: 34)
+                TextField("Responder… (teorias bem-vindas)", text: $draft)
+                    .font(MVFont.body(14, weight: 500))
+                    .focused($focused)
+                    .padding(.horizontal, 14)
+                    .frame(height: 42)
+                    .background(MV.C.card)
+                    .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+                    .clipShape(Capsule())
+                    .onSubmit { send(review: review) }
+                Text("ENVIAR")
+                    .font(MVFont.bold(12))
+                    .padding(.horizontal, 14)
+                    .frame(height: 42)
+                    .foregroundStyle(MV.C.paper)
+                    .background(MV.C.ink)
+                    .clipShape(Capsule())
+                    .contentShape(Rectangle())
+                    .onTapGesture { send(review: review) }
+            }
+            .padding(.horizontal, MV.pad)
         }
-        .padding(.horizontal, MV.pad)
         .padding(.vertical, 10)
         .background(MV.C.paper)
         .overlay(alignment: .top) { Rectangle().fill(MV.C.ink).frame(height: MV.stroke) }
@@ -94,14 +122,17 @@ struct ThreadView: View {
 
     private func send(review: Review) {
         guard !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        store.postComment(reviewID: review.id, text: draft)
+        store.postComment(reviewID: review.id, text: draft, quote: quoting)
         draft = ""
+        quoting = nil
     }
 }
 
 private struct ReviewDetailCard: View {
     let review: Review
+    let onQuote: () -> Void
     @Environment(AppStore.self) private var store
+    @State private var showReactionBar = false
 
     var body: some View {
         guard let user = store.user(review.user) else { return AnyView(EmptyView()) }
@@ -120,10 +151,38 @@ private struct ReviewDetailCard: View {
                                 BadgeChip(label: badge, universe: badgeUni)
                             }
                         }
-                        Text(review.when).font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
+                        if let item, let uni {
+                            Text("sobre \(item.title) · \(review.when)").font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
+                        } else {
+                            Text(review.when).font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
+                        }
                     }
                     Spacer()
                     StarsText(rating: review.rating, color: uni?.color ?? MV.C.ink, size: 17)
+                }
+
+                if !hidden {
+                    HStack(spacing: 0) {
+                        Text("❝ Citar").font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
+                            .padding(.horizontal, 12).padding(.vertical, 8)
+                            .background(MV.C.wow)
+                            .contentShape(Rectangle())
+                            .onTapGesture(perform: onQuote)
+                        Text("Copiar").font(MVFont.bold(13)).foregroundStyle(MV.C.paper)
+                            .padding(.horizontal, 12).padding(.vertical, 8)
+                            .background(MV.C.ink)
+                            .contentShape(Rectangle())
+                            .onTapGesture { UIPasteboard.general.string = review.text }
+                        Text("POW!").font(MVFont.bold(13)).foregroundStyle(MV.C.paper)
+                            .padding(.horizontal, 12).padding(.vertical, 8)
+                            .background(MV.C.ink)
+                            .burstOnTap("POW!", color: MV.C.marvel, when: store.userReaction(for: review.id) != .pow) {
+                                store.setReaction(.pow, for: review.id)
+                            }
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
+                    .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+                    .fixedSize()
                 }
 
                 ZStack {
@@ -145,20 +204,11 @@ private struct ReviewDetailCard: View {
                     }
                 }
 
-                let liked = store.isLikedReview(review.id)
-                Text("♥ \(Logic.fmt(store.reviewLikeCount(review))) curtidas")
-                    .font(MVFont.bold(12))
-                    .padding(.horizontal, 11).padding(.vertical, 6)
-                    .foregroundStyle(liked ? MV.C.card : MV.C.ink)
-                    .background(liked ? MV.C.marvel : MV.C.card)
-                    .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-                    .clipShape(Capsule())
-                    .burstOnTap("POW!", color: MV.C.marvel, when: !liked) {
-                        store.toggleLikedReview(review.id)
-                    }
+                ReactionPillsRow(reviewID: review.id)
             }
             .padding(14)
             .comicCard(shadow: MV.Shadow.l)
+            .reactionBar(isPresented: $showReactionBar, onReact: { store.setReaction($0, for: review.id) }, onQuote: onQuote)
         )
     }
 }
@@ -167,23 +217,34 @@ private struct CommentRow: View {
     let review: Review
     let comment: Comment
     let index: Int
+    let onQuote: () -> Void
     @Environment(AppStore.self) private var store
+    @State private var showReactionBar = false
 
     var body: some View {
         guard let user = store.user(comment.user) else { return AnyView(EmptyView()) }
-        let liked = store.isLikedComment(reviewID: review.id, index: index)
 
         return AnyView(
             HStack(alignment: .top, spacing: 8) {
                 Button { store.openUserProfile(user.id) } label: { AvatarView(user: user, size: 30) }
                     .buttonStyle(.plain)
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 6) {
                         Text(user.name).font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
                         Text(comment.when ?? "agora").font(MVFont.body(10, weight: 600)).foregroundStyle(MV.C.muted)
                     }
+                    if let quotedAuthor = comment.quotedAuthor, let quotedText = comment.quotedText {
+                        (Text("\(quotedAuthor.uppercased()): ").font(MVFont.black(10))
+                            + Text("\"\(quotedText)\"").font(MVFont.body(11, weight: 600)).italic())
+                            .foregroundStyle(MV.C.muted)
+                            .padding(8)
+                            .background(Color(hex: "#F3EDE0"))
+                            .overlay(Rectangle().fill(MV.C.ink).frame(width: 2), alignment: .leading)
+                            .lineLimit(2)
+                    }
                     Text(comment.text).font(MVFont.body(13, weight: 500)).foregroundStyle(MV.C.ink)
+                    ReactionPillsRow(reviewID: "\(review.id):c\(index)")
                 }
                 .padding(10)
                 .background(
@@ -194,9 +255,11 @@ private struct CommentRow: View {
                     UnevenRoundedRectangle(topLeadingRadius: 4, bottomLeadingRadius: 12, bottomTrailingRadius: 12, topTrailingRadius: 12)
                         .strokeBorder(MV.C.ink, lineWidth: MV.stroke)
                 )
+                .reactionBar(isPresented: $showReactionBar, onReact: { store.setReaction($0, for: "\(review.id):c\(index)") }, onQuote: onQuote)
 
                 Spacer(minLength: 0)
 
+                let liked = store.isLikedComment(reviewID: review.id, index: index)
                 Text("♥ \(Logic.fmt(store.commentLikeCount(review: review, index: index)))")
                     .font(MVFont.bold(11))
                     .foregroundStyle(liked ? MV.C.marvel : MV.C.ink)

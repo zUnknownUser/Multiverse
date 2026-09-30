@@ -10,6 +10,7 @@ struct FeedReviewCard: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var showReportSheet = false
+    @State private var showReactionBar = false
 
     private var isAccessibilitySize: Bool { dynamicTypeSize >= .accessibility1 }
 
@@ -33,6 +34,9 @@ struct FeedReviewCard: View {
             .comicCard()
             .contentShape(Rectangle())
             .onTapGesture { if !hidden { store.push(.review(review.id)) } }
+            .reactionBar(isPresented: $showReactionBar) { type in
+                store.setReaction(type, for: review.id)
+            }
             .accessibilityElement(children: .contain)
             .accessibilityLabel(accessibilitySummary(user: user, item: item))
             .sheet(isPresented: $showReportSheet) {
@@ -148,41 +152,35 @@ struct FeedReviewCard: View {
 
     @ViewBuilder
     private func footer(review: Review) -> some View {
-        let liked = store.isLikedReview(review.id)
-        let likeButton = Text("♥ \(Logic.fmt(store.reviewLikeCount(review)))")
-            .font(MVFont.bold(12))
-            .padding(.horizontal, 11).padding(.vertical, 5)
-            .foregroundStyle(liked ? MV.C.card : MV.C.ink)
-            .background(Capsule().fill(liked ? MV.C.marvel : MV.C.card))
-            .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-            .burstOnTap("POW!", color: MV.C.marvel, when: !liked) {
-                store.toggleLikedReview(review.id)
-            }
-            .accessibilityLabel(liked ? "Descurtir" : "Curtir")
-            .accessibilityValue("\(store.reviewLikeCount(review)) curtidas")
-            .accessibilityAddTraits(.isButton)
+        let reactions = ReactionPillsRow(reviewID: review.id)
+            .accessibilityLabel(reactionsAccessibilityLabel(review))
 
         let commentButton = PillButton(title: store.commentsLabel(for: review)) { store.push(.review(review.id)) }
             .accessibilityLabel("Ver comentários, \(review.comments.count)")
 
         let timeLabel = Text(review.when).font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
 
-        VStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 8) {
             Rectangle().fill(MV.C.divider).frame(height: 1.5)
+            reactions
             if isAccessibilitySize {
                 VStack(alignment: .leading, spacing: 8) {
-                    likeButton
                     commentButton
                     timeLabel
                 }
             } else {
                 HStack(spacing: 8) {
-                    likeButton
                     commentButton
                     Spacer()
                     timeLabel
                 }
             }
         }
+    }
+
+    private func reactionsAccessibilityLabel(_ review: Review) -> String {
+        let counts = store.reactionCounts(for: review.id)
+        guard !counts.isEmpty else { return "Segure pra reagir" }
+        return "Reações: " + counts.map { "\($0.type.subtitle.capitalized) \($0.count)" }.joined(separator: ", ")
     }
 }

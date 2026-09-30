@@ -125,6 +125,7 @@ final class AppStore {
     var likedItems: Set<String> = []
     var wantList: Set<String> = []
     var revealedSpoilers: Set<String> = []
+    var reactions: [String: ReactionType] = [:]   // reviewID → reação escolhida
     var checks: [String: Bool] = [:]
     var orderVotes: Set<String> = []
     var orderFollows: Set<String> = []
@@ -205,6 +206,7 @@ final class AppStore {
             async let followsResult = repository.fetchFollows()
             async let itemTogglesResult = repository.fetchItemToggles()
             async let reviewTogglesResult = repository.fetchReviewToggles()
+            async let reactionsResult = repository.fetchReactions()
             async let pollVotesResult = repository.fetchPollVotes()
             async let orderStateResult = repository.fetchOrderState()
             async let likedListsResult = repository.fetchLikedLists()
@@ -247,6 +249,7 @@ final class AppStore {
             likedReviews = reviewToggles.liked
             likedComments = reviewToggles.likedComments
             revealedSpoilers = reviewToggles.revealedSpoilers
+            reactions = try await reactionsResult
 
             let pollVotes = try await pollVotesResult
             pollVote = pollVotes.weekly
@@ -366,6 +369,28 @@ final class AppStore {
         revealedSpoilers.insert(id)
         let repository = self.repository
         Task { try? await repository.setSpoilerRevealed(reviewID: id) }
+    }
+
+    /// Contagem base determinística por tipo (~20% chance de ficar em 0 e sumir do rodapé),
+    /// mais 1 se for a reação escolhida pelo usuário — mesmo espírito de `Logic.logCount`.
+    func reactionCounts(for reviewID: String) -> [(type: ReactionType, count: Int)] {
+        let mine = reactions[reviewID]
+        return ReactionType.allCases.compactMap { type in
+            let sd = Logic.seed(reviewID + type.rawValue)
+            let base = sd % 5 == 0 ? 0 : 1 + Int(sd % 60)
+            let count = base + (mine == type ? 1 : 0)
+            return count > 0 ? (type, count) : nil
+        }
+    }
+
+    func userReaction(for reviewID: String) -> ReactionType? { reactions[reviewID] }
+
+    /// Tocar na mesma reação de novo remove; tocar numa diferente troca.
+    func setReaction(_ type: ReactionType, for reviewID: String) {
+        reactions[reviewID] = (reactions[reviewID] == type) ? nil : type
+        let newValue = reactions[reviewID]
+        let repository = self.repository
+        Task { try? await repository.setReaction(reviewID: reviewID, type: newValue) }
     }
 
     func commentsLabel(for review: Review) -> String {
@@ -872,11 +897,12 @@ final class AppStore {
         }
     }
 
-    /// Resposta na thread da review (campo de resposta da Tela 7).
-    func postComment(reviewID: String, text: String) {
+    /// Resposta na thread da review (campo de resposta da Tela 7). `quote` vem de "Citar"
+    /// no card segurado (recurso 5h).
+    func postComment(reviewID: String, text: String, quote: (author: String, text: String)? = nil) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let idx = reviews.firstIndex(where: { $0.id == reviewID }) else { return }
-        let comment = Comment(user: meID, text: trimmed, likes: 0, when: "agora")
+        let comment = Comment(user: meID, text: trimmed, likes: 0, when: "agora", quotedAuthor: quote?.author, quotedText: quote?.text)
         reviews[idx].comments.append(comment)
         let authorID = reviews[idx].user
         showToast(authorID == meID ? "Resposta publicada" : "\(usersByID[authorID]?.name ?? "") vai ser notificado")

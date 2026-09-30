@@ -80,6 +80,9 @@ struct Comment: Codable, Hashable, Sendable {
     var likes: Int
     /// Ausente no JSON de amostra; os comentários iniciais mostram "1h" (ver AppStore).
     var when: String?
+    /// Citação (recurso 5h) — nome de quem foi citado + o trecho citado.
+    var quotedAuthor: String?
+    var quotedText: String?
 }
 
 struct CanonInfo: Codable, Hashable, Sendable { let status: String, note: String }   // Cânone | Variante | Retconado | Contestado
@@ -103,6 +106,32 @@ struct FlexString: Codable, Hashable, CustomStringConvertible, Sendable {
     }
     func encode(to encoder: Encoder) throws { var c = encoder.singleValueContainer(); try c.encode(value) }
     var description: String { value }
+}
+
+// MARK: - Reações (recurso 5a)
+
+enum ReactionType: String, CaseIterable, Codable, Sendable {
+    case pow = "POW!", zap = "ZAP!", krak = "KRAK!", heh = "HEH"
+
+    var subtitle: String {
+        switch self {
+        case .pow: return "CONCORDO"
+        case .zap: return "SURPRESA"
+        case .krak: return "DISCORDO"
+        case .heh: return "RI ALTO"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .pow: return MV.C.marvel
+        case .zap: return MV.C.dc
+        case .krak: return MV.C.wow
+        case .heh: return MV.C.card
+        }
+    }
+
+    var textColor: Color { self == .heh ? MV.C.ink : MV.C.card }
 }
 
 // MARK: - Escudo de spoiler

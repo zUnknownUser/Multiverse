@@ -119,6 +119,8 @@ protocol MultiverseRepository: Sendable {
     func postComment(reviewID: String, comment: Comment) async throws
     func setCommentLiked(reviewID: String, commentIndex: Int, liked: Bool) async throws
     func setSpoilerRevealed(reviewID: String) async throws
+    func fetchReactions() async throws -> [String: ReactionType]
+    func setReaction(reviewID: String, type: ReactionType?) async throws
 
     // Itens (visto, quero, curtir)
     func fetchItemToggles() async throws -> ItemToggles
