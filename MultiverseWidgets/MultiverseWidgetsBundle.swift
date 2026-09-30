@@ -13,7 +13,7 @@ struct MultiverseWidgetsBundle: WidgetBundle {
 
 // MARK: - Timeline compartilhada
 
-struct SnapshotEntry: TimelineEntry {
+struct SnapshotEntry: WidgetKit.TimelineEntry {
     let date: Date
     let snapshot: WidgetBridge.Snapshot?
 }

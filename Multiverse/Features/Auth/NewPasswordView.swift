@@ -2,7 +2,7 @@ import SwiftUI
 
 struct NewPasswordView: View {
     @Environment(AuthStore.self) private var auth
-    @State private var signOutOtherDevices = true
+    private let signOutOtherDevices = true
 
     var body: some View {
         @Bindable var auth = auth
@@ -43,7 +43,7 @@ struct NewPasswordView: View {
                 Text("Sair de todos os outros aparelhos").font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
             }
             .contentShape(Rectangle())
-            .onTapGesture { signOutOtherDevices.toggle() }
+            .accessibilityLabel("A redefinição de senha invalida as sessões anteriores")
 
             if let error = auth.errorMessage {
                 AuthErrorBanner(message: error)

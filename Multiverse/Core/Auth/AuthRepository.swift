@@ -1,15 +1,15 @@
 import Foundation
 
 /// Autenticação e conta — protocolo separado de `MultiverseRepository` porque é uma
-/// preocupação diferente (identidade, não conteúdo). Hoje só existe `MockAuthRepository`;
-/// a fase 2 troca por um backend real (ex.: Supabase Auth) sem tocar nas Views.
+/// preocupação diferente (identidade, não conteúdo). FirebaseAuthRepository é a
+/// implementação real; MockAuthRepository fica disponível para desenvolvimento.
 protocol AuthRepository: Sendable {
     func currentSession() async -> AuthSession?
 
     func signIn(identifier: String, password: String) async throws -> AuthSession
     func signInWithApple() async throws -> AuthSession
     func signInWithGoogle() async throws -> AuthSession
-    func signOut() async
+    func signOut() async throws
 
     /// Envia o código de verificação pro e-mail informado.
     func startSignUp(email: String, password: String) async throws
@@ -19,8 +19,10 @@ protocol AuthRepository: Sendable {
     func completeSignUp(name: String, username: String, avatarColor: String, bio: String) async throws -> AuthSession
 
     func requestPasswordReset(email: String) async throws
-    /// Simula o toque no link recebido por e-mail.
-    func resetPassword(_ newPassword: String) async throws -> AuthSession
+    func pendingSignUpEmail() async -> String?
+    func pendingEmailIsVerified() async -> Bool
+    func prepareEmailAction(_ url: URL) async throws -> EmailActionResult
+    func resetPassword(_ newPassword: String) async throws
 
     func deleteAccount() async throws
 
@@ -30,4 +32,11 @@ protocol AuthRepository: Sendable {
     func fetchBlockedUsers() async -> [BlockedUser]
     func blockUser(handle: String) async
     func unblockUser(_ id: String) async
+}
+
+// Demo implementations do not process real action links.
+extension AuthRepository {
+    func pendingSignUpEmail() async -> String? { nil }
+    func pendingEmailIsVerified() async -> Bool { false }
+    func prepareEmailAction(_ url: URL) async throws -> EmailActionResult { throw AuthError.invalidActionLink }
 }

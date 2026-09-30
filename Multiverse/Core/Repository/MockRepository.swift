@@ -32,13 +32,17 @@ actor MockRepository: MultiverseRepository {
     /// Simula latência de rede pra que estados de loading façam sentido; ajuste/zere se quiser.
     private let simulatedLatency: Duration = .milliseconds(220)
 
-    init(sample: SampleData = .load(), startFollowing: Bool) {
+    init(sample: SampleData = .load(), startFollowing: Bool, session: AuthSession? = nil) {
+        let signedInUser = session.map {
+            User(id: $0.userID, name: $0.displayName ?? "Lorista", handle: $0.handle,
+                 avatarColor: $0.avatarColor ?? "#F4A814", bio: $0.bio ?? "", followers: 0, badgeUniverse: "")
+        }
         self.sample = sample
         catalog = Catalog(
-            universes: sample.universes, items: sample.items, users: sample.users,
+            universes: sample.universes, items: sample.items, users: sample.users + (signedInUser.map { [$0] } ?? []),
             badgeNames: sample.badgeNames, connections: sample.connections, timelines: sample.timelines,
             readingOrders: sample.readingOrders, lists: sample.lists, genericReviewTexts: sample.genericReviewTexts,
-            canonStatus: sample.canonStatus, canonStatusColors: sample.canonStatusColors, duels: sample.duels, me: sample.me
+            canonStatus: sample.canonStatus, canonStatusColors: sample.canonStatusColors, duels: sample.duels, me: session.map { Me(id: $0.userID, following: [], followers: 0) } ?? sample.me
         )
         follows = startFollowing ? ["nina", "caio", "leo", "bia", "rafa", "tati"] : []
 
@@ -66,6 +70,20 @@ actor MockRepository: MultiverseRepository {
         messages = recursos.messages
         roomMessages = recursos.roomMessages
         roomProgress = ["w-wotlk": 1]
+        if session != nil {
+            // Real identities must not inherit the demo account's personal activity.
+            follows = []
+            diary = []
+            itemToggles = ItemToggles(seenOverrides: [:], wanted: [], liked: [])
+            orderState = OrderState(upvoted: [], following: [])
+            shieldState = ShieldState()
+            clubState = ClubState()
+            theoryLoreState = TheoryLoreState(points: 0, accuracyPercent: 0)
+            predictionState = PredictionState()
+            conversations = []
+            messages = []
+            roomProgress = [:]
+        }
     }
 
     private func delay() async {

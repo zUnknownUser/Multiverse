@@ -15,7 +15,7 @@ final class ProStore {
     private(set) var isLoadingProducts = true
     var purchaseError: String?
 
-    private var updatesTask: Task<Void, Never>?
+    @ObservationIgnored private var updatesTask: Task<Void, Never>?
 
     init() {
         updatesTask = Task { [weak self] in await self?.observeTransactionUpdates() }

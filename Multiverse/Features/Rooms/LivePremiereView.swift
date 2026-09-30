@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 private struct FloatingSticker: Identifiable {
     let id = UUID()

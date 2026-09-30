@@ -12,7 +12,7 @@ import WidgetKit
 /// e troque `appGroupID` abaixo pelo identificador real gerado (geralmente
 /// `group.<bundle-id-do-app>`).
 enum WidgetBridge {
-    static let appGroupID = "group.com.multiverse.app"
+    static let appGroupID = "group.com.nexussoft.multiverse"
     private static let key = "widget-snapshot"
 
     struct Snapshot: Codable {

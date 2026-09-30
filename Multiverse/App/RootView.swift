@@ -1,4 +1,5 @@
 import SwiftUI
+import GoogleSignIn
 
 struct RootView: View {
     @State private var store = AppStore()
@@ -8,28 +9,49 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if store.isLoading || auth.isBootstrapping {
+            if auth.isBootstrapping {
                 LaunchLoadingView()
-            } else if auth.session == nil {
+            } else if auth.session == nil || auth.path.last == .newPassword {
                 AuthFlowView()
+            } else if store.isLoading || store.meID != auth.session?.userID {
+                LaunchLoadingView()
             } else if store.isOnboarded {
                 MainTabView()
             } else {
                 OnboardingView()
             }
         }
+        .alert(auth.errorMessage != nil ? "Não foi possível continuar" : "Multiverse", isPresented: Binding(
+            get: { auth.errorMessage != nil || auth.infoMessage != nil },
+            set: { if !$0 { auth.errorMessage = nil; auth.infoMessage = nil } }
+        )) {
+            Button("OK") { auth.errorMessage = nil; auth.infoMessage = nil }
+        } message: {
+            Text(auth.errorMessage ?? auth.infoMessage ?? "")
+        }
+        .onOpenURL { url in
+            if !GIDSignIn.sharedInstance.handle(url) { Task { await auth.handleEmailLink(url) } }
+        }
+        .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+            if let url = activity.webpageURL { Task { await auth.handleEmailLink(url) } }
+        }
         .environment(store)
         .environment(auth)
         .environment(burst)
         .environment(proStore)
         .preferredColorScheme(store.themePreference.colorScheme)
-        .task { await store.bootstrap() }
+        .task(id: auth.session) {
+            guard let session = auth.session else {
+                store = AppStore()
+                return
+            }
+            let accountStore = AppStore(session: session)
+            store = accountStore
+            await accountStore.bootstrap()
+        }
         .task { await auth.bootstrap() }
         .task { await proStore.loadProducts() }
-        .onChange(of: auth.session) { _, newSession in
-            guard newSession != nil, !auth.draft.name.isEmpty else { return }
-            store.applyProfileEdits(name: auth.draft.name, handle: auth.draft.username.hasPrefix("@") ? auth.draft.username : "@\(auth.draft.username)", avatarColor: auth.draft.avatarColor, bio: auth.draft.bio)
-        }
+
     }
 }
 

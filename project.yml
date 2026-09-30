@@ -1,14 +1,27 @@
 name: Multiverse
 
 options:
-  bundleIdPrefix: com.multiverse
+  bundleIdPrefix: com.nexussoft.multiverse
   deploymentTarget:
     iOS: "17.0"
   createIntermediateGroups: true
   generateEmptyDirectories: false
 
+packages:
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk.git
+    exactVersion: 12.9.0
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS.git
+    exactVersion: 9.2.0
+
+fileGroups:
+  - Configuration
+
 settings:
   base:
+    DEVELOPMENT_TEAM: 5RS2AA677K
+    CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
     ENABLE_PREVIEWS: YES
@@ -25,30 +38,41 @@ targets:
       - path: Multiverse
         excludes:
           - "**/*.md"
-    info:
-      path: Multiverse/Resources/Info.plist
-      properties:
-        UILaunchScreen:
-          UIColorName: LaunchBackground
-        UISupportedInterfaceOrientations:
-          - UIInterfaceOrientationPortrait
-        UIAppFonts:
-          - "Archivo-VariableFont_wdth,wght.ttf"
+      - path: GoogleService-Info.plist
+        buildPhase: resources
     entitlements:
       path: Multiverse/Resources/Multiverse.entitlements
       properties:
+        com.apple.developer.devicecheck.appattest-environment: production
+        com.apple.developer.associated-domains:
+          - applinks:multiverse-7f87c.firebaseapp.com
         com.apple.security.application-groups:
-          - group.com.multiverse.app
+          - group.com.nexussoft.multiverse
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.multiverse.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.nexussoft.multiverse
+        INFOPLIST_FILE: Multiverse/Resources/Info.plist
+        OTHER_LDFLAGS: ["$(inherited)", "-ObjC"]
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: NO
         TARGETED_DEVICE_FAMILY: "1,2"
     dependencies:
+      - package: Firebase
+        product: FirebaseAuth
+      - package: Firebase
+        product: FirebaseFunctions
+      - package: Firebase
+        product: FirebaseAppCheck
+      - package: Firebase
+        product: FirebaseAnalyticsCore
+      - package: Firebase
+        product: FirebaseCore
+      - package: GoogleSignIn
+        product: GoogleSignIn
       - target: MultiverseWidgets
         embed: true
     scheme:
+      storeKitConfiguration: Configuration/Products.storekit
       testTargets:
         - MultiverseTests
 
@@ -58,6 +82,9 @@ targets:
     deploymentTarget: "17.0"
     sources:
       - path: MultiverseTests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
     dependencies:
       - target: Multiverse
 
@@ -75,18 +102,14 @@ targets:
       - path: Multiverse/Core/Logic.swift
       - path: Multiverse/Core/Store/WidgetBridge.swift
       - path: Multiverse/Core/Store/PremiereActivityAttributes.swift
-    info:
-      path: MultiverseWidgets/Info.plist
-      properties:
-        NSExtension:
-          NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:
       path: MultiverseWidgets/MultiverseWidgets.entitlements
       properties:
         com.apple.security.application-groups:
-          - group.com.multiverse.app
+          - group.com.nexussoft.multiverse
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.multiverse.app.widgets
+        PRODUCT_BUNDLE_IDENTIFIER: com.nexussoft.multiverse.widgets
+        INFOPLIST_FILE: MultiverseWidgets/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         TARGETED_DEVICE_FAMILY: "1,2"

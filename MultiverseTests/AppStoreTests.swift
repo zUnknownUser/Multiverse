@@ -27,7 +27,7 @@ struct AppStoreTests {
         #expect(store.isFollowing(someone))
 
         try await Task.sleep(for: .milliseconds(600))
-        let persisted = await repository.fetchFollows()
+        let persisted = try await repository.fetchFollows()
         #expect(persisted.contains(someone))
     }
 

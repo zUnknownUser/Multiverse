@@ -29,8 +29,10 @@ No Xcode:
 2. Marque **Automatically manage signing** e escolha seu **Development Team**.
 3. Rode no Simulator (⌘R) ou num dispositivo físico.
 
-Não há `DEVELOPMENT_TEAM`, certificado ou provisioning profile no repositório — isso é
-intencional (ver `project.yml`); a configuração de assinatura é feita localmente no Mac.
+O `project.yml` usa assinatura automática com a equipe `5RS2AA677K`, a mesma do Verbum.
+Os targets do app e dos widgets compartilham o App Group `group.com.nexussoft.multiverse`.
+Para gerar os perfis de desenvolvimento, conecte e desbloqueie um iPhone registrado nessa
+equipe e execute pelo Xcode. Certificados e provisioning profiles não ficam no repositório.
 
 ### Fonte Archivo
 
@@ -41,9 +43,9 @@ encontrada, então funciona sem esse passo — mas pra ficar pixel-perfeito, sig
 
 ### Variáveis de ambiente
 
-Nenhuma. Todo o conteúdo hoje vem de `Resources/sample-data.json` através de
-`MockRepository`/`MockAuthRepository` (ver arquitetura abaixo) — não há chaves de API pra
-configurar nesta fase.
+O conteúdo ainda vem dos JSONs locais através de `MockRepository`. A autenticação Google
+e o Analytics usam o `GoogleService-Info.plist` do projeto Firebase cadastrado para
+`com.nexussoft.multiverse`; não há backend próprio nesta etapa.
 
 ## Arquitetura
 
@@ -75,13 +77,39 @@ tela muda.
 
 ### Autenticação
 
-Fluxo completo (boas-vindas, criar conta com verificação por e-mail, entrar, esqueci a
-senha, ajustes de conta, sair, excluir conta) rodando sobre `MockAuthRepository`, que
-persiste a sessão em `UserDefaults` entre execuções. Conta de demonstração:
+O botão Google usa `FirebaseAuthRepository`, Google Sign-In e Firebase Authentication.
+`GoogleService-Info.plist` é incluído somente no app pelo XcodeGen; o esquema de retorno
+OAuth fica em `Multiverse/Resources/Info.plist`. Os SDKs são resolvidos pelo Swift Package
+Manager. A sessão usa o UID do Firebase e é restaurada pelo SDK; tokens não são gravados
+manualmente em `UserDefaults`.
 
-- **E-mail:** `duda.kaminski@gmail.com`
-- **Usuário:** `@duda.lore`
-- **Senha:** `Multiverse1`
+Apple conserva o visual e permanece indisponível. Cadastro e login por e-mail usam
+Firebase Auth; a confirmação de seis dígitos está conectada às funções preparadas em
+`firebase/`, que ainda precisam ser configuradas e publicadas. A recuperação usa link
+do Firebase para a tela Nova senha, com Associated Domains preparado. Veja
+`firebase/README.md` para as dependências de ativação. `MockAuthRepository` permanece disponível para desenvolvimento.
+O catálogo e as interações continuam usando `MockRepository`: esta etapa não implementa
+persistência remota de perfis, nomes de usuário, diário ou feed. O perfil usa o UID do Firebase e o nome de exibição. O apelido de cadastro é local e
+não representa reserva de um @usuário global. O onboarding e os ajustes locais são
+separados por UID; sair descarta o estado de conteúdo em memória.
+
+### Analytics
+
+Firebase Analytics inicializa com o app. Os eventos `login` e `sign_up` usam
+`method: google` ou `method: password`; `sign_up` só é emitido quando Firebase confirma
+a criação de uma conta.
+`logout` é emitido após sair com sucesso. Restaurar a sessão não conta como novo login.
+Os eventos não incluem nome, e-mail, tokens ou um User ID personalizado.
+
+A coleta é habilitada explicitamente no app. No console Firebase, confirme a integração
+com Google Analytics em **Configurações do projeto → Integrações** (o plist fornecido
+originalmente contém `IS_ANALYTICS_ENABLED = false`). Para inspecionar eventos em
+DebugView, adicione `-FIRDebugEnabled` aos argumentos de execução do scheme no Xcode.
+
+Validação manual: entrar com Google, cancelar a tela de autorização, reabrir o app,
+sair, entrar com outra conta e conferir o usuário em Firebase Authentication. O login
+real exige a autorização do titular da conta; os testes automatizados usam um cliente
+injetado e não autenticam uma conta Google real.
 
 ### Fase 2 — backend real
 
@@ -115,7 +143,7 @@ adiamento.
 
 ## Estado deste ambiente
 
-Este projeto foi desenvolvido no Windows, sem Xcode/SDK iOS disponível — ou seja, **nunca
-foi compilado de verdade**. Passou por revisão estática extensiva (consistência de
-assinaturas, símbolos, tipos), mas a validação final — build, execução no Simulator,
-ajustes específicos de SDK — é o próximo passo no Mac.
+Projeto gerado por XcodeGen e validado no Xcode com build para simulador e testes
+automatizados, incluindo autenticação com cliente injetado. A autorização
+Google com uma conta real e o recebimento de eventos no console devem ser conferidos
+no ambiente Firebase configurado.

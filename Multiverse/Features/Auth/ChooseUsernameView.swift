@@ -25,7 +25,7 @@ struct ChooseUsernameView: View {
 
                 AuthField(label: "Nome", text: $auth.draft.name, placeholder: "Seu nome")
 
-                AuthField(label: "Usuário", text: $auth.draft.username, placeholder: "usuario", autocapitalization: .never) {
+                AuthField(label: "Apelido", text: $auth.draft.username, placeholder: "usuario", autocapitalization: .never) {
                     availabilityBadge
                 }
                 .onChange(of: auth.draft.username) { _, _ in
@@ -66,9 +66,9 @@ struct ChooseUsernameView: View {
     private var availabilityBadge: some View {
         switch auth.usernameAvailable {
         case .some(true):
-            badge("✓ DISPONÍVEL", bg: MV.C.dc, fg: MV.C.card)
+            badge("✓ FORMATO VÁLIDO", bg: MV.C.dc, fg: MV.C.card)
         case .some(false):
-            badge("INDISPONÍVEL", bg: MV.C.marvel, fg: MV.C.card)
+            badge("FORMATO INVÁLIDO", bg: MV.C.marvel, fg: MV.C.card)
         case .none:
             EmptyView()
         }

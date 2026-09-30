@@ -51,7 +51,7 @@ enum StaticContent {
     /// Favoritos fixos do perfil do usuário logado
     static let myFavoriteItemIDs = ["w-wc3", "d-watchmen", "m-fenix", "c-arthas"]
 
-    static let comingSoonUniverses = ["Star Wars", "Warhammer 40K", "Tolkien"]
+    static let comingSoonUniverses = ["Star Wars", "League of Legends", "Tolkien"]
 
     static let compatAgreeWorks = ["Watchmen", "Warcraft III", "Aranhaverso", "Reino do Amanhã"]
     static let compatAgreePeople = ["Thanos", "Arthas", "O Cavaleiro das Trevas"]

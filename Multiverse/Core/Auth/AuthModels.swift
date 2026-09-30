@@ -4,17 +4,48 @@ struct AuthSession: Sendable, Equatable, Codable {
     let userID: String
     let email: String
     let handle: String
+    var displayName: String? = nil
+    var avatarColor: String? = nil
+    var bio: String? = nil
 }
 
 enum AuthError: LocalizedError, Equatable {
     case invalidCredentials(attemptsRemaining: Int)
     case lockedOut(minutes: Int)
+    case cancelled
+    case unavailable
+    case googleSignInFailed
+    case networkUnavailable
+    case recentLoginRequired
+    case verificationCodeExpired, verificationUnavailable
+    case invalidEmail, emailCredentialsInvalid, emailAlreadyRegistered, weakPassword
+    case accountDisabled, tooManyRequests, emailProviderDisabled, invalidActionLink
+    case emailNotVerified, profileIncomplete, sessionExpired, emailAuthenticationFailed
     case invalidCode
     case usernameTaken
     case noPasswordForSocialAccount
 
     var errorDescription: String? {
         switch self {
+        case .verificationCodeExpired: return "Este código expirou. Solicite um novo código."
+        case .verificationUnavailable: return "O envio de códigos está indisponível no momento. Tente novamente mais tarde."
+        case .invalidEmail: return "Informe um e-mail válido."
+        case .emailCredentialsInvalid: return "E-mail ou senha incorretos."
+        case .emailAlreadyRegistered: return "Este e-mail já está cadastrado. Entre na sua conta ou recupere a senha."
+        case .weakPassword: return "A senha não atende aos requisitos. Escolha uma senha mais forte."
+        case .accountDisabled: return "Esta conta está desativada."
+        case .tooManyRequests: return "Muitas tentativas. Aguarde um pouco antes de tentar novamente."
+        case .emailProviderDisabled: return "O login por e-mail ainda não está habilitado. Tente novamente mais tarde."
+        case .invalidActionLink: return "Este link é inválido, expirou ou já foi usado. Solicite um novo link."
+        case .emailNotVerified: return "Confirme seu e-mail com o código de seis dígitos enviado."
+        case .profileIncomplete: return "Complete seu nome para continuar."
+        case .sessionExpired: return "Sua sessão expirou. Entre novamente."
+        case .emailAuthenticationFailed: return "Não foi possível concluir. Tente novamente."
+        case .cancelled: return ""
+        case .unavailable: return "Esta opção estará disponível em breve. Por enquanto, continue com Google."
+        case .googleSignInFailed: return "Não foi possível entrar com Google. Tente novamente."
+        case .networkUnavailable: return "Confira sua conexão e tente novamente."
+        case .recentLoginRequired: return "Para excluir sua conta, saia e entre novamente."
         case .invalidCredentials(let n):
             return n > 0
                 ? "Senha incorreta. Mais \(n) tentativa\(n > 1 ? "s" : "") antes de um bloqueio de 5 minutos."

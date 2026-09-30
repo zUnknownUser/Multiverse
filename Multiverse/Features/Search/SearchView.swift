@@ -91,10 +91,14 @@ private struct SearchResultRowView: View {
                 }
                 .frame(width: 44, height: row.isCircular ? 44 : 64)
                 .clipShape(row.isCircular ? AnyShape(Circle()) : AnyShape(RoundedRectangle(cornerRadius: MV.R.sm)))
-                .overlay(
-                    (row.isCircular ? AnyShape(Circle()) : AnyShape(RoundedRectangle(cornerRadius: MV.R.sm)))
-                        .strokeBorder(MV.C.ink, lineWidth: MV.stroke)
-                )
+                .overlay {
+                    if row.isCircular {
+                        Circle().strokeBorder(MV.C.ink, lineWidth: MV.stroke)
+                    } else {
+                        RoundedRectangle(cornerRadius: MV.R.sm)
+                            .strokeBorder(MV.C.ink, lineWidth: MV.stroke)
+                    }
+                }
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(row.title).font(MVFont.bold(14)).foregroundStyle(MV.C.ink).lineLimit(1)

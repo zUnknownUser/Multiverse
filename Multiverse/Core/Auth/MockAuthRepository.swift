@@ -122,14 +122,12 @@ actor MockAuthRepository: AuthRepository {
         await delay()
     }
 
-    func resetPassword(_ newPassword: String) async throws -> AuthSession {
+    func resetPassword(_ newPassword: String) async throws {
         await delay()
         storedPassword = newPassword
         failedAttempts = 0
         lockedUntil = nil
-        let session = AuthSession(userID: Self.demoUserID, email: Self.demoEmail, handle: Self.demoHandle)
-        persist(session)
-        return session
+
     }
 
     // MARK: - Conta

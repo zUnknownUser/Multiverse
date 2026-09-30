@@ -29,7 +29,7 @@
     {
       "id": "th1", "userID": "joao", "uni": "marvel",
       "text": "O Estalo criou a divergência que a TVA nunca conseguiu podar",
-      "status": "open", "postedDaysAgo": 12,
+      "status": "aberta", "postedDaysAgo": 12,
       "plausibleBase": 2035, "travelBase": 1145,
       "resolvesAtItemID": "m-secret", "resolutionTitle": null, "resolutionNote": null,
       "accuracyBefore": null, "accuracyAfter": null
@@ -37,7 +37,7 @@
     {
       "id": "th2", "userID": "bia", "uni": "wow",
       "text": "Sylvanas vai voltar como aliada da Horda",
-      "status": "confirmed", "postedDaysAgo": 214,
+      "status": "confirmada", "postedDaysAgo": 214,
       "plausibleBase": 493, "travelBase": 711,
       "resolvesAtItemID": null, "resolutionTitle": "The War Within", "resolutionNote": "Cinemática 3 · marcada por 3 revisores",
       "accuracyBefore": 64, "accuracyAfter": 66
@@ -45,7 +45,7 @@
     {
       "id": "th3", "userID": "caio", "uni": "dc",
       "text": "O Batman da Terra-22 é o mesmo de O Cavaleiro das Trevas",
-      "status": "refuted", "postedDaysAgo": 340,
+      "status": "refutada", "postedDaysAgo": 340,
       "plausibleBase": 441, "travelBase": 1563,
       "resolvesAtItemID": null, "resolutionTitle": "entrevista com o roteirista", "resolutionNote": null,
       "accuracyBefore": null, "accuracyAfter": null
@@ -82,7 +82,7 @@
   "correctionSuggestions": [
     {
       "id": "cs1", "itemID": "d-crise", "userID": "rafa",
-      "changeType": "canonStatus", "fromValue": "Cânone", "toValue": "Retconado",
+      "changeType": "Status de cânone", "fromValue": "Cânone", "toValue": "Retconado",
       "source": "dc.fandom.com/wiki/Infinite_Crisis",
       "reasoning": "Crise Infinita (2005) desfez partes do resultado e trouxe a Terra-2 de volta.",
       "approverIDs": ["tati", "lu"], "approvalsNeeded": 3

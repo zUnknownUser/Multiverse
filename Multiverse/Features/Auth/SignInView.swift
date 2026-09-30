@@ -17,7 +17,7 @@ struct SignInView: View {
                     AuthErrorBanner(message: error)
                 }
 
-                AuthField(label: "E-mail ou usuário", text: $auth.signInIdentifier, placeholder: "@duda.lore", autocapitalization: .never)
+                AuthField(label: "E-mail", text: $auth.signInIdentifier, placeholder: "seu@email.com", keyboardType: .emailAddress, autocapitalization: .never)
 
                 VStack(alignment: .leading, spacing: 6) {
                     AuthField(label: "Senha", text: $auth.signInPassword, isSecure: true, errored: auth.fieldError != nil)

@@ -95,7 +95,8 @@ final class AppStore {
     var canonStatusColors: [String: StatusColor] = [:]
     var duels: [Duel] = []
     var me = Me(id: "duda", following: [], followers: 0)
-    let meID = "duda"
+    let meID: String
+    private let onboardingKey: String
 
     private(set) var itemsByID: [String: Item] = [:]
     private(set) var usersByID: [String: User] = [:]
@@ -147,10 +148,10 @@ final class AppStore {
     // MARK: - Onboarding
     var onboardingPhase: OnboardingPhase = .step1
     var onboardingUniverses: Set<String> = []
-    /// Persistido em `UserDefaults` (chave `mv-onboarded`); precisa ser uma propriedade
+    /// Persistido em `UserDefaults` por conta; precisa ser uma propriedade
     /// armazenada (não computada) pra que a Observation dispare a atualização da UI.
     var isOnboarded: Bool {
-        didSet { UserDefaults.standard.set(isOnboarded, forKey: "mv-onboarded") }
+        didSet { UserDefaults.standard.set(isOnboarded, forKey: onboardingKey) }
     }
 
     /// Modo Noir. `RootView` aplica `.preferredColorScheme` a partir daqui.
@@ -202,11 +203,13 @@ final class AppStore {
 
     // MARK: - Init
 
-    init(repository: MultiverseRepository? = nil) {
-        let onboarded = UserDefaults.standard.bool(forKey: "mv-onboarded")
+    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil) {
+        meID = session?.userID ?? "duda"
+        onboardingKey = session.map { "mv-onboarded-\($0.userID)" } ?? "mv-onboarded"
+        let onboarded = UserDefaults.standard.bool(forKey: onboardingKey)
         isOnboarded = onboarded
         themePreference = ThemePreference(rawValue: UserDefaults.standard.string(forKey: "mv-theme") ?? "") ?? .system
-        self.repository = repository ?? MockRepository(startFollowing: onboarded)
+        self.repository = repository ?? MockRepository(startFollowing: onboarded, session: session)
     }
 
     /// Carrega tudo do repositório. Chamado uma vez, a partir de `.task` na `RootView`.

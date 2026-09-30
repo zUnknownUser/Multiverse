@@ -1,0 +1,8 @@
+{
+  "applinks": {
+    "details": [{
+      "appIDs": ["5RS2AA677K.com.nexussoft.multiverse"],
+      "components": [{ "/": "/__/auth/*" }]
+    }]
+  }
+}

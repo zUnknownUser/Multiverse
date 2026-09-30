@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 /// Previsões — recurso 1g.
 struct PredictionsView: View {

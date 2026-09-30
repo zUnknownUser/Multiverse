@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LinkSentView: View {
     @Environment(AuthStore.self) private var auth
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -18,9 +19,9 @@ struct LinkSentView: View {
 
             Text("OLHE SEU E-MAIL").font(MVFont.display(34, width: 120)).foregroundStyle(MV.C.ink)
 
-            (Text("Mandamos o link pra ").font(MVFont.body(15, weight: 500))
+            (Text("Se houver uma conta para ").font(MVFont.body(15, weight: 500))
                 + Text(auth.resetEmail).font(MVFont.body(15, weight: 800))
-                + Text(". Ele expira em 30 minutos.").font(MVFont.body(15, weight: 500)))
+                + Text(" com recuperação disponível, você receberá um link. Confira também o spam.").font(MVFont.body(15, weight: 500)))
                 .foregroundStyle(MV.C.ink)
 
             VStack(spacing: 10) {
@@ -33,8 +34,13 @@ struct LinkSentView: View {
                     .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
                     .background(RoundedRectangle(cornerRadius: MV.R.md).fill(MV.C.marvel).offset(x: MV.Shadow.s, y: MV.Shadow.s))
                     .contentShape(Rectangle())
-                    // Sem deep link real num app offline: simulamos o toque no link do e-mail.
-                    .onTapGesture { auth.simulateEmailLinkTapped() }
+                    .onTapGesture {
+                        if let url = URL(string: "message://") {
+                            openURL(url) { accepted in
+                                if !accepted { auth.infoMessage = "Abra seu aplicativo de e-mail para acessar o link." }
+                            }
+                        }
+                    }
 
                 Text("VOLTAR PRO LOGIN")
                     .font(MVFont.bold(14))
@@ -45,8 +51,7 @@ struct LinkSentView: View {
                     .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        auth.pop()
-                        auth.pop()
+                        auth.returnToLogin()
                     }
             }
             .padding(.top, 8)

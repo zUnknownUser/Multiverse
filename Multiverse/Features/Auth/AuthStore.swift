@@ -17,6 +17,7 @@ final class AuthStore {
 
     var session: AuthSession?
     var isBootstrapping = true
+    private var pendingEmailLink: URL?
 
     /// Pilha de navegação do fluxo (a raiz, Boas-vindas, não entra aqui — ver `AuthFlowView`).
     var path: [AuthRoute] = []
@@ -35,17 +36,27 @@ final class AuthStore {
     var resendCooldown = 0
 
     // Esqueci a senha
-    var resetEmail = "duda.kaminski@gmail.com"
+    var resetEmail = ""
+    var infoMessage: String?
+    @ObservationIgnored private var cooldownTask: Task<Void, Never>?
     var newPassword = ""
     var newPasswordConfirm = ""
 
-    init(repository: AuthRepository = MockAuthRepository()) {
+    init(repository: AuthRepository = FirebaseAuthRepository()) {
         self.repository = repository
     }
 
     func bootstrap() async {
         session = await repository.currentSession()
+        if session == nil, let pending = await repository.pendingSignUpEmail() {
+            draft.email = pending
+            path = await repository.pendingEmailIsVerified() ? [.chooseUsername] : [.createAccount, .verifyCode]
+        }
         isBootstrapping = false
+        if let url = pendingEmailLink {
+            pendingEmailLink = nil
+            await handleEmailLink(url)
+        }
     }
 
     func push(_ route: AuthRoute) {
@@ -63,6 +74,7 @@ final class AuthStore {
     // MARK: - Entrar
 
     func signIn() async {
+        guard !isLoading else { return }
         errorMessage = nil
         fieldError = nil
         isLoading = true
@@ -71,7 +83,19 @@ final class AuthStore {
             session = try await repository.signIn(identifier: signInIdentifier, password: signInPassword)
         } catch {
             errorMessage = error.localizedDescription
-            fieldError = "A senha não confere com esse usuário."
+            if error as? AuthError == .emailNotVerified || error as? AuthError == .profileIncomplete {
+                draft.email = signInIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
+                path = error as? AuthError == .profileIncomplete ? [.chooseUsername] : [.verifyCode]
+                errorMessage = nil
+                if error as? AuthError == .emailNotVerified {
+                    do {
+                        try await repository.resendVerificationCode()
+                        startResendCooldown()
+                    } catch { errorMessage = error.localizedDescription }
+                }
+            } else if error as? AuthError == .emailCredentialsInvalid {
+                fieldError = error.localizedDescription
+            }
         }
     }
 
@@ -79,14 +103,23 @@ final class AuthStore {
     func continueWithGoogle() async { await socialSignIn(repository.signInWithGoogle) }
 
     private func socialSignIn(_ perform: () async throws -> AuthSession) async {
+        guard !isLoading else { return }
+        errorMessage = nil
         isLoading = true
         defer { isLoading = false }
-        do { session = try await perform() } catch { errorMessage = error.localizedDescription }
+        do {
+            session = try await perform()
+        } catch AuthError.cancelled {
+            // Closing the Google sheet is not a failed login.
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     // MARK: - Criar conta
 
     func submitSignUpEmail() async {
+        guard !isLoading else { return }
         errorMessage = nil
         guard PasswordRequirements(draft.password).allMet else {
             errorMessage = "Sua senha ainda não atende aos requisitos."
@@ -97,29 +130,44 @@ final class AuthStore {
         do {
             try await repository.startSignUp(email: draft.email, password: draft.password)
             startResendCooldown()
+            draft.password = ""
             push(.verifyCode)
         } catch {
+            if let pending = await repository.pendingSignUpEmail() {
+                draft.email = pending
+                draft.password = ""
+                path = [.createAccount, .verifyCode]
+            }
             errorMessage = error.localizedDescription
         }
     }
 
     func resendCode() async {
-        guard resendCooldown == 0 else { return }
-        try? await repository.resendVerificationCode()
-        startResendCooldown()
+        guard resendCooldown == 0, !isLoading else { return }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        do {
+            try await repository.resendVerificationCode()
+            startResendCooldown()
+        } catch { errorMessage = error.localizedDescription }
     }
 
     private func startResendCooldown() {
+        cooldownTask?.cancel()
         resendCooldown = 60
-        Task { [weak self] in
-            while let self, self.resendCooldown > 0 {
-                try? await Task.sleep(for: .seconds(1))
+        cooldownTask = Task { [weak self] in
+            while !Task.isCancelled {
+                do { try await Task.sleep(for: .seconds(1)) } catch { return }
+                guard let self else { return }
                 self.resendCooldown = max(0, self.resendCooldown - 1)
+                if self.resendCooldown == 0 { return }
             }
         }
     }
 
     func submitCode() async {
+        guard !isLoading, verificationCode.count == 6 else { return }
         errorMessage = nil
         isLoading = true
         defer { isLoading = false }
@@ -134,10 +182,13 @@ final class AuthStore {
 
     func checkUsername() async {
         guard !draft.username.isEmpty else { usernameAvailable = nil; return }
-        usernameAvailable = await repository.checkUsernameAvailable(draft.username)
+        let username = draft.username
+        let available = await repository.checkUsernameAvailable(username)
+        if draft.username == username { usernameAvailable = available }
     }
 
     func finishSignUp() async {
+        guard !isLoading else { return }
         errorMessage = nil
         isLoading = true
         defer { isLoading = false }
@@ -151,24 +202,51 @@ final class AuthStore {
     // MARK: - Esqueci a senha
 
     func requestPasswordReset() async {
+        guard !isLoading, path.last != .linkSent || resendCooldown == 0 else { return }
         errorMessage = nil
         isLoading = true
         defer { isLoading = false }
         do {
             try await repository.requestPasswordReset(email: resetEmail)
             startResendCooldown()
-            push(.linkSent)
+            if path.last != .linkSent { push(.linkSent) }
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
-    /// Numa conta de verdade isso viria de um universal link; aqui simulamos o toque no e-mail.
-    func simulateEmailLinkTapped() {
-        push(.newPassword)
+    func handleEmailLink(_ url: URL) async {
+        if isBootstrapping { pendingEmailLink = url; return }
+        guard session == nil else {
+            infoMessage = "Saia da conta antes de abrir o link de recuperação."
+            return
+        }
+        guard !isLoading else { return }
+        isLoading = true
+        errorMessage = nil
+        newPassword = ""
+        newPasswordConfirm = ""
+        defer { isLoading = false }
+        do {
+            switch try await repository.prepareEmailAction(url) {
+            case .resetPassword(let email):
+                resetEmail = email
+                path = [.signIn, .forgotPassword, .linkSent, .newPassword]
+            case .emailVerified:
+                path = [.chooseUsername]
+            }
+        } catch { errorMessage = error.localizedDescription }
+    }
+
+    func returnToLogin() {
+        path = [.signIn]
+        errorMessage = nil
+        newPassword = ""
+        newPasswordConfirm = ""
     }
 
     func submitNewPassword() async {
+        guard !isLoading else { return }
         errorMessage = nil
         guard newPassword == newPasswordConfirm else {
             errorMessage = "As senhas precisam ser iguais."
@@ -181,7 +259,20 @@ final class AuthStore {
         isLoading = true
         defer { isLoading = false }
         do {
-            session = try await repository.resetPassword(newPassword)
+            let password = newPassword
+            try await repository.resetPassword(password)
+            newPassword = ""
+            newPasswordConfirm = ""
+            do {
+                session = try await repository.signIn(identifier: resetEmail, password: password)
+                path = []
+            } catch {
+                // The code is consumed: a failed subsequent login must not retry the reset.
+                signInIdentifier = resetEmail
+                signInPassword = ""
+                returnToLogin()
+                infoMessage = "Senha alterada. Entre com sua nova senha."
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -190,8 +281,12 @@ final class AuthStore {
     // MARK: - Conta (chamado a partir de Ajustes)
 
     func signOut() async {
-        await repository.signOut()
-        reset()
+        do {
+            try await repository.signOut()
+            reset()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     func deleteAccount() async throws {
@@ -200,6 +295,9 @@ final class AuthStore {
     }
 
     private func reset() {
+        cooldownTask?.cancel()
+        resendCooldown = 0
+        resetEmail = ""
         session = nil
         path = []
         signInIdentifier = ""; signInPassword = ""

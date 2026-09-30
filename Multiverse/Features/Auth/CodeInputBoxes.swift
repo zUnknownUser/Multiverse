@@ -28,10 +28,11 @@ struct CodeInputBoxes: View {
             }
             TextField("", text: $code)
                 .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
                 .focused($focused)
                 .opacity(0.02)
                 .onChange(of: code) { _, newValue in
-                    code = String(newValue.filter(\.isNumber).prefix(length))
+                    code = String(newValue.filter { $0.isASCII && $0.isNumber }.prefix(length))
                 }
         }
         .contentShape(Rectangle())
