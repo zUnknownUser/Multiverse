@@ -10,11 +10,14 @@ import { ConfigModule } from '@nestjs/config';
 import { validateEnvironment } from './config/environment.js';
 import { HealthModule } from './health/health.module.js';
 import { AIModule } from './ai/ai.module.js';
+import { CatalogController } from './catalog/catalog.controller.js';
+import { CatalogService } from './catalog/catalog.service.js';
 
 @Module({
-  controllers: [AccountsController],
+  controllers: [AccountsController, CatalogController],
   providers: [
     DatabaseService,
+    CatalogService,
     FirebaseTokenVerifier,
     AccountsService,
     AccountLifecycleService,

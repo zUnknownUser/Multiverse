@@ -33,7 +33,7 @@ struct HomeView: View {
                     .font(MVFont.display(30, width: 125))
                     .tracking(-0.4)
                     .foregroundStyle(MV.C.ink)
-                Text(L10n.format("%1$@ amigos · 3 universos", String(describing: store.friendsCount)))
+                Text(L10n.format("home.friendsCount", store.friendsCount) + " · " + L10n.format("home.universesCount", store.universes.count))
                     .kicker(11).foregroundStyle(MV.C.muted)
             }
             Spacer()

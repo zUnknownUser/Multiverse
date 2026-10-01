@@ -12369,6 +12369,326 @@
           }
         }
       }
+    },
+    "Catálogo em preparação": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catálogo em preparação"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalog coming soon"
+          }
+        }
+      }
+    },
+    "Sem conexão": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem conexão"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection"
+          }
+        }
+      }
+    },
+    "A conexão demorou mais que o esperado": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A conexão demorou mais que o esperado"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The connection took longer than expected"
+          }
+        }
+      }
+    },
+    "Catálogo atualizado": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catálogo atualizado"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalog updated"
+          }
+        }
+      }
+    },
+    "Não conseguimos carregar o catálogo": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não conseguimos carregar o catálogo"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn’t load the catalog"
+          }
+        }
+      }
+    },
+    "O serviço está indisponível no momento. Tente novamente em instantes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O serviço está indisponível no momento. Tente novamente em instantes."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service is temporarily unavailable. Please try again shortly."
+          }
+        }
+      }
+    },
+    "Confira sua conexão com a internet e tente novamente.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confira sua conexão com a internet e tente novamente."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your internet connection and try again."
+          }
+        }
+      }
+    },
+    "O catálogo não respondeu a tempo. Tente novamente.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O catálogo não respondeu a tempo. Tente novamente."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The catalog didn’t respond in time. Please try again."
+          }
+        }
+      }
+    },
+    "Ainda não há universos disponíveis. Volte em instantes para conferir as novidades.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ainda não há universos disponíveis. Volte em instantes para conferir as novidades."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No universes are available yet. Check back shortly to see what’s new."
+          }
+        }
+      }
+    },
+    "VERIFICAR NOVAMENTE": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VERIFICAR NOVAMENTE"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CHECK AGAIN"
+          }
+        }
+      }
+    },
+    "Ainda não há itens nesta categoria. Experimente outro filtro.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ainda não há itens nesta categoria. Experimente outro filtro."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no items in this category yet. Try another filter."
+          }
+        }
+      }
+    },
+    "Nenhum resultado para esta busca. Tente outro nome ou filtro.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum resultado para esta busca. Tente outro nome ou filtro."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No results for this search. Try another name or filter."
+          }
+        }
+      }
+    },
+    "O catálogo mudou. Atualize para continuar.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O catálogo mudou. Atualize para continuar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The catalog has changed. Refresh to continue."
+          }
+        }
+      }
+    },
+    "Explore o catálogo": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explore o catálogo"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explore the catalog"
+          }
+        }
+      }
+    },
+    "home.friendsCount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld friend"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld friends"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld amigo"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld amigos"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "home.universesCount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld universe"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld universes"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld universo"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld universos"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "version": "1.0"

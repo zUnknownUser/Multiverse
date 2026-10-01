@@ -75,6 +75,7 @@ final class AccountAPIClient: AccountAPI {
             let code = (try? JSONDecoder().decode(APIError.self, from: data))?.code
             switch code {
             case "USERNAME_TAKEN": throw AuthError.usernameTaken
+            case "CATALOG_CHANGED": throw CatalogError.changed
             case "EMAIL_NOT_VERIFIED": throw AuthError.emailNotVerified
             case "RECENT_LOGIN_REQUIRED": throw AuthError.recentLoginRequired
             case "STALE_ONBOARDING", "ONBOARDING_COMPLETED": throw AuthError.onboardingConflict

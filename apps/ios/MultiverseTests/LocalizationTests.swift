@@ -3,6 +3,15 @@ import Testing
 @testable import Multiverse
 
 struct LocalizationTests {
+    @Test func catalogStatesAndCountsAreLocalizedWithoutPresentingEmptyContentAsAnError() {
+        #expect(L10n.text("Catálogo em preparação", preferredLanguages: ["en-US"]) == "Catalog coming soon")
+        #expect(L10n.text("Sem conexão", preferredLanguages: ["en-US"]) == "No connection")
+        #expect(L10n.text("VERIFICAR NOVAMENTE", preferredLanguages: ["pt-BR"]) == "VERIFICAR NOVAMENTE")
+        #expect(L10n.format("home.universesCount", arguments: [1], preferredLanguages: ["en"]) == "1 universe")
+        #expect(L10n.format("home.universesCount", arguments: [3], preferredLanguages: ["pt-BR"]) == "3 universos")
+        #expect(L10n.format("home.friendsCount", arguments: [1], preferredLanguages: ["pt-BR"]) == "1 amigo")
+        #expect(L10n.format("home.friendsCount", arguments: [2], preferredLanguages: ["en"]) == "2 friends")
+    }
     @Test func selectsFirstSupportedPreferredLanguage() {
         #expect(L10n.language(for: ["en-US", "pt-BR"]) == "en")
         #expect(L10n.language(for: ["en-GB"]) == "en")

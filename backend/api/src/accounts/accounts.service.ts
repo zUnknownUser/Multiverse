@@ -185,6 +185,25 @@ export class AccountsService {
         throw new ConflictException({ code: 'ONBOARDING_COMPLETED' });
       if ((input.step > 1 || input.completed) && !input.universeIDs.length)
         throw new ConflictException({ code: 'UNIVERSE_REQUIRED' });
+      const selectedUniverses = await client.query(
+        `SELECT u.id FROM catalog_universes u
+         JOIN catalog_universe_translations t ON t.universe_id=u.id AND t.locale='pt-BR'
+         WHERE u.id=ANY($1::text[]) AND u.status='active' FOR SHARE OF u,t`,
+        [input.universeIDs],
+      );
+      const selectedItems = await client.query(
+        `SELECT i.id FROM catalog_items i JOIN catalog_universes u ON u.id=i.universe_id
+         JOIN catalog_item_translations t ON t.item_id=i.id AND t.locale='pt-BR'
+         JOIN catalog_universe_translations ut ON ut.universe_id=u.id AND ut.locale='pt-BR'
+         WHERE i.id=ANY($1::text[]) AND i.status='published' AND u.status='active' AND i.type<>'Personagem'
+         FOR SHARE OF i,u,t,ut`,
+        [input.seenItemIDs],
+      );
+      if (
+        selectedUniverses.rowCount !== input.universeIDs.length ||
+        selectedItems.rowCount !== input.seenItemIDs.length
+      )
+        throw new ConflictException({ code: 'CATALOG_CHANGED' });
       if (input.followedUserIDs.includes(uid))
         throw new ConflictException({ code: 'INVALID_FOLLOWS' });
       const eligible = await client.query<{ firebase_uid: string }>(

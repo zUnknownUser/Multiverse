@@ -37,11 +37,13 @@ struct SearchView: View {
                 }
 
                 let (rows, total) = store.searchResults(query: query, filter: filter)
-                Text(query.isEmpty ? L10n.text("Mais registrados esta semana") : L10n.format("search.results", total))
+                Text(query.isEmpty ? L10n.text(store.usesRemoteCatalog ? "Explore o catálogo" : "Mais registrados esta semana") : L10n.format("search.results", total))
                     .kicker(11).foregroundStyle(MV.C.muted)
 
                 if rows.isEmpty {
-                    Text(L10n.text("Nada nesse canto do multiverso."))
+                    Text(query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                         ? L10n.text("Ainda não há itens nesta categoria. Experimente outro filtro.")
+                         : L10n.text("Nenhum resultado para esta busca. Tente outro nome ou filtro."))
                         .font(MVFont.body(14)).foregroundStyle(MV.C.muted)
                         .frame(maxWidth: .infinity)
                         .padding(.top, 24)

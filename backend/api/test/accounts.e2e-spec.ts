@@ -228,8 +228,133 @@ describe.skipIf(!databaseURL)('Account API with real PostgreSQL', () => {
       .put('/api/v1/me/onboarding')
       .auth('owner', { type: 'bearer' })
       .send({ ...progress(), universeIDs: ['fake'] })
-      .expect(400);
+      .expect(409);
   });
+  it('serves the seeded public catalog with PT/EN content and real item totals', async () => {
+    const pt = await request(app.getHttpServer())
+      .get('/api/v1/catalog')
+      .expect(200);
+    const en = await request(app.getHttpServer())
+      .get('/api/v1/catalog')
+      .set('Accept-Language', 'en-US')
+      .expect(200);
+    expect(pt.headers.vary).toBe('Accept-Language');
+    expect(pt.body.version).toBe(1);
+    expect(pt.body.locale).toBe('pt-BR');
+    expect(en.body.locale).toBe('en');
+    expect(pt.body.universes.map((u: { id: string }) => u.id)).toEqual([
+      'marvel',
+      'dc',
+      'wow',
+    ]);
+    expect(pt.body.items).toHaveLength(31);
+    expect(pt.body.comingSoon.map((u: { name: string }) => u.name)).toEqual([
+      'Star Wars',
+      'League of Legends',
+      'Tolkien',
+    ]);
+    expect(
+      pt.body.items.find((i: { id: string }) => i.id === 'm-civil').title,
+    ).toBe('Guerra Civil');
+    expect(
+      en.body.items.find((i: { id: string }) => i.id === 'm-civil').title,
+    ).toBe('Civil War');
+    for (const u of pt.body.universes) {
+      expect(u.total).toBe(
+        pt.body.items.filter((i: { uni: string }) => i.uni === u.id).length,
+      );
+      expect(u.base).toBe(0);
+      expect(u.live).toBe(0);
+    }
+    expect(pt.body.items.every((i: { avg: number }) => i.avg === 0)).toBe(true);
+  });
+
+  it('accepts new database catalog IDs and handles missing translations and publication changes', async () => {
+    const uid = 'catalog-test-user';
+    await putProfile(uid).expect(200);
+    await database.query(`INSERT INTO catalog_universes(id,color,dark_color,ink_color,track) VALUES('test-universe','#E4412F','#C9362A','#FFFDF8','track');
+      INSERT INTO catalog_universe_translations(universe_id,locale,name) VALUES('test-universe','pt-BR','Novo universo');
+      INSERT INTO catalog_items(id,universe_id,type) VALUES('test-item','test-universe','Livro');
+      INSERT INTO catalog_item_translations(item_id,locale,title,year) VALUES('test-item','pt-BR','Novo livro','2026');`);
+    try {
+      const snapshot = await request(app.getHttpServer())
+        .get('/api/v1/catalog')
+        .set('Accept-Language', 'en')
+        .expect(200);
+      expect(
+        snapshot.body.items.find((i: { id: string }) => i.id === 'test-item')
+          .title,
+      ).toBe('Novo livro');
+      expect(
+        snapshot.body.universes.find(
+          (u: { id: string }) => u.id === 'test-universe',
+        ),
+      ).toMatchObject({ name: 'Novo universo', total: 1, members: 0 });
+      const value = {
+        ...progress(),
+        universeIDs: ['test-universe'],
+        seenItemIDs: ['test-item'],
+      };
+      await putProgress(uid, value).expect(200);
+      for (const overrides of [
+        { universeIDs: ['league-of-legends'] },
+        { universeIDs: ['missing'] },
+        { seenItemIDs: ['c-arthas'] },
+        { seenItemIDs: ['missing'] },
+      ]) {
+        const rejected = await putProgress(uid, {
+          ...value,
+          version: 1,
+          ...overrides,
+        }).expect(409);
+        expect(rejected.body.code).toBe('CATALOG_CHANGED');
+      }
+      await database.query(
+        "UPDATE catalog_items SET status='archived' WHERE id='test-item'",
+      );
+      const retired = await request(app.getHttpServer())
+        .get('/api/v1/catalog')
+        .expect(200);
+      expect(
+        retired.body.items.some((i: { id: string }) => i.id === 'test-item'),
+      ).toBe(false);
+      expect(
+        retired.body.universes.find(
+          (u: { id: string }) => u.id === 'test-universe',
+        ).total,
+      ).toBe(0);
+      expect(
+        (await putProgress(uid, { ...value, version: 1 }).expect(409)).body
+          .code,
+      ).toBe('CATALOG_CHANGED');
+      const stored = await database.query(
+        'SELECT version,seen_item_ids FROM onboarding WHERE firebase_uid=$1',
+        [uid],
+      );
+      expect(stored.rows[0]).toEqual({
+        version: 1,
+        seen_item_ids: ['test-item'],
+      });
+      await database.query(
+        "UPDATE catalog_universes SET status='archived' WHERE id='test-universe'",
+      );
+      const archived = await request(app.getHttpServer())
+        .get('/api/v1/catalog')
+        .expect(200);
+      expect(
+        archived.body.universes.some(
+          (u: { id: string }) => u.id === 'test-universe',
+        ),
+      ).toBe(false);
+    } finally {
+      await database.query("DELETE FROM catalog_items WHERE id='test-item'");
+      await database.query(
+        "DELETE FROM catalog_universes WHERE id='test-universe'",
+      );
+      await database.query('DELETE FROM profiles WHERE firebase_uid=$1', [uid]);
+    }
+  });
+
   it('requires only two available people, then caps the requirement at three', async () => {
     await putProfile('third-person').expect(200);
     const two = await request(app.getHttpServer())

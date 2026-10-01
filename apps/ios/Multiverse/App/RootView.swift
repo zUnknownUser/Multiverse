@@ -14,7 +14,13 @@ struct RootView: View {
                 LaunchLoadingView()
             } else if auth.session == nil || auth.session?.needsProfile == true || auth.path.last == .newPassword {
                 AuthFlowView()
-            } else if store.isLoading || store.accountLoadError != nil || store.meID != auth.session?.userID {
+            } else if store.isLoading || store.meID != auth.session?.userID {
+                LaunchLoadingView()
+            } else if let issue = store.catalogIssue {
+                CatalogStatusView(issue: issue, isSigningOut: auth.isLoading,
+                                  retry: { Task { await store.reloadAccount() } },
+                                  signOut: { Task { await auth.signOut() } })
+            } else if store.accountLoadError != nil {
                 LaunchLoadingView()
             } else if store.isOnboarded {
                 MainTabView()
@@ -58,7 +64,8 @@ struct RootView: View {
             let accountStore = AppStore(
                 session: session,
                 accountAPI: AccountAPIClient(expectedUserID: session.userID),
-                widgetWriter: WidgetBridge.beginSession()
+                widgetWriter: WidgetBridge.beginSession(),
+                catalogAPI: CatalogAPIClient()
             )
             store = accountStore
             await accountStore.bootstrap()

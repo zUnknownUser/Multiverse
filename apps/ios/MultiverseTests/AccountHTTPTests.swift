@@ -86,6 +86,13 @@ struct AccountHTTPTests {
         #expect(AccountURLProtocol.fixture.requests.first?.httpMethod == "PUT")
     }
 
+    @Test func removedCatalogSelectionRequestsARefresh() async {
+        AccountURLProtocol.fixture.reset([(409, "{\"code\":\"CATALOG_CHANGED\"}")])
+        let (api, transport) = client(TokenStub())
+        defer { transport.invalidateAndCancel() }
+        await #expect(throws: CatalogError.changed) { try await api.saveOnboarding(OnboardingState()) }
+    }
+
     @Test(arguments: [false, true]) func deletionRequiresPositiveServerConfirmation(deleted: Bool) async throws {
         AccountURLProtocol.fixture.reset([(200, "{\"deleted\":\(deleted)}")])
         let (api, transport) = client(TokenStub())

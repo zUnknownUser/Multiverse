@@ -23,8 +23,8 @@ struct OnboardingStep1View: View {
                 }
 
                 VStack(spacing: 10) {
-                    ForEach(StaticContent.comingSoonUniverses, id: \.self) { name in
-                        ComingSoonRow(name: name)
+                    ForEach(store.comingSoonUniverses) { universe in
+                        ComingSoonRow(name: universe.name)
                     }
                 }
             }

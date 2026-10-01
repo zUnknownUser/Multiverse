@@ -4,7 +4,6 @@ import {
   ArrayUnique,
   IsArray,
   IsBoolean,
-  IsIn,
   IsInt,
   IsString,
   Length,
@@ -12,7 +11,6 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { ITEM_IDS, UNIVERSE_IDS } from './catalog-ids.js';
 
 export class ProfileDTO {
   @Transform(({ value }: { value: unknown }) =>
@@ -40,14 +38,16 @@ export class UsernameDTO {
 }
 export class OnboardingDTO {
   @IsArray()
-  @ArrayMaxSize(3)
+  @ArrayMaxSize(50)
   @ArrayUnique()
-  @IsIn(UNIVERSE_IDS, { each: true })
+  @IsString({ each: true })
+  @Matches(/^[a-z0-9-]{1,80}$/, { each: true })
   universeIDs!: string[];
   @IsArray()
   @ArrayMaxSize(500)
   @ArrayUnique()
-  @IsIn(ITEM_IDS, { each: true })
+  @IsString({ each: true })
+  @Matches(/^[a-z0-9-]{1,80}$/, { each: true })
   seenItemIDs!: string[];
   @IsArray()
   @ArrayMaxSize(100)

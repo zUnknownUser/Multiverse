@@ -22,9 +22,9 @@ fileGroups:
 settings:
   configs:
     Debug:
-      MULTIVERSE_API_BASE_URL: "http://localhost:3000/api/v1"
+      MULTIVERSE_API_BASE_URL: "https://api-production-6e8d.up.railway.app/api/v1"
     Release:
-      MULTIVERSE_API_BASE_URL: ""
+      MULTIVERSE_API_BASE_URL: "https://api-production-6e8d.up.railway.app/api/v1"
   base:
     DEVELOPMENT_TEAM: 5RS2AA677K
     CODE_SIGN_STYLE: Automatic
