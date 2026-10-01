@@ -12689,6 +12689,23 @@
           }
         }
       }
+    },
+    "Nenhum amigo": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum amigo"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No friends"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

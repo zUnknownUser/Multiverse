@@ -35,7 +35,7 @@ struct HomeView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                     .foregroundStyle(MV.C.ink)
-                Text(L10n.format("home.friendsCount", store.friendsCount) + " · " + L10n.format("home.universesCount", store.universes.count))
+                Text((store.friendsCount == 0 ? L10n.text("Nenhum amigo") : L10n.format("home.friendsCount", store.friendsCount)) + " · " + L10n.format("home.universesCount", store.universes.count))
                     .kicker(11).foregroundStyle(MV.C.muted)
             }
             Spacer()
