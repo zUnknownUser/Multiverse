@@ -41,10 +41,10 @@ enum Logic {
     }
 
     /// Nº de registros de um item
-    static func logCount(_ item: Item) -> Int { 800 + Int(seed(item.id) % 13000) }
+    static func logCount(_ item: Item) -> Int { item.logCount ?? (800 + Int(seed(item.id) % 13000)) }
 
     /// Nº de reviews de um item (≈ 1/4 dos registros)
-    static func reviewCount(_ item: Item) -> Int { Int((Double(logCount(item)) / 4).rounded()) }
+    static func reviewCount(_ item: Item) -> Int { item.reviewCount ?? Int((Double(logCount(item)) / 4).rounded()) }
 
     /// Afinidade com o usuário logado (48–94%)
     static func compat(_ userId: String) -> Int { 48 + Int(seed(userId + "duda") % 47) }

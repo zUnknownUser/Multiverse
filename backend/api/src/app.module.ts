@@ -12,12 +12,15 @@ import { HealthModule } from './health/health.module.js';
 import { AIModule } from './ai/ai.module.js';
 import { CatalogController } from './catalog/catalog.controller.js';
 import { CatalogService } from './catalog/catalog.service.js';
+import { ActivityController } from './activity/activity.controller.js';
+import { ActivityService } from './activity/activity.service.js';
 
 @Module({
-  controllers: [AccountsController, CatalogController],
+  controllers: [AccountsController, CatalogController, ActivityController],
   providers: [
     DatabaseService,
     CatalogService,
+    ActivityService,
     FirebaseTokenVerifier,
     AccountsService,
     AccountLifecycleService,

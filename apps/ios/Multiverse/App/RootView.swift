@@ -17,7 +17,12 @@ struct RootView: View {
             } else if store.isLoading || store.meID != auth.session?.userID {
                 LaunchLoadingView()
             } else if let issue = store.catalogIssue {
-                CatalogStatusView(issue: issue, isSigningOut: auth.isLoading,
+                DataLoadStatusView(title: issue.title, message: issue.errorDescription ?? "",
+                                  retryTitle: issue == .empty ? L10n.text("VERIFICAR NOVAMENTE") : L10n.text("TENTAR DE NOVO"), isSigningOut: auth.isLoading,
+                                  retry: { Task { await store.reloadAccount() } },
+                                  signOut: { Task { await auth.signOut() } })
+            } else if let error = store.activityLoadError {
+                DataLoadStatusView(title: L10n.text("Não conseguimos carregar seu diário"), message: error, isSigningOut: auth.isLoading,
                                   retry: { Task { await store.reloadAccount() } },
                                   signOut: { Task { await auth.signOut() } })
             } else if store.accountLoadError != nil {
@@ -61,11 +66,13 @@ struct RootView: View {
                 store = AppStore()
                 return
             }
+            let api = AccountAPIClient(expectedUserID: session.userID)
             let accountStore = AppStore(
                 session: session,
-                accountAPI: AccountAPIClient(expectedUserID: session.userID),
+                accountAPI: api,
                 widgetWriter: WidgetBridge.beginSession(),
-                catalogAPI: CatalogAPIClient()
+                catalogAPI: CatalogAPIClient(),
+                activityAPI: api
             )
             store = accountStore
             await accountStore.bootstrap()

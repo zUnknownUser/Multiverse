@@ -1,7 +1,7 @@
 import Foundation
 
 @MainActor
-final class AccountAPIClient: AccountAPI {
+final class AccountAPIClient: AccountAPI, ActivityAPI {
     private let baseURL: URL?
     private let tokens: any APITokenProvider
     private let transport: URLSession
@@ -33,6 +33,12 @@ final class AccountAPIClient: AccountAPI {
     private struct APIError: Decodable { let code: String? }
 
     func fetchAccount() async throws -> AccountEnvelope { try await request("me") }
+    func fetchActivity() async throws -> ActivitySnapshot { try await request("me/activity") }
+    func saveLog(id: UUID, input: SaveLogInput) async throws -> ActivitySnapshot {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return try await request("me/diary/" + id.uuidString.lowercased(), method: "PUT", body: encoder.encode(input))
+    }
     func usernameAvailable(_ username: String) async throws -> Bool {
         let response: Availability = try await request("me/username-availability", query: [URLQueryItem(name: "username", value: username)])
         return response.available
@@ -64,18 +70,36 @@ final class AccountAPIClient: AccountAPI {
             let data: Data
             let response: URLResponse
             do { (data, response) = try await transport.data(for: request) }
-            catch { throw AuthError.networkUnavailable }
+            catch {
+                if (error as? URLError)?.code == .timedOut, path.hasPrefix("me/diary/") { throw ActivityError.timedOut }
+                throw AuthError.networkUnavailable
+            }
             guard tokens.userID == uid else { throw AuthError.sessionExpired }
             guard let http = response as? HTTPURLResponse else { throw AuthError.apiUnavailable }
             if http.statusCode == 401 && attempt == 0 { continue }
             if (200..<300).contains(http.statusCode) {
-                do { return try JSONDecoder().decode(Response.self, from: data) }
+                do {
+                    let decoder = JSONDecoder()
+                    decoder.dateDecodingStrategy = .custom { decoder in
+                        let value = try decoder.singleValueContainer().decode(String.self)
+                        let formatter = ISO8601DateFormatter()
+                        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                        if let date = formatter.date(from: value) { return date }
+                        formatter.formatOptions = [.withInternetDateTime]
+                        guard let date = formatter.date(from: value) else { throw AuthError.apiUnavailable }
+                        return date
+                    }
+                    return try decoder.decode(Response.self, from: data)
+                }
                 catch { throw AuthError.apiUnavailable }
             }
             let code = (try? JSONDecoder().decode(APIError.self, from: data))?.code
             switch code {
             case "USERNAME_TAKEN": throw AuthError.usernameTaken
             case "CATALOG_CHANGED": throw CatalogError.changed
+            case "INVALID_LOG": throw ActivityError.invalidLog
+            case "INVALID_LOG_DATE": throw ActivityError.invalidDate
+            case "ITEM_UNAVAILABLE": throw ActivityError.itemUnavailable
             case "EMAIL_NOT_VERIFIED": throw AuthError.emailNotVerified
             case "RECENT_LOGIN_REQUIRED": throw AuthError.recentLoginRequired
             case "STALE_ONBOARDING", "ONBOARDING_COMPLETED": throw AuthError.onboardingConflict

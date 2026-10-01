@@ -25,8 +25,8 @@ futuras são feitas no banco por migrations novas; não edite migrations aplicad
 
 `total` é a quantidade publicada de itens. `members` conta perfis com onboarding
 concluído que selecionaram o universo, excluindo contas em exclusão. Os números
-fictícios de engajamento não foram importados. `base`, `live` e `avg` retornam zero:
-presença e avaliações reais ainda serão implementadas. A leitura usa uma transação
+fictícios de engajamento não foram importados. `base` e `live` retornam zero; presença ainda será implementada. `avg`,
+`logCount` e `reviewCount` usam a atividade persistida (veja [diário](activity.md)). A leitura usa uma transação
 com snapshot consistente para não misturar itens e totais de publicações distintas.
 
 ## iOS
@@ -45,7 +45,8 @@ Não substitui uma falha por catálogo fictício. A tentativa refaz a consulta; 
 catálogo são descartadas localmente ao restaurar o onboarding. Universo sem itens
 continua válido. A busca filtra o snapshot carregado, sem paginação nesta primeira etapa.
 
-Mocks continuam disponíveis para previews/testes. Reviews, feed social, listas,
+Mocks continuam disponíveis para previews/testes. O diário e as reviews da própria
+conta são persistidos. Feed social de outras pessoas, listas,
 timelines, clubes e outros módulos ainda usam os dados anteriores nesta etapa.
 O catálogo inicial não torna esses recursos persistentes nem seus contadores reais.
 

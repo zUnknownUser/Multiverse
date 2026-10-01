@@ -4,7 +4,6 @@ import SwiftUI
 /// numa Obra. `AppStore.logDraft` guia se mostramos a grade de escolha ou o formulário.
 struct LogSheetView: View {
     @Environment(AppStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(spacing: 0) {
@@ -14,7 +13,7 @@ struct LogSheetView: View {
                 if store.logDraft?.itemID == nil {
                     PickItemContent()
                 } else {
-                    LogFormContent(onPublished: { dismiss() })
+                    LogFormContent()
                 }
             }
             .scrollIndicators(.hidden)
@@ -28,6 +27,7 @@ struct LogSheetView: View {
         .presentationDetents([.fraction(0.92)])
         .presentationDragIndicator(.hidden)
         .presentationCornerRadius(20)
+        .interactiveDismissDisabled(store.isSavingLog)
     }
 }
 
@@ -40,14 +40,16 @@ private struct PickItemContent: View {
             Text(L10n.text("O QUE VOCÊ VIU, LEU OU JOGOU?"))
                 .font(MVFont.section(18)).foregroundStyle(MV.C.ink)
             LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(StaticContent.logQuickPickIDs, id: \.self) { id in
-                    if let item = store.item(id) {
+                ForEach(store.logPickerItems) { item in
                         Button { store.setLogItem(item.id) } label: {
                             PosterView(item: item, universe: store.universe(of: item), width: 104, height: 156, titleSize: 11)
                         }
                         .buttonStyle(.plain)
-                    }
                 }
+            }
+            if store.logPickerItems.isEmpty {
+                Text(L10n.text("Ainda não há itens disponíveis para registrar. Volte em instantes."))
+                    .font(MVFont.body(14)).foregroundStyle(MV.C.muted)
             }
         }
         .padding(.horizontal, MV.pad)
@@ -57,7 +59,6 @@ private struct PickItemContent: View {
 
 private struct LogFormContent: View {
     @Environment(AppStore.self) private var store
-    let onPublished: () -> Void
 
     var body: some View {
         if let itemID = store.logDraft?.itemID, let item = store.item(itemID) {
@@ -69,12 +70,15 @@ private struct LogFormContent: View {
                 ratingPicker(uni: uni, rating: rating)
                 togglePills
                 reviewField
-                Text(L10n.format("Vai aparecer no feed dos seus 312 seguidores e na página de %1$@.", String(describing: item.title)))
+                Text(L10n.text("Sua nota e review serão salvas com este registro."))
                     .font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
+                if let error = store.logSaveError { AuthErrorBanner(message: error) }
                 publishButton(item: item, uni: uni)
             }
             .padding(.horizontal, MV.pad)
             .padding(.bottom, 24)
+            .disabled(store.isSavingLog)
+            .allowsHitTesting(!store.isSavingLog)
         }
     }
 
@@ -164,7 +168,7 @@ private struct LogFormContent: View {
     }
 
     private func publishButton(item: Item, uni: Universe) -> some View {
-        Text(L10n.text("PUBLICAR"))
+        Text(store.isSavingLog ? L10n.text("SALVANDO…") : L10n.text("PUBLICAR"))
             .font(MVFont.bold(15))
             .frame(maxWidth: .infinity).frame(height: 54)
             .foregroundStyle(uni.inkColor)
@@ -175,7 +179,6 @@ private struct LogFormContent: View {
             .contentShape(Rectangle())
             .onTapGesture {
                 store.saveLog()
-                onPublished()
             }
     }
 }

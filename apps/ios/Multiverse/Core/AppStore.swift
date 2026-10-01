@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct LogDraft: Equatable {
+    var id = UUID()
+    var loggedAt: Date?
     var itemID: String?
     var rating: Double = 0
     var liked: Bool = false
@@ -80,6 +82,11 @@ final class AppStore {
     /// Conteúdo de demonstração; perfil e onboarding usam a API NestJS via `AccountAPI`.
     private let repository: MultiverseRepository
     private let catalogAPI: (any CatalogAPI)?
+    private let activityAPI: (any ActivityAPI)?
+    var activityLoadError: String?
+    var logSaveError: String?
+    private(set) var isSavingLog = false
+    private var activityFollowerCount = 0
     var usesRemoteCatalog: Bool { catalogAPI != nil }
     private(set) var catalogIssue: CatalogError?
     var catalogLoadError: String? { catalogIssue?.errorDescription }
@@ -218,7 +225,8 @@ final class AppStore {
 
     // MARK: - Init
 
-    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil, catalogAPI: (any CatalogAPI)? = nil) {
+    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil, catalogAPI: (any CatalogAPI)? = nil, activityAPI: (any ActivityAPI)? = nil) {
+        self.activityAPI = activityAPI
         self.catalogAPI = catalogAPI
         self.accountAPI = accountAPI
         self.widgetWriter = widgetWriter
@@ -345,6 +353,7 @@ final class AppStore {
             do { try await loadRemoteAccount() }
             catch { accountLoadError = error.localizedDescription }
         }
+        if accountLoadError == nil { await loadRemoteActivity() }
         isLoading = false
         syncWidgetData()
     }
@@ -357,6 +366,34 @@ final class AppStore {
         comingSoonUniverses = snapshot.comingSoon
         universesByID = Dictionary(uniqueKeysWithValues: universes.map { ($0.id, $0) })
         itemsByID = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })
+    }
+
+    private func loadRemoteActivity() async {
+        guard let activityAPI else { return }
+        activityLoadError = nil
+        do {
+            let snapshot = try await activityAPI.fetchActivity()
+            try snapshot.validate(for: meID)
+            applyActivity(snapshot)
+        } catch { activityLoadError = error.localizedDescription }
+    }
+
+    private func applyActivity(_ snapshot: ActivitySnapshot) {
+        diary = snapshot.entries
+        reviews.removeAll { $0.user == meID }
+        reviews.insert(contentsOf: snapshot.reviews.map(\.display), at: 0)
+        activityFollowerCount = snapshot.followerCount
+        for universe in snapshot.universes where universesByID[universe.id] == nil { universesByID[universe.id] = universe }
+        for item in snapshot.items { itemsByID[item.id] = item }
+        items = items.map { itemsByID[$0.id] ?? $0 }
+        for entry in diary { checks[entry.itemId] = true }
+    }
+
+    var logPickerItems: [Item] {
+        let featured = StaticContent.logQuickPickIDs.compactMap { item($0) }.filter { item in items.contains { $0.id == item.id } }
+        guard usesRemoteCatalog else { return featured }
+        let ids = Set(featured.map(\.id))
+        return featured + items.filter { !ids.contains($0.id) }
     }
 
     func item(_ id: String) -> Item? { itemsByID[id] }
@@ -567,7 +604,7 @@ final class AppStore {
 
     /// Manda os números atuais pra extensão de widgets via App Group (ver `WidgetBridge`).
     func syncWidgetData() {
-        guard let widgetWriter, !isLoading, catalogLoadError == nil, accountLoadError == nil, !Task.isCancelled, !duels.isEmpty else { return }
+        guard let widgetWriter, !isLoading, catalogLoadError == nil, accountLoadError == nil, activityLoadError == nil, !Task.isCancelled, !duels.isEmpty else { return }
         let mainUniID = user(meID)?.badgeUniverse ?? "wow"
         let followedOrder = readingOrders.first { orderFollows.contains($0.id) } ?? readingOrders.first
         let progress = followedOrder.map { orderProgress($0) } ?? (done: 0, total: 0)
@@ -845,7 +882,7 @@ final class AppStore {
 
         let stats: [(String, String)]
         if isMe {
-            stats = [("\(diary.count + 318)", L10n.text("Registros")), ("312", L10n.text("Seguidores")), ("\(friendsList.count)", L10n.text("Seguindo"))]
+            stats = [("\(diary.count + (activityAPI == nil ? 318 : 0))", L10n.text("Registros")), (activityAPI == nil ? "312" : Logic.fmt(activityFollowerCount), L10n.text("Seguidores")), ("\(activityAPI == nil ? friendsList.count : friendsCount)", L10n.text("Seguindo"))]
         } else {
             let followers = (u.followers ?? (200 + Int(sd % 700))) + (follows.contains(userID) ? 1 : 0)
             stats = [("\(120 + Int(sd % 600))", L10n.text("Registros")), (Logic.fmt(followers), L10n.text("Seguidores")), ("\(40 + Int(sd % 200))", L10n.text("Seguindo"))]
@@ -933,12 +970,14 @@ final class AppStore {
 
     // MARK: - Sheet de registro
 
-    func openLogBlank() { logDraft = LogDraft() }
+    func openLogBlank() { guard !isSavingLog else { return }; logSaveError = nil; logDraft = LogDraft() }
     func openLog(for itemID: String) {
+        guard !isSavingLog else { return }
+        logSaveError = nil
         let mine = myDiaryEntry(for: itemID)
         logDraft = LogDraft(itemID: itemID, rating: mine?.rating ?? 0, liked: false, rewatch: isSeen(itemID), spoiler: false, text: "")
     }
-    func closeLog() { logDraft = nil }
+    func closeLog() { guard !isSavingLog else { return }; logDraft = nil; logSaveError = nil }
 
     func setLogItem(_ itemID: String) {
         guard var d = logDraft else { return }
@@ -955,6 +994,8 @@ final class AppStore {
     }
 
     func saveLog(at date: Date = .now) {
+        guard !isSavingLog else { return }
+        if let activityAPI { saveRemoteLog(using: activityAPI, at: date); return }
         guard let d = logDraft, let itemID = d.itemID, let item = itemsByID[itemID] else { return }
         let entry = DiaryEntry(itemId: itemID, loggedAt: date, rating: d.rating, liked: d.liked, rewatch: d.rewatch)
         diary.insert(entry, at: 0)
@@ -979,6 +1020,31 @@ final class AppStore {
         Task {
             try? await repository.addDiaryEntry(entry)
             if let newReview { try? await repository.publishReview(newReview) }
+        }
+    }
+
+    private func saveRemoteLog(using api: any ActivityAPI, at date: Date) {
+        guard var draft = logDraft, let itemID = draft.itemID, let item = itemsByID[itemID] else { return }
+        let text = draft.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard text.unicodeScalars.count <= 5000 else { logSaveError = ActivityError.tooLong.localizedDescription; return }
+        draft.loggedAt = draft.loggedAt ?? date
+        logDraft = draft
+        let input = SaveLogInput(itemId: itemID, loggedAt: draft.loggedAt!, rating: draft.rating,
+                                 liked: draft.liked, rewatch: draft.rewatch, spoiler: draft.spoiler, text: text)
+        logSaveError = nil
+        isSavingLog = true
+        Task { @MainActor [self] in
+            defer { isSavingLog = false }
+            do {
+                let snapshot = try await api.saveLog(id: draft.id, input: input)
+                try snapshot.validate(for: meID)
+                guard snapshot.entries.contains(where: { $0.id == draft.id }) else { throw AuthError.apiUnavailable }
+                applyActivity(snapshot)
+                logDraft = nil
+                showToast(L10n.text("Registro salvo no diário."))
+                if shieldAdvanceAutomatically, let idx = timelineIndex(for: item) { advanceShieldPoint(universeID: item.uni, to: idx) }
+                syncWidgetData()
+            } catch { logSaveError = error.localizedDescription }
         }
     }
 
@@ -1057,6 +1123,7 @@ final class AppStore {
         onboardingDebounce?.cancel()
         _ = try? await onboardingSaveQueue?.value
         accountLoadError = nil
+        activityLoadError = nil
         onboardingError = nil
         isLoading = true
         if catalogLoadError != nil {
@@ -1077,6 +1144,7 @@ final class AppStore {
         }
         do { try await loadRemoteAccount() }
         catch { accountLoadError = error.localizedDescription }
+        if accountLoadError == nil { await loadRemoteActivity() }
         isLoading = false
         syncWidgetData()
     }

@@ -30,8 +30,10 @@ struct LaunchLoadingView: View {
 
 /// Uses the existing product typography and buttons for recoverable catalog states.
 /// An empty catalog is informational, not a connectivity failure.
-struct CatalogStatusView: View {
-    let issue: CatalogError
+struct DataLoadStatusView: View {
+    let title: String
+    let message: String
+    var retryTitle = L10n.text("TENTAR DE NOVO")
     let isSigningOut: Bool
     let retry: () -> Void
     let signOut: () -> Void
@@ -44,11 +46,11 @@ struct CatalogStatusView: View {
                     Text("MULTIVERSE")
                         .font(MVFont.display(30, width: 125)).tracking(-0.4)
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(issue.title).font(MVFont.display(26, width: 115))
-                        Text(issue.errorDescription ?? "")
+                        Text(title).font(MVFont.display(26, width: 115))
+                        Text(message)
                             .font(MVFont.body(14)).foregroundStyle(MV.C.muted)
                     }
-                    PrimaryAuthButton(title: issue == .empty ? L10n.text("VERIFICAR NOVAMENTE") : L10n.text("TENTAR DE NOVO"), enabled: !isSigningOut, action: retry)
+                    PrimaryAuthButton(title: retryTitle, enabled: !isSigningOut, action: retry)
                         .accessibilityAddTraits(.isButton)
                     Button(L10n.text("SAIR"), action: signOut)
                         .font(MVFont.bold(13)).underline().buttonStyle(.plain)

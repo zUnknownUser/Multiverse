@@ -12706,6 +12706,268 @@
           }
         }
       }
+    },
+    "Confira a nota e os dados do registro. Sua review continua aqui.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confira a nota e os dados do registro. Sua review continua aqui."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the rating and entry details. Your review is still here."
+          }
+        }
+      }
+    },
+    "A data do registro está no futuro. Confira a data do aparelho e tente novamente.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A data do registro está no futuro. Confira a data do aparelho e tente novamente."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The entry date is in the future. Check your device’s date and try again."
+          }
+        }
+      }
+    },
+    "Esta obra não está disponível para novos registros. Sua review continua aqui; você pode copiá-la antes de sair.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta obra não está disponível para novos registros. Sua review continua aqui; você pode copiá-la antes de sair."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This title is not available for new entries. Your review is still here; you can copy it before leaving."
+          }
+        }
+      }
+    },
+    "Sua review pode ter até 5.000 caracteres. Reduza o texto para publicar.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sua review pode ter até 5.000 caracteres. Reduza o texto para publicar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your review can contain up to 5,000 characters. Shorten it to publish."
+          }
+        }
+      }
+    },
+    "O servidor demorou a responder. Tente novamente; o mesmo registro não será duplicado.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor demorou a responder. Tente novamente; o mesmo registro não será duplicado."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server took too long to respond. Try again; the same entry will not be duplicated."
+          }
+        }
+      }
+    },
+    "Registro salvo no diário.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro salvo no diário."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entry saved to your diary."
+          }
+        }
+      }
+    },
+    "Não conseguimos carregar seu diário": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não conseguimos carregar seu diário"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn’t load your diary"
+          }
+        }
+      }
+    },
+    "Ainda não há itens disponíveis para registrar. Volte em instantes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ainda não há itens disponíveis para registrar. Volte em instantes."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No items are available to log yet. Please check back shortly."
+          }
+        }
+      }
+    },
+    "Sua nota e review serão salvas com este registro.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sua nota e review serão salvas com este registro."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your rating and review will be saved with this entry."
+          }
+        }
+      }
+    },
+    "SALVANDO…": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SALVANDO…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SAVING…"
+          }
+        }
+      }
+    },
+    "Seu diário começa com o primeiro registro.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seu diário começa com o primeiro registro."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your diary starts with your first entry."
+          }
+        }
+      }
+    },
+    "FAZER PRIMEIRO REGISTRO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FAZER PRIMEIRO REGISTRO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ADD YOUR FIRST ENTRY"
+          }
+        }
+      }
+    },
+    "diary.recordCount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld entry"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld entries"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld registro"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld registros"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Nenhum registro ainda": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No entries yet"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum registro ainda"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

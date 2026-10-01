@@ -42,6 +42,8 @@ struct Item: Codable, Identifiable, Hashable, Sendable {
     let year: FlexString
     let avg: Double
     let canon: String, desc: String
+    var logCount: Int? = nil
+    var reviewCount: Int? = nil
 }
 
 struct User: Codable, Identifiable, Hashable, Sendable {

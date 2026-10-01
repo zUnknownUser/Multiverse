@@ -52,6 +52,26 @@ struct AccountHTTPTests {
         return (AccountAPIClient(baseURL: URL(string: "https://api.example.test/api/v1")!, tokens: token, transport: session), session)
     }
 
+    @Test func diaryRequestUsesStableIDAndDecodesPostgresTimestamp() async throws {
+        let id = UUID()
+        let json = """
+        {"entries":[{"id":"\(id.uuidString)","itemId":"m-civilwar","loggedAt":"2026-09-30T12:00:00.123Z","rating":4.5,"liked":true,"rewatch":false}],"reviews":[],"items":[],"universes":[],"followerCount":0}
+        """
+        AccountURLProtocol.fixture.reset([(200, json), (409, "{\"code\":\"ITEM_UNAVAILABLE\"}")])
+        let (api, transport) = client(TokenStub())
+        defer { transport.invalidateAndCancel() }
+        let input = SaveLogInput(itemId: "m-civilwar", loggedAt: .now, rating: 4.5, liked: true, rewatch: false, spoiler: true, text: "Review")
+        let result = try await api.saveLog(id: id, input: input)
+        #expect(result.entries.first?.id == id)
+        #expect(result.entries.first?.rating == 4.5)
+        let request = try #require(AccountURLProtocol.fixture.requests.first)
+        #expect(request.url?.path.lowercased() == "/api/v1/me/diary/\(id.uuidString.lowercased())")
+        #expect(request.httpMethod == "PUT")
+        #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer original-token")
+        #expect(request.value(forHTTPHeaderField: "Accept-Language") == L10n.language())
+        await #expect(throws: ActivityError.itemUnavailable) { try await api.saveLog(id: id, input: input) }
+    }
+
     @Test func expiredTokenRefreshesOnceAndPreservesAuthenticatedRequest() async throws {
         AccountURLProtocol.fixture.reset([(401, "{}"), (200, "{\"available\":true}")])
         let token = TokenStub()

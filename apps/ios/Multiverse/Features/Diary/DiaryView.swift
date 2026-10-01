@@ -18,8 +18,16 @@ struct DiaryView: View {
             VStack(alignment: .leading, spacing: 22) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(L10n.text("DIÁRIO")).font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
-                    Text(L10n.format("%1$@ registros em %2$@ · visível pros seus seguidores", String(describing: store.diary.count), yearRange))
+                    Text(store.diary.isEmpty ? L10n.text("Nenhum registro ainda") : L10n.format("diary.recordCount", store.diary.count) + " · " + yearRange)
                         .font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.muted)
+                }
+
+                if store.diary.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(L10n.text("Seu diário começa com o primeiro registro."))
+                            .font(MVFont.body(14)).foregroundStyle(MV.C.muted)
+                        PrimaryAuthButton(title: L10n.text("FAZER PRIMEIRO REGISTRO")) { store.openLogBlank() }
+                    }
                 }
 
                 ForEach(groupedByMonth) { group in

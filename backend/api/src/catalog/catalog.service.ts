@@ -46,9 +46,10 @@ export class CatalogService {
       );
       const items = await client.query(
         `SELECT i.id,i.universe_id AS uni,i.type,coalesce(t.title,p.title) AS title,
-          coalesce(t.year,p.year) AS year,0::float AS avg,
+          coalesce(t.year,p.year) AS year,s.average AS avg,s.log_count AS "logCount",s.review_count AS "reviewCount",
           coalesce(t.canon,p.canon) AS canon,coalesce(t.description,p.description) AS "desc"
          FROM catalog_items i JOIN catalog_universes u ON u.id=i.universe_id AND u.status='active'
+         JOIN catalog_item_statistics s ON s.item_id=i.id
          JOIN catalog_universe_translations up ON up.universe_id=u.id AND up.locale='pt-BR'
          JOIN catalog_item_translations p ON p.item_id=i.id AND p.locale='pt-BR'
          LEFT JOIN catalog_item_translations t ON t.item_id=i.id AND t.locale=$1
