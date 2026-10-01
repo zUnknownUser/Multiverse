@@ -105,4 +105,80 @@ describe('Wikidata Marvel connector', () => {
       ),
     ).rejects.toThrow('INVALID_ENTITY');
   });
+
+  it.each([undefined, '1'])(
+    'cancels an oversized stream with content-length %s before reading its remainder',
+    async (length) => {
+      const cancel = vi.fn();
+      const pull = vi.fn(
+        (controller: ReadableStreamDefaultController<Uint8Array>) => {
+          controller.enqueue(new Uint8Array(1_000_001));
+        },
+      );
+      const stream = new ReadableStream({ pull, cancel }, { highWaterMark: 0 });
+      const response = new Response(stream, {
+        headers: length ? { 'content-length': length } : {},
+      });
+      await expect(
+        fetchMarvelMetadata(
+          [mapping],
+          vi.fn<typeof fetch>().mockResolvedValue(response),
+        ),
+      ).rejects.toThrow('TOO_LARGE');
+      expect(pull).toHaveBeenCalledTimes(2);
+      expect(cancel).toHaveBeenCalledOnce();
+      expect(stream.locked).toBe(false);
+    },
+  );
+
+  it('counts bytes rather than UTF-16 characters', async () => {
+    const payload = JSON.stringify({
+      ...entity(),
+      padding: 'é'.repeat(1_000_000),
+    });
+    expect(payload.length).toBeLessThan(2_000_000);
+    await expect(
+      fetchMarvelMetadata(
+        [mapping],
+        vi.fn<typeof fetch>().mockResolvedValue(new Response(payload)),
+      ),
+    ).rejects.toThrow('TOO_LARGE');
+  });
+
+  it('accepts the exact byte limit even when UTF-8 characters cross chunk boundaries', async () => {
+    const encoded = new TextEncoder().encode(JSON.stringify(entity()));
+    const bytes = new Uint8Array(2_000_000).fill(32);
+    bytes.set(encoded);
+    let offset = 0;
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (offset === bytes.length) {
+          controller.close();
+          return;
+        }
+        const end = Math.min(offset + 127, bytes.length);
+        controller.enqueue(bytes.slice(offset, end));
+        offset = end;
+      },
+    });
+    const [result] = await fetchMarvelMetadata(
+      [mapping],
+      vi.fn<typeof fetch>().mockResolvedValue(new Response(stream)),
+    );
+    expect(result.metadata.titles['pt-BR']).toBe('Título BR');
+  });
+
+  it('cancels unused error bodies without masking the provider status', async () => {
+    const cancel = vi.fn().mockRejectedValue(new Error('cancel failed'));
+    const response = new Response(new ReadableStream({ cancel }), {
+      status: 429,
+    });
+    await expect(
+      fetchMarvelMetadata(
+        [mapping],
+        vi.fn<typeof fetch>().mockResolvedValue(response),
+      ),
+    ).rejects.toThrow('HTTP 429');
+    expect(cancel).toHaveBeenCalledOnce();
+  });
 });

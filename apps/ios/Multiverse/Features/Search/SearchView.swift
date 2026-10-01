@@ -4,6 +4,7 @@ struct SearchView: View {
     @Environment(AppStore.self) private var store
     @State private var query = ""
     @State private var filter: SearchFilter = .all
+    @State private var visibleResults = 40
 
     var body: some View {
         ScreenScaffold {
@@ -36,7 +37,7 @@ struct SearchView: View {
                     .buttonStyle(.plain)
                 }
 
-                let (rows, total) = store.searchResults(query: query, filter: filter)
+                let (rows, total) = store.searchResults(query: query, filter: filter, limit: visibleResults)
                 Text(query.isEmpty ? L10n.text(store.usesRemoteCatalog ? "Explore o catálogo" : "Mais registrados esta semana") : L10n.format("search.results", total))
                     .kicker(11).foregroundStyle(MV.C.muted)
 
@@ -48,15 +49,22 @@ struct SearchView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 24)
                 } else {
-                    VStack(spacing: 10) {
+                    LazyVStack(spacing: 10) {
                         ForEach(rows) { row in
                             SearchResultRowView(row: row)
+                                .onAppear {
+                                    if row.id == rows.last?.id && rows.count < total {
+                                        visibleResults = min(total, visibleResults + 40)
+                                    }
+                                }
                         }
                     }
                 }
             }
             .padding(.horizontal, MV.pad)
             .padding(.bottom, 24)
+            .onChange(of: query) { _, _ in visibleResults = 40 }
+            .onChange(of: filter) { _, _ in visibleResults = 40 }
         }
     }
 

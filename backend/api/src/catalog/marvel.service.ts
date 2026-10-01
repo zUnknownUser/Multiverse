@@ -38,35 +38,19 @@ export class MarvelService {
       (after && !/^[a-z0-9-]{1,80}$/.test(after))
     )
       throw new BadRequestException({ code: 'INVALID_CATALOG_QUERY' });
-    const locale = catalogLanguage(language);
-    const snapshot = await this.catalog.snapshot(locale);
-    const normalize = (value: string) =>
-      value
-        .normalize('NFD')
-        .replace(/\p{Diacritic}/gu, '')
-        .toLowerCase();
-    const matches = snapshot.items
-      .filter(
-        (i) =>
-          i.uni === 'marvel' &&
-          (!type || i.type === type) &&
-          normalize(i.title).includes(normalize(q.trim())),
-      )
-      .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-    const remaining = matches.filter((i) => !after || i.id > after);
-    const items = remaining.slice(0, Number(limit));
-    return {
-      locale,
-      total: matches.length,
-      items,
-      nextCursor: remaining.length > items.length ? items.at(-1)?.id : null,
-    };
+    return this.catalog.page(catalogLanguage(language), 'marvel', {
+      type: type || undefined,
+      search: q,
+      after: after || undefined,
+      limit: Number(limit),
+    });
   }
 
   async detail(id: string, language?: string) {
     const locale = catalogLanguage(language);
-    const snapshot = await this.catalog.snapshot(locale);
-    const item = snapshot.items.find((i) => i.uni === 'marvel' && i.id === id);
+    if (!/^[a-z0-9-]{1,80}$/.test(id))
+      throw new NotFoundException({ code: 'CATALOG_ITEM_NOT_FOUND' });
+    const item = await this.catalog.item(locale, 'marvel', id);
     if (!item) throw new NotFoundException({ code: 'CATALOG_ITEM_NOT_FOUND' });
     const sources = await this.db.query(
       `SELECT provider,external_id AS "externalId",source_url AS url,

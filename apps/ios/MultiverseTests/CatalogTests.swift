@@ -65,6 +65,29 @@ struct CatalogTests {
         #expect(store.onboardingConsumablePicks().allSatisfy { $0.uni == snapshot.universes[0].id })
     }
 
+    @Test func searchCanReachEveryResultAndMatchesAccentsWithoutChangingTitles() async {
+        let sample = SampleData.load()
+        let marvel = sample.universes.first { $0.id == "marvel" }!
+        let items = (0..<125).map { index in
+            Item(id: "m-search-\(index)", uni: "marvel", type: "HQ", title: "Fênix \(index)",
+                 year: sample.items[0].year, avg: 0, canon: "—", desc: "")
+        }
+        let store = AppStore(catalogAPI: CatalogStub(CatalogSnapshot(version: 1, locale: "pt-BR", universes: [marvel], comingSoon: [], items: items)))
+        await store.bootstrap()
+        let first = store.searchResults(query: "  FENIX  ", filter: .works)
+        #expect(first.totalCount == 125)
+        #expect(first.rows.count == 40)
+        #expect(first.rows[0].title == "Fênix 0")
+        let second = store.searchResults(query: "fenix", filter: .works, limit: 80)
+        #expect(second.rows.count == 80)
+        #expect(Array(second.rows.prefix(40)).map(\.id) == first.rows.map(\.id))
+        let all = store.searchResults(query: "fenix", filter: .works, limit: 160)
+        #expect(all.rows.map(\.id) == items.map(\.id))
+        #expect(store.searchResults(query: "Fênix 124", filter: .works).rows.map(\.id) == ["m-search-124"])
+        #expect(store.searchResults(query: "fenix", filter: .characters).totalCount == 0)
+        #expect(store.searchResults(query: "fenix", filter: .works, limit: -1).rows.isEmpty)
+    }
+
     @Test func failedCatalogDoesNotFallBackToDemoAndCanBeRetried() async {
         let api = CatalogStub(snapshot())
         api.failure = .unavailable

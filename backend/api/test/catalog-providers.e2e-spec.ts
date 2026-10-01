@@ -2,7 +2,10 @@ import { randomUUID } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import type { INestApplication } from '@nestjs/common';
+import {
+  ServiceUnavailableException,
+  type INestApplication,
+} from '@nestjs/common';
 import pg from 'pg';
 import request from 'supertest';
 import { AppModule } from '../src/app.module.js';
@@ -12,6 +15,11 @@ import { configureApp } from '../src/configure-app.js';
 import { importMarvel } from '../src/catalog/providers/import-marvel.js';
 import { marvelRegistry } from '../src/catalog/providers/marvel-registry.js';
 import type { ImportedMarvelItem } from '../src/catalog/providers/wikidata.js';
+import {
+  parseTMDB,
+  tmdbMarvelRegistry,
+} from '../src/catalog/providers/tmdb.js';
+import { stageCandidates } from '../src/catalog/providers/stage-candidates.js';
 
 const databaseURL = process.env.TEST_DATABASE_URL;
 describe.skipIf(!databaseURL)(
@@ -96,6 +104,36 @@ describe.skipIf(!databaseURL)(
         .get('/api/v1/catalog/marvel/w-wotlk')
         .expect(404);
     });
+    it('searches accents literally and reaches the end of a filtered SQL page', async () => {
+      const get = (query: object) =>
+        request(app.getHttpServer())
+          .get('/api/v1/catalog/marvel')
+          .query(query)
+          .set('Accept-Language', 'pt-BR');
+      const accent = (await get({ q: 'FENIX' }).expect(200)).body;
+      expect(accent.items.map((i: { id: string }) => i.id)).toEqual([
+        'm-fenix',
+      ]);
+      for (const q of ['%', '_', "' OR 1=1 --"])
+        expect((await get({ q }).expect(200)).body.total).toBe(0);
+      const ids: string[] = [];
+      let after: string | undefined;
+      do {
+        const page = (
+          await get({
+            type: 'HQ',
+            limit: 1,
+            ...(after ? { after } : {}),
+          }).expect(200)
+        ).body;
+        expect(page.total).toBe(3);
+        ids.push(...page.items.map((i: { id: string }) => i.id));
+        after = page.nextCursor;
+      } while (after && ids.length < 10);
+      expect(ids).toEqual(['m-civil', 'm-fenix', 'm-secret']);
+      const empty = (await get({ type: 'HQ', after: 'zzz' }).expect(200)).body;
+      expect(empty).toMatchObject({ total: 3, items: [], nextCursor: null });
+    });
     it('imports idempotently while preserving editorial titles, user references and archival decisions', async () => {
       await db.transaction((client) => importMarvel(client, batch));
       await db.query(
@@ -146,6 +184,58 @@ describe.skipIf(!databaseURL)(
           (i: { id: string }) => i.id === 'm-infinity-gauntlet',
         ),
       ).toBe(true);
+    });
+    it('stages provider data privately and atomically without modifying the published catalog', async () => {
+      const candidate = parseTMDB(
+        { id: 299534, title: 'Avengers: Endgame', release_date: '2019-04-24' },
+        tmdbMarvelRegistry[0],
+      );
+      const before = (
+        await request(app.getHttpServer()).get('/api/v1/catalog').expect(200)
+      ).body;
+      await db.transaction((client) => stageCandidates(client, [candidate]));
+      await db.transaction((client) => stageCandidates(client, [candidate]));
+      const old = {
+        ...candidate,
+        fetchedAt: '2000-01-01T00:00:00Z',
+        metadata: { ...candidate.metadata, year: '1900' },
+      };
+      await db.transaction((client) => stageCandidates(client, [old]));
+      const rows = (
+        await db.query('SELECT metadata FROM catalog_import_candidates')
+      ).rows;
+      expect(rows).toHaveLength(1);
+      expect(rows[0].metadata.year).toBe('2019');
+      const after = (
+        await request(app.getHttpServer()).get('/api/v1/catalog').expect(200)
+      ).body;
+      expect(after).toEqual(before);
+      expect(
+        (
+          await request(app.getHttpServer())
+            .get('/api/v1/catalog/marvel/m-ultimato')
+            .expect(200)
+        ).body.sources,
+      ).toEqual([]);
+      await expect(
+        db.transaction((client) =>
+          stageCandidates(client, [
+            {
+              ...candidate,
+              externalId: 'movie:999',
+              suggestedItemId: 'm-candidate-test',
+            },
+            { ...candidate, suggestedItemId: 'm-wrong-item' },
+          ]),
+        ),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+      expect(
+        (
+          await db.query(
+            'SELECT count(*)::int AS count FROM catalog_import_candidates',
+          )
+        ).rows[0].count,
+      ).toBe(1);
     });
     it('rolls back the complete batch on mapping conflict and never downgrades a source revision', async () => {
       await db.transaction((client) => importMarvel(client, [batch[0]]));

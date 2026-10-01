@@ -802,9 +802,15 @@ final class AppStore {
 
     // MARK: - Busca
 
-    func searchResults(query: String, filter: SearchFilter) -> (rows: [SearchResultRow], totalCount: Int) {
-        let q = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    func searchResults(query: String, filter: SearchFilter, limit: Int = 40) -> (rows: [SearchResultRow], totalCount: Int) {
+        let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let visibleLimit = max(0, limit)
+        let searchLocale = Locale(identifier: L10n.language())
         var rows: [SearchResultRow] = []
+        var totalCount = 0
+        func matches(_ value: String) -> Bool {
+            q.isEmpty || value.range(of: q, options: [.caseInsensitive, .diacriticInsensitive], locale: searchLocale) != nil
+        }
 
         if filter != .people {
             var filtered = items.filter { it in
@@ -819,11 +825,12 @@ final class AppStore {
                 guard typeOK else { return false }
                 guard !q.isEmpty else { return true }
                 let uniName = universesByID[it.uni]?.name ?? ""
-                return (it.title + uniName).lowercased().contains(q)
+                return matches(it.title + " " + uniName)
             }
             if !usesRemoteCatalog { filtered.sort { Logic.logCount($0) > Logic.logCount($1) } }
 
-            rows.append(contentsOf: filtered.map { it in
+            totalCount += filtered.count
+            rows.append(contentsOf: filtered.prefix(visibleLimit).map { it in
                 let uni = universesByID[it.uni]!
                 let p = Logic.posterColors(item: it, universe: uni)
                 let isCircular = it.type == "Personagem"
@@ -837,16 +844,17 @@ final class AppStore {
         if filter == .all || filter == .people {
             let peopleFiltered = users.filter { u in
                 guard u.id != meID else { return false }
-                let matches = q.isEmpty || (u.name + u.handle).lowercased().contains(q)
-                if filter == .people { return matches }
-                return !q.isEmpty && matches
+                let isMatch = matches(u.name + " " + u.handle)
+                if filter == .people { return isMatch }
+                return !q.isEmpty && isMatch
             }
-            rows.append(contentsOf: peopleFiltered.map { u in
+            totalCount += peopleFiltered.count
+            rows.append(contentsOf: peopleFiltered.prefix(max(0, visibleLimit - rows.count)).map { u in
                 SearchResultRow(id: u.id, title: u.name, meta: "\(u.handle) · \(u.bio)", typeLabel: follows.contains(u.id) ? L10n.text("Seguindo") : L10n.text("Pessoa"), pillBG: MV.C.card, pillFG: MV.C.ink, posterBG: Color(hex: u.avatarColor), posterFG: Logic.inkOn(hex: u.avatarColor), initials: Logic.initials(u.name), isCircular: true, route: .user(u.id))
             })
         }
 
-        return (Array(rows.prefix(14)), rows.count)
+        return (rows, totalCount)
     }
 
     // MARK: - Perfil

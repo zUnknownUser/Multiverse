@@ -1,3 +1,4 @@
+import { readProviderJSON } from './provider-http.js';
 import type { MarvelMapping } from './marvel-registry.js';
 
 type RecordValue = Record<string, unknown>;
@@ -22,6 +23,7 @@ export interface ImportedMarvelItem {
   revision: number;
   metadata: ExternalMetadata;
 }
+
 export function parseWikidata(
   payload: unknown,
   mapping: MarvelMapping,
@@ -107,15 +109,15 @@ export async function fetchMarvelMetadata(
         redirect: 'error',
       },
     );
-    if (!response.ok)
+    if (!response.ok) {
+      await response.body?.cancel().catch(() => {});
       throw new Error(
         `WIKIDATA_UNAVAILABLE: HTTP ${response.status}; retry later`,
       );
-    if (Number(response.headers.get('content-length') ?? 0) > 2_000_000)
-      throw new Error('WIKIDATA_RESPONSE_TOO_LARGE');
-    const body = await response.text();
-    if (body.length > 2_000_000) throw new Error('WIKIDATA_RESPONSE_TOO_LARGE');
-    result.push(parseWikidata(JSON.parse(body), mapping));
+    }
+    result.push(
+      parseWikidata(await readProviderJSON(response, 'WIKIDATA'), mapping),
+    );
   }
   return result;
 }
