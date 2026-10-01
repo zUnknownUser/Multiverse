@@ -28,6 +28,7 @@ Pods/
 *.mobileprovision
 *.p12
 *.cer
+*firebase-adminsdk*.json
 
 # Descompactados só pra referência de design — o conteúdo já está em design/design_handoff_multiverse/
 *.zip

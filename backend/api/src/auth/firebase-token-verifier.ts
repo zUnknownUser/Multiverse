@@ -1,6 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { applicationDefault, getApps, initializeApp } from 'firebase-admin/app';
+import {
+  applicationDefault,
+  cert,
+  getApps,
+  initializeApp,
+} from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 
 @Injectable()
@@ -13,11 +18,32 @@ export class FirebaseTokenVerifier {
       initializeApp(
         {
           projectId: this.config.get<string>('FIREBASE_PROJECT_ID'),
-          credential: applicationDefault(),
+          credential: this.credential(),
         },
         name,
       );
     return getAuth(app);
+  }
+  private credential() {
+    const json = this.config.get<string>('FIREBASE_SERVICE_ACCOUNT_JSON');
+    if (!json) return applicationDefault();
+    try {
+      const account = JSON.parse(json) as Record<string, unknown>;
+      if (
+        account.project_id !== this.config.get<string>('FIREBASE_PROJECT_ID') ||
+        typeof account.client_email !== 'string' ||
+        typeof account.private_key !== 'string'
+      )
+        throw new Error('Invalid service account');
+      return cert({
+        projectId: account.project_id as string,
+        clientEmail: account.client_email,
+        privateKey: account.private_key,
+      });
+    } catch {
+      // Do not include credential contents or parser errors in logs.
+      throw new Error('Invalid FIREBASE_SERVICE_ACCOUNT_JSON configuration');
+    }
   }
   verify(token: string) {
     return this.auth().verifyIdToken(token, true);
