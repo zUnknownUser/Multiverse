@@ -9,6 +9,7 @@ import { AccountsController } from './accounts/accounts.controller.js';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnvironment } from './config/environment.js';
 import { HealthModule } from './health/health.module.js';
+import { AIModule } from './ai/ai.module.js';
 
 @Module({
   controllers: [AccountsController],
@@ -27,6 +28,7 @@ import { HealthModule } from './health/health.module.js';
       validate: validateEnvironment,
     }),
     HealthModule,
+    AIModule,
   ],
 })
 export class AppModule {}

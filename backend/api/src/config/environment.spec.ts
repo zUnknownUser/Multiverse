@@ -49,4 +49,29 @@ describe('Environment configuration', () => {
   it('rejects an unknown environment', () => {
     expect(() => validateEnvironment({ NODE_ENV: 'prod' })).toThrow('NODE_ENV');
   });
+
+  it('supports optional OpenAI credentials and a configurable model', () => {
+    expect(validateEnvironment({})).toMatchObject({
+      OPENAI_API_KEY: undefined,
+      OPENAI_MODEL: 'gpt-4.1-mini',
+    });
+    expect(
+      validateEnvironment({
+        OPENAI_API_KEY: ' test-placeholder ',
+        OPENAI_MODEL: 'test-model',
+      }),
+    ).toMatchObject({
+      OPENAI_API_KEY: 'test-placeholder',
+      OPENAI_MODEL: 'test-model',
+    });
+    expect(
+      validateEnvironment({ OPENAI_API_KEY: ' ' }).OPENAI_API_KEY,
+    ).toBeUndefined();
+    expect(() => validateEnvironment({ OPENAI_API_KEY: 123 })).toThrow(
+      'OPENAI_API_KEY',
+    );
+    expect(() => validateEnvironment({ OPENAI_MODEL: '' })).toThrow(
+      'OPENAI_MODEL',
+    );
+  });
 });

@@ -3,6 +3,8 @@ export interface Environment {
   PORT: number;
   DATABASE_URL?: string;
   FIREBASE_PROJECT_ID: string;
+  OPENAI_API_KEY?: string;
+  OPENAI_MODEL: string;
 }
 
 export function validateEnvironment(
@@ -53,10 +55,22 @@ export function validateEnvironment(
     !/^[a-z][a-z0-9-]{4,62}$/.test(projectID)
   )
     throw new Error('Invalid FIREBASE_PROJECT_ID');
+  const openAIKey = config.OPENAI_API_KEY;
+  if (openAIKey !== undefined && typeof openAIKey !== 'string')
+    throw new Error('OPENAI_API_KEY must be a string.');
+  const openAIModel = config.OPENAI_MODEL ?? 'gpt-4.1-mini';
+  if (
+    typeof openAIModel !== 'string' ||
+    !/^[a-zA-Z0-9._:-]{1,200}$/.test(openAIModel)
+  )
+    throw new Error('Invalid OPENAI_MODEL.');
   return {
     NODE_ENV: nodeEnv,
     PORT: port,
     DATABASE_URL: databaseURL as string | undefined,
     FIREBASE_PROJECT_ID: projectID,
+    OPENAI_API_KEY:
+      typeof openAIKey === 'string' ? openAIKey.trim() || undefined : undefined,
+    OPENAI_MODEL: openAIModel,
   };
 }
