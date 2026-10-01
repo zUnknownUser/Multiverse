@@ -1,4 +1,4 @@
-# Marvel: catálogo publicado e fontes externas
+# Marvel catálogo publicado e fontes externas
 
 ## Entrega e limites
 
@@ -7,15 +7,14 @@ participam do login, da busca ou da abertura de uma obra. Uma indisponibilidade
 externa preserva o último catálogo publicado. As notas, reviews, diários e cânone
 editorial do Multiverse não são substituídos por dados de fornecedores.
 
-| Fonte    | Escopo implementado                                                                                 | Estado                                                                             |
-| -------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Wikidata | Identidade, títulos PT/EN, descrições curtas, ano e referências de criadores/editoras               | Integração publicada, cinco mapeamentos revisados                                  |
-| Metron   | Edições de HQ: série, número, datas, páginas, créditos e personagens                                | Conector e revisão privada preparados; falta token e validação com respostas reais |
-| TMDB     | Filmes/séries: títulos e sinopses PT/EN, estreia, duração de filme, créditos e referência de pôster | Conector e revisão privada preparados; falta token e validação com respostas reais |
+| Fonte    | Escopo implementado                                                                                 | Estado                                                                                                |
+| -------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Wikidata | Identidade, títulos PT/EN, descrições curtas, ano e referências de criadores/editoras               | Integração publicada, cinco mapeamentos revisados                                                     |
+| Metron   | Edições de HQ: série, número, datas, páginas, créditos e personagens                                | Conector e revisão privada preparados; falta token e validação com respostas reais                    |
+| TMDB     | Filmes/séries: títulos e sinopses PT/EN, estreia, duração de filme, créditos e referência de pôster | Credencial configurada e respostas reais validadas para três obras; publicação operacional disponível |
 
 Não há scraping, descoberta irrestrita, mensagens diárias, importação de avaliações
-externas ou novas telas. Capas continuam com o visual existente. Metadados de
-recursos que ainda não existem no app ficam privados. Não se promete retenção
+externas ou novas telas. Capas continuam com o visual existente. Dados revisados do TMDB ficam disponíveis também na API de detalhe; campos sem apresentação no app não criam novas telas. Não se promete retenção
 medida: esta etapa remove obstáculos concretos à descoberta e ao registro, mantendo
 IDs estáveis e os dados pessoais intactos.
 
@@ -40,6 +39,8 @@ IDs estáveis e os dados pessoais intactos.
 - `stage-candidates.ts`: grava apenas em `catalog_import_candidates`, separado do
   catálogo público. Lote inválido é revertido, identidade conflitante é recusada,
   consulta antiga não sobrescreve uma consulta mais recente.
+- `publish-tmdb.ts`: publica somente o lote completo dos três mapeamentos TMDB revisados em `catalog_sources`, após validação e autorização de uso. Sincronização antiga não substitui uma mais recente; não altera texto editorial, status, IDs ou atividade.
+- `catalog-description.ts`: sinopse TMDB publicada no idioma pedido, com fallback editorial. Catálogo, detalhe e referências do diário usam a mesma regra.
 - `CatalogService`/`MarvelService`: consultas somente ao catálogo publicado.
 
 ## Credenciais e uso dos conectores preparados
@@ -64,6 +65,8 @@ npm run db:migrate
 node scripts/preview-marvel-sources.mjs --provider=tmdb
 # Guarda os candidatos para revisão privada, sem publicar:
 node scripts/preview-marvel-sources.mjs --provider=tmdb --stage
+# Publicação explícita do lote TMDB revisado (licença e créditos necessários):
+node scripts/preview-marvel-sources.mjs --provider=tmdb --publish
 # Substitua ID por um ID numérico real da edição no Metron:
 node scripts/preview-marvel-sources.mjs --provider=metron --issues=ID --stage
 ```
@@ -80,11 +83,7 @@ SELECT provider, external_id, suggested_item_id, kind, metadata, attribution, fe
 FROM catalog_import_candidates ORDER BY provider, external_id;
 ```
 
-Esta etapa não fornece publicação automática desses candidatos. Antes de expor
-novas fontes: validar respostas autenticadas, conferir a identidade/granularidade
-da obra, revisar traduções e implementar créditos/licença aplicáveis. Isso evita
-transformar uma edição em arco, publicar dados incompletos ou alterar a identidade
-visual sem uma etapa dedicada. A migração `007` é aditiva e não altera o catálogo.
+Não existe cron ou publicação durante o login. `--publish` é exclusivo do TMDB e grava o lote completo em uma transação. Metron continua privado e pendente de credencial/validação. A migração `007` cria a revisão privada; `008` permite a origem TMDB no catálogo. Para reverter uma publicação, remover somente sua linha de `catalog_sources` faz a sinopse voltar ao texto editorial preservado.
 
 ## Fontes, manutenção e autorização de uso
 
@@ -106,7 +105,7 @@ visual sem uma etapa dedicada. A migração `007` é aditiva e não altera o cat
   Uma chamada por obra traz detalhes, traduções e créditos. A
   [FAQ oficial](https://developer.themoviedb.org/docs/faq) exige atribuição e logo
   em About/Credits; uso comercial requer licença comercial. Também não oferece SLA.
-  A presença do plano Pro exige resolver esse uso antes da publicação dos dados.
+  O responsável informou em 01/10/2026 que já possui autorização comercial. O token de leitura foi validado em chamadas autenticadas, sem versionar seu valor. Ajustes → Créditos contém logo oficial e aviso de atribuição. O arquivo SVG foi obtido sem modificação da [página oficial de logos](https://www.themoviedb.org/about/logos-attribution).
 - **Comic Vine** não foi incorporado: os
   [termos da API](https://comicvine.gamespot.com/api/) restringem uso comercial.
 - O antigo portal de desenvolvedores Marvel não pôde ser validado; não é uma
@@ -138,7 +137,7 @@ inferidos. `catalog_sources` conserva origem, revisão e data da consulta.
   view compartilhada; não há materialização de métricas nesta etapa.
 - `GET /api/v1/catalog/marvel/:id` faz consulta restrita ao item Marvel publicado.
   Retorna `{ locale, item, sources }`; não carrega todos os universos/itens. Candidatos
-  de Metron/TMDB permanecem privados e não entram em `sources`.
+  continuam privados; dados TMDB publicados por `--publish` entram em `sources` com atribuição e data da consulta.
 - Tipos: `HQ`, `Personagem`, `Evento`, `Filme`, `Série`. `Accept-Language` escolhe
   PT-BR/EN. Busca vazia retorna 200 com lista vazia; entrada inválida, 400
   `INVALID_CATALOG_QUERY`; item indisponível, 404; banco indisponível, 503.
@@ -152,5 +151,5 @@ inferidos. `catalog_sources` conserva origem, revisão e data da consulta.
 O catálogo Marvel publicado, incluindo duas HQs novas e Homem-Aranha da etapa
 anterior, continua acessível na busca e no registro do diário. Neste ajuste, o
 usuário ganha acesso aos resultados antes escondidos e busca tolerante a acentos.
-Notas e progresso continuam sendo do Multiverse. Não há capas TMDB/Metron,
+Ultimato, Através do Aranhaverso e Loki passam a usar sinopses TMDB em PT-BR/EN após a publicação operacional e recarga do catálogo. As credenciais ficam no backend. Notas e progresso continuam sendo do Multiverse. Não há capas TMDB/Metron,
 cronologia externa, catálogo completo da Marvel ou feed social externo publicado.

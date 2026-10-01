@@ -19,6 +19,7 @@ struct SettingsView: View {
                 themeSection
                 privacySection
                 notificationsSection
+                creditsSection
 
                 HStack(spacing: 10) {
                     Text(L10n.text("SAIR DA CONTA"))
@@ -146,6 +147,31 @@ struct SettingsView: View {
                 Divider().overlay(MV.C.divider)
                 toggleRow(L10n.text("Duelos e debates novos"), isOn: Binding(get: { settings.newDuelsAndDebates }, set: { settings.newDuelsAndDebates = $0 }))
             }
+            .comicCard(shadow: MV.Shadow.s)
+        }
+    }
+
+    private var creditsSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(L10n.text("CRÉDITOS")).kicker(11).foregroundStyle(MV.C.muted)
+            VStack(alignment: .leading, spacing: 12) {
+                Link(destination: URL(string: "https://www.themoviedb.org")!) {
+                    Image("TMDBLogo")
+                        .resizable().scaledToFit().frame(width: 110)
+                        .accessibilityLabel(Text(verbatim: "TMDB"))
+                }
+                Text(L10n.text("Dados de filmes e séries fornecidos pelo TMDB."))
+                    .font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.ink)
+                // Official attribution notice, retained verbatim in both locales.
+                Text(verbatim: "This product uses the TMDB API but is not endorsed or certified by TMDB.")
+                    .font(MVFont.body(11)).foregroundStyle(MV.C.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                Divider().overlay(MV.C.divider)
+                Link("Wikidata · CC0", destination: URL(string: "https://www.wikidata.org/wiki/Wikidata:Licensing")!)
+                    .font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.ink)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
             .comicCard(shadow: MV.Shadow.s)
         }
     }

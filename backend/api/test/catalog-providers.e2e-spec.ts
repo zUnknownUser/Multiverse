@@ -20,6 +20,7 @@ import {
   tmdbMarvelRegistry,
 } from '../src/catalog/providers/tmdb.js';
 import { stageCandidates } from '../src/catalog/providers/stage-candidates.js';
+import { publishTMDB } from '../src/catalog/providers/publish-tmdb.js';
 
 const databaseURL = process.env.TEST_DATABASE_URL;
 describe.skipIf(!databaseURL)(
@@ -236,6 +237,124 @@ describe.skipIf(!databaseURL)(
           )
         ).rows[0].count,
       ).toBe(1);
+    });
+    it('publishes only reviewed TMDB mappings with localized fallback and preserved editorial data', async () => {
+      const candidates = tmdbMarvelRegistry.map((m) =>
+        parseTMDB(
+          {
+            id: m.id,
+            ...(m.kind === 'movie'
+              ? { title: m.title, release_date: `${m.year}-01-01` }
+              : { name: m.title, first_air_date: `${m.year}-01-01` }),
+            overview: 'English TMDB synopsis',
+            translations: {
+              translations: [
+                {
+                  iso_639_1: 'pt',
+                  iso_3166_1: 'BR',
+                  data: { overview: 'Sinopse TMDB' },
+                },
+              ],
+            },
+          },
+          m,
+        ),
+      );
+      await db.transaction((client) => publishTMDB(client, candidates));
+      await db.transaction((client) => publishTMDB(client, candidates));
+      const get = (locale: string) =>
+        request(app.getHttpServer())
+          .get('/api/v1/catalog/marvel/m-ultimato')
+          .set('Accept-Language', locale)
+          .expect(200);
+      expect((await get('pt-BR')).body.item).toMatchObject({
+        title: 'Vingadores: Ultimato',
+        desc: 'Sinopse TMDB',
+        avg: 0,
+        canon: 'MCU',
+      });
+      expect((await get('en')).body.item.desc).toBe('English TMDB synopsis');
+      expect((await get('en')).body.sources).toHaveLength(1);
+      const editorial = (
+        await db.query(
+          "SELECT description FROM catalog_item_translations WHERE item_id='m-ultimato' AND locale='pt-BR'",
+        )
+      ).rows[0].description;
+      expect(editorial).not.toBe('Sinopse TMDB');
+      const missingPT = candidates.map((c) => ({
+        ...c,
+        fetchedAt: new Date(Date.parse(c.fetchedAt) + 1000).toISOString(),
+        metadata: {
+          ...c.metadata,
+          descriptions: { en: 'Updated English', 'pt-BR': '' },
+        },
+      }));
+      await db.transaction((client) => publishTMDB(client, missingPT));
+      await db.transaction((client) => publishTMDB(client, candidates));
+      expect((await get('pt-BR')).body.item.desc).toBe(editorial);
+      expect((await get('en')).body.item.desc).toBe('Updated English');
+      verifier.verify.mockResolvedValue({
+        uid: 'tmdb-reader',
+        email_verified: true,
+        firebase: { sign_in_provider: 'password' },
+      });
+      await request(app.getHttpServer())
+        .put('/api/v1/me/profile')
+        .set('Authorization', 'Bearer test')
+        .send({
+          username: 'tmdb-reader'.replace('-', ''),
+          displayName: 'Reader',
+          avatarColor: '#123456',
+          bio: '',
+        })
+        .expect(200);
+      const activity = (
+        await request(app.getHttpServer())
+          .put('/api/v1/me/diary/' + randomUUID())
+          .set('Authorization', 'Bearer test')
+          .set('Accept-Language', 'en')
+          .send({
+            itemId: 'm-ultimato',
+            loggedAt: new Date().toISOString(),
+            rating: 0,
+            liked: false,
+            rewatch: false,
+            spoiler: false,
+            text: '',
+          })
+          .expect(200)
+      ).body;
+      expect(
+        activity.items.find((i: { id: string }) => i.id === 'm-ultimato').desc,
+      ).toBe('Updated English');
+      await expect(
+        db.transaction((client) => publishTMDB(client, [candidates[0]])),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+      await expect(
+        db.transaction((client) =>
+          publishTMDB(
+            client,
+            candidates.map((c, i) =>
+              i === 2
+                ? { ...c, suggestedItemId: 'd-watchmen' }
+                : {
+                    ...c,
+                    fetchedAt: new Date(
+                      Date.parse(c.fetchedAt) + 2000,
+                    ).toISOString(),
+                  },
+            ),
+          ),
+        ),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+      expect((await get('en')).body.item.desc).toBe('Updated English');
+      await db.query(
+        "UPDATE catalog_items SET status='archived' WHERE id='m-loki'",
+      );
+      await db.transaction((client) => publishTMDB(client, candidates));
+      await request(app.getHttpServer())
+        .get('/api/v1/catalog/marvel/m-loki')
+        .expect(404);
     });
     it('rolls back the complete batch on mapping conflict and never downgrades a source revision', async () => {
       await db.transaction((client) => importMarvel(client, [batch[0]]));

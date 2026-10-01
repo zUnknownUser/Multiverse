@@ -8,6 +8,10 @@ import {
 import type { PoolClient } from 'pg';
 import { AccountLifecycleService } from '../accounts/account-lifecycle.service.js';
 import type { SaveLogDTO } from './activity.dto.js';
+import {
+  catalogDescription,
+  descriptionSourceJoin,
+} from '../catalog/catalog-description.js';
 
 @Injectable()
 export class ActivityService {
@@ -95,9 +99,10 @@ export class ActivityService {
     const items = await client.query(
       `SELECT i.id,i.universe_id AS uni,i.type,coalesce(t.title,p.title) AS title,
       coalesce(t.year,p.year) AS year,s.average AS avg,s.log_count AS "logCount",s.review_count AS "reviewCount",
-      coalesce(t.canon,p.canon) AS canon,coalesce(t.description,p.description) AS "desc"
+      coalesce(t.canon,p.canon) AS canon,${catalogDescription('$2')} AS "desc"
       FROM catalog_items i JOIN catalog_item_translations p ON p.item_id=i.id AND p.locale='pt-BR'
       LEFT JOIN catalog_item_translations t ON t.item_id=i.id AND t.locale=$2
+      ${descriptionSourceJoin}
       JOIN catalog_item_statistics s ON s.item_id=i.id
       WHERE i.id IN (SELECT item_id FROM diary_entries WHERE firebase_uid=$1) ORDER BY i.sort_order,i.id`,
       [uid, locale],

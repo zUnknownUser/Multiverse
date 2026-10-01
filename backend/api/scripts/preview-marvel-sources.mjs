@@ -3,6 +3,7 @@ import pg from 'pg';
 import { fetchTMDBMarvel } from '../dist/catalog/providers/tmdb.js';
 import { fetchMetronMarvelIssues } from '../dist/catalog/providers/metron.js';
 import { stageCandidates } from '../dist/catalog/providers/stage-candidates.js';
+import { publishTMDB } from '../dist/catalog/providers/publish-tmdb.js';
 
 // All network reads finish before opening a transaction. Never called on API boot/login.
 async function main() {
@@ -10,7 +11,7 @@ async function main() {
   if (
     args.some(
       (a) =>
-        !/^(--provider=(tmdb|metron)|--issues=[1-9]\d*(,[1-9]\d*){0,9}|--stage)$/.test(
+        !/^(--provider=(tmdb|metron)|--issues=[1-9]\d*(,[1-9]\d*){0,9}|--stage|--publish)$/.test(
           a,
         ),
     ) ||
@@ -25,7 +26,10 @@ async function main() {
     ?.slice('--issues='.length);
   if (!provider || (provider === 'metron' ? !issues : issues))
     throw new Error('USAGE');
-  if (args.includes('--stage') && !process.env.DATABASE_URL)
+  const publish = args.includes('--publish');
+  if (publish && (provider !== 'tmdb' || args.includes('--stage')))
+    throw new Error('USAGE');
+  if ((args.includes('--stage') || publish) && !process.env.DATABASE_URL)
     throw new Error('DATABASE_URL_REQUIRED');
   const batch =
     provider === 'tmdb'
@@ -34,7 +38,7 @@ async function main() {
           issues.split(',').map(Number),
           process.env.METRON_API_TOKEN,
         );
-  if (args.includes('--stage')) {
+  if (args.includes('--stage') || publish) {
     const client = new pg.Client({
       connectionString: process.env.DATABASE_URL,
       connectionTimeoutMillis: 5000,
@@ -44,6 +48,7 @@ async function main() {
     try {
       await client.query('BEGIN');
       await stageCandidates(client, batch);
+      if (publish) await publishTMDB(client, batch);
       await client.query('COMMIT');
     } catch (error) {
       await client.query('ROLLBACK');
@@ -55,8 +60,12 @@ async function main() {
   console.log(
     JSON.stringify(
       {
-        mode: args.includes('--stage') ? 'private-review' : 'preview',
-        published: false,
+        mode: publish
+          ? 'published'
+          : args.includes('--stage')
+            ? 'private-review'
+            : 'preview',
+        published: publish,
         candidates: batch,
       },
       null,
@@ -69,7 +78,7 @@ main().catch((error) => {
   const code = error instanceof Error ? error.message : '';
   console.error(
     code === 'USAGE'
-      ? 'Usage: node scripts/preview-marvel-sources.mjs --provider=tmdb|metron [--issues=ID,ID] [--stage]'
+      ? 'Usage: node scripts/preview-marvel-sources.mjs --provider=tmdb|metron [--issues=ID,ID] [--stage|--publish]'
       : /^(TMDB|METRON|CATALOG)_[A-Z_0-9]+$/.test(code) ||
           code === 'DATABASE_URL_REQUIRED'
         ? code

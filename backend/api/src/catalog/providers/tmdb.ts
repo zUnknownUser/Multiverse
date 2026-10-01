@@ -73,6 +73,18 @@ export function parseTMDB(
       name: plainText(c.name, 300),
       roles: [String(c.job)],
     }));
+  if (mapping.kind === 'tv') {
+    creators.push(
+      ...records(data.created_by)
+        .filter((c) => positiveInt(c.id) && plainText(c.name))
+        .slice(0, 30)
+        .map((c) => ({
+          id: Number(c.id),
+          name: plainText(c.name, 300),
+          roles: ['Creator'],
+        })),
+    );
+  }
   const poster =
     typeof data.poster_path === 'string' &&
     /^\/[a-zA-Z0-9]+\.(jpg|png)$/.test(data.poster_path)

@@ -1,6 +1,8 @@
 {
   "sourceLanguage": "pt-BR",
   "strings": {
+    "CRÉDITOS": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "CREDITS"}}, "pt-BR": {"stringUnit": {"state": "translated", "value": "CRÉDITOS"}}}},
+    "Dados de filmes e séries fornecidos pelo TMDB.": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Movie and TV data provided by TMDB."}}, "pt-BR": {"stringUnit": {"state": "translated", "value": "Dados de filmes e séries fornecidos pelo TMDB."}}}},
     "  %1$@ reviews": {
       "extractionState": "manual",
       "localizations": {
