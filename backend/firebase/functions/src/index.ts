@@ -102,7 +102,9 @@ export const confirmEmailVerificationCode = onCall(options, async request => {
     if (!result.accepted) throw new HttpsError("invalid-argument", "Código incorreto. Confira e tente novamente.");
     const latest = await getAuth().getUser(uid);
     if (latest.email !== email || latest.disabled) throw new HttpsError("failed-precondition", "A conta mudou. Solicite outro código.");
-    await getAuth().updateUser(uid, { emailVerified: true });
+    // Bind the privileged write to the address proved by this code. A concurrent
+    // email change after the read above must not verify a different address.
+    await getAuth().updateUser(uid, { email, emailVerified: true });
     await db.runTransaction(async tx => {
       const current = (await tx.get(ref)).data() as Challenge | undefined;
       if (current?.generation === result.challenge.generation) tx.update(ref, { status: "verified", hash: "" });
