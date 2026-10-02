@@ -6,6 +6,7 @@ struct ReportSheet: View {
     let targetID: String
     let authorHandle: String
     let targetTitle: String
+    var reviewID: String? = nil
 
     @Environment(AppStore.self) private var store
     @Environment(AuthStore.self) private var auth
@@ -20,7 +21,7 @@ struct ReportSheet: View {
             VStack(alignment: .leading, spacing: 18) {
                 Capsule().fill(MV.C.ink).frame(width: 44, height: 5).frame(maxWidth: .infinity)
 
-                Text(L10n.format("DENUNCIAR %1$@", String(describing: targetType.uppercased()))).font(MVFont.display(24, width: 118)).foregroundStyle(MV.C.ink)
+                Text(L10n.format("DENUNCIAR %1$@", L10n.text(targetType == "comentário" ? "COMENTÁRIO" : "REVIEW"))).font(MVFont.display(24, width: 118)).foregroundStyle(MV.C.ink)
                 Text(L10n.format("de %1$@ sobre %2$@", String(describing: authorHandle), String(describing: targetTitle))).font(MVFont.body(13, weight: 500)).foregroundStyle(MV.C.muted)
 
                 VStack(spacing: 10) {
@@ -87,6 +88,20 @@ struct ReportSheet: View {
     private func send() {
         guard !isSending else { return }
         if let social = store.social {
+            if let reviewID, let comment = social.comments[reviewID]?.first(where: { $0.id == targetID }), comment.user != store.meID {
+                isSending = true; errorMessage = nil
+                Task {
+                    if await social.reportComment(reviewID: reviewID, id: targetID, authorID: comment.user, reason: reason, alsoBlock: alsoBlock) {
+                        store.showToast(L10n.text("Denúncia registrada. O comentário foi ocultado para você."))
+                        dismiss()
+                        await store.refreshAfterSafetyChange()
+                        await social.loadReview(reviewID)
+                        await social.loadComments(reviewID)
+                    } else { errorMessage = social.actionError }
+                    isSending = false
+                }
+                return
+            }
             guard targetType == "review", let review = store.review(targetID), review.user != store.meID else {
                 errorMessage = SocialError.unavailable.localizedDescription
                 return

@@ -12,19 +12,17 @@ import {
   catalogDescription,
   descriptionSourceJoin,
 } from '../catalog/catalog-description.js';
-import { unblocked } from './social-policy.js';
+import {
+  reviewRelations as relations,
+  reviewVisible as visible,
+  commentVisible,
+} from './social-policy.js';
+import { reactionSummaries } from './interaction-summary.js';
 
 export interface FeedCursor {
   time: string;
   id: string;
 }
-const relations = `reviews r JOIN diary_entries d ON d.firebase_uid=r.firebase_uid AND d.id=r.entry_id
- JOIN profiles p ON p.firebase_uid=r.firebase_uid JOIN onboarding o ON o.firebase_uid=p.firebase_uid AND o.completed=true
- JOIN catalog_items ci ON ci.id=d.item_id AND ci.status='published'
- JOIN catalog_universes cu ON cu.id=ci.universe_id AND cu.status='active'`;
-const visible = `p.deletion_requested_at IS NULL AND (p.firebase_uid=$1 OR p.public_diary)
- AND r.moderation_status='visible' AND ${unblocked('$1', 'p.firebase_uid')}
- AND NOT EXISTS(SELECT 1 FROM review_reports rr WHERE rr.reporter_uid=$1 AND rr.review_id=r.id)`;
 const fields = `r.id,r.firebase_uid AS "user",d.item_id AS item,d.rating,r.text,r.spoiler,r.created_at AS "createdAt",
  to_char(r.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "cursorTime"`;
 
@@ -34,9 +32,9 @@ export class SocialService {
     @Inject(AccountLifecycleService)
     private readonly lifecycle: AccountLifecycleService,
   ) {}
-  private async member(client: PoolClient, uid: string) {
+  async member(client: PoolClient, uid: string) {
     const r = await client.query(
-      `SELECT p.public_diary FROM profiles p JOIN onboarding o USING(firebase_uid)
+      `SELECT p.public_diary,p.comment_permission FROM profiles p JOIN onboarding o USING(firebase_uid)
    WHERE p.firebase_uid=$1 AND p.deletion_requested_at IS NULL AND o.completed=true FOR SHARE OF p`,
       [uid],
     );
@@ -52,7 +50,10 @@ export class SocialService {
           'UPDATE profiles SET public_diary=$2 WHERE firebase_uid=$1',
           [uid, publicDiary],
         );
-      return { publicDiary: publicDiary ?? member.public_diary };
+      return {
+        publicDiary: publicDiary ?? member.public_diary,
+        commentPermission: member.comment_permission,
+      };
     });
   }
   async feed(
@@ -82,6 +83,17 @@ export class SocialService {
               JSON.stringify({ time: last!.cursorTime, id: last!.id }),
             ).toString('base64url')
           : null;
+      const summaries = await reactionSummaries(
+        client,
+        uid,
+        rows.map((row) => row.id),
+      );
+      const counts = await client.query(
+        `SELECT c.review_id,count(*)::int AS count FROM review_comments c
+        JOIN profiles cp ON cp.firebase_uid=c.firebase_uid JOIN reviews r ON r.id=c.review_id
+        WHERE c.review_id=ANY($2::uuid[]) AND ${commentVisible} GROUP BY c.review_id`,
+        [uid, rows.map((row) => row.id)],
+      );
       const reviews = rows.map((row) => ({
         id: row.id,
         user: row.user,
@@ -90,6 +102,9 @@ export class SocialService {
         text: row.text,
         spoiler: row.spoiler,
         createdAt: row.createdAt,
+        interaction: summaries.find((summary) => summary.id === row.id),
+        commentCount:
+          counts.rows.find((count) => count.review_id === row.id)?.count ?? 0,
       }));
       const itemIDs = [...new Set(rows.map((r) => r.item))];
       const authors = [...new Set(rows.map((r) => r.user))];
@@ -125,7 +140,7 @@ export class SocialService {
       };
     });
   }
-  private async block(client: PoolClient, uid: string, target: string) {
+  async block(client: PoolClient, uid: string, target: string) {
     if (uid === target)
       throw new BadRequestException({ code: 'INVALID_BLOCK' });
     const person = await client.query(
@@ -188,7 +203,7 @@ export class SocialService {
         throw new BadRequestException({ code: 'INVALID_REPORT' });
       if (!existing.rowCount) {
         const count = await client.query(
-          "SELECT count(*)::int AS count FROM review_reports WHERE reporter_uid=$1 AND created_at>now()-interval '24 hours'",
+          "SELECT ((SELECT count(*) FROM review_reports WHERE reporter_uid=$1 AND created_at>now()-interval '24 hours') + (SELECT count(*) FROM comment_reports WHERE reporter_uid=$1 AND created_at>now()-interval '24 hours'))::int AS count",
           [uid],
         );
         if (count.rows[0].count >= 50)

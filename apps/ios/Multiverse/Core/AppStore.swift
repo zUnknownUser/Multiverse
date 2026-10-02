@@ -510,12 +510,17 @@ final class AppStore {
 
     // MARK: - Curtidas / spoilers / listas
 
-    func isLikedReview(_ id: String) -> Bool { likedReviews.contains(id) }
-    func reviewLikeCount(_ review: Review) -> Int { review.likes + (isLikedReview(review.id) ? 1 : 0) }
+    func isLikedReview(_ id: String) -> Bool { isRemoteReview(id) ? (social?.interactions[id]?.liked ?? false) : likedReviews.contains(id) }
+    func reviewLikeCount(_ review: Review) -> Int { isRemoteReview(review.id) ? (social?.interactions[review.id]?.likes ?? 0) : review.likes + (isLikedReview(review.id) ? 1 : 0) }
 
     @discardableResult
     func toggleLikedReview(_ id: String) -> Bool {
-        if isRemoteReview(id) { showToast(L10n.text("Reações e comentários estarão disponíveis em breve.")); return false }
+        if isRemoteReview(id), let social {
+            Task {
+                if !(await social.setReaction(reviewID: id, reaction: social.interactions[id]?.myReaction, liked: !isLikedReview(id))), let error = social.actionError { showToast(error) }
+            }
+            return false
+        }
         let turningOn = !likedReviews.contains(id)
         if turningOn { likedReviews.insert(id) } else { likedReviews.remove(id) }
         let repository = self.repository
@@ -533,7 +538,12 @@ final class AppStore {
     /// Contagem base determinística por tipo (~20% chance de ficar em 0 e sumir do rodapé),
     /// mais 1 se for a reação escolhida pelo usuário — mesmo espírito de `Logic.logCount`.
     func reactionCounts(for reviewID: String) -> [(type: ReactionType, count: Int)] {
-        if isRemoteReview(reviewID) { return [] }
+        if isRemoteReview(reviewID) {
+            return ReactionType.allCases.compactMap { type in
+                let count = social?.interactions[reviewID]?.reactions[type.rawValue] ?? 0
+                return count > 0 ? (type, count) : nil
+            }
+        }
         let mine = reactions[reviewID]
         return ReactionType.allCases.compactMap { type in
             let sd = Logic.seed(reviewID + type.rawValue)
@@ -543,11 +553,18 @@ final class AppStore {
         }
     }
 
-    func userReaction(for reviewID: String) -> ReactionType? { isRemoteReview(reviewID) ? nil : reactions[reviewID] }
+    func userReaction(for reviewID: String) -> ReactionType? { isRemoteReview(reviewID) ? social?.interactions[reviewID]?.myReaction.flatMap(ReactionType.init(rawValue:)) : reactions[reviewID] }
 
     /// Tocar na mesma reação de novo remove; tocar numa diferente troca.
     func setReaction(_ type: ReactionType, for reviewID: String) {
-        if isRemoteReview(reviewID) { showToast(L10n.text("Reações e comentários estarão disponíveis em breve.")); return }
+        if isRemoteReview(reviewID), let social {
+            let parent = social.comments.first { $0.value.contains { $0.id == reviewID } }?.key
+            Task {
+                let desired = social.interactions[reviewID]?.myReaction == type.rawValue ? nil : type.rawValue
+                if !(await social.setReaction(reviewID: parent ?? reviewID, commentID: parent == nil ? nil : reviewID, reaction: desired, liked: social.interactions[reviewID]?.liked ?? false)), let error = social.actionError { showToast(error) }
+            }
+            return
+        }
         reactions[reviewID] = (reactions[reviewID] == type) ? nil : type
         let newValue = reactions[reviewID]
         let repository = self.repository
@@ -555,7 +572,7 @@ final class AppStore {
     }
 
     func commentsLabel(for review: Review) -> String {
-        let n = review.comments.count
+        let n = isRemoteReview(review.id) ? (social?.commentCounts[review.id] ?? 0) : review.comments.count
         return n > 0 ? L10n.format("comments.count", n) : L10n.text("Comentar")
     }
 

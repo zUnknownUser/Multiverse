@@ -157,8 +157,8 @@ struct FeedReviewCard: View {
         let reactions = ReactionPillsRow(reviewID: review.id)
             .accessibilityLabel(reactionsAccessibilityLabel(review))
 
-        let commentButton = PillButton(title: store.isRemoteReview(review.id) ? L10n.text("VER REVIEW") : store.commentsLabel(for: review)) { store.push(.review(review.id)) }
-            .accessibilityLabel(store.isRemoteReview(review.id) ? L10n.text("VER REVIEW") : L10n.format("Ver comentários, %1$@", String(describing: review.comments.count)))
+        let commentButton = PillButton(title: store.commentsLabel(for: review)) { store.push(.review(review.id)) }
+            .accessibilityLabel(store.commentsLabel(for: review))
 
         let timeLabel = Text(review.when).font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
 

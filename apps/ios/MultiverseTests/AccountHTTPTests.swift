@@ -9,7 +9,19 @@ private final class HTTPResponses: @unchecked Sendable {
     func reset(_ values: [(Int, String)]) { lock.withLock { responses = values; captured = [] } }
     func next(_ request: URLRequest) -> (Int, String) {
         lock.withLock {
-            captured.append(request)
+            var copy = request
+            if copy.httpBody == nil, let stream = request.httpBodyStream {
+                stream.open()
+                defer { stream.close() }
+                var data = Data(), buffer = [UInt8](repeating: 0, count: 1024)
+                while stream.hasBytesAvailable {
+                    let count = stream.read(&buffer, maxLength: buffer.count)
+                    if count <= 0 { break }
+                    data.append(contentsOf: buffer.prefix(count))
+                }
+                copy.httpBody = data
+            }
+            captured.append(copy)
             return responses.isEmpty ? (500, "{}") : responses.removeFirst()
         }
     }
@@ -49,6 +61,27 @@ private final class TokenStub: APITokenProvider {
 @Suite(.serialized)
 @MainActor
 struct AccountHTTPTests {
+    @Test func reactionRemovalSendsExplicitNullAndCommentErrorsPreserveTheirMeaning() async throws {
+        let reviewID = UUID().uuidString.lowercased(), commentID = UUID().uuidString.lowercased()
+        let json = """
+        {"id":"\(commentID)","likes":0,"liked":false,"myReaction":null,"reactions":{"POW!":0,"ZAP!":0,"KRAK!":0,"HEH":0}}
+        """
+        AccountURLProtocol.fixture.reset([(200, json), (403, "{\"code\":\"COMMENTS_RESTRICTED\"}"), (429, "{\"code\":\"COMMENT_LIMIT\"}")])
+        let (api, transport) = client(TokenStub())
+        defer { transport.invalidateAndCancel() }
+        let result = try await api.setReaction(reviewID: reviewID, commentID: commentID, reaction: nil, liked: false)
+        #expect(result.id == commentID && result.myReaction == nil)
+        let request = try #require(AccountURLProtocol.fixture.requests.first)
+        #expect(request.url?.path == "/api/v1/reviews/\(reviewID)/comments/\(commentID)/reaction")
+        let data = try #require(request.httpBody)
+        let object = try JSONSerialization.jsonObject(with: data)
+        let body = try #require(object as? [String: Any])
+        #expect(body["reaction"] is NSNull)
+        #expect(body["liked"] as? Bool == false)
+        await #expect(throws: SocialError.commentsRestricted) { try await api.postComment(reviewID: reviewID, id: commentID, text: "Draft", spoiler: false) }
+        await #expect(throws: SocialError.commentLimit) { try await api.postComment(reviewID: reviewID, id: commentID, text: "Draft", spoiler: false) }
+        #expect(AccountURLProtocol.fixture.requests.allSatisfy { $0.value(forHTTPHeaderField: "Authorization") == "Bearer original-token" })
+    }
     @Test func socialRoutesUseAuthenticatedRequestsAndMapVisibilityFailures() async throws {
         AccountURLProtocol.fixture.reset([(200, "{\"publicDiary\":false}"), (200, "{\"publicDiary\":true}"), (404, "{\"code\":\"REVIEW_UNAVAILABLE\"}"), (429, "{\"code\":\"REPORT_LIMIT\"}")])
         let (api, transport) = client(TokenStub())

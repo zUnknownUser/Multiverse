@@ -24,6 +24,8 @@ struct ActivityReview: Codable, Sendable {
     let text: String
     let spoiler: Bool
     let createdAt: Date
+    var interaction: InteractionSummary? = nil
+    var commentCount: Int? = nil
 
     var display: Review {
         Review(id: id, user: user, item: item, rating: rating, text: text.isEmpty ? L10n.text("Avaliou esta obra.") : text, spoiler: spoiler, likes: 0,

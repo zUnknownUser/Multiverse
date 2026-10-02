@@ -128,15 +128,16 @@ struct SettingsView: View {
                     Text(L10n.text("Quem pode comentar")).font(MVFont.bold(15)).foregroundStyle(MV.C.ink)
                     HStack(spacing: 0) {
                         ForEach(CommentPermission.allCases, id: \.self) { option in
-                            let selected = settings.whoCanComment == option
+                            let selected = (store.social == nil ? settings.whoCanComment : store.social?.commentPermission) == option
                             Text(L10n.text(option.rawValue).uppercased())
                                 .font(MVFont.bold(11))
                                 .frame(maxWidth: .infinity).frame(height: 40)
                                 .foregroundStyle(selected ? MV.C.paper : MV.C.ink)
                                 .background(selected ? MV.C.ink : Color.clear)
                                 .contentShape(Rectangle())
+                                .allowsHitTesting(store.social.map { !$0.isMutating && $0.commentPermission != nil } ?? true)
                                 .onTapGesture {
-                                    if store.social != nil { store.showToast(L10n.text("Reações e comentários estarão disponíveis em breve.")) }
+                                    if let social = store.social { Task { _ = await social.setCommentPermission(option) } }
                                     else { settings.whoCanComment = option }
                                 }
                         }

@@ -14,6 +14,36 @@ import Testing
     var pendingPrivacy: CheckedContinuation<DiaryPrivacy, any Error>?
     var cursors: [String?] = []
     var writes = 0
+    var commentPermission = "following"
+    var savedComments: [String] = []
+    var commentFailure = false
+    var commentItems: [RemoteComment] = []
+    var holdComments = false
+    var pendingComments: CheckedContinuation<CommentsPage, any Error>?
+    func fetchComments(reviewID: String, after: String?) async throws -> CommentsPage {
+        if commentFailure { throw AuthError.networkUnavailable }
+        if holdComments { return try await withCheckedThrowingContinuation { pendingComments = $0 } }
+        return CommentsPage(reviewID: reviewID, canComment: commentPermission != "nobody", comments: commentItems, users: page.users, nextCursor: nil)
+    }
+    func postComment(reviewID: String, id: String, text: String, spoiler: Bool) async throws -> CommentReceipt {
+        savedComments.append(id)
+        if failure { throw AuthError.networkUnavailable }
+        return CommentReceipt(reviewID: reviewID, commentID: id, saved: acknowledge)
+    }
+    func setReaction(reviewID: String, commentID: String?, reaction: String?, liked: Bool) async throws -> InteractionSummary {
+        if failure { throw AuthError.networkUnavailable }
+        return InteractionSummary(id: commentID ?? reviewID, likes: liked ? 1 : 0, liked: acknowledge ? liked : !liked, myReaction: reaction,
+            reactions: Dictionary(uniqueKeysWithValues: ReactionType.allCases.map { ($0.rawValue, $0.rawValue == reaction ? 1 : 0) }))
+    }
+    func saveCommentPermission(_ permission: String) async throws -> DiaryPrivacy {
+        if failure { throw AuthError.networkUnavailable }
+        commentPermission = permission
+        return DiaryPrivacy(publicDiary: publicDiary, commentPermission: acknowledge ? permission : "invalid")
+    }
+    func reportComment(reviewID: String, id: String, reason: String, alsoBlock: Bool) async throws -> CommentReportReceipt {
+        if failure { throw AuthError.networkUnavailable }
+        return CommentReportReceipt(reported: acknowledge, reviewID: reviewID, commentID: id, blockedUserID: alsoBlock ? "alice" : nil)
+    }
     init() {
         let sample = SampleData.load()
         let item = sample.items[0]
@@ -34,7 +64,7 @@ import Testing
     func fetchPrivacy() async throws -> DiaryPrivacy {
         if failure { throw AuthError.networkUnavailable }
         if holdPrivacy { return try await withCheckedThrowingContinuation { pendingPrivacy = $0 } }
-        return DiaryPrivacy(publicDiary: publicDiary)
+        return DiaryPrivacy(publicDiary: publicDiary, commentPermission: commentPermission)
     }
     func savePrivacy(publicDiary: Bool) async throws -> DiaryPrivacy {
         writes += 1
@@ -59,6 +89,71 @@ import Testing
 }
 
 @MainActor struct SocialStoreTests {
+    @Test func remoteCommentsRequireAcknowledgementAndRetryKeepsTheSameIdentity() async {
+        let api = SocialStub(), id = api.page.reviews[0].id, commentID = UUID().uuidString
+        let store = SocialStore(api: api)
+        await store.loadComments(id)
+        api.failure = true
+        #expect(!(await store.postComment(reviewID: id, id: commentID, text: "Draft", spoiler: true)))
+        #expect(store.commentErrors[id] != nil)
+        api.failure = false
+        #expect(await store.postComment(reviewID: id, id: commentID, text: "Draft", spoiler: true))
+        #expect(api.savedComments == [commentID, commentID])
+        api.acknowledge = false
+        #expect(!(await store.postComment(reviewID: id, id: commentID, text: "Draft", spoiler: true)))
+    }
+    @Test func confirmedReactionSurvivesFailedMutationAndStaleFeed() async throws {
+        let api = SocialStub(), id = api.page.reviews[0].id
+        let store = SocialStore(api: api)
+        await store.loadFeed()
+        api.holdFeed = true
+        let stale = Task { await store.loadFeed() }
+        try await settle { api.pendingFeed != nil }
+        #expect(await store.setReaction(reviewID: id, reaction: "POW!", liked: true))
+        api.pendingFeed?.resume(returning: api.page)
+        await stale.value
+        #expect(store.interactions[id]?.myReaction == "POW!")
+        api.failure = true
+        #expect(!(await store.setReaction(reviewID: id, reaction: nil, liked: false)))
+        #expect(store.interactions[id]?.liked == true && store.actionError != nil)
+        api.failure = false
+        #expect(await store.setReaction(reviewID: id, reaction: nil, liked: false))
+        #expect(store.interactions[id]?.myReaction == nil && store.interactions[id]?.likes == 0)
+    }
+    @Test func lateCommentReadCannotRestoreReportedOrBlockedContent() async throws {
+        let api = SocialStub(), id = api.page.reviews[0].id
+        let store = SocialStore(api: api)
+        api.holdComments = true
+        let stale = Task { await store.loadComments(id) }
+        try await settle { api.pendingComments != nil }
+        #expect(await store.setBlock("alice", blocked: true))
+        api.pendingComments?.resume(returning: CommentsPage(reviewID: id, canComment: true, comments: [], users: [], nextCursor: nil))
+        await stale.value
+        #expect(store.canComment[id] == nil && store.comments[id] == nil)
+    }
+    @Test func permissionOnlyChangesAfterAcknowledgementAndIsAccountScoped() async {
+        let api = SocialStub(), store = SocialStore(api: SocialStub())
+        #expect(store.commentPermission == nil)
+        let actual = SocialStore(api: api)
+        await actual.loadPrivacy()
+        #expect(actual.commentPermission == .following)
+        api.failure = true
+        #expect(!(await actual.setCommentPermission(.everyone)))
+        #expect(actual.commentPermission == .following)
+        api.failure = false
+        #expect(await actual.setCommentPermission(.nobody))
+        #expect(actual.commentPermission == .nobody && store.commentPermission == nil)
+        api.acknowledge = false
+        #expect(!(await actual.setCommentPermission(.everyone)))
+        #expect(actual.commentPermission == .nobody)
+    }
+    @Test func commentPayloadRejectsForeignReferencesAndInvalidReactionCounts() throws {
+        let id = UUID().uuidString
+        let bad = InteractionSummary(id: id, likes: 0, liked: true, myReaction: nil, reactions: [:])
+        #expect(throws: (any Error).self) { try bad.validate(target: id) }
+        let page = CommentsPage(reviewID: id, canComment: true, comments: [], users: [], nextCursor: "loop")
+        #expect(throws: (any Error).self) { try page.validate(review: id) }
+    }
     private func settle(_ condition: () -> Bool) async throws {
         for _ in 0..<200 {
             if condition() { return }

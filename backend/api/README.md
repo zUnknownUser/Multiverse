@@ -1,8 +1,8 @@
 # Multiverse API
 
-API NestJS 12 + TypeScript com Firebase Authentication e PostgreSQL. A primeira
-etapa persiste perfil, reserva de @usuário, progresso do onboarding e os follows
-feitos durante esse fluxo. Não armazena senhas nem emite tokens próprios.
+API NestJS 12 + TypeScript com Firebase Authentication e PostgreSQL. Persiste conta,
+onboarding, catálogo, diário, reviews, follows, comentários, reações e proteções
+sociais. Não armazena senhas nem emite tokens próprios.
 
 ## Executar localmente
 
@@ -24,7 +24,35 @@ do serviço; no desenvolvimento, use ADC ou `GOOGLE_APPLICATION_CREDENTIALS`
 apontando para um arquivo de conta de serviço **fora do repositório**, com acesso
 ao Firebase Authentication do projeto. Nunca inclua essa credencial no app iOS.
 O `GoogleService-Info.plist` é uma configuração cliente e não substitui a credencial
-Admin. Não há credenciais Admin incluídas nesta entrega.
+Admin. Não há credenciais Admin versionadas no repositório.
+
+## Railway
+
+Projeto: `multiverse` (`3d9b8511-b917-4a7a-8a7d-577853c8a011`), ambiente `production`.
+Serviços: `api` e `Postgres`.
+URL: `https://api-production-6e8d.up.railway.app/api/v1`.
+
+O serviço está ligado ao GitHub `zUnknownUser/Multiverse`, branch `master`, raiz
+`/backend/api`, com predeploy `npm run db:migrate` e healthcheck `/api/v1/health`.
+O Dockerfile opcional compila com Node 24 e executa sem privilégios.
+`.railway/railway.ts` conserva a preparação inicial de configuração via CLI;
+não reaplique esse plano sem comparar com a configuração remota atual.
+`DATABASE_URL` referencia `${{Postgres.DATABASE_URL}}` pela rede privada.
+`FIREBASE_SERVICE_ACCOUNT_JSON` contém o JSON Admin somente nas variáveis do serviço;
+o projeto da credencial precisa coincidir com `FIREBASE_PROJECT_ID`.
+
+O fluxo atual é commit/push e acompanhamento do deploy GitHub no Railway.
+Como alternativa operacional, a partir de `backend/api`:
+
+```sh
+railway link --project 3d9b8511-b917-4a7a-8a7d-577853c8a011
+railway up . --path-as-root --service api --environment production --detach
+```
+
+O último deploy conferido nesta retomada correspondeu ao commit `bf852c8` do
+GitHub; não publique o mesmo lote por CLI enquanto houver autodeploy em andamento. Não copie credenciais para o Dockerfile, código ou app iOS. Para atualizar
+o segredo, use `railway variable set FIREBASE_SERVICE_ACCOUNT_JSON --stdin --service api`
+com o conteúdo do arquivo local via stdin, sem imprimi-lo.
 
 ```sh
 curl http://localhost:3000/api/v1/health
@@ -90,8 +118,8 @@ Exemplo de progresso:
 A versão começa em zero; cada escrita incrementa e retorna a versão. Enviar uma
 versão antiga retorna 409 `STALE_ONBOARDING`: recarregue `/me` antes de editar de
 novo. Etapa maior que 1 ou conclusão exige pelo menos um universo. O servidor
-valida IDs contra o catálogo atual do app em `src/accounts/catalog-ids.ts`.
-Esse catálogo ainda é estático: sua migração para o banco é uma próxima etapa.
+valida IDs contra o catálogo publicado no PostgreSQL; não há lista fixa de IDs
+no código de validação.
 
 Sugestões incluem até 20 contas reais com onboarding concluído, excluindo o próprio
 usuário e contas em exclusão. O `GET /me` também filtra os follows restaurados por
@@ -159,12 +187,16 @@ validam permissões da credencial Admin do ambiente.
 
 ## Escopo e próximas etapas
 
-O iOS usa `AccountAPIClient` para esta integração. Catálogo, feed, reviews, diário,
-clubes, mensagens, follows fora do onboarding e outros recursos ainda usam o
-repositório de demonstração. Ajustes de conta continuam locais por UID.
-As funções de código por e-mail em `../firebase` seguem independentes e precisam
-ser ativadas conforme seu próprio guia. Ainda não há deploy da API, banco hospedado,
-monitoramento, readiness de dependências ou política de rate limiting de produção.
+O iOS usa clientes separados por contrato para conta, [catálogo](docs/catalog.md),
+[diário](docs/activity.md), [pessoas](docs/people.md), [feed](docs/social-feed.md) e
+[comentários/reações](docs/interactions.md). A CLI de moderação revisa denúncias com
+conexão administrativa privada e auditoria. Clubes, mensagens, salas e outros
+módulos ainda usam demonstração. Ajustes não migrados continuam locais por UID.
+
+As funções de e-mail em `../firebase` já têm registro de publicação. O teste
+integrado com contas reais segue pendente. Ainda faltam monitoramento com alertas,
+readiness de dependências e limites gerais de produção para lançamento.
+Veja o [resumo de retomada](../../docs/SESSION_HANDOFF.md).
 
 Referências: [NestJS](https://docs.nestjs.com/),
 [Firebase: verificar ID tokens](https://firebase.google.com/docs/auth/admin/verify-id-tokens),

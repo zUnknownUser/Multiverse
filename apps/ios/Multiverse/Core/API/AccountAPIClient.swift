@@ -36,6 +36,33 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI {
         try await request("feed", query: after.map { [URLQueryItem(name: "after", value: $0)] } ?? [])
     }
     func fetchReview(id: String) async throws -> SocialPage { try await request("reviews/" + id) }
+    func fetchComments(reviewID: String, after: String?) async throws -> CommentsPage {
+        try await request("reviews/" + reviewID + "/comments", query: after.map { [URLQueryItem(name: "after", value: $0)] } ?? [])
+    }
+    func postComment(reviewID: String, id: String, text: String, spoiler: Bool) async throws -> CommentReceipt {
+        struct Input: Encodable { let text: String; let spoiler: Bool }
+        return try await request("reviews/" + reviewID + "/comments/" + id, method: "PUT", body: JSONEncoder().encode(Input(text: text, spoiler: spoiler)))
+    }
+    func setReaction(reviewID: String, commentID: String?, reaction: String?, liked: Bool) async throws -> InteractionSummary {
+        struct Input: Encodable {
+            let reaction: String?; let liked: Bool
+            enum CodingKeys: String, CodingKey { case reaction, liked }
+            func encode(to encoder: any Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                try container.encode(reaction, forKey: .reaction)
+                try container.encode(liked, forKey: .liked)
+            }
+        }
+        return try await request("reviews/" + reviewID + (commentID.map { "/comments/" + $0 } ?? "") + "/reaction", method: "PUT", body: JSONEncoder().encode(Input(reaction: reaction, liked: liked)))
+    }
+    func saveCommentPermission(_ permission: String) async throws -> DiaryPrivacy {
+        struct Input: Encodable { let commentPermission: String }
+        return try await request("me/comment-permission", method: "PUT", body: JSONEncoder().encode(Input(commentPermission: permission)))
+    }
+    func reportComment(reviewID: String, id: String, reason: String, alsoBlock: Bool) async throws -> CommentReportReceipt {
+        struct Input: Encodable { let reason: String; let alsoBlock: Bool }
+        return try await request("reviews/" + reviewID + "/comments/" + id + "/report", method: "PUT", body: JSONEncoder().encode(Input(reason: reason, alsoBlock: alsoBlock)))
+    }
     func fetchPrivacy() async throws -> DiaryPrivacy { try await request("me/privacy") }
     func savePrivacy(publicDiary: Bool) async throws -> DiaryPrivacy {
         try await request("me/privacy", method: "PUT", body: JSONEncoder().encode(DiaryPrivacy(publicDiary: publicDiary)))
@@ -125,6 +152,11 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI {
             }
             let code = (try? JSONDecoder().decode(APIError.self, from: data))?.code
             switch code {
+            case "COMMENTS_RESTRICTED": throw SocialError.commentsRestricted
+            case "COMMENT_UNAVAILABLE": throw SocialError.commentUnavailable
+            case "COMMENT_LIMIT": throw SocialError.commentLimit
+            case "COMMENT_CONFLICT": throw SocialError.commentConflict
+            case "REACTION_LIMIT": throw SocialError.reactionLimit
             case "REVIEW_UNAVAILABLE": throw SocialError.unavailable
             case "INVALID_SOCIAL_REQUEST", "INVALID_REPORT", "INVALID_BLOCK", "INVALID_FEED_CURSOR": throw SocialError.invalid
             case "REPORT_LIMIT": throw SocialError.reportLimit

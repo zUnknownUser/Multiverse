@@ -44,7 +44,7 @@ uma descrição localizada. Tocar repetidamente na mesma estrela permite nota
 inteira, meia estrela e sem nota. Novos estados e mensagens têm PT-BR e inglês.
 
 Estas rotas leem a atividade da própria conta, sem paginação. O [feed social](social-feed.md)
-tem paginação e regras próprias de publicação, privacidade e bloqueio. Comentários, curtidas sociais, o botão de curtir
+tem paginação e regras próprias de publicação, privacidade e bloqueio. Comentários e reações têm [contrato próprio](interactions.md). O botão de curtir
 obra fora do registro, a lista de desejos e listas continuam nos módulos anteriores.
 Não há
 interface de edição/exclusão individual nesta entrega. A paginação do diário

@@ -6,6 +6,7 @@ struct ReactionBarModifier: ViewModifier {
     @Binding var isPresented: Bool
     var onReact: (ReactionType) -> Void
     var onQuote: (() -> Void)? = nil
+    var quoteLabel: String? = nil
 
     func body(content: Content) -> some View {
         content
@@ -35,7 +36,7 @@ struct ReactionBarModifier: ViewModifier {
     private var bar: some View {
         HStack(spacing: 0) {
             if let onQuote {
-                pill(label: L10n.text("❝ Citar"), bg: MV.C.wow, fg: MV.C.ink) {
+                pill(label: quoteLabel ?? L10n.text("❝ Citar"), bg: MV.C.wow, fg: MV.C.ink) {
                     isPresented = false
                     onQuote()
                 }
@@ -75,8 +76,8 @@ struct ReactionBarModifier: ViewModifier {
 
 extension View {
     /// Segurar mostra a barra de reações (+ "Citar" se `onQuote` for passado).
-    func reactionBar(isPresented: Binding<Bool>, onReact: @escaping (ReactionType) -> Void, onQuote: (() -> Void)? = nil) -> some View {
-        modifier(ReactionBarModifier(isPresented: isPresented, onReact: onReact, onQuote: onQuote))
+    func reactionBar(isPresented: Binding<Bool>, onReact: @escaping (ReactionType) -> Void, onQuote: (() -> Void)? = nil, quoteLabel: String? = nil) -> some View {
+        modifier(ReactionBarModifier(isPresented: isPresented, onReact: onReact, onQuote: onQuote, quoteLabel: quoteLabel))
     }
 }
 
@@ -99,6 +100,8 @@ struct ReactionPillsRow: View {
                         .background(active ? entry.type.color : MV.C.card)
                         .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                         .clipShape(Capsule())
+                        .onTapGesture { store.setReaction(entry.type, for: reviewID) }
+                        .accessibilityAddTraits(.isButton)
                 }
             }
         }

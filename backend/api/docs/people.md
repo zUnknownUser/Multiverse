@@ -60,4 +60,5 @@ Conferir os contadores nas duas contas após atualizar. Sem internet, a ação
 deve explicar a falha sem anunciar sucesso; reconectar e repetir. Conferir em
 inglês e português. Sem outras contas elegíveis, a Home não mostra sugestões.
 
-Próxima etapa: comentários e reações persistidos, com permissões e moderação.
+Comentários e reações persistidos, permissões e operação de moderação estão
+documentados em [interactions.md](interactions.md).

@@ -1,8 +1,8 @@
 # Feed de reviews, privacidade e proteção
 
 Esta etapa conecta a Home às reviews reais da própria conta e de pessoas seguidas.
-Mantém os componentes existentes e PT-BR/EN. Posts livres, comentários, reações,
-reposts, notificações e moderação por IA continuam fora deste recorte.
+Mantém os componentes existentes e PT-BR/EN. Comentários e reações foram conectados na [etapa seguinte](interactions.md).
+Posts livres, reposts, notificações e moderação por IA continuam pendentes.
 
 ## Visibilidade
 
@@ -63,12 +63,13 @@ consome outra publicação. Respostas 429 explicam a espera e preservam o rascun
 Esses limites são uma proteção inicial; não substituem moderação humana/antifraude.
 
 A fila `review_reports.status='pending'` precisa de acompanhamento operacional.
-Não existe painel nem análise automática nesta etapa. Operadores autorizados podem
+Existe agora uma [CLI administrativa auditada](interactions.md); não há painel
+nem análise automática. Operadores autorizados podem
 revisar a fila pelo acesso administrativo já protegido ao banco. Uma decisão de
 remoção usa `reviews.moderation_status='hidden'`; isso retira a review das rotas
 sociais sem apagar o diário do autor. Marcar a denúncia como `reviewed` registra
-seu processamento. Não há rota pública de administração. Painel, justificativas,
-notificação ao autor, contestação e triagem por IA são a próxima etapa de moderação.
+seu processamento. Não há rota pública de administração. As decisões da CLI registram justificativa e operador. Painel,
+notificação ao autor, contestação e triagem por IA continuam pendentes.
 
 ## App e validação
 

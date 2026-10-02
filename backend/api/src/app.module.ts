@@ -21,9 +21,12 @@ import { PeopleService } from './people/people.service.js';
 
 import { SocialController } from './social/social.controller.js';
 import { SocialService } from './social/social.service.js';
+import { InteractionsService } from './social/interactions.service.js';
+import { InteractionsController } from './social/interactions.controller.js';
 
 @Module({
   controllers: [
+    InteractionsController,
     SocialController,
     PeopleController,
     AccountsController,
@@ -32,6 +35,7 @@ import { SocialService } from './social/social.service.js';
     MarvelController,
   ],
   providers: [
+    InteractionsService,
     SocialService,
     PeopleService,
     DatabaseService,

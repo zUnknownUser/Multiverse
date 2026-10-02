@@ -1,0 +1,82 @@
+# Retomada do Multiverse — 02/10/2026
+
+## Objetivo recuperado
+
+A sessão anterior terminou a entrega `bf852c8` (feed real, privacidade, denúncias
+e bloqueios) e publicou esse commit no Railway. O histórico local confirmou a
+autorização seguinte: implementar comentários e reações reais, respeitando
+“Quem pode comentar”, mais revisão administrativa de denúncias. A sessão foi
+interrompida antes de implementar essa etapa. Este lote conclui esse recorte.
+
+O usuário autorizou finalizar, validar e fazer push. Layout, componentes e PT-BR/EN
+devem ser preservados. A proposta futura de comunidade semelhante a fóruns não
+autoriza reorganizar a navegação, trocar identidade visual ou abrir posts livres
+sem definir o próximo recorte.
+
+## Mapa do app
+
+SwiftUI/iOS 17+, Swift 6, XcodeGen e widgets. `RootView` injeta os clientes reais
+em `AppStore`, `PeopleStore` e `SocialStore`. Firebase cuida da identidade;
+NestJS/PostgreSQL cuidam da conta e dos dados sociais. `MockRepository` ainda
+fornece módulos do protótipo; sua presença não significa que o app todo seja mock.
+
+| Área | Estado |
+| --- | --- |
+| Google/e-mail, perfil, @usuário, onboarding e exclusão | Implementados; Firebase + API |
+| Catálogo e busca | PostgreSQL, PT/EN; acervo inicial limitado |
+| Marvel externo | Wikidata e TMDB integrados; Metron preparado e aguardando credencial/cadastro |
+| Diário, notas e reviews pessoais | Persistidos, com estados vazios, falhas e retry |
+| Pessoas, perfis, seguir/deixar de seguir | API real, contadores e bloqueios |
+| Feed, privacidade e denúncias | Reviews reais, opt-in, paginação e proteção |
+| Comentários e reações | Este lote; permissões, limites e persistência reais |
+| Revisão de denúncias | CLI privada, decisões auditadas; sem IA ou painel web |
+| Clubes, salas, mensagens, teorias, previsões, duelos | Ainda contêm dados/interações de demonstração |
+| Listas, desejos, conexões e cronologias | Ainda precisam de revisão/migração por fluxo |
+| Wrapped/notificações/presença | Não representam uma operação social completa; há conteúdo estático |
+| Pro | StoreKit implementado; vínculo à conta Multiverse e validação backend pendentes |
+
+## Alterações locais recuperadas
+
+Havia arquivos sem commit antes desta retomada: template de e-mail PT/EN e envio
+do locale; ajuste de espaço da tab bar; preparação Docker/Railway; notas de setup;
+entradas de localização extraídas pelo Xcode. Foram preservados e revisados.
+As funções de e-mail já tinham registro de publicação; não foi necessário
+reenviar e-mails ou mexer em DNS/faturamento.
+
+O verificador de idiomas falhava em 53 entradas automáticas sem cobertura PT/EN.
+As entradas foram completadas e `SWIFT_EMIT_LOC_STRINGS=NO` mantém a gestão pelo
+`L10n`, sem novas extrações automáticas. READMEs antigos diziam incorretamente que
+catálogo, diário e feed ainda eram somente mock; foram atualizados.
+
+## Validação e infraestrutura
+
+- API: formatação, lint, tipos, build, 72 testes unitários e 59 testes HTTP com
+  PostgreSQL local, incluindo os casos novos de interação/moderação.
+- iOS: build e suíte de 150 testes; catálogo de idiomas verificado pelo script.
+- Firebase: 14 testes locais. Não enviam e-mail nem alteram o projeto Firebase.
+- PostgreSQL de teste: container isolado `multiverse-interactions-test`, porta
+  local 55433. Os testes criam/removem schemas próprios; não usam produção.
+- Railway: serviço `api`, projeto `multiverse`, ambiente `production`, GitHub
+  `zUnknownUser/Multiverse`, branch `master`, raiz `/backend/api`; predeploy
+  `npm run db:migrate` e healthcheck `/api/v1/health`.
+- Nova migration: `011_review_interactions.sql`. Não editar depois de publicada.
+
+## Pendências reais
+
+1. Teste manual de ponta a ponta com duas contas, incluindo cadastro/código,
+   reenvio, recuperação por link em aparelho e interações sociais. Testes usam
+   autenticação injetada; não substituem essa validação.
+2. Acompanhamento humano da fila de denúncias; depois definir painel, comunicação
+   ao autor e contestação antes da expansão para posts livres/reposts.
+3. IA está preparada no backend, mas não está moderando conteúdo automaticamente.
+4. Metron continua adiado conforme decisão do usuário. Não trocar outros domínios
+   ou integrações para tentar contornar essa dependência.
+5. Rotação da chave de envio Resend mencionada no histórico como compartilhada;
+   detalhes operacionais em `backend/firebase/PENDING_SETUP.md`, sem segredos.
+6. Antes do lançamento: migrar/ocultar módulos de demonstração conforme decisão
+   de produto, rever notificações e Pro, paginar diário/carga inicial do catálogo,
+   definir monitoramento/readiness e limites gerais de produção.
+
+Contrato e operação desta etapa: [interactions.md](../backend/api/docs/interactions.md).
+Backlog de produto: [BACKLOG.md](BACKLOG.md); suas propostas históricas não são
+uma autorização automática para redesenhar o app.

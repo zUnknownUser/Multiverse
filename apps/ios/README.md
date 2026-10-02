@@ -1,3 +1,5 @@
+> Estado consolidado e pendências: [resumo de retomada](../../docs/SESSION_HANDOFF.md).
+
 # Multiverse — iOS
 
 Rede social pra fãs de universos fictícios (Marvel, DC, Warcraft) — diário + reviews + rede.
@@ -50,8 +52,10 @@ Não é necessário baixá-la manualmente. Origem e detalhes em
 
 ### Variáveis de ambiente
 
-O catálogo ainda vem dos JSONs locais através de `MockRepository`. Perfil e onboarding
-usam a API NestJS conforme a seção "Conectar à API" abaixo. Autenticação e Analytics
+Catálogo, perfil, onboarding, diário, pessoas e feed usam a API NestJS conforme a
+seção "Conectar à API" abaixo. Comentários e reações também usam persistência real;
+clubes, mensagens, salas e outros módulos ainda contêm dados de demonstração.
+Autenticação e Analytics
 usam o `GoogleService-Info.plist` cadastrado para `com.nexussoft.multiverse`.
 
 ## Arquitetura
@@ -78,7 +82,8 @@ Multiverse/
 **Regra de dependência:** Views acessam `AppStore`/`AuthStore` via `@Environment`.
 Os stores usam protocolos injetáveis: `MultiverseRepository` para conteúdo,
 `AuthRepository` para autenticação e `AccountAPI` para perfil/onboarding remoto.
-`MockRepository` mantém o conteúdo de demonstração nesta etapa; o layout é preservado.
+`MockRepository` mantém os módulos ainda não migrados e os previews/testes.
+`CatalogAPIClient` e `AccountAPIClient` conectam os fluxos reais; o layout é preservado.
 
 ### Autenticação
 
@@ -90,7 +95,8 @@ manualmente em `UserDefaults`.
 
 Apple conserva o visual e permanece indisponível. Cadastro e login por e-mail usam
 Firebase Auth; a confirmação de seis dígitos está conectada às funções preparadas em
-`../../backend/firebase/`, que ainda precisam ser configuradas e publicadas. A recuperação usa link
+`../../backend/firebase/`, publicadas em 01/10/2026. O recebimento e o fluxo
+integrado ainda exigem teste manual. A recuperação usa link
 do Firebase para a tela Nova senha, com Associated Domains preparado. Veja
 [guia de ativação do Firebase](../../backend/firebase/README.md) para as dependências de ativação. `MockAuthRepository` permanece disponível para desenvolvimento.
 Perfil, @usuário e onboarding agora usam a API NestJS com PostgreSQL. A sessão
@@ -102,12 +108,14 @@ antes de avançar/concluir. Uma falha permite tentar novamente ou sair, sem entr
 com um perfil fictício. O mínimo de pessoas a seguir acompanha a comunidade real;
 sem sugestões, essa etapa é pulada. Conflitos entre aparelhos exigem recarregar.
 
-O catálogo, feed, diário e demais interações ainda usam `MockRepository`.
+O catálogo, feed, diário, pessoas, comentários e reações usam a API.
+Veja [contratos de interação e moderação](../../backend/api/docs/interactions.md).
 Registros novos do diário guardam o instante de publicação (`loggedAt`). A apresentação
 agrupa por mês e ano no calendário/fuso do usuário e formata as datas em PT-BR ou EN.
 A frequência Pro usa os últimos 105 dias do diário; as horas anuais consideram o ano
 atual. As amostras e o Wrapped do protótipo continuam no recorte de setembro de 2026.
-O diário ainda é mantido em memória pelo mock e não é persistido pela API.
+O diário da sessão real é persistido pela API. Módulos de demonstração mantêm
+suas limitações de persistência; não representam uma comunidade em produção.
 Ajustes continuam locais por UID. Exclusão de conta agora passa pela API para
 remover tanto a identidade Firebase quanto o perfil e progresso no PostgreSQL.
 
@@ -116,13 +124,13 @@ remover tanto a identidade Firebase quanto o perfil e progresso no PostgreSQL.
 Siga o [guia da API](../../backend/api/README.md) para iniciar PostgreSQL, aplicar
 migrations, configurar Firebase Admin e executar NestJS.
 
-- Debug usa `http://localhost:3000/api/v1` no simulador. A permissão ATS é restrita
+- Debug e Release usam `https://api-production-6e8d.up.railway.app/api/v1`.
+- Para desenvolvimento local no simulador, sobrescreva o endereço com
+  `http://localhost:3000/api/v1` no scheme Debug. A permissão ATS é restrita
   a rede local; não há liberação geral de HTTP.
-- Para um iPhone físico, configure um endereço HTTPS alcançável pelo aparelho.
 - `MULTIVERSE_API_BASE_URL` em `project.yml` controla o endereço incluído no plist.
   Em Debug também pode ser sobrescrito pela variável de ambiente do scheme.
-- Release exige endereço HTTPS e vem vazio, pois ainda não foi definida a hospedagem.
-  Configure-o antes de distribuir o app e regenere com `xcodegen generate`.
+- Release exige endereço HTTPS. Após alterar `project.yml`, regenere com XcodeGen.
 - Tokens Firebase são obtidos do SDK a cada chamada e renovados uma vez em caso
   de 401. Não são salvos pelo cliente HTTP nem incluídos nos logs.
 
@@ -170,8 +178,8 @@ injetado e não autenticam uma conta Google real.
 ### Próximas etapas do backend
 
 A stack definida é NestJS + PostgreSQL, com Firebase para autenticação e Analytics.
-Após perfil/onboarding, a migração do catálogo e das interações acontece por fluxo,
-usando os IDs e modelos existentes. Veja o [guia da API](../../backend/api/README.md).
+Conta, catálogo, diário, pessoas e interações em reviews estão integrados. A
+migração dos demais módulos acontece por fluxo, preservando IDs e modelos existentes. Veja o [guia da API](../../backend/api/README.md).
 
 ## Testes
 
@@ -217,13 +225,14 @@ o app ao trocar seu idioma.
 
 - Use `L10n.text` para rótulos e `L10n.format` com placeholders posicionais para
   frases com valores. Adicione ambas as traduções ao catálogo; as entradas são
-  mantidas manualmente, inclusive as variantes plurais.
+  mantidas manualmente, inclusive as variantes plurais. A extração automática do
+  Xcode está desativada em `project.yml` para evitar entradas incompletas.
 - Não traduza IDs, valores de enums persistidos, chaves de API ou texto escrito
   pelas pessoas. Localize valores de domínio somente na apresentação.
 - Os JSONs de demonstração em `Resources/en.lproj/` têm conteúdo inglês e mantêm
   os mesmos IDs, relações e códigos dos JSONs originais em português.
-- O idioma dos e-mails gerenciados pelo Firebase Auth acompanha o app. Os templates
-  do serviço externo de códigos de seis dígitos são uma configuração separada.
+- O idioma dos e-mails gerenciados pelo Firebase Auth acompanha o app. O template PT-BR/EN
+  do serviço externo de códigos acompanha o locale enviado pelo app.
 - As traduções StoreKit são locais ao arquivo de testes; publicar metadados
   comerciais traduzidos no App Store Connect é uma etapa separada.
 

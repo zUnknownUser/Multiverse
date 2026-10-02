@@ -9,6 +9,8 @@ struct ThreadView: View {
     @State private var quoting: (author: String, text: String)?
     @FocusState private var focused: Bool
     @State private var validated = false
+    @State private var commentSpoiler = false
+    @State private var pendingComment: (id: String, text: String, spoiler: Bool)?
 
     var body: some View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
@@ -35,8 +37,11 @@ struct ThreadView: View {
         }
         .task(id: reviewID) {
             validated = false
-            if store.isRemoteReview(reviewID) { await store.social?.loadReview(reviewID) }
+            if store.isRemoteReview(reviewID) { await store.social?.loadReview(reviewID); await store.social?.loadComments(reviewID) }
             validated = true
+        }
+        .refreshable {
+            if store.isRemoteReview(reviewID) { await store.social?.loadReview(reviewID); await store.social?.loadComments(reviewID) }
         }
         .safeAreaInset(edge: .bottom) {
             if let review = store.review(reviewID), !store.isRemoteReview(reviewID) || (validated && store.social?.detailErrors[reviewID] == nil) {
@@ -66,18 +71,44 @@ struct ThreadView: View {
     @ViewBuilder
     private func commentsSection(review: Review) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(store.isRemoteReview(reviewID) ? L10n.text("Reações e comentários estarão disponíveis em breve.") : (review.comments.isEmpty ? L10n.text("SEM COMENTÁRIOS AINDA") : L10n.format("comments.uppercase", review.comments.count)))
-                .font(MVFont.section(16)).foregroundStyle(MV.C.ink)
-            VStack(spacing: 12) {
-                ForEach(Array(review.comments.enumerated()), id: \.offset) { index, comment in
-                    CommentRow(review: review, comment: comment, index: index, onQuote: { quote(author: store.user(comment.user)?.name ?? "", text: comment.text) })
+            if store.isRemoteReview(reviewID), let social = store.social {
+                Text(store.commentsLabel(for: review).uppercased()).font(MVFont.section(16)).foregroundStyle(MV.C.ink)
+                if let error = social.commentErrors[reviewID] {
+                    PeopleStatusNotice(message: error) { await social.loadComments(reviewID) }
+                }
+                if social.loadingComments.contains(reviewID) { ProgressView().frame(maxWidth: .infinity) }
+                if !store.isSpoilerHidden(review) {
+                    ForEach(social.comments[reviewID] ?? []) { comment in
+                        RemoteCommentRow(reviewID: reviewID, comment: comment, onReply: {
+                            guard pendingComment == nil else { return }
+                            draft = (social.users[comment.user]?.handle ?? "") + " "
+                            focused = true
+                        })
+                    }
+                    if social.commentCursors[reviewID] != nil {
+                        PrimaryAuthButton(title: L10n.text("VER MAIS")) { Task { await social.loadComments(reviewID, more: true) } }
+                            .disabled(social.loadingComments.contains(reviewID))
+                    }
+                }
+            } else {
+                Text(review.comments.isEmpty ? L10n.text("SEM COMENTÁRIOS AINDA") : L10n.format("comments.uppercase", review.comments.count))
+                    .font(MVFont.section(16)).foregroundStyle(MV.C.ink)
+                VStack(spacing: 12) {
+                    ForEach(Array(review.comments.enumerated()), id: \.offset) { index, comment in
+                        CommentRow(review: review, comment: comment, index: index, onQuote: { quote(author: store.user(comment.user)?.name ?? "", text: comment.text) })
+                    }
                 }
             }
         }
     }
 
     private func quote(author: String, text: String) {
-        if store.isRemoteReview(reviewID) { store.showToast(L10n.text("Reações e comentários estarão disponíveis em breve.")); return }
+        if store.isRemoteReview(reviewID) {
+            guard pendingComment == nil else { return }
+            draft = (store.review(reviewID).flatMap { store.user($0.user)?.handle } ?? author) + " "
+            focused = true
+            return
+        }
         quoting = (author, text)
         focused = true
     }
@@ -105,9 +136,21 @@ struct ThreadView: View {
                 .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.wow, lineWidth: MV.stroke))
                 .padding(.horizontal, MV.pad)
             }
+            if store.isRemoteReview(reviewID) {
+                if pendingComment != nil && store.social?.sendingComments.contains(reviewID) != true && store.social?.commentErrors[reviewID] != nil {
+                    Text(L10n.text("Envio pendente. Toque em ENVIAR para tentar novamente sem duplicar."))
+                        .font(MVFont.body(12)).foregroundStyle(MV.C.muted).padding(.horizontal, MV.pad)
+                }
+                if store.social?.canComment[reviewID] == false {
+                    Text(L10n.text("O autor limitou quem pode comentar.")).font(MVFont.body(12)).foregroundStyle(MV.C.muted).padding(.horizontal, MV.pad)
+                }
+                Toggle(L10n.text("Contém spoiler"), isOn: $commentSpoiler)
+                    .font(MVFont.body(12)).tint(MV.C.marvel).padding(.horizontal, MV.pad)
+                    .disabled(pendingComment != nil)
+            }
             HStack(spacing: 8) {
                 AvatarView(user: me, size: 34)
-                TextField(L10n.text(store.isRemoteReview(reviewID) ? "Comentários em breve" : "Responder… (teorias bem-vindas)"), text: $draft)
+                TextField(L10n.text("Responder… (teorias bem-vindas)"), text: $draft)
                     .font(MVFont.body(14, weight: 500))
                     .focused($focused)
                     .padding(.horizontal, 14)
@@ -116,8 +159,8 @@ struct ThreadView: View {
                     .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                     .clipShape(Capsule())
                     .onSubmit { send(review: review) }
-                    .disabled(store.isRemoteReview(reviewID))
-                Text(L10n.text("ENVIAR"))
+                    .disabled(store.isRemoteReview(reviewID) && (pendingComment != nil || store.social?.canComment[reviewID] != true))
+                Text(L10n.text(store.social?.sendingComments.contains(reviewID) == true ? "SALVANDO…" : "ENVIAR"))
                     .font(MVFont.bold(12))
                     .padding(.horizontal, 14)
                     .frame(height: 42)
@@ -126,6 +169,7 @@ struct ThreadView: View {
                     .clipShape(Capsule())
                     .contentShape(Rectangle())
                     .onTapGesture { send(review: review) }
+                    .allowsHitTesting(store.social?.sendingComments.contains(reviewID) != true)
             }
             .padding(.horizontal, MV.pad)
         }
@@ -135,7 +179,23 @@ struct ThreadView: View {
     }
 
     private func send(review: Review) {
-        if store.isRemoteReview(reviewID) { store.showToast(L10n.text("Reações e comentários estarão disponíveis em breve.")); return }
+        if store.isRemoteReview(reviewID), let social = store.social {
+            guard !social.sendingComments.contains(reviewID), social.canComment[reviewID] == true else { return }
+            if pendingComment == nil {
+                let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !text.isEmpty else { return }
+                guard text.unicodeScalars.count <= 2000 else { store.showToast(L10n.text("O comentário pode ter até 2.000 caracteres.")); return }
+                pendingComment = (UUID().uuidString.lowercased(), text, commentSpoiler)
+            }
+            guard let pending = pendingComment else { return }
+            Task {
+                if await social.postComment(reviewID: reviewID, id: pending.id, text: pending.text, spoiler: pending.spoiler) {
+                    draft = ""; pendingComment = nil; commentSpoiler = false; quoting = nil
+                    store.showToast(L10n.text("Comentário enviado."))
+                }
+            }
+            return
+        }
         guard !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         store.postComment(reviewID: review.id, text: draft, quote: quoting)
         draft = ""
@@ -179,7 +239,7 @@ private struct ReviewDetailCard: View {
 
                 if !hidden {
                     HStack(spacing: 0) {
-                        Text(L10n.text("❝ Citar")).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
+                        Text(L10n.text(store.isRemoteReview(review.id) ? "Responder" : "❝ Citar")).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
                             .padding(.horizontal, 12).padding(.vertical, 8)
                             .background(MV.C.wow)
                             .contentShape(Rectangle())
@@ -234,7 +294,7 @@ private struct ReviewDetailCard: View {
             }
             .padding(14)
             .comicCard(shadow: MV.Shadow.l)
-            .reactionBar(isPresented: $showReactionBar, onReact: { store.setReaction($0, for: review.id) }, onQuote: onQuote)
+            .reactionBar(isPresented: $showReactionBar, onReact: { store.setReaction($0, for: review.id) }, onQuote: onQuote, quoteLabel: store.isRemoteReview(review.id) ? L10n.text("Responder") : nil)
             .sheet(isPresented: $showingSend) {
                 if let item { SendCardSheet(itemID: item.id) }
             }

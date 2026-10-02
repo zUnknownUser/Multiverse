@@ -9,6 +9,7 @@ import { AppModule } from '../src/app.module.js';
 import { DatabaseService } from '../src/database/database.service.js';
 import { FirebaseTokenVerifier } from '../src/auth/firebase-token-verifier.js';
 import { configureApp } from '../src/configure-app.js';
+import { moderate, moderationQueue } from '../src/social/moderation.js';
 
 const databaseURL = process.env.TEST_DATABASE_URL;
 describe.skipIf(!databaseURL)('Social feed and safety with PostgreSQL', () => {
@@ -69,6 +70,7 @@ describe.skipIf(!databaseURL)('Social feed and safety with PostgreSQL', () => {
   afterEach(async () => {
     await db.query('DELETE FROM profiles');
     await db.query('DELETE FROM account_deletions');
+    await db.query('DELETE FROM moderation_decisions');
   });
   afterAll(async () => {
     await app?.close();
@@ -113,6 +115,308 @@ describe.skipIf(!databaseURL)('Social feed and safety with PostgreSQL', () => {
     await member('bruno');
     await follow('alice', true).expect(200);
   };
+  const permission = (value: string, uid = 'alice') =>
+    request(app.getHttpServer())
+      .put('/api/v1/me/comment-permission')
+      .auth(uid, { type: 'bearer' })
+      .send({ commentPermission: value });
+  const comment = (
+    reviewID: string,
+    id: string = randomUUID(),
+    uid = 'owner',
+    text = 'Uma resposta',
+    spoiler = false,
+  ) =>
+    request(app.getHttpServer())
+      .put(`/api/v1/reviews/${reviewID}/comments/${id}`)
+      .auth(uid, { type: 'bearer' })
+      .send({ text, spoiler });
+  const react = (
+    reviewID: string,
+    reaction: string | null,
+    uid = 'owner',
+    commentID?: string,
+    liked = false,
+  ) =>
+    request(app.getHttpServer())
+      .put(
+        `/api/v1/reviews/${reviewID}${commentID ? '/comments/' + commentID : ''}/reaction`,
+      )
+      .auth(uid, { type: 'bearer' })
+      .send({ reaction, liked });
+  const publicReview = async () => {
+    await setup();
+    await privacy(true).expect(200);
+    return (await save('alice').expect(200)).body.reviews[0].id as string;
+  };
+  it('enforces author following direction, nobody/everyone and acknowledged retries', async () => {
+    const reviewID = await publicReview(),
+      id = randomUUID();
+    expect((await get('me/privacy', 'alice')).body.commentPermission).toBe(
+      'following',
+    );
+    await comment(reviewID, id).expect(403);
+    await follow('owner', true, 'alice').expect(200);
+    await comment(reviewID, id).expect(200);
+    await permission('nobody').expect(200);
+    await comment(reviewID, id).expect(200);
+    await comment(reviewID).expect(403);
+    await comment(reviewID, randomUUID(), 'alice').expect(200);
+    await permission('everyone').expect(200);
+    await comment(reviewID, randomUUID(), 'bruno').expect(200);
+    expect(
+      (await get(`reviews/${reviewID}/comments`)).body.comments,
+    ).toHaveLength(3);
+    await permission('invalid').expect(400);
+  });
+  it('rejects invalid payloads and conflicting UUIDs and serializes duplicate sends', async () => {
+    const reviewID = await publicReview(),
+      id = randomUUID();
+    await permission('everyone');
+    const responses = await Promise.all([
+      comment(reviewID, id),
+      comment(reviewID, id),
+    ]);
+    expect(responses.map((r) => r.status)).toEqual([200, 200]);
+    await comment(reviewID, id, 'owner', 'changed').expect(409);
+    await comment(reviewID, id, 'bruno').expect(409);
+    for (const text of ['', '   ', 'x'.repeat(2001)])
+      await comment(reviewID, randomUUID(), 'owner', text).expect(400);
+    await request(app.getHttpServer())
+      .put(`/api/v1/reviews/${reviewID}/comments/${randomUUID()}`)
+      .auth('owner', { type: 'bearer' })
+      .send({ text: 'ok', spoiler: false, user: 'alice' })
+      .expect(400);
+    expect(
+      (await get(`reviews/${reviewID}/comments`)).body.comments,
+    ).toHaveLength(1);
+    await react(reviewID, 'bad').expect(400);
+    await request(app.getHttpServer())
+      .put(`/api/v1/reviews/${reviewID}/reaction`)
+      .auth('owner', { type: 'bearer' })
+      .send({ liked: false })
+      .expect(400);
+  });
+  it('revalidates privacy, blocks, moderation and archived works on every interaction', async () => {
+    const reviewID = await publicReview();
+    await permission('everyone');
+    const id = randomUUID();
+    await comment(reviewID, id).expect(200);
+    await privacy(false).expect(200);
+    await get(`reviews/${reviewID}/comments`).expect(404);
+    await react(reviewID, 'POW!').expect(404);
+    await comment(reviewID).expect(404);
+    await privacy(true);
+    await block('alice', 'owner');
+    await get(`reviews/${reviewID}/comments`).expect(404);
+    await react(reviewID, 'POW!').expect(404);
+    await block('alice', 'owner', false);
+    await db.query(
+      "UPDATE reviews SET moderation_status='hidden' WHERE id=$1",
+      [reviewID],
+    );
+    await comment(reviewID).expect(404);
+    await db.query(
+      "UPDATE reviews SET moderation_status='visible' WHERE id=$1",
+      [reviewID],
+    );
+    await db.query("UPDATE catalog_items SET status='archived' WHERE id=$1", [
+      input.itemId,
+    ]);
+    await react(reviewID, 'POW!').expect(404);
+    await db.query("UPDATE catalog_items SET status='published' WHERE id=$1", [
+      input.itemId,
+    ]);
+  });
+  it('persists reaction replacement/removal and independent likes with accurate counts', async () => {
+    const reviewID = await publicReview();
+    await permission('everyone');
+    await react(reviewID, 'POW!').expect(200);
+    await react(reviewID, 'POW!').expect(200);
+    let summary = (
+      await react(reviewID, 'ZAP!', 'owner', undefined, true).expect(200)
+    ).body;
+    expect(summary).toMatchObject({
+      id: reviewID,
+      likes: 1,
+      liked: true,
+      myReaction: 'ZAP!',
+      reactions: { 'POW!': 0, 'ZAP!': 1 },
+    });
+    await react(reviewID, 'ZAP!', 'bruno').expect(200);
+    summary = (await get('feed')).body.reviews[0].interaction;
+    expect(summary.reactions['ZAP!']).toBe(2);
+    await block('owner', 'bruno');
+    expect(
+      (await get('feed')).body.reviews[0].interaction.reactions['ZAP!'],
+    ).toBe(1);
+    await react(reviewID, null, 'owner', undefined, false).expect(200);
+    expect((await get('feed')).body.reviews[0].interaction.likes).toBe(0);
+    const id = randomUUID();
+    await comment(reviewID, id);
+    await react(reviewID, 'HEH', 'alice', id, true).expect(200);
+    expect(
+      (await get(`reviews/${reviewID}/comments`)).body.comments[0].interaction,
+    ).toMatchObject({ likes: 1, reactions: { HEH: 1 } });
+    await react(reviewID, null, 'owner', randomUUID()).expect(404);
+  });
+  it('paginates comments with microsecond ties and filters blocked commenters', async () => {
+    const reviewID = await publicReview();
+    await permission('everyone');
+    for (let i = 0; i < 31; i++)
+      await db.query(
+        "INSERT INTO review_comments(id,review_id,firebase_uid,text,created_at) VALUES($1,$2,'bruno',$3,'2026-10-01T10:00:00.123456Z')",
+        [randomUUID(), reviewID, 'Comment ' + i],
+      );
+    const first = (await get(`reviews/${reviewID}/comments`).expect(200)).body;
+    const second = (
+      await get(
+        `reviews/${reviewID}/comments?after=${first.nextCursor}`,
+      ).expect(200)
+    ).body;
+    expect(first.comments).toHaveLength(30);
+    expect(second.comments).toHaveLength(1);
+    expect(
+      new Set(
+        [...first.comments, ...second.comments].map(
+          (c: { id: string }) => c.id,
+        ),
+      ).size,
+    ).toBe(31);
+    expect(second.nextCursor).toBeNull();
+    await get(`reviews/${reviewID}/comments?after=bad`).expect(400);
+    await block('owner', 'bruno');
+    expect((await get(`reviews/${reviewID}/comments`)).body.comments).toEqual(
+      [],
+    );
+    expect((await get('feed')).body.reviews[0].commentCount).toBe(0);
+    await block('owner', 'bruno', false);
+    await block('alice', 'bruno');
+    expect((await get(`reviews/${reviewID}/comments`)).body.comments).toEqual(
+      [],
+    );
+  });
+  it('reports comments idempotently and supports audited administrative decisions', async () => {
+    const reviewID = await publicReview(),
+      id = randomUUID();
+    await permission('everyone');
+    await comment(reviewID, id, 'bruno');
+    const reportComment = () =>
+      request(app.getHttpServer())
+        .put(`/api/v1/reviews/${reviewID}/comments/${id}/report`)
+        .auth('owner', { type: 'bearer' })
+        .send({ reason: 'spam', alsoBlock: false });
+    await reportComment().expect(200);
+    await reportComment().expect(200);
+    expect((await get(`reviews/${reviewID}/comments`)).body.comments).toEqual(
+      [],
+    );
+    expect(
+      (await get(`reviews/${reviewID}/comments`, 'alice')).body.comments,
+    ).toHaveLength(1);
+    const queue = await db.transaction(moderationQueue);
+    expect(queue).toHaveLength(1);
+    expect(queue[0]).not.toHaveProperty('reporter_uid');
+    const decision = {
+      id: randomUUID(),
+      targetType: 'comment' as const,
+      targetID: id,
+      action: 'hide' as const,
+      operator: 'test-operator',
+      reason: 'Reviewed spam',
+    };
+    await db.transaction((c) => moderate(c, decision));
+    await db.transaction((c) => moderate(c, decision));
+    expect(
+      (await get(`reviews/${reviewID}/comments`, 'alice')).body.comments,
+    ).toEqual([]);
+    expect(await db.transaction(moderationQueue)).toEqual([]);
+    await expect(
+      db.transaction((c) => moderate(c, { ...decision, action: 'restore' })),
+    ).rejects.toThrow();
+    await db.transaction((c) =>
+      moderate(c, { ...decision, id: randomUUID(), action: 'restore' }),
+    );
+    expect(
+      (await get(`reviews/${reviewID}/comments`, 'alice')).body.comments,
+    ).toHaveLength(1);
+    expect((await get(`reviews/${reviewID}/comments`)).body.comments).toEqual(
+      [],
+    );
+    await get('admin/moderation').expect(404);
+  });
+  it('limits spam and cascades interactions when a commenter deletes their account', async () => {
+    const reviewID = await publicReview();
+    await permission('everyone');
+    let last = '';
+    for (let i = 0; i < 30; i++) {
+      last = randomUUID();
+      await comment(reviewID, last).expect(200);
+    }
+    await comment(reviewID).expect(429);
+    await comment(reviewID, last).expect(200);
+    await react(reviewID, 'POW!').expect(200);
+    await request(app.getHttpServer())
+      .delete('/api/v1/me')
+      .auth('owner', { type: 'bearer' })
+      .expect(200);
+    expect(
+      (await get(`reviews/${reviewID}/comments`, 'alice')).body.comments,
+    ).toEqual([]);
+    expect(
+      (await get(`reviews/${reviewID}`, 'alice')).body.reviews[0].interaction
+        .reactions['POW!'],
+    ).toBe(0);
+  });
+  it('limits repeated reaction changes but still acknowledges exact retries', async () => {
+    const reviewID = await publicReview();
+    for (let i = 0; i < 120; i++)
+      await react(reviewID, i % 2 ? 'ZAP!' : 'POW!').expect(200);
+    await react(reviewID, 'POW!').expect(429);
+    await react(reviewID, 'ZAP!').expect(200);
+    expect((await get('feed')).body.reviews[0].interaction.myReaction).toBe(
+      'ZAP!',
+    );
+    await db.query(
+      "UPDATE social_reaction_limits SET window_start=now()-interval '2 minutes'",
+    );
+    await react(reviewID, null).expect(200);
+  });
+  it('moderates review reports without deleting private history and rolls decisions back atomically', async () => {
+    const reviewID = await publicReview();
+    await report(reviewID).expect(200);
+    const decision = {
+      id: randomUUID(),
+      targetType: 'review' as const,
+      targetID: reviewID,
+      action: 'hide' as const,
+      operator: 'test-operator',
+      reason: 'Reviewed content',
+    };
+    await expect(
+      db.transaction(async (client) => {
+        await moderate(client, decision);
+        throw new Error('rollback');
+      }),
+    ).rejects.toThrow();
+    await get('reviews/' + reviewID, 'bruno').expect(200);
+    expect(await db.transaction(moderationQueue)).toHaveLength(1);
+    await db.transaction((client) => moderate(client, decision));
+    await get('reviews/' + reviewID, 'bruno').expect(404);
+    expect((await get('me/activity', 'alice')).body.reviews).toHaveLength(1);
+    expect(
+      (
+        await db.query('SELECT * FROM moderation_decisions WHERE id=$1', [
+          decision.id,
+        ])
+      ).rowCount,
+    ).toBe(1);
+    await db.transaction((client) =>
+      moderate(client, { ...decision, id: randomUUID(), action: 'restore' }),
+    );
+    await get('reviews/' + reviewID, 'bruno').expect(200);
+    await get('reviews/' + reviewID, 'owner').expect(404);
+  });
   it('requires authentication and explicit opt-in for existing reviews, without losing private history', async () => {
     await setup();
     await request(app.getHttpServer()).get('/api/v1/feed').expect(401);
