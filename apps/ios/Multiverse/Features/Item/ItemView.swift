@@ -25,6 +25,16 @@ struct ItemView: View {
                     friendsSection(item: item, uni: uni).padding(.horizontal, MV.pad)
                     Text(item.desc).font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
                         .padding(.horizontal, MV.pad)
+                    if item.id.hasPrefix("m-metron-issue-"), let issueID = Int(item.id.dropFirst("m-metron-issue-".count)), issueID > 0 {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(L10n.text("Edição original em inglês. Textos em português adaptados pelo Multiverse."))
+                            HStack {
+                                Link(L10n.text("Fonte: Metron"), destination: URL(string: "https://metron.cloud/issue/\(issueID)/")!)
+                                Text("·")
+                                Link("CC BY-SA 4.0", destination: URL(string: "https://creativecommons.org/licenses/by-sa/4.0/")!)
+                            }
+                        }.font(MVFont.body(11, weight: 500)).foregroundStyle(MV.C.muted).padding(.horizontal, MV.pad)
+                    }
                     if store.showsDemoFeatures { WhereToWatchSection(itemID: item.id).padding(.horizontal, MV.pad) }
                     if store.showsDemoFeatures { canonSection(item: item, uni: uni).padding(.horizontal, MV.pad) }
                     if store.showsDemoFeatures { essentialSection(item: item, uni: uni).padding(.horizontal, MV.pad) }

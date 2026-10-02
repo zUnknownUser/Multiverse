@@ -10,11 +10,11 @@ editorial do Multiverse não são substituídos por dados de fornecedores.
 | Fonte    | Escopo implementado                                                                                 | Estado                                                                                                |
 | -------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | Wikidata | Identidade, títulos PT/EN, descrições curtas, ano e referências de criadores/editoras               | Integração publicada, cinco mapeamentos revisados                                                     |
-| Metron   | Edições de HQ: série, número, datas, páginas, créditos e personagens                                | Conector e revisão privada preparados; falta token e validação com respostas reais                    |
+| Metron   | Edições de HQ: série, número, datas, páginas, créditos e personagens                                | Credencial validada; publicação revisada de quatro edições #1, com PT-BR editorial e EN da fonte      |
 | TMDB     | Filmes/séries: títulos e sinopses PT/EN, estreia, duração de filme, créditos e referência de pôster | Credencial configurada e respostas reais validadas para três obras; publicação operacional disponível |
 
 Não há scraping, descoberta irrestrita, mensagens diárias, importação de avaliações
-externas ou novas telas. Capas continuam com o visual existente. Dados revisados do TMDB ficam disponíveis também na API de detalhe; campos sem apresentação no app não criam novas telas. Não se promete retenção
+externas ou novas telas. Capas continuam com o visual existente. Dados revisados do TMDB e da Metron ficam disponíveis também na API de detalhe; campos sem apresentação no app não criam novas telas. Não se promete retenção
 medida: esta etapa remove obstáculos concretos à descoberta e ao registro, mantendo
 IDs estáveis e os dados pessoais intactos.
 
@@ -39,8 +39,12 @@ IDs estáveis e os dados pessoais intactos.
 - `stage-candidates.ts`: grava apenas em `catalog_import_candidates`, separado do
   catálogo público. Lote inválido é revertido, identidade conflitante é recusada,
   consulta antiga não sobrescreve uma consulta mais recente.
+- `metron-registry.ts` / `publish-metron.ts`: lote revisado de quatro edições #1,
+  identificado por ID da edição e da série, nome, ano e número. Cria obras próprias,
+  sem substituir sagas. Títulos/sinopses PT-BR adaptados editorialmente; EN vem da
+  fonte. Preserva textos editoriais e arquivamento em novas sincronizações.
 - `publish-tmdb.ts`: publica somente o lote completo dos três mapeamentos TMDB revisados em `catalog_sources`, após validação e autorização de uso. Sincronização antiga não substitui uma mais recente; não altera texto editorial, status, IDs ou atividade.
-- `catalog-description.ts`: sinopse TMDB publicada no idioma pedido, com fallback editorial. Catálogo, detalhe e referências do diário usam a mesma regra.
+- `catalog-description.ts`: sinopse TMDB/Metron publicada no idioma pedido, com fallback editorial. Catálogo, detalhe e referências do diário usam a mesma regra.
 - `CatalogService`/`MarvelService`: consultas somente ao catálogo publicado.
 
 ## Credenciais e uso dos conectores preparados
@@ -50,7 +54,7 @@ Segredos somente no `.env` ignorado ou nas variáveis privadas do Railway:
 - `TMDB_READ_ACCESS_TOKEN`: **API Read Access Token**, obtido em
   [TMDB > Settings > API](https://www.themoviedb.org/settings/api).
 - `METRON_API_TOKEN`: token da conta [Metron](https://metron.cloud/), enviado como
-  Bearer. [Documentação](https://metron.cloud/docs/).
+  Bearer. [Gerar token](https://metron.cloud/accounts/tokens/). [Documentação](https://metron.cloud/docs/).
 
 Eles são opcionais e usados somente pelo comando operacional. Ausência de chave
 não impede a API de iniciar; o comando retorna `TMDB_NOT_CONFIGURED` ou
@@ -69,6 +73,8 @@ node scripts/preview-marvel-sources.mjs --provider=tmdb --stage
 node scripts/preview-marvel-sources.mjs --provider=tmdb --publish
 # Substitua ID por um ID numérico real da edição no Metron:
 node scripts/preview-marvel-sources.mjs --provider=metron --issues=ID --stage
+# Publica o lote Metron revisado (IDs 3726,21884,27065,42511):
+node scripts/preview-marvel-sources.mjs --provider=metron --publish
 ```
 
 Metron aceita até dez IDs distintos por lote, separados por vírgula, e aguarda
@@ -83,7 +89,7 @@ SELECT provider, external_id, suggested_item_id, kind, metadata, attribution, fe
 FROM catalog_import_candidates ORDER BY provider, external_id;
 ```
 
-Não existe cron ou publicação durante o login. `--publish` é exclusivo do TMDB e grava o lote completo em uma transação. Metron continua privado e pendente de credencial/validação. A migração `007` cria a revisão privada; `008` permite a origem TMDB no catálogo. Para reverter uma publicação, remover somente sua linha de `catalog_sources` faz a sinopse voltar ao texto editorial preservado.
+Não existe cron ou publicação durante o login. `--publish` grava o lote revisado completo do provedor em uma transação. IDs Metron arbitrários continuam restritos à prévia/revisão; publicação exige exatamente o lote registrado. A migração `007` cria a revisão privada; `008` permite TMDB e `014` permite Metron em `catalog_sources`. Para reverter uma publicação, remover somente sua linha de `catalog_sources` faz a sinopse voltar ao texto editorial preservado.
 
 ## Fontes, manutenção e autorização de uso
 
@@ -96,9 +102,11 @@ Não existe cron ou publicação durante o login. `--publish` é exclusivo do TM
   [Configuração oficial](https://github.com/Metron-Project/metron/blob/master/metron/settings.py)
   documenta Bearer, limites padrão e CC BY-SA 4.0 no schema da API. Atribuição e
   condições de redistribuição precisam ser atendidas; não se presume autorização
-  sobre imagens. O site bloqueou a consulta automatizada sem login nesta revisão;
-  o conector foi testado com fixtures baseadas no contrato, sem alegar homologação
-  autenticada ou garantia de disponibilidade.
+  sobre imagens. Em 02/10/2026, a credencial foi validada com respostas reais.
+  O publisher real é `{id:1,name:"Marvel"}`; o conector aceita essa identidade e
+  o alias antigo "Marvel Comics", exigindo ID 1. O nome real de uma série é
+  "The Infinity Gauntlet". Créditos gerais e por obra indicam a fonte, CC BY-SA 4.0
+  e a adaptação editorial do texto português. Não são importadas imagens/páginas.
 - **TMDB**: [contrato de filmes](https://developer.themoviedb.org/reference/movie-details),
   [séries](https://developer.themoviedb.org/reference/tv-series-details) e
   [agregação de subconsultas](https://developer.themoviedb.org/docs/append-to-response).
@@ -137,7 +145,7 @@ inferidos. `catalog_sources` conserva origem, revisão e data da consulta.
   view compartilhada; não há materialização de métricas nesta etapa.
 - `GET /api/v1/catalog/marvel/:id` faz consulta restrita ao item Marvel publicado.
   Retorna `{ locale, item, sources }`; não carrega todos os universos/itens. Candidatos
-  continuam privados; dados TMDB publicados por `--publish` entram em `sources` com atribuição e data da consulta.
+  continuam privados; dados TMDB/Metron publicados por `--publish` entram em `sources` com atribuição e data da consulta.
 - Tipos: `HQ`, `Personagem`, `Evento`, `Filme`, `Série`. `Accept-Language` escolhe
   PT-BR/EN. Busca vazia retorna 200 com lista vazia; entrada inválida, 400
   `INVALID_CATALOG_QUERY`; item indisponível, 404; banco indisponível, 503.
@@ -153,3 +161,30 @@ anterior, continua acessível na busca e no registro do diário. Neste ajuste, o
 usuário ganha acesso aos resultados antes escondidos e busca tolerante a acentos.
 Ultimato, Através do Aranhaverso e Loki passam a usar sinopses TMDB em PT-BR/EN após a publicação operacional e recarga do catálogo. As credenciais ficam no backend. Notas e progresso continuam sendo do Multiverse. Não há capas TMDB/Metron,
 cronologia externa, catálogo completo da Marvel ou feed social externo publicado.
+
+## Metron: lote inicial e idiomas
+
+| ID Metron | Título PT-BR        | Título EN                | Ano / série Metron |
+| --------- | ------------------- | ------------------------ | ------------------ |
+| 3726      | Guerra Civil #1     | Civil War #1             | 2006 / 402         |
+| 21884     | Dinastia M #1       | House of M #1            | 2005 / 1761        |
+| 27065     | Guerras Secretas #1 | Secret Wars #1           | 2015 / 2019        |
+| 42511     | Desafio Infinito #1 | The Infinity Gauntlet #1 | 1991 / 3047        |
+
+IDs Multiverse: `m-metron-issue-<ID>`. São as edições originais em inglês, com ficha
+localizada; não correspondem a uma edição impressa brasileira. Sinopses PT-BR são
+adaptações editoriais revisadas, salvas na tabela de traduções. O conector mantém
+PT ausente no metadata da fonte, sem atribuir à Metron uma tradução que ela não
+forneceu. EN usa a sinopse publicada com fallback editorial se ausente. Atualizar
+PT exige revisão editorial; não há tradução automática nem cópia de EN para PT.
+
+Título, idioma, sinopse e estatísticas são consistentes no catálogo, busca, detalhe,
+diário e referências do feed. Notas/contagens vêm somente da atividade Multiverse.
+Metron fornece metadados, não páginas para ler a HQ, assinatura ou leitor digital.
+O lote não representa o catálogo completo da Marvel e não adiciona pôsteres/capas.
+
+Validação deste lote: 73 testes unitários + 87 HTTP/PostgreSQL, 167 testes iOS,
+926 entradas PT/EN; respostas reais das quatro edições e publicação CLI no banco
+local isolado. Token somente em `.env` ignorado e variáveis privadas do Railway.
+Para rotacionar, substituir `METRON_API_TOKEN` nesses dois locais; não alterar app,
+IDs ou dados publicados. Não há token no app nem no histórico Git.

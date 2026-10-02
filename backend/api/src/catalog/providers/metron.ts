@@ -15,7 +15,7 @@ export const metronMarvelSeries = [
   { name: 'Civil War', year: 2006 },
   { name: 'House of M', year: 2005 },
   { name: 'Secret Wars', year: 2015 },
-  { name: 'Infinity Gauntlet', year: 1991 },
+  { name: 'The Infinity Gauntlet', year: 1991 },
 ] as const;
 
 export function parseMetronIssue(
@@ -28,7 +28,8 @@ export function parseMetronIssue(
   if (
     !positiveInt(requestedID) ||
     data.id !== requestedID ||
-    publisher.name !== 'Marvel Comics' ||
+    publisher.id !== 1 ||
+    !['Marvel', 'Marvel Comics'].includes(String(publisher.name)) ||
     !positiveInt(series.id) ||
     !positiveInt(series.year_began) ||
     series.year_began < 1900 ||

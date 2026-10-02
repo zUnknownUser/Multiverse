@@ -1,3 +1,25 @@
+# Atualização — Metron ativa (02/10/2026)
+
+Usuário forneceu token e autorizou implementar, preservando PT-BR/EN. Credencial
+configurada no `.env` ignorado e nas variáveis privadas de `api`/production Railway.
+Não copiar o valor para documentação, código ou respostas. Rotação fica para depois,
+conforme solicitado; basta substituir METRON_API_TOKEN nos dois locais.
+
+- Respostas reais validadas para 3726, 21884, 27065 e 42511 (#1 das quatro séries).
+- Corrigidos publisher Marvel/ID 1 e nome The Infinity Gauntlet no conector.
+- Migration `014_metron_published_sources.sql`; publicação transacional operacional
+  via `node scripts/preview-marvel-sources.mjs --provider=metron --publish`.
+- Obras próprias `m-metron-issue-<ID>`; nunca substituir os IDs das sagas existentes.
+- PT-BR editorial adaptado e EN da fonte; sem tradução automática ou sinopse inglesa
+  marcada como portuguesa. Fonte/licença/adaptação creditadas em Ajustes e nas obras.
+- Não fornece páginas da HQ: só metadados para descoberta, diário e biblioteca.
+- Testes: API 73 + 87; iOS 167; idiomas 926. [Guia](../backend/api/docs/marvel.md).
+- Push permanece desligado; Apple Developer/APNs continuam pendentes.
+
+Os registros abaixo são históricos.
+
+---
+
 # Atualização — Biblioteca pessoal (02/10/2026)
 
 O usuário aprovou desejos/favoritos persistidos, listas pessoais reais e ocultação

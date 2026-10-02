@@ -22,6 +22,32 @@ import {
 import { stageCandidates } from '../src/catalog/providers/stage-candidates.js';
 import { publishTMDB } from '../src/catalog/providers/publish-tmdb.js';
 
+import { parseMetronIssue } from '../src/catalog/providers/metron.js';
+import { metronMarvelRegistry } from '../src/catalog/providers/metron-registry.js';
+import { publishMetron } from '../src/catalog/providers/publish-metron.js';
+
+const metronBatch = () =>
+  metronMarvelRegistry.map((m) =>
+    parseMetronIssue(
+      {
+        id: m.id,
+        publisher: { id: 1, name: 'Marvel' },
+        series: {
+          id: m.seriesID,
+          name: m.series,
+          year_began: m.year,
+          language: 'en',
+        },
+        number: m.number,
+        cover_date: `${m.year}-07-01`,
+        store_date: null,
+        desc: `English issue synopsis: ${m.series}`,
+        page: 32,
+      },
+      m.id,
+    ),
+  );
+
 const databaseURL = process.env.TEST_DATABASE_URL;
 describe.skipIf(!databaseURL)(
   'Marvel catalog and importer with PostgreSQL',
@@ -387,6 +413,137 @@ describe.skipIf(!databaseURL)(
         (await db.query("SELECT id FROM catalog_items WHERE id='m-new-test'"))
           .rowCount,
       ).toBe(0);
+    });
+    it('publishes reviewed Metron issues in PT-BR and EN without replacing arcs or importing engagement', async () => {
+      const candidates = metronBatch();
+      const before = (
+        await request(app.getHttpServer())
+          .get('/api/v1/catalog/marvel/m-civil')
+          .expect(200)
+      ).body;
+      await db.transaction(async (client) => {
+        await stageCandidates(client, candidates);
+        await publishMetron(client, candidates);
+      });
+      await db.transaction((client) => publishMetron(client, candidates));
+      for (const m of metronMarvelRegistry) {
+        const get = (locale: string) =>
+          request(app.getHttpServer())
+            .get(`/api/v1/catalog/marvel/m-metron-issue-${m.id}`)
+            .set('Accept-Language', locale)
+            .expect(200);
+        const pt = (await get('pt-BR')).body,
+          en = (await get('en')).body;
+        expect(pt.item).toMatchObject({
+          title: m.titlePT,
+          desc: m.descriptionPT,
+          avg: 0,
+          logCount: 0,
+          reviewCount: 0,
+        });
+        expect(en.item).toMatchObject({
+          title: `${m.series} #${m.number}`,
+          desc: `English issue synopsis: ${m.series}`,
+        });
+        expect(pt.sources).toHaveLength(1);
+        expect(pt.sources[0]).toMatchObject({
+          provider: 'metron',
+          externalId: `issue:${m.id}`,
+          url: `https://metron.cloud/issue/${m.id}/`,
+        });
+        expect(pt.sources[0].metadata.attribution.termsUrl).toBe(
+          'https://creativecommons.org/licenses/by-sa/4.0/',
+        );
+        expect(pt.sources[0].metadata.descriptions['pt-BR']).toBe('');
+      }
+      expect(
+        (
+          await request(app.getHttpServer())
+            .get('/api/v1/catalog/marvel/m-civil')
+            .expect(200)
+        ).body,
+      ).toEqual(before);
+      const search = (
+        await request(app.getHttpServer())
+          .get('/api/v1/catalog/marvel')
+          .query({ q: 'guerra civil #1' })
+          .set('Accept-Language', 'pt-BR')
+          .expect(200)
+      ).body;
+      expect(search.items.map((i: { id: string }) => i.id)).toEqual([
+        'm-metron-issue-3726',
+      ]);
+      const catalog = (
+        await request(app.getHttpServer())
+          .get('/api/v1/catalog')
+          .set('Accept-Language', 'en')
+          .expect(200)
+      ).body;
+      expect(
+        catalog.items.find(
+          (i: { id: string }) => i.id === 'm-metron-issue-3726',
+        ).desc,
+      ).toBe('English issue synopsis: Civil War');
+      await request(app.getHttpServer())
+        .get('/api/v1/catalog/marvel/m-metron-issue-999999')
+        .expect(404);
+    });
+    it('keeps editorial translations and archive decisions, rejects conflicting batches atomically and never downgrades Metron data', async () => {
+      const candidates = metronBatch();
+      const firstID = candidates[0].suggestedItemId;
+      await db.query(
+        "UPDATE catalog_item_translations SET title='Título revisado',description='Sinopse revisada' WHERE item_id=$1 AND locale='pt-BR'",
+        [firstID],
+      );
+      const fresh = candidates.map((c) => ({
+        ...c,
+        fetchedAt: '2030-01-01T00:00:00Z',
+        metadata: {
+          ...c.metadata,
+          descriptions: { en: 'New English', 'pt-BR': '' },
+        },
+      }));
+      await db.transaction((client) => publishMetron(client, fresh));
+      await db.transaction((client) => publishMetron(client, candidates));
+      const get = (locale: string) =>
+        request(app.getHttpServer())
+          .get('/api/v1/catalog/marvel/' + firstID)
+          .set('Accept-Language', locale)
+          .expect(200);
+      expect((await get('pt-BR')).body.item).toMatchObject({
+        title: 'Título revisado',
+        desc: 'Sinopse revisada',
+      });
+      expect((await get('en')).body.item.desc).toBe('New English');
+      await expect(
+        db.transaction((client) => publishMetron(client, [fresh[0]])),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+      const invalid = fresh.map((c, i) => ({
+        ...c,
+        fetchedAt: '2031-01-01T00:00:00Z',
+        metadata: {
+          ...c.metadata,
+          descriptions: { en: 'Must roll back', 'pt-BR': '' },
+          ...(i === 3 ? { series: { ...c.metadata.series!, id: 999 } } : {}),
+        },
+      }));
+      await expect(
+        db.transaction((client) => publishMetron(client, invalid)),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+      expect((await get('en')).body.item.desc).toBe('New English');
+      await db.query("UPDATE catalog_items SET status='archived' WHERE id=$1", [
+        firstID,
+      ]);
+      await db.transaction((client) => publishMetron(client, fresh));
+      await request(app.getHttpServer())
+        .get('/api/v1/catalog/marvel/' + firstID)
+        .expect(404);
+      await db.query(
+        "UPDATE catalog_sources SET item_id='m-civil' WHERE provider='metron' AND external_id='issue:3726'",
+      );
+      await expect(
+        db.transaction((client) => publishMetron(client, fresh)),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
     });
   },
 );

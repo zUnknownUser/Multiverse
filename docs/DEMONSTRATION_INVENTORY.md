@@ -116,7 +116,7 @@ não prometem persistência entre sessões/dispositivos.
   seleção do catálogo, não ranking por tendência. O backend retorna `live=0`, sem presença.
   Star Wars/LoL/Tolkien em “em breve” não são catálogos completos prontos.
 - **Marvel:** revisão/importação com Wikidata/TMDB existe; não significa catálogo completo
-  nem atualização editorial automática. Metron continua aguardando credencial/cadastro.
+  nem atualização editorial automática. Metron agora publica quatro edições #1 revisadas, com ficha PT-BR/EN; sem páginas de leitura, capas ou catálogo completo.
 - **Reviews de outras pessoas por obra/perfil:** o feed de seguidos e o detalhe funcionam;
   a seção de obra é rotulada “suas reviews”. Não há catálogo global de reviews de todos,
   nem página de histórico público completo no perfil remoto. Nenhuma amostra deve preencher
@@ -136,6 +136,6 @@ não prometem persistência entre sessões/dispositivos.
 
 ## Validação desta entrega
 
-167 testes iOS; 72 unitários + 85 HTTP/PostgreSQL na API; PT/EN verificado (923 entradas).
+167 testes iOS; 73 unitários + 87 HTTP/PostgreSQL na API; PT/EN verificado (926 entradas).
 Build normal e testes executados em simulador. O build opt-in de push foi compilado no lote anterior, sem envio real. O inventário é auditoria do
 código; não afirma homologação em aparelho nem uso real de integrações ainda não ativadas.

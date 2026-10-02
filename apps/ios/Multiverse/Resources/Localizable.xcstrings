@@ -15998,6 +15998,54 @@
           }
         }
       }
+    },
+    "Dados de HQs: colaboradores da Metron. Títulos e sinopses em português adaptados pelo Multiverse.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dados de HQs: colaboradores da Metron. Títulos e sinopses em português adaptados pelo Multiverse."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comic book data: Metron contributors. Portuguese titles and synopses adapted by Multiverse."
+          }
+        }
+      }
+    },
+    "Edição original em inglês. Textos em português adaptados pelo Multiverse.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edição original em inglês. Textos em português adaptados pelo Multiverse."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original English-language issue. Portuguese text adapted by Multiverse."
+          }
+        }
+      }
+    },
+    "Fonte: Metron": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fonte: Metron"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: Metron"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

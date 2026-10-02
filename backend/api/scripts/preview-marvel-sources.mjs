@@ -4,6 +4,8 @@ import { fetchTMDBMarvel } from '../dist/catalog/providers/tmdb.js';
 import { fetchMetronMarvelIssues } from '../dist/catalog/providers/metron.js';
 import { stageCandidates } from '../dist/catalog/providers/stage-candidates.js';
 import { publishTMDB } from '../dist/catalog/providers/publish-tmdb.js';
+import { publishMetron } from '../dist/catalog/providers/publish-metron.js';
+import { metronMarvelRegistry } from '../dist/catalog/providers/metron-registry.js';
 
 // All network reads finish before opening a transaction. Never called on API boot/login.
 async function main() {
@@ -24,20 +26,26 @@ async function main() {
   const issues = args
     .find((a) => a.startsWith('--issues='))
     ?.slice('--issues='.length);
-  if (!provider || (provider === 'metron' ? !issues : issues))
-    throw new Error('USAGE');
   const publish = args.includes('--publish');
-  if (publish && (provider !== 'tmdb' || args.includes('--stage')))
+  if (!provider || (provider === 'metron' ? !issues && !publish : issues))
     throw new Error('USAGE');
+  if (publish && args.includes('--stage')) throw new Error('USAGE');
+  const issueIDs =
+    issues?.split(',').map(Number) ?? metronMarvelRegistry.map((m) => m.id);
+  if (
+    publish &&
+    provider === 'metron' &&
+    (issueIDs.length !== metronMarvelRegistry.length ||
+      new Set(issueIDs).size !== issueIDs.length ||
+      !metronMarvelRegistry.every((m) => issueIDs.includes(m.id)))
+  )
+    throw new Error('CATALOG_INCOMPLETE_METRON_BATCH');
   if ((args.includes('--stage') || publish) && !process.env.DATABASE_URL)
     throw new Error('DATABASE_URL_REQUIRED');
   const batch =
     provider === 'tmdb'
       ? await fetchTMDBMarvel(process.env.TMDB_READ_ACCESS_TOKEN)
-      : await fetchMetronMarvelIssues(
-          issues.split(',').map(Number),
-          process.env.METRON_API_TOKEN,
-        );
+      : await fetchMetronMarvelIssues(issueIDs, process.env.METRON_API_TOKEN);
   if (args.includes('--stage') || publish) {
     const client = new pg.Client({
       connectionString: process.env.DATABASE_URL,
@@ -48,7 +56,11 @@ async function main() {
     try {
       await client.query('BEGIN');
       await stageCandidates(client, batch);
-      if (publish) await publishTMDB(client, batch);
+      if (publish)
+        await (provider === 'tmdb' ? publishTMDB : publishMetron)(
+          client,
+          batch,
+        );
       await client.query('COMMIT');
     } catch (error) {
       await client.query('ROLLBACK');

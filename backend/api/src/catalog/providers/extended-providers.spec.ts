@@ -34,7 +34,7 @@ function movie() {
 function issue(id = 123) {
   return {
     id,
-    publisher: { id: 1, name: 'Marvel Comics' },
+    publisher: { id: 1, name: 'Marvel' },
     series: { id: 100, name: 'Civil War', language: 'en', year_began: 2006 },
     number: '1',
     store_date: '2006-05-03',
@@ -117,6 +117,42 @@ describe('Marvel provider scope and normalization', () => {
     });
     expect(JSON.stringify(result)).not.toContain('average_rating');
     expect(JSON.stringify(result)).not.toContain('price');
+  });
+  it('accepts the live Marvel identity and rejects a spoofed publisher or unknown language', () => {
+    expect(parseMetronIssue(issue(), 123).provider).toBe('metron');
+    expect(
+      parseMetronIssue(
+        { ...issue(), publisher: { id: 1, name: 'Marvel Comics' } },
+        123,
+      ).provider,
+    ).toBe('metron');
+    expect(() =>
+      parseMetronIssue(
+        { ...issue(), publisher: { id: 2, name: 'Marvel' } },
+        123,
+      ),
+    ).toThrow('NOT_MARVEL');
+    for (const language of [undefined, 'pt']) {
+      expect(() =>
+        parseMetronIssue(
+          { ...issue(), series: { ...issue().series, language } },
+          123,
+        ),
+      ).toThrow('NOT_MARVEL');
+    }
+    const gauntlet = parseMetronIssue(
+      {
+        ...issue(),
+        series: {
+          id: 3047,
+          name: 'The Infinity Gauntlet',
+          year_began: 1991,
+          language: 'en',
+        },
+      },
+      123,
+    );
+    expect(gauntlet.metadata.series?.title).toBe('The Infinity Gauntlet');
   });
   it('rejects non-Marvel publishers and licensed universes even when Marvel publishes them', () => {
     expect(() =>
