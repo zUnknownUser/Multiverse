@@ -1,8 +1,15 @@
-# Autenticação por e-mail — preparada, não publicada
+# Autenticação por e-mail
 
 O app mantém o fluxo do protótipo: cadastro → código de seis dígitos → nome/apelido →
-avatar/bio. Recuperação: e-mail → link → tela Nova senha. Nenhum serviço foi publicado
-por esta implementação e nenhum e-mail real foi enviado nos testes.
+avatar/bio. Recuperação: e-mail → link → tela Nova senha.
+
+Em 01/10/2026, as duas funções foram publicadas em `us-central1`, com Firestore
+fechado ao cliente, TTL ativo e segredos no Secret Manager. O remetente é
+`Multiverse <elesys@somosmultiverse.com.br>`. O e-mail tem HTML com a identidade
+visual do app e versão em texto; o iOS envia o idioma PT-BR/EN na solicitação.
+A prévia foi aceita pelo Resend para o endereço de teste autorizado pelo usuário.
+Recebimento na caixa de entrada e confirmação completa pelo app ainda precisam
+ser validados com o usuário. Na retomada de 02/10, os 14 testes locais passaram.
 
 ## O que está implementado
 
@@ -32,7 +39,7 @@ memória até o app poder validá-los. Se chegarem vários, prevalece o mais rec
 O estado da sessão é conferido novamente antes de abrir a recuperação; logout descarta
 links pendentes. Nenhum token do link é gravado no armazenamento local.
 
-## Ativação futura
+## Configuração e manutenção
 
 1. Habilitar **E-mail/senha** em Firebase Authentication. Apple continua pendente.
 2. Habilitar Firestore e um plano Firebase compatível com Cloud Functions. Não foi feita
@@ -61,8 +68,7 @@ links pendentes. Nenhum token do link é gravado no armazenamento local.
 9. Configurar TTL no campo `purgeAt` da coleção `emailVerificationChallenges` para
    limpeza automática. A expiração do código é validada no servidor mesmo sem TTL.
 
-O endpoint de associação retornava 404 durante a implementação; por isso a abertura
-real dos links no app ainda depende da etapa de Hosting. No dispositivo, validar o link
+O arquivo de associação foi publicado no Hosting e responde HTTP 200. No dispositivo, validar o link
 com o app instalado e a assinatura contendo Associated Domains. Se o app não abrir,
 o handler web do Firebase poderá apresentar a recuperação no navegador.
 

@@ -5,6 +5,7 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { defineSecret, defineString } from "firebase-functions/params";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { Challenge, createChallenge, confirmChallenge, VerificationError } from "./verificationPolicy";
+import { verificationEmail } from "./verificationEmail";
 
 initializeApp();
 const db = getFirestore();
@@ -60,8 +61,8 @@ export const requestEmailVerificationCode = onCall(options, async request => {
           "Idempotency-Key": `email-verification/${generation}`,
         },
         body: JSON.stringify({
-          from: mailFrom.value(), to: [email], subject: "Seu código Multiverse",
-          text: `Seu código de confirmação é ${code}. Ele vale por 10 minutos. Se você não solicitou, ignore este e-mail.`,
+          from: mailFrom.value(), to: [email],
+          ...verificationEmail(code, request.data?.locale),
         }),
         signal: AbortSignal.timeout(10_000),
       });

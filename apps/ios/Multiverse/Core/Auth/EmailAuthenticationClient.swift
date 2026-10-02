@@ -52,7 +52,7 @@ final class FirebaseEmailAuthenticationClient: EmailAuthenticationClient {
         do {
             Auth.auth().languageCode = L10n.language()
             _ = try await Functions.functions(region: "us-central1")
-                .httpsCallable("requestEmailVerificationCode").call()
+                .httpsCallable("requestEmailVerificationCode").call(["locale": L10n.language()])
         } catch { throw Self.failure(error) }
     }
 

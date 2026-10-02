@@ -14,15 +14,19 @@ struct MainTabView: View {
     }
 
     var body: some View {
-        Group {
-            switch store.tab {
-            case .home: HomeStack()
-            case .search: SearchStack()
-            case .clubs: ClubsStack()
-            case .profile: ProfileStack()
+        VStack(spacing: 0) {
+            Group {
+                switch store.tab {
+                case .home: HomeStack()
+                case .search: SearchStack()
+                case .clubs: ClubsStack()
+                case .profile: ProfileStack()
+                }
             }
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            // Reserve the bar's height outside the navigation stacks so pushed
+            // screens can scroll their final actions fully above the bar.
             CustomTabBar { store.openLogBlank() }
         }
         .overlay { ToastOverlay() }

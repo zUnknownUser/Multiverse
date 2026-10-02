@@ -1,0 +1,13 @@
+*
+!Dockerfile
+!package.json
+!package-lock.json
+!tsconfig*.json
+!nest-cli.json
+!src/
+!src/**
+!scripts/
+!scripts/migrate.mjs
+!scripts/moderate.mjs
+!migrations/
+!migrations/*.sql
