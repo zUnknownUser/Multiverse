@@ -1,5 +1,17 @@
 import SwiftUI
 
+struct LibraryEmptyState: View {
+    let message: String
+    var body: some View {
+        Text(message)
+            .font(MVFont.body(14, weight: 500))
+            .foregroundStyle(MV.C.muted)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .comicCard(shadow: MV.Shadow.s)
+    }
+}
+
 struct LibraryStatusNotice: View {
     let library: LibraryStore
     var body: some View {
@@ -36,11 +48,11 @@ struct LibraryView: View {
                     if library.snapshot != nil {
                         if selection == 2 {
                             Button(L10n.text("CRIAR LISTA")) { creating = true }.buttonStyle(.borderedProminent).disabled(!library.canMutate)
-                            if library.lists.isEmpty { Text(L10n.text("Crie sua primeira lista para organizar as obras.")) }
+                            if library.lists.isEmpty { LibraryEmptyState(message: L10n.text("Crie sua primeira lista para organizar as obras.")) }
                             ForEach(library.lists) { list in PersonalListRow(list: list) }
                         } else {
                             let ids = selection == 0 ? library.wantedIDs : library.favoriteIDs
-                            if ids.isEmpty { Text(L10n.text("Nada salvo aqui ainda. Explore uma obra para começar.")) }
+                            if ids.isEmpty { LibraryEmptyState(message: L10n.text("Nada salvo aqui ainda. Explore uma obra para começar.")) }
                             ForEach(ids, id: \.self) { id in
                                 LibraryItemRow(itemID: id) {
                                     Task { await library.change(selection == 0 ? "wanted" : "favorite", itemID: id, enabled: false) }

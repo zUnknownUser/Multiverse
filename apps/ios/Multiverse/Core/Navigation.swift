@@ -7,6 +7,7 @@ enum AppTab: String, CaseIterable, Hashable {
 /// Destinos navegáveis dentro da NavigationStack de cada aba.
 enum Route: Hashable {
     case item(String)
+    case catalogSeries(String)
     case universe(String)
     case user(String)
     case review(String)

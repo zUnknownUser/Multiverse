@@ -1,3 +1,30 @@
+# Atualização — séries completas e ajustes da Biblioteca (02/10/2026)
+
+O usuário aprovou expandir as quatro séries Metron e organizar edições por número.
+Durante o trabalho, pediu preservar o layout e ajustar especificamente os estados
+vazios de Quero consumir, Favoritos e Listas, além da quebra do rótulo Biblioteca.
+
+- 30 edições revisadas: Guerra Civil 1–7, Dinastia M 1–8, Guerras Secretas 1–9,
+  Desafio Infinito 1–6. IDs #1 e sagas preexistentes preservados.
+- PT-BR adaptado editorialmente a partir das descrições reais, EN da Metron.
+  Descrições curtas da fonte permanecem curtas, sem conteúdo inventado.
+- Migration `015_catalog_series.sql`: séries/traduções/vínculos; metadados `series`
+  compartilhados entre catálogo, diário e feed. Sem segredo ou chamadas externas no iOS.
+- Publicação Metron busca 30 edições com 3,1s entre chamadas e grava tudo em uma
+  transação. Prévia manual permanece limitada a 10 IDs; não buscar lotes em paralelo.
+- iOS: seção/tela de série, ordem numérica e progresso de obras distintas no diário.
+- Biblioteca: fonte/cores/cartão do design system nos estados vazios, sem alterar
+  filtros, ações, estrutura ou posição das abas. Rótulos em uma linha com escala
+  de texto; dimensões da tab bar e botão central preservadas.
+- Validação: 75 unitários + 88 HTTP/PostgreSQL, 170 iOS, 938 entradas PT/EN.
+  PostgreSQL descartável desta rodada: multiverse-series-test, localhost:55433.
+- Credencial Metron já configurada; nunca imprimir. Push continua desligado.
+- [Guia operacional e limites](../backend/api/docs/marvel.md).
+
+Registros abaixo são históricos.
+
+---
+
 # Atualização — Metron ativa (02/10/2026)
 
 Usuário forneceu token e autorizou implementar, preservando PT-BR/EN. Credencial

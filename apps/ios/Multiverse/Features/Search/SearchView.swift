@@ -39,6 +39,10 @@ struct SearchView: View {
                     .buttonStyle(.plain)
                 }
 
+                if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && (filter == .all || filter == .works) {
+                    CatalogSeriesSection()
+                }
+
                 let (rows, total) = store.searchResults(query: query, filter: filter, limit: visibleResults)
                 Text(searchingPeople ? L10n.text("RESULTADOS") : (query.isEmpty ? L10n.text(store.usesRemoteCatalog ? "Explore o catálogo" : "Mais registrados esta semana") : L10n.format("search.results", total)))
                     .kicker(11).foregroundStyle(MV.C.muted)

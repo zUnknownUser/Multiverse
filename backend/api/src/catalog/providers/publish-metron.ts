@@ -46,7 +46,43 @@ export async function publishMetron(
       );
       if (!existing.rowCount) throw new Error('CATALOG_MAPPING_CONFLICT');
     }
+    const seriesID = `metron-${mapping.seriesID}`;
+    await client.query(
+      `INSERT INTO catalog_series(id,universe_id,year) VALUES($1,'marvel',$2) ON CONFLICT(id) DO NOTHING`,
+      [seriesID, mapping.year],
+    );
+    const storedSeries = await client.query(
+      'SELECT universe_id,year FROM catalog_series WHERE id=$1 FOR UPDATE',
+      [seriesID],
+    );
+    if (
+      storedSeries.rows[0]?.universe_id !== 'marvel' ||
+      storedSeries.rows[0]?.year !== mapping.year
+    )
+      throw new Error('CATALOG_MAPPING_CONFLICT');
+    await client.query(
+      `INSERT INTO catalog_series_items(item_id,series_id,issue_number,position) VALUES($1,$2,$3,$4) ON CONFLICT(item_id) DO NOTHING`,
+      [itemID, seriesID, mapping.number, Number(mapping.number)],
+    );
+    const membership = await client.query(
+      'SELECT series_id,issue_number,position FROM catalog_series_items WHERE item_id=$1',
+      [itemID],
+    );
+    if (
+      membership.rows[0]?.series_id !== seriesID ||
+      membership.rows[0]?.issue_number !== mapping.number ||
+      membership.rows[0]?.position !== Number(mapping.number)
+    )
+      throw new Error('CATALOG_MAPPING_CONFLICT');
     for (const locale of ['pt-BR', 'en'] as const) {
+      await client.query(
+        `INSERT INTO catalog_series_translations(series_id,locale,title) VALUES($1,$2,$3) ON CONFLICT(series_id,locale) DO NOTHING`,
+        [
+          seriesID,
+          locale,
+          locale === 'pt-BR' ? mapping.seriesPT : mapping.series,
+        ],
+      );
       await client.query(
         `INSERT INTO catalog_item_translations(item_id,locale,title,year,description,canon)
          VALUES($1,$2,$3,$4,$5,'—') ON CONFLICT(item_id,locale) DO NOTHING`,

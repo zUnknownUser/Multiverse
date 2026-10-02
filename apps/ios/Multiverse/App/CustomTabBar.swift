@@ -46,7 +46,12 @@ struct CustomTabBar: View {
             store.goToTab(t)
         } label: {
             Text(label)
-                .kicker(11)
+                .font(MVFont.archivo(12, weight: 800, width: t == .library ? 90 : 100))
+                .textCase(.uppercase)
+                .tracking(t == .library ? 0 : 0.2)
+                .lineLimit(1)
+                .minimumScaleFactor(0.9)
+                .allowsTightening(true)
                 .foregroundStyle(active ? MV.C.paper : MV.C.ink)
                 .frame(width: 70, height: 40)
                 .background(active ? MV.C.ink : Color.clear)

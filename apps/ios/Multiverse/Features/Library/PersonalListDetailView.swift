@@ -24,7 +24,7 @@ struct PersonalListDetailView: View {
                                 Button(L10n.text("EXCLUIR LISTA"), role: .destructive) { deleting = true }
                             } label: { Image(systemName: "ellipsis.circle").font(.title2) }.accessibilityLabel(L10n.text("Mais opções"))
                         }.disabled(!library.canMutate)
-                        if list.itemIDs.isEmpty { Text(L10n.text("Esta lista ainda não tem obras.")) }
+                        if list.itemIDs.isEmpty { LibraryEmptyState(message: L10n.text("Esta lista ainda não tem obras.")) }
                         ForEach(list.itemIDs, id: \.self) { id in
                             LibraryItemRow(itemID: id) { Task { await library.change("remove_item", listID: listID, itemID: id) } }.disabled(!library.canMutate)
                         }

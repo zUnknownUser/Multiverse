@@ -22,6 +22,17 @@ struct ItemView: View {
                         Button(L10n.text("ADICIONAR A LISTAS")) { addingToList = true }
                             .disabled(!library.canMutate).padding(.horizontal, MV.pad)
                     }
+                    if let series = item.series {
+                        Button { store.push(.catalogSeries(series.id)) } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(L10n.text("VER EDIÇÕES DA SÉRIE")).font(MVFont.bold(12))
+                                    Text(series.title).font(MVFont.body(13, weight: 500))
+                                }
+                                Spacer(); Image(systemName: "chevron.right")
+                            }.foregroundStyle(MV.C.ink).padding(12).comicCard()
+                        }.buttonStyle(.plain).padding(.horizontal, MV.pad)
+                    }
                     friendsSection(item: item, uni: uni).padding(.horizontal, MV.pad)
                     Text(item.desc).font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
                         .padding(.horizontal, MV.pad)

@@ -1,3 +1,7 @@
+import {
+  catalogSeriesJoin,
+  catalogSeriesField,
+} from '../catalog/catalog-series.js';
 import { reportQuotaSQL } from '../community/community-policy.js';
 import {
   BadRequestException,
@@ -117,9 +121,9 @@ export class SocialService {
       const items = await client.query(
         `SELECT i.id,i.universe_id AS uni,i.type,coalesce(t.title,p.title) AS title,
     coalesce(t.year,p.year) AS year,s.average AS avg,s.log_count AS "logCount",s.review_count AS "reviewCount",
-    s.rating_histogram AS "ratingHistogram",coalesce(t.canon,p.canon) AS canon,${catalogDescription('$2')} AS "desc"
+    s.rating_histogram AS "ratingHistogram",coalesce(t.canon,p.canon) AS canon,${catalogDescription('$2')} AS "desc",${catalogSeriesField}
     FROM catalog_items i JOIN catalog_item_translations p ON p.item_id=i.id AND p.locale='pt-BR'
-    LEFT JOIN catalog_item_translations t ON t.item_id=i.id AND t.locale=$2 ${descriptionSourceJoin}
+    LEFT JOIN catalog_item_translations t ON t.item_id=i.id AND t.locale=$2 ${descriptionSourceJoin} ${catalogSeriesJoin('$2')}
     JOIN catalog_item_statistics s ON s.item_id=i.id WHERE i.id=ANY($1::text[])`,
         [itemIDs, locale],
       );

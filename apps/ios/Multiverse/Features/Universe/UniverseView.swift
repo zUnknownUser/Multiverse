@@ -95,6 +95,8 @@ private struct GeneralTabContent: View {
             }
             .padding(.horizontal, MV.pad)
 
+            CatalogSeriesSection(universeID: universeID).padding(.horizontal, MV.pad)
+
             VStack(alignment: .leading, spacing: 12) {
                 SectionHeader(title: L10n.text("Mais bem avaliados")).padding(.horizontal, MV.pad)
                 ScrollView(.horizontal) {

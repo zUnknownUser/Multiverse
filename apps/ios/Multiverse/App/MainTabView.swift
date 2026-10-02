@@ -107,6 +107,7 @@ private struct RouteDestination: View {
     @ViewBuilder private var destination: some View {
         switch route {
         case .item(let id): ItemView(itemID: id)
+        case .catalogSeries(let id): CatalogSeriesView(seriesID: id)
         case .universe(let id): UniverseView(universeID: id)
         case .user(let id): ProfileView(userID: id)
         case .review(let id): ThreadView(reviewID: id)

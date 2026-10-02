@@ -45,6 +45,15 @@ struct Item: Codable, Identifiable, Hashable, Sendable {
     var logCount: Int? = nil
     var reviewCount: Int? = nil
     var ratingHistogram: [Int]? = nil
+    var series: ItemSeries? = nil
+}
+
+struct ItemSeries: Codable, Hashable, Sendable {
+    let id: String, title: String
+    let year: Int
+    let number: String
+    let position: Int
+    var isValid: Bool { !id.isEmpty && !title.isEmpty && !number.isEmpty && position > 0 && (1900...2100).contains(year) }
 }
 
 struct User: Codable, Identifiable, Hashable, Sendable {

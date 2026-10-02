@@ -10,7 +10,7 @@ editorial do Multiverse não são substituídos por dados de fornecedores.
 | Fonte    | Escopo implementado                                                                                 | Estado                                                                                                |
 | -------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | Wikidata | Identidade, títulos PT/EN, descrições curtas, ano e referências de criadores/editoras               | Integração publicada, cinco mapeamentos revisados                                                     |
-| Metron   | Edições de HQ: série, número, datas, páginas, créditos e personagens                                | Credencial validada; publicação revisada de quatro edições #1, com PT-BR editorial e EN da fonte      |
+| Metron   | Edições de HQ: série, número, datas, páginas, créditos e personagens                                | 30 edições revisadas de quatro séries completas, com PT-BR editorial e EN da fonte                    |
 | TMDB     | Filmes/séries: títulos e sinopses PT/EN, estreia, duração de filme, créditos e referência de pôster | Credencial configurada e respostas reais validadas para três obras; publicação operacional disponível |
 
 Não há scraping, descoberta irrestrita, mensagens diárias, importação de avaliações
@@ -39,7 +39,7 @@ IDs estáveis e os dados pessoais intactos.
 - `stage-candidates.ts`: grava apenas em `catalog_import_candidates`, separado do
   catálogo público. Lote inválido é revertido, identidade conflitante é recusada,
   consulta antiga não sobrescreve uma consulta mais recente.
-- `metron-registry.ts` / `publish-metron.ts`: lote revisado de quatro edições #1,
+- `metron-registry.ts` / `publish-metron.ts`: lote revisado de 30 edições,
   identificado por ID da edição e da série, nome, ano e número. Cria obras próprias,
   sem substituir sagas. Títulos/sinopses PT-BR adaptados editorialmente; EN vem da
   fonte. Preserva textos editoriais e arquivamento em novas sincronizações.
@@ -73,12 +73,14 @@ node scripts/preview-marvel-sources.mjs --provider=tmdb --stage
 node scripts/preview-marvel-sources.mjs --provider=tmdb --publish
 # Substitua ID por um ID numérico real da edição no Metron:
 node scripts/preview-marvel-sources.mjs --provider=metron --issues=ID --stage
-# Publica o lote Metron revisado (IDs 3726,21884,27065,42511):
+# Publica as 30 edições revisadas das quatro séries:
 node scripts/preview-marvel-sources.mjs --provider=metron --publish
 ```
 
-Metron aceita até dez IDs distintos por lote, separados por vírgula, e aguarda
-3,1 segundos entre requests. Não repita comandos em paralelo nem tente contornar 429. O lote para no primeiro erro, sem gravar resultado parcial. HTTP 401/403 indica
+Prévia/revisão Metron aceita até dez IDs distintos por lote, separados por vírgula.
+A publicação busca as 30 edições do registro em grupos de até dez, com 3,1 segundos
+entre requests, inclusive na troca de grupo. Todos os dados são obtidos antes da
+transação; a publicação é atômica. O comando leva cerca de dois minutos. Não repita comandos em paralelo nem tente contornar 429. O lote para no primeiro erro, sem gravar resultado parcial. HTTP 401/403 indica
 credencial/permissão; 429 indica cota; `UNAVAILABLE` indica rede/timeout; divergência
 de obra é um erro de mapeamento. Não é erro da conta do usuário do app.
 
@@ -89,7 +91,7 @@ SELECT provider, external_id, suggested_item_id, kind, metadata, attribution, fe
 FROM catalog_import_candidates ORDER BY provider, external_id;
 ```
 
-Não existe cron ou publicação durante o login. `--publish` grava o lote revisado completo do provedor em uma transação. IDs Metron arbitrários continuam restritos à prévia/revisão; publicação exige exatamente o lote registrado. A migração `007` cria a revisão privada; `008` permite TMDB e `014` permite Metron em `catalog_sources`. Para reverter uma publicação, remover somente sua linha de `catalog_sources` faz a sinopse voltar ao texto editorial preservado.
+Não existe cron ou publicação durante o login. `--publish` grava o lote revisado completo do provedor em uma transação. IDs Metron arbitrários continuam restritos à prévia/revisão; publicação exige exatamente o lote registrado. A migração `007` cria a revisão privada; `008` permite TMDB e `014` permite Metron em `catalog_sources`. `015` cria séries, traduções e vínculos de edições com posição numérica única. Para reverter uma publicação, remover somente sua linha de `catalog_sources` faz a sinopse voltar ao texto editorial preservado.
 
 ## Fontes, manutenção e autorização de uso
 
@@ -162,14 +164,14 @@ usuário ganha acesso aos resultados antes escondidos e busca tolerante a acento
 Ultimato, Através do Aranhaverso e Loki passam a usar sinopses TMDB em PT-BR/EN após a publicação operacional e recarga do catálogo. As credenciais ficam no backend. Notas e progresso continuam sendo do Multiverse. Não há capas TMDB/Metron,
 cronologia externa, catálogo completo da Marvel ou feed social externo publicado.
 
-## Metron: lote inicial e idiomas
+## Metron: séries e idiomas
 
-| ID Metron | Título PT-BR        | Título EN                | Ano / série Metron |
-| --------- | ------------------- | ------------------------ | ------------------ |
-| 3726      | Guerra Civil #1     | Civil War #1             | 2006 / 402         |
-| 21884     | Dinastia M #1       | House of M #1            | 2005 / 1761        |
-| 27065     | Guerras Secretas #1 | Secret Wars #1           | 2015 / 2019        |
-| 42511     | Desafio Infinito #1 | The Infinity Gauntlet #1 | 1991 / 3047        |
+| Série PT-BR / EN                         | Edições | Série Metron | IDs das edições |
+| ---------------------------------------- | ------- | ------------ | --------------- |
+| Guerra Civil / Civil War                 | #1–7    | 402 (2006)   | 3726–3732       |
+| Dinastia M / House of M                  | #1–8    | 1761 (2005)  | 21884–21891     |
+| Guerras Secretas / Secret Wars           | #1–9    | 2019 (2015)  | 27065–27073     |
+| Desafio Infinito / The Infinity Gauntlet | #1–6    | 3047 (1991)  | 42511–42516     |
 
 IDs Multiverse: `m-metron-issue-<ID>`. São as edições originais em inglês, com ficha
 localizada; não correspondem a uma edição impressa brasileira. Sinopses PT-BR são
@@ -183,8 +185,24 @@ diário e referências do feed. Notas/contagens vêm somente da atividade Multiv
 Metron fornece metadados, não páginas para ler a HQ, assinatura ou leitor digital.
 O lote não representa o catálogo completo da Marvel e não adiciona pôsteres/capas.
 
-Validação deste lote: 73 testes unitários + 87 HTTP/PostgreSQL, 167 testes iOS,
-926 entradas PT/EN; respostas reais das quatro edições e publicação CLI no banco
-local isolado. Token somente em `.env` ignorado e variáveis privadas do Railway.
+Validação desta expansão: 75 testes unitários + 88 HTTP/PostgreSQL, 170 testes iOS,
+938 entradas PT/EN. Respostas autenticadas das 30 edições conferidas. Testes HTTP
+cobrem idiomas, séries, diário, favoritos, desejos/listas e reimportação sem perda
+ou duplicação de dados pessoais. Testes iOS cobrem ordem numérica, releituras e
+recuperação após falha. Não equivalem a homologação manual em aparelho. Token somente em `.env` ignorado e variáveis privadas do Railway.
 Para rotacionar, substituir `METRON_API_TOKEN` nesses dois locais; não alterar app,
 IDs ou dados publicados. Não há token no app nem no histórico Git.
+
+### Navegação por série
+
+Cada obra vinculada recebe `series: {id,title,year,number,position}` no catálogo,
+no diário e nas referências do feed. Obras sem série retornam `null`. Os títulos
+são localizados por `Accept-Language`; posição numérica é independente de idioma.
+As tabelas editoriais não são sobrescritas por uma sincronização posterior.
+Os quatro IDs #1 e as sagas existentes são preservados durante a expansão.
+
+O iOS organiza as edições em Busca → Séries de HQs, Universo → Séries de HQs e
+no botão “Ver edições da série” da obra. A ordem segue `position`, nunca comparação
+alfabética do título. Progresso conta obras distintas registradas no diário;
+releituras não somam outra edição. Favoritar ou salvar um desejo não marca como lido.
+Listagem/progresso usam as obras publicadas carregadas, sem inventar edições ausentes.

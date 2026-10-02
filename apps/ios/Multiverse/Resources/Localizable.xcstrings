@@ -16046,6 +16046,198 @@
           }
         }
       }
+    },
+    "·": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "·"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "·"
+          }
+        }
+      }
+    },
+    "%@/100 · %@/1000": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@/100 · %2$@/1000"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@/100 · %2$@/1000"
+          }
+        }
+      }
+    },
+    "%@/140 · %@/5000": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@/140 · %2$@/5000"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@/140 · %2$@/5000"
+          }
+        }
+      }
+    },
+    "SÉRIES DE HQS": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SÉRIES DE HQS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "COMIC BOOK SERIES"
+          }
+        }
+      }
+    },
+    "SÉRIE DE HQS": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SÉRIE DE HQS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "COMIC BOOK SERIES"
+          }
+        }
+      }
+    },
+    "%1$@ · %2$@ edições": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ edições"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ issues"
+          }
+        }
+      }
+    },
+    "Edições em ordem de publicação. Registre a leitura de cada uma no diário para acompanhar seu progresso.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edições em ordem de publicação. Registre a leitura de cada uma no diário para acompanhar seu progresso."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Issues in publication order. Log each issue in your diary to track your progress."
+          }
+        }
+      }
+    },
+    "%1$@ de %2$@ edições registradas": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ de %2$@ edições registradas"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ issues logged"
+          }
+        }
+      }
+    },
+    "Ainda não registrada": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ainda não registrada"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not logged yet"
+          }
+        }
+      }
+    },
+    "Registrada no diário": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrada no diário"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logged in diary"
+          }
+        }
+      }
+    },
+    "Esta série não está disponível no catálogo.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta série não está disponível no catálogo."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This series is not available in the catalog."
+          }
+        }
+      }
+    },
+    "VER EDIÇÕES DA SÉRIE": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VER EDIÇÕES DA SÉRIE"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VIEW SERIES ISSUES"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -5,6 +5,7 @@ import { fetchMetronMarvelIssues } from '../dist/catalog/providers/metron.js';
 import { stageCandidates } from '../dist/catalog/providers/stage-candidates.js';
 import { publishTMDB } from '../dist/catalog/providers/publish-tmdb.js';
 import { publishMetron } from '../dist/catalog/providers/publish-metron.js';
+import { fetchMetronPublication } from '../dist/catalog/providers/fetch-metron-publication.js';
 import { metronMarvelRegistry } from '../dist/catalog/providers/metron-registry.js';
 
 // All network reads finish before opening a transaction. Never called on API boot/login.
@@ -45,7 +46,9 @@ async function main() {
   const batch =
     provider === 'tmdb'
       ? await fetchTMDBMarvel(process.env.TMDB_READ_ACCESS_TOKEN)
-      : await fetchMetronMarvelIssues(issueIDs, process.env.METRON_API_TOKEN);
+      : publish
+        ? await fetchMetronPublication(process.env.METRON_API_TOKEN)
+        : await fetchMetronMarvelIssues(issueIDs, process.env.METRON_API_TOKEN);
   if (args.includes('--stage') || publish) {
     const client = new pg.Client({
       connectionString: process.env.DATABASE_URL,
@@ -55,7 +58,8 @@ async function main() {
     await client.connect();
     try {
       await client.query('BEGIN');
-      await stageCandidates(client, batch);
+      for (let offset = 0; offset < batch.length; offset += 10)
+        await stageCandidates(client, batch.slice(offset, offset + 10));
       if (publish)
         await (provider === 'tmdb' ? publishTMDB : publishMetron)(
           client,

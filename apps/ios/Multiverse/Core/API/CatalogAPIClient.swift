@@ -25,7 +25,7 @@ struct CatalogSnapshot: Codable, Sendable {
               ids.count == universes.count, Set(items.map(\.id)).count == items.count,
               upcomingIDs.count == comingSoon.count, ids.isDisjoint(with: upcomingIDs),
               universes.allSatisfy({ !$0.id.isEmpty && !$0.name.isEmpty && $0.total >= 0 && $0.members >= 0 }),
-              items.allSatisfy({ !$0.id.isEmpty && !$0.title.isEmpty && ids.contains($0.uni) }) else {
+              items.allSatisfy({ !$0.id.isEmpty && !$0.title.isEmpty && ids.contains($0.uni) && ($0.series?.isValid ?? true) }) else {
             throw CatalogError.unavailable
         }
     }

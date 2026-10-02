@@ -1,3 +1,5 @@
+import { fetchMetronPublication } from './fetch-metron-publication.js';
+import { metronMarvelRegistry } from './metron-registry.js';
 import { fetchProviderJSON } from './provider-http.js';
 import { parseTMDB, fetchTMDBMarvel, tmdbMarvelRegistry } from './tmdb.js';
 import { parseMetronIssue, fetchMetronMarvelIssues } from './metron.js';
@@ -264,5 +266,46 @@ describe('Provider transport and quotas', () => {
       fetchMetronMarvelIssues(ids, 'test-token', fetcher),
     ).rejects.toThrow('INVALID_ISSUE_IDS');
     expect(fetcher).not.toHaveBeenCalled();
+  });
+});
+
+describe('Reviewed Metron publication fetch', () => {
+  it('fetches all 30 reviewed editions in order and paces across chunk boundaries', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async (url) => {
+      const id = Number(String(url).match(/issue\/(\d+)\//)?.[1]);
+      const m = metronMarvelRegistry.find((m) => m.id === id)!;
+      return Response.json({
+        ...issue(id),
+        number: m.number,
+        series: {
+          id: m.seriesID,
+          name: m.series,
+          year_began: m.year,
+          language: 'en',
+        },
+      });
+    });
+    const wait = vi.fn().mockResolvedValue(undefined);
+    const batch = await fetchMetronPublication('test-token', fetcher, wait);
+    expect(batch.map((c) => c.externalId)).toEqual(
+      metronMarvelRegistry.map((m) => `issue:${m.id}`),
+    );
+    expect(batch).toHaveLength(30);
+    expect(fetcher).toHaveBeenCalledTimes(30);
+    expect(wait).toHaveBeenCalledTimes(29);
+    expect(wait.mock.calls.every(([ms]) => ms === 3100)).toBe(true);
+    expect(
+      new Set(metronMarvelRegistry.map((m) => `${m.seriesID}:${m.number}`))
+        .size,
+    ).toBe(30);
+  });
+  it('stops the full publication on quota/auth errors without returning a partial batch', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response('', { status: 429 }));
+    await expect(
+      fetchMetronPublication('test-token', fetcher, vi.fn()),
+    ).rejects.toThrow('METRON_HTTP_429');
+    expect(fetcher).toHaveBeenCalledOnce();
   });
 });

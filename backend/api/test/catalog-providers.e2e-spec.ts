@@ -422,7 +422,8 @@ describe.skipIf(!databaseURL)(
           .expect(200)
       ).body;
       await db.transaction(async (client) => {
-        await stageCandidates(client, candidates);
+        for (let offset = 0; offset < candidates.length; offset += 10)
+          await stageCandidates(client, candidates.slice(offset, offset + 10));
         await publishMetron(client, candidates);
       });
       await db.transaction((client) => publishMetron(client, candidates));
@@ -487,6 +488,129 @@ describe.skipIf(!databaseURL)(
       await request(app.getHttpServer())
         .get('/api/v1/catalog/marvel/m-metron-issue-999999')
         .expect(404);
+    });
+    it('keeps complete series membership ordered and supports localized diary, reviews and private library after reopening', async () => {
+      const expected = [
+        { id: 402, count: 7 },
+        { id: 1761, count: 8 },
+        { id: 2019, count: 9 },
+        { id: 3047, count: 6 },
+      ];
+      for (const locale of ['pt-BR', 'en']) {
+        const catalog = (
+          await request(app.getHttpServer())
+            .get('/api/v1/catalog')
+            .set('Accept-Language', locale)
+            .expect(200)
+        ).body;
+        for (const group of expected) {
+          const items = catalog.items.filter(
+            (i: { series?: { id: string } }) =>
+              i.series?.id === `metron-${group.id}`,
+          );
+          expect(items).toHaveLength(group.count);
+          expect(
+            items
+              .map((i: { series: { position: number } }) => i.series.position)
+              .sort((a: number, b: number) => a - b),
+          ).toEqual(Array.from({ length: group.count }, (_, i) => i + 1));
+          const m = metronMarvelRegistry.find((m) => m.seriesID === group.id)!;
+          expect(
+            items.every(
+              (i: { series: { title: string } }) =>
+                i.series.title === (locale === 'pt-BR' ? m.seriesPT : m.series),
+            ),
+          ).toBe(true);
+        }
+      }
+      verifier.verify.mockImplementation(async (uid: string) => ({
+        uid,
+        email_verified: true,
+        firebase: { sign_in_provider: 'google.com' },
+      }));
+      await db.query(
+        "INSERT INTO profiles(firebase_uid,username,display_name,avatar_color) VALUES('metron-user','metronreader','Reader','#123456')",
+      );
+      await db.query(
+        "INSERT INTO onboarding(firebase_uid,completed,step,universe_ids) VALUES('metron-user',true,3,'{marvel}')",
+      );
+      const itemID = 'm-metron-issue-42516',
+        diaryID = randomUUID();
+      const input = {
+        itemId: itemID,
+        loggedAt: new Date().toISOString(),
+        rating: 4,
+        liked: false,
+        rewatch: false,
+        spoiler: false,
+        text: 'Minha leitura',
+      };
+      await request(app.getHttpServer())
+        .put('/api/v1/me/diary/' + diaryID)
+        .auth('metron-user', { type: 'bearer' })
+        .send(input)
+        .expect(200);
+      await request(app.getHttpServer())
+        .put('/api/v1/me/diary/' + diaryID)
+        .auth('metron-user', { type: 'bearer' })
+        .send(input)
+        .expect(200);
+      for (const locale of ['pt-BR', 'en']) {
+        const history = (
+          await request(app.getHttpServer())
+            .get('/api/v1/me/activity')
+            .auth('metron-user', { type: 'bearer' })
+            .set('Accept-Language', locale)
+            .expect(200)
+        ).body;
+        expect(history.entries).toHaveLength(1);
+        expect(history.reviews[0].text).toBe('Minha leitura');
+        expect(history.items[0].series).toMatchObject({
+          id: 'metron-3047',
+          number: '6',
+          position: 6,
+          title:
+            locale === 'pt-BR' ? 'Desafio Infinito' : 'The Infinity Gauntlet',
+        });
+      }
+      const listID = randomUUID();
+      const ops = [
+        { action: 'favorite', itemID, enabled: true },
+        { action: 'wanted', itemID, enabled: true },
+        { action: 'create_list', listID, title: 'Leituras', description: '' },
+        { action: 'add_item', listID, itemID },
+      ];
+      for (const [version, op] of ops.entries())
+        await request(app.getHttpServer())
+          .put('/api/v1/me/library')
+          .auth('metron-user', { type: 'bearer' })
+          .send({ mutationID: randomUUID(), version, ...op })
+          .expect(200);
+      // Reimport must not alter UID-owned data or duplicate published issues.
+      await db.transaction((client) => publishMetron(client, metronBatch()));
+      const library = (
+        await request(app.getHttpServer())
+          .get('/api/v1/me/library')
+          .auth('metron-user', { type: 'bearer' })
+          .expect(200)
+      ).body;
+      expect(library).toMatchObject({
+        version: 4,
+        favoriteIDs: [itemID],
+        wantedIDs: [itemID],
+      });
+      expect(library.lists[0].itemIDs).toEqual([itemID]);
+      expect(
+        (await db.query('SELECT count(*)::int AS n FROM catalog_series_items'))
+          .rows[0].n,
+      ).toBe(30);
+      expect(
+        (
+          await db.query(
+            "SELECT count(*)::int AS n FROM diary_entries WHERE firebase_uid='metron-user'",
+          )
+        ).rows[0].n,
+      ).toBe(1);
     });
     it('keeps editorial translations and archive decisions, rejects conflicting batches atomically and never downgrades Metron data', async () => {
       const candidates = metronBatch();
