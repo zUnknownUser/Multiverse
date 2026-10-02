@@ -1,7 +1,7 @@
 import Foundation
 
 @MainActor
-final class AccountAPIClient: AccountAPI, ActivityAPI {
+final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI {
     private let baseURL: URL?
     private let tokens: any APITokenProvider
     private let transport: URLSession
@@ -34,6 +34,17 @@ final class AccountAPIClient: AccountAPI, ActivityAPI {
 
     func fetchAccount() async throws -> AccountEnvelope { try await request("me") }
     func fetchActivity() async throws -> ActivitySnapshot { try await request("me/activity") }
+    func searchPeople(query: String, after: String?) async throws -> PeoplePage {
+        var parameters = [URLQueryItem(name: "q", value: query), URLQueryItem(name: "limit", value: "20")]
+        if let after { parameters.append(URLQueryItem(name: "after", value: after)) }
+        return try await request("people", query: parameters)
+    }
+    func suggestedPeople() async throws -> PeoplePage { try await request("people/suggestions") }
+    func fetchPerson(id: String) async throws -> PersonEnvelope { try await request("people/" + id) }
+    func setFollowing(id: String, following: Bool) async throws -> PersonEnvelope {
+        struct Input: Encodable { let following: Bool }
+        return try await request("me/follows/" + id, method: "PUT", body: JSONEncoder().encode(Input(following: following)))
+    }
     func saveLog(id: UUID, input: SaveLogInput) async throws -> ActivitySnapshot {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
@@ -97,6 +108,10 @@ final class AccountAPIClient: AccountAPI, ActivityAPI {
             }
             let code = (try? JSONDecoder().decode(APIError.self, from: data))?.code
             switch code {
+            case "PERSON_UNAVAILABLE": throw PeopleError.unavailable
+            case "INVALID_PEOPLE_QUERY": throw PeopleError.invalidSearch
+            case "INVALID_FOLLOW", "CANNOT_FOLLOW_SELF", "INVALID_PERSON": throw PeopleError.followFailed
+            case "ONBOARDING_REQUIRED": throw PeopleError.onboardingRequired
             case "USERNAME_TAKEN": throw AuthError.usernameTaken
             case "CATALOG_CHANGED": throw CatalogError.changed
             case "INVALID_LOG": throw ActivityError.invalidLog

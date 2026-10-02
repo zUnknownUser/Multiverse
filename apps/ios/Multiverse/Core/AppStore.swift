@@ -83,6 +83,8 @@ final class AppStore {
     private let repository: MultiverseRepository
     private let catalogAPI: (any CatalogAPI)?
     private let activityAPI: (any ActivityAPI)?
+    let people: PeopleStore?
+    var usesRemotePeople: Bool { people != nil }
     var activityLoadError: String?
     private(set) var activityRefreshError: String?
     private(set) var isRefreshingActivity = false
@@ -229,7 +231,8 @@ final class AppStore {
 
     // MARK: - Init
 
-    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil, catalogAPI: (any CatalogAPI)? = nil, activityAPI: (any ActivityAPI)? = nil) {
+    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil, catalogAPI: (any CatalogAPI)? = nil, activityAPI: (any ActivityAPI)? = nil, peopleAPI: (any PeopleAPI)? = nil) {
+        self.people = peopleAPI.map { PeopleStore(api: $0, ownerID: session?.userID ?? "duda") }
         self.activityAPI = activityAPI
         self.catalogAPI = catalogAPI
         self.accountAPI = accountAPI
@@ -424,7 +427,7 @@ final class AppStore {
     }
 
     func item(_ id: String) -> Item? { itemsByID[id] }
-    func user(_ id: String) -> User? { usersByID[id] }
+    func user(_ id: String) -> User? { people?.profiles[id]?.user ?? usersByID[id] }
     func universe(_ id: String) -> Universe? { universesByID[id] }
     func universe(of item: Item) -> Universe { universesByID[item.uni]! }
 
@@ -455,15 +458,31 @@ final class AppStore {
 
     // MARK: - Seguir
 
-    func isFollowing(_ id: String) -> Bool { follows.contains(id) }
+    func isFollowing(_ id: String) -> Bool {
+        if isOnboarded, let people, people.state != nil { return people.followingIDs.contains(id) }
+        return follows.contains(id)
+    }
 
-    var friendsList: [User] { users.filter { $0.id != meID && follows.contains($0.id) } }
-    var friendsCount: Int { follows.count }
+    var friendsList: [User] {
+        if isOnboarded, let people { return people.followingIDs.sorted().compactMap { people.profiles[$0]?.user } }
+        return users.filter { $0.id != meID && follows.contains($0.id) }
+    }
+    var friendsCount: Int { isOnboarded ? (people?.state?.followingIDs.count ?? follows.count) : follows.count }
 
     /// Retorna `true` quando a ação acabou de seguir (pra a View decidir se dispara o ZAP!).
     @discardableResult
     func toggleFollow(_ id: String, silent: Bool = false) -> Bool {
         guard !onboardingTransitioning else { return false }
+        if isOnboarded, let people {
+            let following = !isFollowing(id)
+            Task {
+                if await people.setFollowing(id, following: following) {
+                    follows = people.followingIDs
+                    if !silent { showToast(L10n.text(following ? "Agora você segue este lorista." : "Você deixou de seguir este lorista.")) }
+                }
+            }
+            return false
+        }
         let turningOn = !follows.contains(id)
         if turningOn {
             follows.insert(id)
@@ -841,8 +860,7 @@ final class AppStore {
     }
 
     var homeSuggestedPeople: [User] {
-        // Post-onboarding discovery/following needs its own persistent API.
-        // Keep sample people confined to the preview until that module is ready.
+        if let people { return people.suggestions }
         guard !usesAccountAPI else { return [] }
         return StaticContent.suggestionUserIDs.compactMap { user($0) }.filter { !isFollowing($0.id) }
     }
@@ -900,7 +918,13 @@ final class AppStore {
             })
         }
 
-        if !usesAccountAPI && (filter == .all || filter == .people) {
+        if let people, (filter == .people || (filter == .all && !q.isEmpty)), people.searchQuery == q {
+            let found = people.searchIDs.compactMap { people.profiles[$0]?.user }
+            totalCount += found.count
+            rows.append(contentsOf: found.prefix(max(0, visibleLimit - rows.count)).map { u in
+                SearchResultRow(id: "person:" + u.id, title: u.name, meta: "\(u.handle) · \(u.bio)", typeLabel: isFollowing(u.id) ? L10n.text("Seguindo") : L10n.text("Pessoa"), pillBG: MV.C.card, pillFG: MV.C.ink, posterBG: Color(hex: u.avatarColor), posterFG: Logic.inkOn(hex: u.avatarColor), initials: Logic.initials(u.name), isCircular: true, route: .user(u.id))
+            })
+        } else if !usesAccountAPI && (filter == .all || filter == .people) {
             let peopleFiltered = users.filter { u in
                 guard u.id != meID else { return false }
                 let isMatch = matches(u.name + " " + u.handle)
@@ -937,7 +961,13 @@ final class AppStore {
 
     func profileData(for userID: String) -> ProfileData {
         let isMe = userID == meID
-        let u = usersByID[userID]!
+        let u = user(userID)!
+        if !isMe, let person = people?.profiles[userID] {
+            return ProfileData(user: u, isMe: false,
+                stats: [(Logic.fmt(person.logCount), L10n.text("Registros")), (Logic.fmt(person.followerCount), L10n.text("Seguidores")), (Logic.fmt(person.followingCount), L10n.text("Seguindo"))],
+                progress: [], favorites: [], recentReviews: [], compatPercent: nil, compatLine: nil,
+                compatByUniverse: nil, agreeLine: nil, disagreeLine: nil, badges: [])
+        }
         let sd = Logic.seed(userID)
         let myRevs = reviews.filter { $0.user == userID }
 
@@ -949,7 +979,7 @@ final class AppStore {
 
         let stats: [(String, String)]
         if isMe {
-            stats = [("\(diary.count + (activityAPI == nil ? 318 : 0))", L10n.text("Registros")), (activityAPI == nil ? "312" : Logic.fmt(activityFollowerCount), L10n.text("Seguidores")), ("\(activityAPI == nil ? friendsList.count : friendsCount)", L10n.text("Seguindo"))]
+            stats = [("\(diary.count + (activityAPI == nil ? 318 : 0))", L10n.text("Registros")), (people?.state.map { Logic.fmt($0.followerCount) } ?? (activityAPI == nil ? "312" : Logic.fmt(activityFollowerCount)), L10n.text("Seguidores")), ("\(usesRemotePeople || activityAPI != nil ? friendsCount : friendsList.count)", L10n.text("Seguindo"))]
         } else {
             let followers = (u.followers ?? (200 + Int(sd % 700))) + (follows.contains(userID) ? 1 : 0)
             stats = [("\(120 + Int(sd % 600))", L10n.text("Registros")), (Logic.fmt(followers), L10n.text("Seguidores")), ("\(40 + Int(sd % 200))", L10n.text("Seguindo"))]

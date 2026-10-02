@@ -70,9 +70,10 @@ real ainda não está disponível, então os cards de universo mostram quantidad
 de itens em vez de sugerir que zero pessoas estão online.
 
 Sugestões de pessoas de exemplo ficam restritas ao modo de demonstração.
-A Home oculta essa seção na sessão real; a busca por loristas informa que está
-em preparação. Descoberta de pessoas e seguir/deixar de seguir após o onboarding
-ainda precisam de API própria antes de liberar essas ações. Outros módulos do
+A sessão real usa a [API de pessoas](people.md): busca por nome/@usuário, perfis
+e seguir/deixar de seguir persistidos. A Home só apresenta a seção quando há
+loristas elegíveis ainda não seguidos; uma falha de consulta tem retry, sem ser
+tratada como comunidade vazia. Outros módulos do
 protótipo permanecem fora desta etapa; estas regras não tornam o app inteiro
 pronto para lançamento. Todos os novos textos têm PT-BR e inglês.
 

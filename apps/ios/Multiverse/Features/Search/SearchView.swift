@@ -5,6 +5,8 @@ struct SearchView: View {
     @State private var query = ""
     @State private var filter: SearchFilter = .all
     @State private var visibleResults = 40
+    @State private var waitingForSearch = false
+    private var searchingPeople: Bool { store.usesRemotePeople && (filter == .people || (filter == .all && !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)) }
 
     var body: some View {
         ScreenScaffold {
@@ -38,12 +40,20 @@ struct SearchView: View {
                 }
 
                 let (rows, total) = store.searchResults(query: query, filter: filter, limit: visibleResults)
-                Text(query.isEmpty ? L10n.text(store.usesRemoteCatalog ? "Explore o catálogo" : "Mais registrados esta semana") : L10n.format("search.results", total))
+                Text(searchingPeople ? L10n.text("RESULTADOS") : (query.isEmpty ? L10n.text(store.usesRemoteCatalog ? "Explore o catálogo" : "Mais registrados esta semana") : L10n.format("search.results", total)))
                     .kicker(11).foregroundStyle(MV.C.muted)
 
-                if rows.isEmpty {
-                    Text(store.usesAccountAPI && filter == .people
+                if searchingPeople, let people = store.people {
+                    if let error = people.searchError {
+                        PeopleStatusNotice(message: error) { await people.search(more: !people.searchIDs.isEmpty && people.nextCursor != nil) }
+                    }
+                    if people.isSearching || waitingForSearch { ProgressView().frame(maxWidth: .infinity) }
+                }
+                if rows.isEmpty && !(searchingPeople && (waitingForSearch || store.people?.isSearching == true || store.people?.searchError != nil || store.people?.searchQuery != query.trimmingCharacters(in: .whitespacesAndNewlines))) {
+                    Text(store.usesAccountAPI && !store.usesRemotePeople && filter == .people
                          ? L10n.text("A busca por loristas estará disponível em breve. Enquanto isso, explore as obras do catálogo.")
+                         : searchingPeople && filter == .people
+                         ? L10n.text("Nenhum lorista encontrado. Tente outro nome ou volte mais tarde.")
                          : query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                          ? L10n.text("Ainda não há itens nesta categoria. Experimente outro filtro.")
                          : L10n.text("Nenhum resultado para esta busca. Tente outro nome ou filtro."))
@@ -62,11 +72,29 @@ struct SearchView: View {
                         }
                     }
                 }
+                if searchingPeople, let people = store.people, people.nextCursor != nil {
+                    PrimaryAuthButton(title: L10n.text("VER MAIS")) {
+                        Task {
+                            await people.search(more: true)
+                            visibleResults += 20
+                        }
+                    }
+                    .disabled(people.isSearching)
+                }
             }
             .padding(.horizontal, MV.pad)
             .padding(.bottom, 24)
             .onChange(of: query) { _, _ in visibleResults = 40 }
             .onChange(of: filter) { _, _ in visibleResults = 40 }
+        }
+        .task(id: filter.rawValue + "|" + query) {
+            guard let people = store.people else { return }
+            waitingForSearch = searchingPeople
+            people.prepareSearch(query)
+            guard searchingPeople else { return }
+            do { try await Task.sleep(for: .milliseconds(250)) } catch { return }
+            waitingForSearch = false
+            await people.search()
         }
     }
 

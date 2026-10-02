@@ -16,15 +16,19 @@ import { MarvelService } from './catalog/marvel.service.js';
 import { MarvelController } from './catalog/marvel.controller.js';
 import { ActivityController } from './activity/activity.controller.js';
 import { ActivityService } from './activity/activity.service.js';
+import { PeopleController } from './people/people.controller.js';
+import { PeopleService } from './people/people.service.js';
 
 @Module({
   controllers: [
+    PeopleController,
     AccountsController,
     CatalogController,
     ActivityController,
     MarvelController,
   ],
   providers: [
+    PeopleService,
     DatabaseService,
     CatalogService,
     MarvelService,

@@ -19,10 +19,22 @@ struct HomeView: View {
                     .padding(.horizontal, MV.pad)
                 theoriesAndPredictionsRow.padding(.horizontal, MV.pad)
                 feedSection.padding(.horizontal, MV.pad)
+                if let people = store.people {
+                    if let error = people.homeError {
+                        PeopleStatusNotice(message: error) { await people.loadHome() }.padding(.horizontal, MV.pad)
+                    }
+                    if people.isLoadingHome { ProgressView().frame(maxWidth: .infinity) }
+                    if let error = people.followError { AuthErrorBanner(message: error).padding(.horizontal, MV.pad) }
+                }
                 if !store.homeSuggestedPeople.isEmpty { suggestionsSection }
             }
             .padding(.top, 4)
             .padding(.bottom, 24)
+        }
+        .task { if store.people?.state == nil { await store.people?.loadHome() } }
+        .refreshable {
+            await store.refreshActivity()
+            await store.people?.loadHome()
         }
     }
 
@@ -210,7 +222,7 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(L10n.text("LORISTAS PRA SEGUIR")).font(MVFont.section(19)).foregroundStyle(MV.C.ink)
-                Text(L10n.text("Quanto mais gente você segue, melhor fica o seu feed."))
+                Text(L10n.text("Encontre pessoas que também exploram estes universos."))
                     .font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted)
             }
             .padding(.horizontal, MV.pad)
@@ -300,7 +312,7 @@ private struct SuggestionCard: View {
                     .background(Capsule().fill(uni.color))
                     .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: 1.5))
             }
-            Text(following ? L10n.text("Seguindo") : L10n.text("Seguir"))
+            Text(store.people?.savingPersonID == user.id ? L10n.text("SALVANDO…") : (following ? L10n.text("Seguindo") : L10n.text("Seguir")))
                 .font(MVFont.bold(12))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
@@ -308,9 +320,10 @@ private struct SuggestionCard: View {
                 .background(following ? MV.C.card : MV.C.ink)
                 .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                 .clipShape(Capsule())
-                .burstOnTap("ZAP!", color: MV.C.dc, when: !following) {
+                .burstOnTap("ZAP!", color: MV.C.dc, when: !following && !store.usesRemotePeople) {
                     store.toggleFollow(user.id)
                 }
+                .allowsHitTesting(store.people?.canFollow ?? true)
         }
         .padding(12)
         .frame(width: 138)

@@ -1,6 +1,198 @@
 {
   "sourceLanguage": "pt-BR",
   "strings": {
+    "Este perfil não está mais disponível. Atualize as sugestões para encontrar outros loristas.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este perfil não está mais disponível. Atualize as sugestões para encontrar outros loristas."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This profile is no longer available. Refresh suggestions to find other lorekeepers."
+          }
+        }
+      }
+    },
+    "Use até 80 caracteres para buscar um nome ou @usuário.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use até 80 caracteres para buscar um nome ou @usuário."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use up to 80 characters to search for a name or @username."
+          }
+        }
+      }
+    },
+    "Não foi possível atualizar quem você segue. Tente novamente.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível atualizar quem você segue. Tente novamente."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn’t update who you follow. Please try again."
+          }
+        }
+      }
+    },
+    "Conclua a apresentação do app para encontrar e seguir loristas.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conclua a apresentação do app para encontrar e seguir loristas."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish onboarding to find and follow lorekeepers."
+          }
+        }
+      }
+    },
+    "Agora você segue este lorista.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agora você segue este lorista."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’re now following this lorekeeper."
+          }
+        }
+      }
+    },
+    "Você deixou de seguir este lorista.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você deixou de seguir este lorista."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’ve unfollowed this lorekeeper."
+          }
+        }
+      }
+    },
+    "Encontre pessoas que também exploram estes universos.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encontre pessoas que também exploram estes universos."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find people who explore these universes too."
+          }
+        }
+      }
+    },
+    "Mensagens entre loristas estarão disponíveis em breve.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mensagens entre loristas estarão disponíveis em breve."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messaging between lorekeepers is coming soon."
+          }
+        }
+      }
+    },
+    "Desafios entre loristas estarão disponíveis em breve.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desafios entre loristas estarão disponíveis em breve."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Challenges between lorekeepers are coming soon."
+          }
+        }
+      }
+    },
+    "RESULTADOS": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RESULTADOS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RESULTS"
+          }
+        }
+      }
+    },
+    "Nenhum lorista encontrado. Tente outro nome ou volte mais tarde.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum lorista encontrado. Tente outro nome ou volte mais tarde."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No lorekeepers found. Try another name or come back later."
+          }
+        }
+      }
+    },
+    "VER MAIS": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VER MAIS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SEE MORE"
+          }
+        }
+      }
+    },
     "A busca por loristas estará disponível em breve. Enquanto isso, explore as obras do catálogo.": {
       "extractionState": "manual",
       "localizations": {

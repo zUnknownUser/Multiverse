@@ -49,6 +49,44 @@ private final class TokenStub: APITokenProvider {
 @Suite(.serialized)
 @MainActor
 struct AccountHTTPTests {
+    @Test func peopleSearchEncodesHandleAndCursorWithoutLosingAuthentication() async throws {
+        AccountURLProtocol.fixture.reset([(200, "{\"users\":[],\"nextCursor\":null,\"state\":{\"version\":0,\"followingIDs\":[],\"followerCount\":0}}")])
+        let (api, transport) = client(TokenStub())
+        defer { transport.invalidateAndCancel() }
+        let page = try await api.searchPeople(query: "@Álice & Bob", after: "alice")
+        #expect(page.users.isEmpty)
+        let request = try #require(AccountURLProtocol.fixture.requests.first)
+        let components = try #require(URLComponents(url: request.url!, resolvingAgainstBaseURL: false))
+        #expect(components.path == "/api/v1/people")
+        #expect(components.queryItems?.first { $0.name == "q" }?.value == "@Álice & Bob")
+        #expect(components.queryItems?.first { $0.name == "after" }?.value == "alice")
+        #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer original-token")
+    }
+
+    @Test func followRefreshesTokenOnceAndTranslatesUnavailableProfile() async throws {
+        let person = PersonSummary(userID: "alice", username: "alice", displayName: "Alice", avatarColor: "#F4A814", bio: "", logCount: 0, followerCount: 1, followingCount: 0)
+        let payload = PersonEnvelope(person: person, state: SocialState(version: 1, followingIDs: ["alice"], followerCount: 0))
+        let json = String(decoding: try JSONEncoder().encode(payload), as: UTF8.self)
+        AccountURLProtocol.fixture.reset([(401, "{}"), (200, json)])
+        let token = TokenStub()
+        let (api, transport) = client(token)
+        defer { transport.invalidateAndCancel() }
+        let result = try await api.setFollowing(id: "alice", following: true)
+        #expect(result.state.followingIDs == ["alice"])
+        #expect(token.refreshes == [false, true])
+        #expect(AccountURLProtocol.fixture.requests.allSatisfy { $0.httpMethod == "PUT" && $0.url?.path == "/api/v1/me/follows/alice" })
+        AccountURLProtocol.fixture.reset([(404, "{\"code\":\"PERSON_UNAVAILABLE\"}")])
+        await #expect(throws: PeopleError.unavailable) { try await api.fetchPerson(id: "alice") }
+        #expect(AccountURLProtocol.fixture.requests.count == 1)
+    }
+
+    @Test func followCannotWriteForAnAccountThatHasSignedOut() async {
+        AccountURLProtocol.fixture.reset([])
+        let api = AccountAPIClient(baseURL: URL(string: "https://api.example.test/api/v1"), tokens: TokenStub(), expectedUserID: "previous-owner")
+        await #expect(throws: AuthError.sessionExpired) { try await api.setFollowing(id: "alice", following: true) }
+        #expect(AccountURLProtocol.fixture.requests.isEmpty)
+    }
+
     private func client(_ token: TokenStub) -> (AccountAPIClient, URLSession) {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [AccountURLProtocol.self]

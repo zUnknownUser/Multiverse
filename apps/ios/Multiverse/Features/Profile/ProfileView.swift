@@ -8,33 +8,52 @@ struct ProfileView: View {
     var body: some View {
         let isRoot = store.tab == .profile && userID == store.meID && store.profilePath.isEmpty
         ScreenScaffold(showBack: !isRoot, onBack: { dismiss() }) {
-            let data = store.profileData(for: userID)
-            VStack(alignment: .leading, spacing: 22) {
-                if data.isMe { ActivityRefreshNotice().padding(.horizontal, MV.pad) }
-                hero(data: data)
-                    .padding(.horizontal, MV.pad)
-
-                if data.isMe {
-                    WrappedPromoCard()
+            if let people = store.people, userID != store.meID, let error = people.profileErrors[userID] {
+                PeopleStatusNotice(message: error) { await people.loadProfile(userID) }.padding(MV.pad)
+            } else if store.user(userID) == nil || (store.usesRemotePeople && userID != store.meID && store.people?.profiles[userID] == nil) {
+                ProgressView().frame(maxWidth: .infinity).padding(MV.pad)
+            } else {
+                let data = store.profileData(for: userID)
+                VStack(alignment: .leading, spacing: 22) {
+                    if data.isMe { ActivityRefreshNotice().padding(.horizontal, MV.pad) }
+                    if let error = store.people?.homeError, data.isMe {
+                        PeopleStatusNotice(message: error) { await store.people?.loadHome() }.padding(.horizontal, MV.pad)
+                    }
+                    if let error = store.people?.followError { AuthErrorBanner(message: error).padding(.horizontal, MV.pad) }
+                    hero(data: data)
                         .padding(.horizontal, MV.pad)
-                } else if let compat = data.compatPercent, let line = data.compatLine, let byUni = data.compatByUniverse {
-                    AffinityCard(percent: compat, line: line, byUniverse: byUni, agree: data.agreeLine ?? "", disagree: data.disagreeLine ?? "")
-                        .padding(.horizontal, MV.pad)
-                }
 
-                canonSection(data: data).padding(.horizontal, MV.pad)
-                badgesSection(data: data).padding(.horizontal, MV.pad)
-                favoritesSection(data: data).padding(.horizontal, MV.pad)
-                reviewsSection(data: data).padding(.horizontal, MV.pad)
+                    if data.isMe {
+                        WrappedPromoCard()
+                            .padding(.horizontal, MV.pad)
+                    } else if let compat = data.compatPercent, let line = data.compatLine, let byUni = data.compatByUniverse {
+                        AffinityCard(percent: compat, line: line, byUniverse: byUni, agree: data.agreeLine ?? "", disagree: data.disagreeLine ?? "")
+                            .padding(.horizontal, MV.pad)
+                    }
 
-                if data.isMe {
-                    clubsSection().padding(.horizontal, MV.pad)
-                    listsSection().padding(.horizontal, MV.pad)
+                    if !data.progress.isEmpty { canonSection(data: data).padding(.horizontal, MV.pad) }
+                    if !data.badges.isEmpty { badgesSection(data: data).padding(.horizontal, MV.pad) }
+                    favoritesSection(data: data).padding(.horizontal, MV.pad)
+                    reviewsSection(data: data).padding(.horizontal, MV.pad)
+
+                    if data.isMe {
+                        clubsSection().padding(.horizontal, MV.pad)
+                        listsSection().padding(.horizontal, MV.pad)
+                    }
                 }
+                .padding(.bottom, 24)
             }
-            .padding(.bottom, 24)
         }
-        .refreshable { if userID == store.meID { await store.refreshActivity() } }
+        .task(id: userID) { await refreshPeople() }
+        .refreshable {
+            if userID == store.meID { await store.refreshActivity() }
+            await refreshPeople()
+        }
+    }
+
+    private func refreshPeople() async {
+        if userID == store.meID { await store.people?.loadHome() }
+        else { await store.people?.loadProfile(userID) }
     }
 
     @ViewBuilder
@@ -96,23 +115,27 @@ struct ProfileView: View {
             } else {
                 let following = store.isFollowing(userID)
                 HStack(spacing: 10) {
-                    Text(following ? L10n.text("SEGUINDO") : L10n.text("SEGUIR"))
+                    Text(store.people?.savingPersonID == userID ? L10n.text("SALVANDO…") : (following ? L10n.text("SEGUINDO") : L10n.text("SEGUIR")))
                         .font(MVFont.bold(13))
                         .frame(maxWidth: .infinity).padding(.vertical, 12)
                         .foregroundStyle(following ? MV.C.paper : MV.C.ink)
                         .background(following ? Color.clear : MV.C.paper)
                         .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.paper, lineWidth: MV.stroke))
                         .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
-                        .burstOnTap("ZAP!", color: MV.C.dc, when: !following) {
+                        .burstOnTap("ZAP!", color: MV.C.dc, when: !following && !store.usesRemotePeople) {
                             store.toggleFollow(userID)
                         }
+                        .allowsHitTesting(store.people?.canFollow ?? true)
                     Text(L10n.text("MENSAGEM"))
                         .font(MVFont.bold(13))
                         .frame(maxWidth: .infinity).padding(.vertical, 12)
                         .foregroundStyle(MV.C.paper)
                         .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.paper, lineWidth: MV.stroke))
                         .contentShape(Rectangle())
-                        .onTapGesture { store.push(.conversation(userID)) }
+                        .onTapGesture {
+                            if store.usesRemotePeople { store.showToast(L10n.text("Mensagens entre loristas estarão disponíveis em breve.")) }
+                            else { store.push(.conversation(userID)) }
+                        }
                     Text(L10n.text("DESAFIAR"))
                         .font(MVFont.bold(13))
                         .frame(maxWidth: .infinity).padding(.vertical, 12)
@@ -121,7 +144,10 @@ struct ProfileView: View {
                         .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.paper, lineWidth: MV.stroke))
                         .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
                         .contentShape(Rectangle())
-                        .onTapGesture { store.showingChallengeUserID = userID }
+                        .onTapGesture {
+                            if store.usesRemotePeople { store.showToast(L10n.text("Desafios entre loristas estarão disponíveis em breve.")) }
+                            else { store.showingChallengeUserID = userID }
+                        }
                 }
             }
         }

@@ -90,7 +90,9 @@ export class AccountsService {
       `SELECT o.universe_ids,o.seen_item_ids,o.step,o.completed,o.version,
         ARRAY(
           SELECT p.firebase_uid
-          FROM unnest(o.followed_user_ids) WITH ORDINALITY AS selected(uid,ordinal)
+          FROM unnest(CASE WHEN o.completed THEN ARRAY(
+            SELECT f.followed_uid FROM follows f WHERE f.follower_uid=o.firebase_uid ORDER BY f.followed_uid
+          ) ELSE o.followed_user_ids END) WITH ORDINALITY AS selected(uid,ordinal)
           JOIN profiles p ON p.firebase_uid=selected.uid
           JOIN onboarding eligible ON eligible.firebase_uid=p.firebase_uid
           WHERE p.firebase_uid<>o.firebase_uid AND p.deletion_requested_at IS NULL AND eligible.completed=true
@@ -185,6 +187,17 @@ export class AccountsService {
         throw new ConflictException({ code: 'STALE_ONBOARDING' });
       if (current.completed && !input.completed)
         throw new ConflictException({ code: 'ONBOARDING_COMPLETED' });
+      // Completed accounts manage relationships through /me/follows. A legacy
+      // onboarding write must never restore an unfollowed person or erase new follows.
+      if (current.completed) {
+        const followed = await client.query<{ followed_uid: string }>(
+          `SELECT f.followed_uid FROM follows f
+          JOIN profiles p ON p.firebase_uid=f.followed_uid JOIN onboarding o ON o.firebase_uid=p.firebase_uid
+          WHERE f.follower_uid=$1 AND p.deletion_requested_at IS NULL AND o.completed=true ORDER BY f.followed_uid`,
+          [uid],
+        );
+        input.followedUserIDs = followed.rows.map((row) => row.followed_uid);
+      }
       if ((input.step > 1 || input.completed) && !input.universeIDs.length)
         throw new ConflictException({ code: 'UNIVERSE_REQUIRED' });
       const selectedUniverses = await client.query(
@@ -223,7 +236,11 @@ export class AccountsService {
         )
       ).rows[0];
       const minimum = Math.min(3, Number(total.count));
-      if (input.completed && input.followedUserIDs.length < minimum)
+      if (
+        !current.completed &&
+        input.completed &&
+        input.followedUserIDs.length < minimum
+      )
         throw new ConflictException({
           code: 'FOLLOWS_REQUIRED',
           minimumFollows: minimum,

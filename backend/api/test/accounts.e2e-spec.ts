@@ -600,6 +600,14 @@ describe.skipIf(!databaseURL)('Account API with real PostgreSQL', () => {
       'INSERT INTO onboarding(firebase_uid,completed) SELECT unnest($1::text[]),true',
       [uids],
     );
+    // Completed accounts retain their canonical relationships when an older
+    // client saves onboarding again. Seed those relationships before the race.
+    for (const uid of uids.slice(0, 2)) {
+      await database.query(
+        'INSERT INTO follows(follower_uid,followed_uid) SELECT $1,unnest($2::text[])',
+        [uid, uids.filter((id) => id !== uid)],
+      );
+    }
     // A test-only trigger holds both requests after they lock their own profile.
     // This makes the mutual-follow lock cycle deterministic instead of relying on timing.
     const gate = await admin.connect();

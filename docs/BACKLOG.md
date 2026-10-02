@@ -1,5 +1,25 @@
 # Backlog — próximos passos sugeridos
 
+## Direção atual — comunidade (01/10/2026)
+
+Pessoas, busca, sugestões e seguir/deixar de seguir já usam a API real. O próximo
+recorte é o feed de reviews de quem o usuário segue, com regras explícitas de
+visibilidade e paginação. Os componentes e a identidade visual atuais devem ser
+preservados; as propostas históricas de reorganização abaixo não estão aprovadas.
+
+Direção solicitada para depois: a comunidade produzir conteúdo no estilo de
+fóruns, com posts ligados a universos/obras, conversas, humor e reações. Evoluir
+por etapas, sem misturar responsabilidades com catálogo ou integrações externas.
+Antes de abrir publicação e interação: denúncia, bloqueio, limites contra spam,
+regras de spoilers/conteúdo adulto e resposta clara ao autor. IA pode ajudar na
+triagem, com revisão e possibilidade de contestação; não representa garantia de
+moderação correta. Reposts, ranking e notificações dependem de um recorte futuro.
+Esses recursos ainda não foram implementados nesta entrega.
+
+As seções seguintes registram propostas antigas e precisam ser reavaliadas frente
+ao estado atual: autenticação, diário, tratamentos de erro e App Icon já tiveram
+implementações posteriores.
+
 Os caminhos de código abaixo são relativos a `apps/ios/`; as referências visuais ficam em `design/`.
 
 Itens de produto/arquitetura que surgiram durante o desenvolvimento, avaliados e

@@ -3,6 +3,12 @@ import Testing
 @testable import Multiverse
 
 struct LocalizationTests {
+    @Test func peopleStatesRespectThePreferredLanguage() {
+        #expect(L10n.text("Agora você segue este lorista.", preferredLanguages: ["en-US"]) == "You’re now following this lorekeeper.")
+        #expect(L10n.text("Não foi possível atualizar quem você segue. Tente novamente.", preferredLanguages: ["en"]) == "We couldn’t update who you follow. Please try again.")
+        #expect(L10n.text("Nenhum lorista encontrado. Tente outro nome ou volte mais tarde.", preferredLanguages: ["en"]) == "No lorekeepers found. Try another name or come back later.")
+        #expect(L10n.text("SALVANDO…", preferredLanguages: ["pt-BR"]) == "SALVANDO…")
+    }
     @Test func launchAvailabilityMessagesRemainInformationalInBothLanguages() {
         #expect(L10n.text("Começar a explorar", preferredLanguages: ["en-US"]) == "Start exploring")
         #expect(L10n.text("Sem notas ainda", preferredLanguages: ["en"]) == "No ratings yet")
