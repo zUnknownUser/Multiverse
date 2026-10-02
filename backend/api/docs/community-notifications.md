@@ -31,8 +31,9 @@ Todas as rotas usam `/api/v1` e Firebase ID token, com onboarding concluído.
 O DTO compartilhado de comentários mantém o campo de transporte `reviewID`, que,
 nas rotas `/posts`, contém o ID do post. Isso não cria vínculo com a tabela de reviews.
 Posts retornam título/texto original; spoilers são revelados explicitamente no cliente.
-Não há upload de mídia, editor de posts publicados, reposts, marcação de pessoas,
-respostas aninhadas ou busca textual de posts nesta etapa.
+A expansão da migration 016 acrescenta imagens, edição, menções, respostas, busca,
+clubes, salas, teorias e duelos. Consulte o [contrato atual](live-community.md).
+Reposts continuam ausentes.
 
 Limites: título 140 caracteres, corpo 5.000, 10 posts/hora; comentários 2.000 e
 30/hora somando posts/reviews; 120 alterações de reação/minuto por conta;
@@ -42,13 +43,13 @@ autor em exclusão, denúncias pessoais e moderação valem na leitura e nas mut
 A permissão de comentários segue `me/comment-permission`; `following` significa
 pessoas que o autor segue. O autor pode comentar no próprio conteúdo.
 
-CLI privada de moderação existente agora aceita `post` e `post_comment`, além de
+CLI privada de moderação aceita `post`, `post_comment` e `club`, além de
 `review` e `comment`. A fila mistura todos os tipos; decisões continuam auditadas.
 Não existe triagem automática por IA nem painel administrativo nesta entrega.
 
 ## Notificações reais dentro do app
 
-Eventos novos de seguir, comentar e reagir a reviews/posts/comentários geram
+Eventos novos de seguir, comentar, responder, mencionar e reagir a reviews/posts/comentários geram
 atividade na mesma transação da ação. Sem autoalertas. O índice único impede
 alertas duplicados por retry ou alternância de reação/follow. Preferência desativada
 impede novos eventos; não apaga o histórico. Eventos anteriores à migration não são

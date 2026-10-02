@@ -6,6 +6,8 @@ struct ActivityNotification: Codable, Identifiable, Sendable {
     var label: String {
         switch kind {
         case "follow": L10n.text("começou a seguir você.")
+        case "mention": L10n.text("mencionou você em uma conversa.")
+        case "reply": L10n.text("respondeu ao seu comentário.")
         case "comment": L10n.text("comentou na sua publicação.")
         default: L10n.text("reagiu à sua publicação ou comentário.")
         }
@@ -15,7 +17,7 @@ struct NotificationsPage: Codable, Sendable {
     let notifications: [ActivityNotification]; let users: [User]; let unreadCount: Int; let nextCursor: String?
     func validate() throws {
         guard unreadCount >= 0, notifications.count <= 30, Set(notifications.map(\.id)).count == notifications.count,
-              notifications.allSatisfy({ n in UUID(uuidString: n.id) != nil && ["follow", "comment", "reaction"].contains(n.kind) && ["person", "review", "post"].contains(n.targetType) && (n.targetType == "person" || UUID(uuidString: n.targetID) != nil) && users.contains(where: { $0.id == n.user }) }),
+              notifications.allSatisfy({ n in UUID(uuidString: n.id) != nil && ["follow", "comment", "reaction", "mention", "reply"].contains(n.kind) && ["person", "review", "post"].contains(n.targetType) && (n.targetType == "person" || UUID(uuidString: n.targetID) != nil) && users.contains(where: { $0.id == n.user }) }),
               nextCursor == nil || (!notifications.isEmpty && !(nextCursor?.isEmpty ?? true)) else { throw SocialError.invalid }
     }
 }

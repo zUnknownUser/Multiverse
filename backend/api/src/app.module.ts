@@ -1,3 +1,6 @@
+import { SpacesController } from './community/spaces.controller.js';
+import { SpacesService } from './community/spaces.service.js';
+import { ImagesService } from './community/images.service.js';
 import { LibraryService } from './library/library.service.js';
 import { LibraryController } from './library/library.controller.js';
 import { PushService } from './notifications/push.service.js';
@@ -33,6 +36,7 @@ import { InteractionsController } from './social/interactions.controller.js';
 
 @Module({
   controllers: [
+    SpacesController,
     LibraryController,
     NotificationsController,
     CommunityController,
@@ -45,6 +49,8 @@ import { InteractionsController } from './social/interactions.controller.js';
     MarvelController,
   ],
   providers: [
+    SpacesService,
+    ImagesService,
     LibraryService,
     PushService,
     NotificationsService,

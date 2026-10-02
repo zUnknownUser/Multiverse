@@ -1,3 +1,36 @@
+# Atualização — Comunidade dinâmica (02/10/2026)
+
+Usuário autorizou edição/imagens, respostas/menções, busca/descoberta e módulos reais
+para clubes, salas, teorias e duelos. Implementado com migration aditiva 016.
+
+- Posts: edição com versão/idempotência; até quatro imagens verificadas por Sharp,
+  JPEG sem metadados; armazenamento PostgreSQL privado e leitura autenticada.
+- Respostas vinculadas ao comentário pai e menções por @handle/seletor; eventos reais
+  no sino. Visibilidade revalidada para bloqueio, denúncia, moderação e exclusão.
+- Busca textual; filtros recentes/seguidos/em conversa e universo/obra/tipo.
+- Clubes públicos: CRUD, membros, calendário por obra/data, progresso por membro/etapa,
+  discussões e convites com deep link; denúncias na CLI auditada existente.
+- Salas por obra publicada: mensagens/respostas/imagens, presença com TTL de um minuto,
+  atualização a cada 10s em primeiro plano e progresso persistido; trechos 0/50/100
+  protegidos no servidor, inclusive imagens e notificações.
+- Teorias: votos reais e conclusão do autor explicitamente rotulada. Duelo: duas
+  opções, prazo e voto único por conta com alteração. Nada de números por seed.
+- Novos módulos acessados pela Comunidade; sala também na ficha da obra. Layout da
+  barra/Biblioteca preservado. As telas legadas de demonstração continuam isoladas.
+- Validação: 75 unitários + 100 HTTP/PostgreSQL API; 178 iOS; 1034 entradas PT-BR/EN.
+  Fixtures HTTP agora mantêm uma porta por suíte para evitar races de bind/close
+  de Supertest em requisições concorrentes. Sem relaxar autorização/assertions.
+- Push continua desligado. Sem Apple Developer/APNs; não habilitar nesta entrega.
+- Sem reposts, vídeo, DMs, live de estreia, ranking de afinidade ou IA de confirmação.
+  Moderação ainda é CLI; salas usam polling. Imagens no PostgreSQL têm limites;
+  object storage/CDN deve preceder escala ampla de mídia.
+- [Contrato e limites](../backend/api/docs/live-community.md).
+- [Inventário atualizado](DEMONSTRATION_INVENTORY.md).
+
+Os registros abaixo são históricos.
+
+---
+
 # Atualização — séries completas e ajustes da Biblioteca (02/10/2026)
 
 O usuário aprovou expandir as quatro séries Metron e organizar edições por número.

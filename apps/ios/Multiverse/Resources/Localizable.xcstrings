@@ -16238,6 +16238,1542 @@
           }
         }
       }
+    },
+    "%1$@ pessoas na sala": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ pessoas na sala"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ people in the room"
+          }
+        }
+      }
+    },
+    "%1$@ unidades": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ unidades"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ units"
+          }
+        }
+      }
+    },
+    "A sala está quieta. Comece a conversa.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A sala está quieta. Comece a conversa."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The room is quiet. Start the conversation."
+          }
+        }
+      }
+    },
+    "A votação foi encerrada. Atualize para ver o resultado.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A votação foi encerrada. Atualize para ver o resultado."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voting has closed. Refresh to see the results."
+          }
+        }
+      }
+    },
+    "ADICIONAR ETAPA": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ADICIONAR ETAPA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ADD STAGE"
+          }
+        }
+      }
+    },
+    "ADICIONAR IMAGENS": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ADICIONAR IMAGENS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ADD IMAGES"
+          }
+        }
+      }
+    },
+    "ATUALIZAR CONCLUSÃO": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATUALIZAR CONCLUSÃO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "UPDATE CONCLUSION"
+          }
+        }
+      }
+    },
+    "Aberta": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aberta"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        }
+      }
+    },
+    "Até 4 imagens por publicação.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Até 4 imagens por publicação."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to 4 images per post."
+          }
+        }
+      }
+    },
+    "Até a metade": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Até a metade"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halfway through"
+          }
+        }
+      }
+    },
+    "Bloquear também o organizador": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquear também o organizador"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also block the organizer"
+          }
+        }
+      }
+    },
+    "Buscar clubes": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar clubes"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search clubs"
+          }
+        }
+      }
+    },
+    "Buscar nome ou @usuário": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar nome ou @usuário"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search name or @username"
+          }
+        }
+      }
+    },
+    "Buscar obra": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar obra"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search titles"
+          }
+        }
+      }
+    },
+    "Buscar publicações": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar publicações"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search posts"
+          }
+        }
+      }
+    },
+    "CALENDÁRIO": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CALENDÁRIO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SCHEDULE"
+          }
+        }
+      }
+    },
+    "CLUBE": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CLUBE"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CLUB"
+          }
+        }
+      }
+    },
+    "CONFIRMADA PELO AUTOR": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONFIRMADA PELO AUTOR"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONFIRMED BY THE AUTHOR"
+          }
+        }
+      }
+    },
+    "CONVERSA DO CLUBE": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONVERSA DO CLUBE"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CLUB DISCUSSION"
+          }
+        }
+      }
+    },
+    "CONVERSAR SOBRE ESTA ETAPA": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONVERSAR SOBRE ESTA ETAPA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DISCUSS THIS STAGE"
+          }
+        }
+      }
+    },
+    "CRIAR CLUBE": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRIAR CLUBE"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CREATE CLUB"
+          }
+        }
+      }
+    },
+    "Clubes são públicos. Pessoas podem encontrar o clube e entrar para participar.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clubes são públicos. Pessoas podem encontrar o clube e entrar para participar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clubs are public. People can find your club and join to participate."
+          }
+        }
+      }
+    },
+    "Conclusão": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conclusão"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conclusion"
+          }
+        }
+      }
+    },
+    "Confirmada": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmada"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed"
+          }
+        }
+      }
+    },
+    "DENUNCIAR CLUBE": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DENUNCIAR CLUBE"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REPORT CLUB"
+          }
+        }
+      }
+    },
+    "DUELO": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DUELO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DUEL"
+          }
+        }
+      }
+    },
+    "DUELOS": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DUELOS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DUELS"
+          }
+        }
+      }
+    },
+    "Descrição do clube": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descrição do clube"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Club description"
+          }
+        }
+      }
+    },
+    "EDITAR CLUBE": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EDITAR CLUBE"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EDIT CLUB"
+          }
+        }
+      }
+    },
+    "EDITAR PUBLICAÇÃO": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EDITAR PUBLICAÇÃO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EDIT POST"
+          }
+        }
+      }
+    },
+    "ENTRAR NA SALA": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ENTRAR NA SALA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ENTER ROOM"
+          }
+        }
+      }
+    },
+    "ENTRAR NO CLUBE": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ENTRAR NO CLUBE"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JOIN CLUB"
+          }
+        }
+      }
+    },
+    "EXCLUIR CLUBE": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EXCLUIR CLUBE"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DELETE CLUB"
+          }
+        }
+      }
+    },
+    "Editado": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editado"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edited"
+          }
+        }
+      }
+    },
+    "Em conversa": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Em conversa"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active discussions"
+          }
+        }
+      }
+    },
+    "Em resposta a %1$@": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Em resposta a %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replying to %1$@"
+          }
+        }
+      }
+    },
+    "Encerra em": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encerra em"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closes on"
+          }
+        }
+      }
+    },
+    "Encerrar votação": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encerrar votação"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close voting"
+          }
+        }
+      }
+    },
+    "Entre no clube para participar da conversa.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entre no clube para participar da conversa."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join the club to take part in the conversation."
+          }
+        }
+      }
+    },
+    "Escreva uma mensagem": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escreva uma mensagem"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write a message"
+          }
+        }
+      }
+    },
+    "Esta publicação mudou em outro dispositivo. Feche e abra novamente para editar a versão atual.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta publicação mudou em outro dispositivo. Feche e abra novamente para editar a versão atual."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This post changed on another device. Close and reopen it to edit the current version."
+          }
+        }
+      }
+    },
+    "Este clube não está mais disponível para você.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este clube não está mais disponível para você."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This club is no longer available to you."
+          }
+        }
+      }
+    },
+    "Este trecho contém spoilers. Atualize seu progresso para participar.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este trecho contém spoilers. Atualize seu progresso para participar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This section contains spoilers. Update your progress to participate."
+          }
+        }
+      }
+    },
+    "Etapa do clube": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etapa do clube"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Club stage"
+          }
+        }
+      }
+    },
+    "Excluir este clube e encerrar suas conversas?": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excluir este clube e encerrar suas conversas?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this club and close its discussions?"
+          }
+        }
+      }
+    },
+    "Explique sua conclusão e cite a obra ou fonte. A marcação ficará identificada como conclusão do autor.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explique sua conclusão e cite a obra ou fonte. A marcação ficará identificada como conclusão do autor."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explain your conclusion and cite the title or source. The status will be labeled as the author's conclusion."
+          }
+        }
+      }
+    },
+    "Final": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Final"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ending"
+          }
+        }
+      }
+    },
+    "Fonte e explicação": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fonte e explicação"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source and explanation"
+          }
+        }
+      }
+    },
+    "IMAGENS": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IMAGENS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IMAGES"
+          }
+        }
+      }
+    },
+    "Imagem da publicação": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imagem da publicação"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Post image"
+          }
+        }
+      }
+    },
+    "Leia, acompanhe e converse em grupo.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leia, acompanhe e converse em grupo."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read, track progress, and discuss together."
+          }
+        }
+      }
+    },
+    "MEMBROS E PROGRESSO": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MEMBROS E PROGRESSO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MEMBERS AND PROGRESS"
+          }
+        }
+      }
+    },
+    "MENCIONAR PESSOA": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MENCIONAR PESSOA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MENTION SOMEONE"
+          }
+        }
+      }
+    },
+    "MENSAGENS ANTERIORES": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MENSAGENS ANTERIORES"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OLDER MESSAGES"
+          }
+        }
+      }
+    },
+    "Meu progresso: %1$@%%": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meu progresso: %1$@%%"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My progress: %1$@%%"
+          }
+        }
+      }
+    },
+    "Nenhum clube por aqui ainda. Crie o primeiro.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum clube por aqui ainda. Crie o primeiro."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No clubs here yet. Create the first one."
+          }
+        }
+      }
+    },
+    "Nenhuma pessoa encontrada.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhuma pessoa encontrada."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No people found."
+          }
+        }
+      }
+    },
+    "Nenhuma sala encontrada para esta busca.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhuma sala encontrada para esta busca."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No rooms match your search."
+          }
+        }
+      }
+    },
+    "Nome do clube": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome do clube"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Club name"
+          }
+        }
+      }
+    },
+    "Não foi possível enviar esta imagem. Escolha uma foto JPEG, PNG ou WebP de até 2 MB.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível enviar esta imagem. Escolha uma foto JPEG, PNG ou WebP de até 2 MB."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This image could not be uploaded. Choose a JPEG, PNG, or WebP photo up to 2 MB."
+          }
+        }
+      }
+    },
+    "O organizador ainda não adicionou obras ao calendário.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O organizador ainda não adicionou obras ao calendário."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The organizer hasn't added any titles to the schedule yet."
+          }
+        }
+      }
+    },
+    "Obra": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obra"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title"
+          }
+        }
+      }
+    },
+    "Opção A": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opção A"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Option A"
+          }
+        }
+      }
+    },
+    "Opção B": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opção B"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Option B"
+          }
+        }
+      }
+    },
+    "Ordenar publicações": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordenar publicações"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter posts"
+          }
+        }
+      }
+    },
+    "PARTICIPANDO": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PARTICIPANDO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JOINED"
+          }
+        }
+      }
+    },
+    "Plausibilidade da teoria": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plausibilidade da teoria"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theory plausibility"
+          }
+        }
+      }
+    },
+    "RECARREGAR IMAGEM": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RECARREGAR IMAGEM"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RELOAD IMAGE"
+          }
+        }
+      }
+    },
+    "REFUTADA PELO AUTOR": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REFUTADA PELO AUTOR"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REFUTED BY THE AUTHOR"
+          }
+        }
+      }
+    },
+    "REMOVER": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REMOVER"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REMOVE"
+          }
+        }
+      }
+    },
+    "REMOVER ETAPA": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REMOVER ETAPA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REMOVE STAGE"
+          }
+        }
+      }
+    },
+    "RESPONDER": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RESPONDER"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REPLY"
+          }
+        }
+      }
+    },
+    "Recentes": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recentes"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent"
+          }
+        }
+      }
+    },
+    "Refutada": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refutada"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refuted"
+          }
+        }
+      }
+    },
+    "Remover esta etapa e sua discussão?": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remover esta etapa e sua discussão?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this stage and its discussion?"
+          }
+        }
+      }
+    },
+    "Resposta a um comentário anterior.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resposta a um comentário anterior."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply to an earlier comment."
+          }
+        }
+      }
+    },
+    "SAIR DO CLUBE": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SAIR DO CLUBE"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LEAVE CLUB"
+          }
+        }
+      }
+    },
+    "SALVAR": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SALVAR"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SAVE"
+          }
+        }
+      }
+    },
+    "SALVAR ALTERAÇÕES": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SALVAR ALTERAÇÕES"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SAVE CHANGES"
+          }
+        }
+      }
+    },
+    "SALVAR PROGRESSO": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SALVAR PROGRESSO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SAVE PROGRESS"
+          }
+        }
+      }
+    },
+    "Selecione uma obra": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecione uma obra"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select a title"
+          }
+        }
+      }
+    },
+    "Spoiler": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spoiler"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spoiler"
+          }
+        }
+      }
+    },
+    "TEORIA": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TEORIA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "THEORY"
+          }
+        }
+      }
+    },
+    "Todos os universos": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos os universos"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All universes"
+          }
+        }
+      }
+    },
+    "Trecho da conversa": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trecho da conversa"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discussion section"
+          }
+        }
+      }
+    },
+    "Uma conversa para cada obra do catálogo.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma conversa para cada obra do catálogo."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A conversation for every title in the catalog."
+          }
+        }
+      }
+    },
+    "Unidade: capítulos, páginas, episódios…": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidade: capítulos, páginas, episódios…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unit: chapters, pages, episodes…"
+          }
+        }
+      }
+    },
+    "VER MENSAGENS RECENTES": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VER MENSAGENS RECENTES"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SHOW RECENT MESSAGES"
+          }
+        }
+      }
+    },
+    "Você é o organizador. Para encerrar o clube, use Excluir clube.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você é o organizador. Para encerrar o clube, use Excluir clube."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're the organizer. To close this club, use Delete club."
+          }
+        }
+      }
+    },
+    "Votação encerrada": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votação encerrada"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voting closed"
+          }
+        }
+      }
+    },
+    "mencionou você em uma conversa.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mencionou você em uma conversa."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mentioned you in a conversation."
+          }
+        }
+      }
+    },
+    "respondeu ao seu comentário.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "respondeu ao seu comentário."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "replied to your comment."
+          }
+        }
+      }
+    },
+    "O limite deste recurso foi atingido. Tente novamente mais tarde ou remova conteúdo antigo.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O limite deste recurso foi atingido. Tente novamente mais tarde ou remova conteúdo antigo."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This feature has reached its limit. Try again later or remove older content."
+          }
+        }
+      }
+    },
+    "Já existe uma etapa nesta data. Escolha outra data.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Já existe uma etapa nesta data. Escolha outra data."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is already a stage on this date. Choose another date."
+          }
+        }
+      }
+    },
+    "Você pode mencionar até 10 pessoas por mensagem.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você pode mencionar até 10 pessoas por mensagem."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can mention up to 10 people per message."
+          }
+        }
+      }
+    },
+    "Use duas opções diferentes e uma data de encerramento nos próximos 30 dias.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use duas opções diferentes e uma data de encerramento nos próximos 30 dias."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use two different options and a closing date within the next 30 days."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

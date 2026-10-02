@@ -174,6 +174,48 @@ struct AccountHTTPTests {
         #expect(AccountURLProtocol.fixture.requests.isEmpty)
     }
 
+
+    @Test func communityEditsAndRepliesCarryVersionImagesAndParentWithAuthentication() async throws {
+        let id = UUID().uuidString.lowercased(), image = UUID().uuidString.lowercased(), comment = UUID().uuidString.lowercased(), parent = UUID().uuidString.lowercased()
+        AccountURLProtocol.fixture.reset([(200, "{\"id\":\"\(id)\",\"saved\":true}"), (200, "{\"reviewID\":\"\(id)\",\"commentID\":\"\(comment)\",\"saved\":true}"), (409, "{\"code\":\"POST_STALE\"}")])
+        let (api, session) = client(TokenStub()); defer { session.invalidateAndCancel() }
+        let input = PostEdit(title: "Novo", text: "Oi @alice", spoiler: true, imageIDs: [image], version: 3, mutationID: UUID().uuidString.lowercased())
+        #expect(try await api.editPost(id, input: input).saved)
+        #expect(try await api.postReply(post: id, id: comment, text: "Resposta", spoiler: false, parent: parent).saved)
+        let requests = AccountURLProtocol.fixture.requests
+        let editData = try #require(requests[0].httpBody)
+        let edit = try #require(JSONSerialization.jsonObject(with: editData) as? [String: Any])
+        let replyData = try #require(requests[1].httpBody)
+        let reply = try #require(JSONSerialization.jsonObject(with: replyData) as? [String: Any])
+        #expect(requests[0].httpMethod == "PATCH" && edit["version"] as? Int == 3 && edit["imageIDs"] as? [String] == [image])
+        #expect(reply["parentID"] as? String == parent)
+        #expect(requests.allSatisfy { $0.value(forHTTPHeaderField: "Authorization") == "Bearer original-token" })
+        do { _ = try await api.editPost(id, input: input); Issue.record("Expected stale edit") } catch { #expect(error is CommunityError) }
+    }
+    @Test func communityDiscoveryEncodesSearchAndScopeAndImagesStayOnAuthenticatedAPI() async throws {
+        let id = UUID().uuidString.lowercased(), image = UUID().uuidString.lowercased()
+        AccountURLProtocol.fixture.reset([(200, "{\"posts\":[],\"users\":[],\"nextCursor\":null}"), (200, "{\"id\":\"\(image)\",\"width\":20,\"height\":20,\"base64\":\"YWJj\"}")])
+        let (api, session) = client(TokenStub()); defer { session.invalidateAndCancel() }
+        _ = try await api.fetchPosts(filter: .init(universe: "marvel", search: "HQ & heróis", feed: "active", kind: "theory", club: id), after: nil)
+        _ = try await api.fetchPostImage(post: id, id: image)
+        let requests = AccountURLProtocol.fixture.requests
+        let query = URLComponents(url: try #require(requests[0].url), resolvingAgainstBaseURL: false)?.queryItems
+        #expect(query?.first { $0.name == "q" }?.value == "HQ & heróis")
+        #expect(query?.first { $0.name == "club" }?.value == id)
+        #expect(requests[1].url?.path == "/api/v1/posts/\(id)/images/\(image)" && requests[1].value(forHTTPHeaderField: "Authorization") != nil)
+    }
+    @Test func clubProgressAndRoomVisitsPreserveServerIdentifiersAndOptionalProgress() async throws {
+        let id = UUID().uuidString.lowercased(), schedule = UUID().uuidString.lowercased()
+        AccountURLProtocol.fixture.reset([(200, "{\"id\":\"\(schedule)\",\"saved\":true}"), (200, "{\"itemID\":\"m-civil\",\"online\":2,\"progress\":50}")])
+        let (api, session) = client(TokenStub()); defer { session.invalidateAndCancel() }
+        #expect(try await api.saveClubProgress(club: id, schedule: schedule, units: 7).id == schedule)
+        #expect(try await api.visitRoom("m-civil", progress: nil).progress == 50)
+        let requests = AccountURLProtocol.fixture.requests
+        #expect(requests[0].url?.path == "/api/v1/community/clubs/\(id)/schedule/\(schedule)/progress")
+        let requestData = try #require(requests[1].httpBody)
+        let body = try #require(JSONSerialization.jsonObject(with: requestData) as? [String: Any])
+        #expect(body.isEmpty)
+    }
     private func client(_ token: TokenStub) -> (AccountAPIClient, URLSession) {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [AccountURLProtocol.self]

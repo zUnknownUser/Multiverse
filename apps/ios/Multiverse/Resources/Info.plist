@@ -13,6 +13,7 @@
 	</dict>
 	<key>CFBundleURLTypes</key>
 	<array>
+		<dict><key>CFBundleURLSchemes</key><array><string>multiverse</string></array></dict>
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array><string>com.googleusercontent.apps.542469411124-selga9fvq0rh52jbug247rk57jisoig1</string></array>

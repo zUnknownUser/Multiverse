@@ -93,7 +93,7 @@ describe.skipIf(!databaseURL)(
         .compile();
       app = module.createNestApplication();
       configureApp(app);
-      await app.init();
+      await app.listen(0, '127.0.0.1'); // Keep one port per suite; concurrent Supertest requests must not close/rebind it.
     });
     afterAll(async () => {
       await app?.close();

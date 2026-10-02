@@ -165,6 +165,17 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, Com
             case "COMMENT_LIMIT": throw SocialError.commentLimit
             case "COMMENT_CONFLICT": throw SocialError.commentConflict
             case "REACTION_LIMIT": throw SocialError.reactionLimit
+            case "POST_STALE": throw CommunityError.stale
+            case "INVALID_IMAGE": throw CommunityError.invalidImage
+            case "ROOM_PROGRESS_REQUIRED": throw CommunityError.roomProgress
+            case "CLUB_FULL", "CLUB_LIMIT", "SCHEDULE_LIMIT", "IMAGE_LIMIT": throw CommunityError.capacity
+            case "SCHEDULE_DATE_USED": throw CommunityError.scheduleDate
+            case "MENTION_LIMIT": throw CommunityError.mentionLimit
+            case "INVALID_DUEL": throw CommunityError.invalidDuel
+            case "VOTE_CLOSED": throw CommunityError.closed
+            case "CLUB_MEMBERSHIP_REQUIRED": throw CommunityError.membership
+            case "CLUB_UNAVAILABLE": throw CommunityError.clubUnavailable
+            case "CLUB_OWNER_CANNOT_LEAVE": throw CommunityError.ownerLeave
             case "POST_UNAVAILABLE": throw CommunityError.unavailable
             case "POST_CONFLICT": throw CommunityError.conflict
             case "INVALID_POST_CATALOG": throw CatalogError.changed

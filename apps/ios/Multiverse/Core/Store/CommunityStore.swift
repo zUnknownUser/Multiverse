@@ -2,9 +2,20 @@ import Foundation
 import Observation
 
 enum CommunityError: LocalizedError {
-    case unavailable, conflict
+    case unavailable, conflict, stale, invalidImage, closed, membership, clubUnavailable, ownerLeave, roomProgress, capacity, scheduleDate, mentionLimit, invalidDuel
     var errorDescription: String? {
         switch self {
+        case .roomProgress: L10n.text("Este trecho contém spoilers. Atualize seu progresso para participar.")
+        case .capacity: L10n.text("O limite deste recurso foi atingido. Tente novamente mais tarde ou remova conteúdo antigo.")
+        case .scheduleDate: L10n.text("Já existe uma etapa nesta data. Escolha outra data.")
+        case .mentionLimit: L10n.text("Você pode mencionar até 10 pessoas por mensagem.")
+        case .invalidDuel: L10n.text("Use duas opções diferentes e uma data de encerramento nos próximos 30 dias.")
+        case .stale: L10n.text("Esta publicação mudou em outro dispositivo. Feche e abra novamente para editar a versão atual.")
+        case .invalidImage: L10n.text("Não foi possível enviar esta imagem. Escolha uma foto JPEG, PNG ou WebP de até 2 MB.")
+        case .closed: L10n.text("A votação foi encerrada. Atualize para ver o resultado.")
+        case .membership: L10n.text("Entre no clube para participar da conversa.")
+        case .clubUnavailable: L10n.text("Este clube não está mais disponível para você.")
+        case .ownerLeave: L10n.text("Você é o organizador. Para encerrar o clube, use Excluir clube.")
         case .unavailable: L10n.text("Esta publicação não está mais disponível para você.")
         case .conflict: L10n.text("Este envio já foi usado. Confira a comunidade antes de publicar novamente.")
         }
@@ -16,20 +27,28 @@ enum CommunityError: LocalizedError {
     private(set) var cursor: String?
     private(set) var busy = false
     private(set) var error: String?
+    private var currentFilter: CommunityFilter?
+    private var generation = 0
     func load(api: any CommunityAPI, universe: String?, item: String?, more: Bool = false) async {
+        await load(api: api, filter: .init(universe: universe, item: item), more: more)
+    }
+    func load(api: any CommunityAPI, filter: CommunityFilter, more: Bool = false) async {
+        if currentFilter != filter { generation += 1; currentFilter = filter; posts = []; users = [:]; cursor = nil; busy = false }
+        let requestGeneration = generation
         guard !busy, !more || cursor != nil else { return }; busy = true; error = nil
-        defer { busy = false }
+        defer { if requestGeneration == generation { busy = false } }
         do {
             let after = more ? cursor : nil
-            let page = try await api.fetchPosts(universe: universe, item: item, after: after)
+            let page = try await api.fetchPosts(filter: filter, after: after)
+            guard requestGeneration == generation else { return }
             try Task.checkCancellation(); try page.validate()
             guard page.nextCursor == nil || page.nextCursor != after,
-                  page.posts.allSatisfy({ (universe == nil || $0.universeID == universe) && (item == nil || $0.itemID == item) }) else { throw SocialError.invalid }
+                  page.posts.allSatisfy({ (filter.universe == nil || $0.universeID == filter.universe) && (filter.item == nil || $0.itemID == filter.item) && (filter.kind == nil || $0.kind == filter.kind) && (filter.club == nil || $0.clubID == filter.club) && (filter.schedule == nil || $0.scheduleID == filter.schedule) && (filter.segment == nil || $0.segment == filter.segment) }) else { throw SocialError.invalid }
             let previous = more ? posts : []
             posts = previous + page.posts.filter { post in !previous.contains(where: { $0.id == post.id }) }
             for user in page.users { users[user.id] = user }; cursor = page.nextCursor
         } catch is CancellationError { }
-        catch { self.error = error.localizedDescription }
+        catch { if requestGeneration == generation { self.error = error.localizedDescription } }
     }
 }
 @MainActor @Observable final class CommunityThread {
@@ -68,11 +87,27 @@ enum CommunityError: LocalizedError {
             if error is CommunityError { post = nil; comments = []; canComment = false }
         }
     }
-    func reply(id commentID: String, text: String, spoiler: Bool) async -> Bool {
+    func reply(id commentID: String, text: String, spoiler: Bool, parent: String? = nil) async -> Bool {
         guard !busy, canComment else { return false }; busy = true; error = nil
         do {
-            let receipt = try await api.postReply(post: id, id: commentID, text: text, spoiler: spoiler)
+            let receipt = try await api.postReply(post: id, id: commentID, text: text, spoiler: spoiler, parent: parent)
             guard receipt.saved, receipt.reviewID == id, receipt.commentID == commentID else { throw SocialError.invalid }
+            busy = false; await load(); return true
+        } catch { self.error = error.localizedDescription; busy = false; return false }
+    }
+    func vote(_ choice: Int) async {
+        guard !busy else { return }; busy = true; error = nil
+        do {
+            let receipt = try await api.votePost(id, choice: choice)
+            guard receipt.saved, receipt.id == id else { throw SocialError.invalid }
+            busy = false; await load()
+        } catch { self.error = error.localizedDescription; busy = false }
+    }
+    func resolve(status: String, note: String) async -> Bool {
+        guard !busy, let post else { return false }; busy = true; error = nil
+        do {
+            let receipt = try await api.resolveTheory(id, status: status, note: note, version: post.version ?? 1)
+            guard receipt.saved, receipt.id == id else { throw SocialError.invalid }
             busy = false; await load(); return true
         } catch { self.error = error.localizedDescription; busy = false; return false }
     }

@@ -7,6 +7,7 @@ struct RootView: View {
     @State private var auth = AuthStore()
     @State private var burst = BurstCenter()
     @State private var proStore = ProStore()
+    @State private var pendingClub: String?
 
     var body: some View {
         Group {
@@ -50,6 +51,10 @@ struct RootView: View {
             Text(auth.errorMessage ?? auth.infoMessage ?? store.accountLoadError ?? store.onboardingError ?? "")
         }
         .onOpenURL { url in
+            if url.scheme == "multiverse", url.host == "club", url.user == nil, url.password == nil, url.query == nil,
+               let id = url.pathComponents.last, UUID(uuidString: id) != nil {
+                pendingClub = id.lowercased(); openClubInvitation(); return
+            }
             if !GIDSignIn.sharedInstance.handle(url) { Task { await auth.handleEmailLink(url) } }
         }
         .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
@@ -86,8 +91,10 @@ struct RootView: View {
                 await accountStore.notifications?.refresh()
                 await PushCoordinator.shared.resume(api: api, userID: session.userID)
                 openPushActivity()
+                openClubInvitation()
             }
         }
+        .onChange(of: store.isOnboarded) { _, _ in openClubInvitation() }
         .onChange(of: PushCoordinator.shared.openActivity) { _, _ in openPushActivity() }
         .task(id: store.meID) {
             while !Task.isCancelled {
@@ -101,6 +108,10 @@ struct RootView: View {
             if phase == .active { Task { await proStore.refreshEntitlement(); if store.isOnboarded { await store.notifications?.refresh(); await store.library?.refresh() } } }
         }
 
+    }
+    private func openClubInvitation() {
+        guard let id = pendingClub, auth.session?.userID == store.meID, store.isOnboarded, !store.isLoading else { return }
+        pendingClub = nil; store.push(.liveClub(id))
     }
     private func openPushActivity() {
         guard PushCoordinator.shared.openActivity, auth.session?.userID == store.meID, store.isOnboarded else { return }

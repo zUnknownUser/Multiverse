@@ -1,6 +1,6 @@
 # Inventário de dados reais e demonstrações — 02/10/2026
 
-Auditoria após Biblioteca pessoal, posts de comunidade e central de atividade. “Demonstração”
+Auditoria após Comunidade dinâmica (migration 016), Biblioteca e central de atividade. “Demonstração”
 significa dados de exemplo ou interação que não chega a outro usuário/servidor.
 Uma função local pode funcionar de verdade sem ser sincronizada. A distinção abaixo
 considera a sessão autenticada normal, não previews/testes com repositórios mockados.
@@ -11,8 +11,9 @@ A sessão autenticada usa Home, Busca, Biblioteca e Perfil. A Biblioteca substit
 Clubes na barra: desejos, favoritos e listas privadas agora persistem na conta.
 Os módulos demonstrativos descritos abaixo permanecem no código para previews e
 trabalho futuro, mas seus atalhos foram ocultados e suas rotas bloqueadas na sessão
-real. As abas de universo mostram Geral e Personagens; ordens, timeline e salas
-ficaram ocultas. Pro, Wrapped, escudo automático por cronologia e ações sem backend
+real. As abas de universo mostram Geral e Personagens; ordens e timeline
+ficaram ocultas. Clubes, salas, teorias e duelos reais são acessados pela Comunidade;
+salas também pela obra. As telas legadas desses módulos não são usadas pela conta real. Pro, Wrapped, escudo automático por cronologia e ações sem backend
 também saíram dos acessos normais. Spoilers explícitos continuam funcionando.
 Widgets não recebem mais snapshots mistos em sessões reais: ficam sem dados.
 Capas gráficas/avatares de iniciais e estatísticas locais descritas abaixo continuam
@@ -38,12 +39,21 @@ sendo apresentação/cálculo local; não são novos serviços de mídia ou medi
   API real. Perfis remotos não recebem afinidade, favoritos ou estatísticas fictícias.
 - Feed de reviews de quem você segue, opt-in de diário público, comentários,
   curtidas, reações, permissão de comentários, bloqueios e denúncias: reais.
-- **Posts da comunidade**: descoberta global/por universo/obra, criação de texto,
-  spoiler, comentários, reações, denúncia/bloqueio e exclusão pelo autor: reais.
+- **Posts da comunidade**: texto, edição pelo autor, até quatro imagens, spoiler,
+  comentários/respostas vinculadas, menções com seletor e aviso no sino, reações,
+  denúncia/bloqueio e exclusão. Busca textual e filtros recentes/seguidos/em conversa.
+- **Clubes reais:** criação/edição/exclusão, entrar/sair, membros, calendário por obra,
+  progresso por membro/etapa, discussões, convite por link e denúncia/moderação.
+- **Salas reais:** uma por obra publicada; mensagens, respostas, reações, presença
+  por visitas no último minuto e progresso sincronizado; trechos 0/50/100 com proteção
+  no servidor. Atualização por consulta a cada 10s enquanto a sala está aberta.
+- **Teorias e duelos reais:** publicação, descoberta, votos únicos por conta e contagens
+  persistidas. Teoria tem conclusão identificada como decisão do autor com explicação;
+  duelo tem opções e prazo. Nada de votos-base, ranking ou precisão inventada.
 - **Central de atividade e sino**: eventos novos reais de follows/comentários/reações,
   estado de leitura persistido, paginação e preferências por conta. Atualização em
   primeiro plano a cada 30s, ao voltar e por gesto; não é uma conexão em tempo real.
-- Fila/revisão de denúncias de reviews, posts e comentários: CLI privada no banco,
+- Fila/revisão de denúncias de reviews, posts, comentários e clubes: CLI privada no banco,
   decisões auditadas. Precisa de operação humana, sem painel web ou IA automática.
 
 Fontes: [RootView](../apps/ios/Multiverse/App/RootView.swift),
@@ -55,13 +65,13 @@ Fontes: [RootView](../apps/ios/Multiverse/App/RootView.swift),
 
 | Área/tela | O que ainda é exemplo/local, exatamente |
 | --- | --- |
-| Clubes | Lista/clubes, membros, calendário de maratona, progresso dos participantes, discussão, mensagens, curtidas/POW: dados de `recursos-data.json` e mutações em memória. Não existe clube compartilhado no servidor. |
-| Salas por obra / explorar salas | Salas, segmentos, mensagens, avatares de participantes, contagens online e progresso na conversa: exemplos/memória. Não há presença, chat ou sincronização multiusuário. |
+| Clubes (legado/demo) | Fixtures de `recursos-data.json`, cutucada sem entrega e cards antigos continuam apenas em previews. O módulo acessível pela Comunidade usa backend real; não inclui lembretes por push. |
+| Salas (legado/demo) | As telas antigas com trechos editoriais, pin de teoria fixa e contagens de exemplo permanecem isoladas. As salas acessíveis pela Comunidade/ficha da obra usam posts, presença e progresso reais. |
 | Estreia ao vivo | Evento/banner, contador, enquete relâmpago, votos e chat/stickers gerados por timers: simulação local. Não acompanha uma estreia real nem transmite mensagens. |
 | Mensagens privadas | Conversas, pedidos, texto, cartas de obras, desafios em DM e lidas: repositório em memória. Contas reais começam sem as conversas da persona demo; os botões de mensagem/desafio no perfil remoto avisam “em breve”. Outros fluxos de cartas/desafio que chamam o repositório também não entregam a ninguém. “online agora”/afinidade na conversa são fictícios. |
-| Duelo do dia | Perguntas/opções e votos-base de exemplo; seu voto só altera memória. Resultado “maioria/minoria” usa esses votos; próximo duelo troca a amostra. |
+| Duelo do dia (legado/demo) | O card antigo, rotação de exemplos, votos-base e desafio por DM continuam ocultos. Duelo criado pela Comunidade tem votos e encerramento reais; não há seleção automática diária. |
 | Debate da semana | Assunto/opções, números de votos e “612 comentários” fixos. Voto local, sem debate multiusuário no backend. |
-| Teorias (telas antigas) | Feed, detalhe, votos Plausível/Viajou, evidências, percentuais, pontos de lore/precisão e publicação: exemplos/memória. São um módulo separado dos posts novos, que já persistem texto real. |
+| Teorias (legado/demo) | Precisão, pontos de lore, revisores fictícios e teorias de exemplo continuam isolados. Teorias acessíveis na Comunidade têm conteúdo/votos reais e conclusão do autor explicitamente identificada. |
 | Previsões | Eventos/perguntas, respostas, pontos e liga/ranking: exemplos/memória. Não há apuração real nem competição compartilhada. |
 | Check de visto fora do diário | Após onboarding, check/uncheck em ordem/timeline usa estado local. O diário real marca a obra vista ao recarregar; desmarcar localmente não exclui um registro. Os vistos escolhidos no onboarding são persistidos naquele fluxo. |
 | Ordens de leitura | Títulos, passos, autores e votos-base vêm do JSON; seguir ordem e votar são locais. O cálculo de progresso funciona, mas mistura passos fixos com diário/checks locais. |
@@ -75,7 +85,7 @@ Fontes: [RootView](../apps/ios/Multiverse/App/RootView.swift),
 | Badges de universo | No perfil demonstrativo, o progresso é calculado localmente a partir do acervo/“visto”; badge é liberado pelo limiar de 50%. Não existe concessão/histórico de badge no servidor. Em personas demo, progresso pode ser calculado por seed. |
 | Widgets | Ponte App Group e isolamento/limpeza por sessão estão implementados. Snapshot legado é misto e deixou de ser publicado em sessões reais: progresso local/diário + ordem e duelo de amostra; delta do universo é fixo `3`. O widget não é prova de backend para duelo/ordens. |
 | Live Activity | Extensão/layout, atributos e solicitação/atualização local via ActivityKit existem. Não há operação remota de estreia/APNs ActivityKit; tela de estreia continua simulada. |
-| Capas/avatares | Cards usam composição gráfica/cores determinísticas e iniciais; não há upload de foto do usuário nem pipeline geral de pôsteres oficiais. Isso é apresentação implementada, mas não uma integração de mídia pronta. |
+| Capas/avatares | Capas usam composição gráfica/cores determinísticas e avatares usam iniciais; imagens em posts já têm upload real. Não há foto de perfil nem pipeline de pôsteres oficiais. Isso é apresentação implementada, mas não uma integração de mídia pronta. |
 
 Fontes principais: [MockRepository](../apps/ios/Multiverse/Core/Repository/MockRepository.swift),
 [StaticContent](../apps/ios/Multiverse/Core/StaticContent.swift),
@@ -123,9 +133,13 @@ não prometem persistência entre sessões/dispositivos.
   a seção de obra é rotulada “suas reviews”. Não há catálogo global de reviews de todos,
   nem página de histórico público completo no perfil remoto. Nenhuma amostra deve preencher
   esses estados vazios.
-- **Comunidade nova:** texto/título, comentários e reações reais; não inclui mídia, edição
-  de post publicado, reposts, busca textual, menções, respostas aninhadas, feed por ranking
-  ou migração automática dos módulos antigos de teorias/duelos.
+- **Comunidade:** recursos solicitados ligados ao backend; sem reposts, vídeo, ranking
+  personalizado, fila offline durável, DMs ou live de estreia. Clubes são públicos,
+  sem coorganizador/expulsão/transferência. Teorias não têm validação editorial automática
+  nem pontos/ranking. Salas atualizam por polling, sem WebSocket/indicador de digitação.
+  As amostras antigas não foram publicadas no servidor. Imagens ficam no PostgreSQL
+  com limites; object storage/CDN é evolução necessária antes de escala de mídia.
+  [Contrato e limites detalhados](../backend/api/docs/live-community.md).
 - **Notificações novas:** somente ações novas suportadas; não reconstrói todo histórico,
   não cobre módulos demo, não envia e-mail de atividade. Marcar lidas atua em até 100 IDs
   carregados por vez. Preferência desativada bloqueia novos eventos, não apaga histórico.
@@ -138,6 +152,6 @@ não prometem persistência entre sessões/dispositivos.
 
 ## Validação desta entrega
 
-170 testes iOS; 75 unitários + 88 HTTP/PostgreSQL na API; PT/EN verificado (938 entradas).
+178 testes iOS; 75 unitários + 100 HTTP/PostgreSQL na API; PT/EN verificado (1034 entradas).
 Build normal e testes executados em simulador. O build opt-in de push foi compilado no lote anterior, sem envio real. O inventário é auditoria do
 código; não afirma homologação em aparelho nem uso real de integrações ainda não ativadas.

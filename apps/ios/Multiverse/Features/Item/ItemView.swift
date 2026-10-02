@@ -161,6 +161,11 @@ struct ItemView: View {
                     StarsText(rating: mine.rating, color: uni.color, size: 14)
                 }
             }
+            if store.spacesAPI != nil {
+                Button { store.push(.liveRoom(item.id)) } label: {
+                    Label(L10n.text("ENTRAR NA SALA"), systemImage: "bubble.left.and.bubble.right").font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
+                }.buttonStyle(.plain)
+            }
             if store.showsDemoFeatures, let room = store.room(for: item.id) {
                 Button { store.push(.room(item.id)) } label: {
                     HStack(spacing: 6) {

@@ -1,3 +1,4 @@
+import { saveMentions, mentionsField } from '../community/mentions.js';
 import {
   BadRequestException,
   ConflictException,
@@ -19,6 +20,7 @@ import {
   postRelations,
   postVisible,
   postCommentVisible,
+  postParentVisible,
   reportQuotaSQL,
 } from '../community/community-policy.js';
 import { recordNotification } from '../notifications/notification-events.js';
@@ -64,7 +66,7 @@ export class InteractionsService {
   private async review(client: PoolClient, uid: string, id: string) {
     await this.social.member(client, uid);
     const result = await client.query(
-      `SELECT r.firebase_uid,p.comment_permission FROM ${this.tables.relations}
+      `SELECT r.firebase_uid,p.comment_permission,${this.domain === 'post' ? 'r.club_id' : 'NULL::uuid'} AS club_id FROM ${this.tables.relations}
       WHERE r.id=$2 AND ${this.tables.visible} FOR SHARE OF p,r`,
       [uid, id],
     );
@@ -76,13 +78,28 @@ export class InteractionsService {
     return result.rows[0] as {
       firebase_uid: string;
       comment_permission: string;
+      club_id?: string | null;
     };
   }
   private async canComment(
     client: PoolClient,
     uid: string,
-    review: { firebase_uid: string; comment_permission: string },
+    review: {
+      firebase_uid: string;
+      comment_permission: string;
+      club_id?: string | null;
+    },
   ) {
+    if (
+      review.club_id &&
+      !(
+        await client.query(
+          'SELECT 1 FROM club_members WHERE club_id=$1 AND firebase_uid=$2',
+          [review.club_id, uid],
+        )
+      ).rowCount
+    )
+      return false;
     if (uid === review.firebase_uid) return true;
     if (review.comment_permission === 'everyone') return true;
     if (review.comment_permission === 'nobody') return false;
@@ -126,6 +143,7 @@ export class InteractionsService {
       const review = await this.review(client, uid, reviewID);
       const result = await client.query(
         `SELECT c.id,c.firebase_uid AS "user",c.text,c.spoiler,c.created_at AS "createdAt",
+        ${this.domain === 'post' ? `CASE WHEN EXISTS(SELECT 1 FROM post_comments pc JOIN profiles pp ON pp.firebase_uid=pc.firebase_uid WHERE pc.id=c.parent_id AND ${postParentVisible}) THEN c.parent_id ELSE NULL END AS "parentID",(c.parent_id IS NOT NULL) AS "isReply",${mentionsField(true)},` : ''}
         to_char(c.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "cursorTime",
         cp.display_name AS name,cp.username,cp.avatar_color AS "avatarColor"
         FROM ${this.tables.comments} c JOIN profiles cp ON cp.firebase_uid=c.firebase_uid JOIN ${this.tables.parents} r ON r.id=c.${this.tables.key}
@@ -151,6 +169,13 @@ export class InteractionsService {
           text: row.text,
           spoiler: row.spoiler,
           createdAt: row.createdAt,
+          ...(this.domain === 'post'
+            ? {
+                parentID: row.parentID,
+                isReply: row.isReply,
+                mentions: row.mentions,
+              }
+            : {}),
           interaction: summaries.find((s) => s.id === row.id),
         })),
         users: [
@@ -184,6 +209,7 @@ export class InteractionsService {
     id: string,
     text: string,
     spoiler: boolean,
+    parentID?: string,
   ) {
     return this.lifecycle.withActiveAccount(uid, async (client) => {
       const review = await this.review(client, uid, reviewID);
@@ -197,12 +223,17 @@ export class InteractionsService {
           row.firebase_uid !== uid ||
           row[this.tables.key] !== reviewID ||
           row.text !== text ||
-          row.spoiler !== spoiler
+          row.spoiler !== spoiler ||
+          (this.domain === 'post' && row.parent_id !== (parentID ?? null))
         )
           throw new ConflictException({ code: 'COMMENT_CONFLICT' });
         // A retry acknowledges the saved comment, never republishes hidden content.
         return { reviewID, commentID: id, saved: true };
       }
+      const parent =
+        parentID && this.domain === 'post'
+          ? await this.comment(client, uid, reviewID, parentID)
+          : undefined;
       if (!(await this.canComment(client, uid, review)))
         throw new ForbiddenException({ code: 'COMMENTS_RESTRICTED' });
       const count = await client.query(
@@ -214,13 +245,33 @@ export class InteractionsService {
         throw new HttpException({ code: 'COMMENT_LIMIT' }, 429);
       try {
         await client.query(
-          `INSERT INTO ${this.tables.comments}(id,${this.tables.key},firebase_uid,text,spoiler) VALUES($1,$2,$3,$4,$5)`,
-          [id, reviewID, uid, text, spoiler],
+          `INSERT INTO ${this.tables.comments}(id,${this.tables.key},firebase_uid,text,spoiler${this.domain === 'post' ? ',parent_id' : ''}) VALUES($1,$2,$3,$4,$5${this.domain === 'post' ? ',$6' : ''})`,
+          [
+            id,
+            reviewID,
+            uid,
+            text,
+            spoiler,
+            ...(this.domain === 'post' ? [parentID ?? null] : []),
+          ],
         );
       } catch (error) {
         if ((error as { code?: string }).code === '23505')
           throw new ConflictException({ code: 'COMMENT_CONFLICT' });
         throw error;
+      }
+      if (this.domain === 'post') {
+        await saveMentions(client, uid, reviewID, text, id);
+        if (parent)
+          await recordNotification(
+            client,
+            parent.firebase_uid,
+            uid,
+            'reply',
+            'post',
+            reviewID,
+            id,
+          );
       }
       await recordNotification(
         client,

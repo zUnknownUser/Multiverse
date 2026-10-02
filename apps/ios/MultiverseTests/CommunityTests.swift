@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import Testing
 @testable import Multiverse
 
@@ -9,6 +10,17 @@ import Testing
     var failWrites = false
     var writes: [String] = []
     var commentRows: [RemoteComment] = []
+    var heldQueries: [String: CheckedContinuation<CommunityPage, any Error>] = [:]
+    var holdQueries = false
+    var replyParents: [String?] = []
+    func fetchPosts(filter: CommunityFilter, after: String?) async throws -> CommunityPage {
+        if holdQueries { return try await withCheckedThrowingContinuation { heldQueries[filter.search] = $0 } }
+        return try page()
+    }
+    func postReply(post: String, id: String, text: String, spoiler: Bool, parent: String?) async throws -> CommentReceipt {
+        replyParents.append(parent)
+        return try await postReply(post: post, id: id, text: text, spoiler: spoiler)
+    }
     func summary(_ id: String) -> InteractionSummary { .init(id: id, likes: 0, liked: false, myReaction: nil, reactions: ["POW!": 0, "ZAP!": 0, "KRAK!": 0, "HEH": 0]) }
     func page() throws -> CommunityPage {
         if unavailable { throw CommunityError.unavailable }
@@ -63,5 +75,52 @@ import Testing
         #expect(timeline.posts.isEmpty && timeline.error != nil)
         await timeline.load(api: api, universe: "wow", item: nil)
         #expect(timeline.posts.count == 1 && timeline.error == nil)
+    }
+
+    @Test func changingDiscoveryFilterRejectsLateResultsAndClearsPriorScope() async throws {
+        let api = CommunityStub(), timeline = CommunityTimeline(); api.holdQueries = true
+        let first = Task { await timeline.load(api: api, filter: .init(search: "first")) }
+        for _ in 0..<100 { if api.heldQueries["first"] != nil { break }; await Task.yield() }
+        let second = Task { await timeline.load(api: api, filter: .init(search: "second")) }
+        for _ in 0..<100 { if api.heldQueries["second"] != nil { break }; await Task.yield() }
+        let empty = CommunityPage(posts: [], users: [], nextCursor: nil)
+        let secondReply = api.heldQueries.removeValue(forKey: "second")
+        try #require(secondReply).resume(returning: empty)
+        await second.value
+        let firstReply = api.heldQueries.removeValue(forKey: "first")
+        try #require(firstReply).resume(returning: api.page())
+        await first.value
+        #expect(timeline.posts.isEmpty && !timeline.busy && timeline.error == nil)
+    }
+    @Test func ambiguousThreadReplyKeepsItsParentAcrossRetry() async {
+        let api = CommunityStub(), parent = UUID().uuidString.lowercased(), comment = UUID().uuidString.lowercased()
+        let thread = CommunityThread(api: api, id: api.id); await thread.load(); api.failWrites = true
+        #expect(await thread.reply(id: comment, text: "Reply @alice", spoiler: true, parent: parent) == false)
+        api.failWrites = false
+        #expect(await thread.reply(id: comment, text: "Reply @alice", spoiler: true, parent: parent))
+        #expect(api.replyParents == [parent, parent] && thread.comments.count == 1)
+    }
+    @Test func photoPreparationRejectsNonImagesAndBoundsDecodedPixels() throws {
+        #expect(throws: (any Error).self) { try CommunityPhoto.prepare(Data("not a picture".utf8)) }
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 2400, height: 1200))
+        let source = renderer.image { context in UIColor.red.setFill(); context.fill(CGRect(x: 0, y: 0, width: 2400, height: 1200)) }
+        let photo = try CommunityPhoto.prepare(#require(source.pngData()))
+        #expect(photo.preview.size.width <= 1600 && photo.preview.size.height <= 1600)
+        #expect(photo.data.count <= 2_000_000 && UUID(uuidString: photo.id) != nil)
+    }
+    @Test func realCommunityRoutesDoNotEnableLegacyDemoModules() {
+        let store = AppStore(accountAPI: AccountAPIClient())
+        let id = UUID().uuidString.lowercased()
+        for route in [Route.liveClubs(nil), .liveClub(id), .liveRooms("marvel"), .liveRoom("m-civil"), .communityFeed(.init(kind: "duel"))] { store.push(route) }
+        #expect(store.homePath.count == 5 && !store.showsDemoFeatures)
+        store.push(.club("demo")); store.push(.theories); #expect(store.homePath.count == 5)
+    }
+    @Test func newNotificationKindsValidateAndRemainTiedToPostTargets() throws {
+        let api = CommunityStub()
+        for kind in ["mention", "reply"] {
+            let entry = ActivityNotification(id: UUID().uuidString.lowercased(), kind: kind, targetType: "post", targetID: api.id, commentID: nil, createdAt: .now, readAt: nil, user: api.user.id)
+            try NotificationsPage(notifications: [entry], users: [api.user], unreadCount: 1, nextCursor: nil).validate()
+            #expect(!entry.label.isEmpty)
+        }
     }
 }

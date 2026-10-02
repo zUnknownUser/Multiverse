@@ -31,6 +31,7 @@ struct InteractionSummary: Codable, Sendable {
 struct RemoteComment: Codable, Identifiable, Sendable {
     let id: String; let user: String; let text: String; let spoiler: Bool; let createdAt: Date
     let interaction: InteractionSummary
+    var parentID: String? = nil; var isReply: Bool? = nil; var mentions: [PostMention]? = nil
 }
 struct CommentsPage: Codable, Sendable {
     let reviewID: String; let canComment: Bool; let comments: [RemoteComment]; let users: [User]; let nextCursor: String?

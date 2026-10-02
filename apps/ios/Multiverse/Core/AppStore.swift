@@ -86,6 +86,7 @@ final class AppStore {
     let library: LibraryStore?
     var showsDemoFeatures: Bool { !usesAccountAPI }
     let communityAPI: (any CommunityAPI)?
+    var spacesAPI: (any SpacesAPI)? { communityAPI as? any SpacesAPI }
     let notifications: NotificationStore?
     let social: SocialStore?
     let people: PeopleStore?
