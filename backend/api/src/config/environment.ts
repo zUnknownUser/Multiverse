@@ -5,6 +5,7 @@ export interface Environment {
   FIREBASE_PROJECT_ID: string;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL: string;
+  PUSH_ENABLED: 'true' | 'false';
 }
 
 export function validateEnvironment(
@@ -64,8 +65,12 @@ export function validateEnvironment(
     !/^[a-zA-Z0-9._:-]{1,200}$/.test(openAIModel)
   )
     throw new Error('Invalid OPENAI_MODEL.');
+  const pushEnabled = config.PUSH_ENABLED ?? 'false';
+  if (pushEnabled !== 'true' && pushEnabled !== 'false')
+    throw new Error('PUSH_ENABLED must be true or false.');
   return {
     NODE_ENV: nodeEnv,
+    PUSH_ENABLED: pushEnabled,
     PORT: port,
     DATABASE_URL: databaseURL as string | undefined,
     FIREBASE_PROJECT_ID: projectID,

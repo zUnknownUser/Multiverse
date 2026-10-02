@@ -1,0 +1,16 @@
+# Opt-in build ONLY after Apple Developer/APNs provisioning is configured.
+include:
+  - project.yml
+targets:
+  Multiverse:
+    settings:
+      base:
+        MULTIVERSE_PUSH_ENABLED: YES
+      configs:
+        Debug:
+          APS_ENVIRONMENT: development
+        Release:
+          APS_ENVIRONMENT: production
+    entitlements:
+      properties:
+        aps-environment: $(APS_ENVIRONMENT)

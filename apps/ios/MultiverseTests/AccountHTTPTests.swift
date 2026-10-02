@@ -61,6 +61,32 @@ private final class TokenStub: APITokenProvider {
 @Suite(.serialized)
 @MainActor
 struct AccountHTTPTests {
+    @Test func communityPublicationEncodesOptionalItemAndUsesIdempotentRoute() async throws {
+        let id = UUID().uuidString.lowercased()
+        AccountURLProtocol.fixture.reset([(200, "{\"id\":\"\(id)\",\"saved\":true}")])
+        let (api, transport) = client(TokenStub()); defer { transport.invalidateAndCancel() }
+        let result = try await api.publishPost(id: id, input: .init(universeID: "wow", itemID: nil, title: "Title", text: "Body", spoiler: true))
+        #expect(result.saved && result.id == id)
+        let request = try #require(AccountURLProtocol.fixture.requests.first)
+        #expect(request.url?.path == "/api/v1/posts/\(id)" && request.httpMethod == "PUT")
+        let data = try #require(request.httpBody)
+        let body = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        #expect(body["itemID"] is NSNull && body["spoiler"] as? Bool == true)
+    }
+    @Test func notificationReadsSendOnlyExplicitIDsAndCannotUseAnotherAccount() async throws {
+        let id = UUID().uuidString.lowercased(), tokens = TokenStub()
+        AccountURLProtocol.fixture.reset([(200, "{\"saved\":true}")])
+        let (api, transport) = client(tokens); defer { transport.invalidateAndCancel() }
+        #expect(try await api.readNotifications([id]).saved)
+        let request = try #require(AccountURLProtocol.fixture.requests.first)
+        #expect(request.url?.path == "/api/v1/me/notifications/read")
+        let data = try #require(request.httpBody)
+        let body = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        #expect(body["ids"] as? [String] == [id])
+        tokens.switchAccount = true
+        await #expect(throws: AuthError.sessionExpired) { try await api.fetchNotifications(after: nil) }
+        #expect(AccountURLProtocol.fixture.requests.count == 1)
+    }
     @Test func reactionRemovalSendsExplicitNullAndCommentErrorsPreserveTheirMeaning() async throws {
         let reviewID = UUID().uuidString.lowercased(), commentID = UUID().uuidString.lowercased()
         let json = """

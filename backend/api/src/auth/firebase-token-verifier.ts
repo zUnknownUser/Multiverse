@@ -11,7 +11,7 @@ import { getAuth } from 'firebase-admin/auth';
 @Injectable()
 export class FirebaseTokenVerifier {
   constructor(@Inject(ConfigService) private readonly config: ConfigService) {}
-  private auth() {
+  app() {
     const name = 'multiverse-api';
     const app =
       getApps().find((app) => app.name === name) ??
@@ -22,7 +22,10 @@ export class FirebaseTokenVerifier {
         },
         name,
       );
-    return getAuth(app);
+    return app;
+  }
+  private auth() {
+    return getAuth(this.app());
   }
   private credential() {
     const json = this.config.get<string>('FIREBASE_SERVICE_ACCOUNT_JSON');

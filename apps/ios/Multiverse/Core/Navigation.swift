@@ -18,6 +18,8 @@ enum Route: Hashable {
     case blockedUsers
     case deleteAccount
     /// Avisos deixou de ser aba — agora é o sino no topo da Home, empilhado como rota.
+    case community(universe: String?, item: String?)
+    case post(String)
     case notifications
     case club(String)
     case clubDiscussion(clubID: String, week: Int)

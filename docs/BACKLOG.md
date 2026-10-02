@@ -1,6 +1,8 @@
 # Backlog — próximos passos sugeridos
 
-## Direção atual — comunidade (01/10/2026)
+## Direção atual — comunidade (02/10/2026)
+
+Estado detalhado após os itens 2 e 3: [inventário de demonstrações](DEMONSTRATION_INVENTORY.md) e [contrato/ativação de push](../backend/api/docs/community-notifications.md).
 
 Pessoas, busca, sugestões e seguir/deixar de seguir já usam a API real. Em 02/10,
 o feed de reviews também passou a usar a API, com opt-in de diário público,
@@ -14,8 +16,8 @@ por etapas, sem misturar responsabilidades com catálogo ou integrações extern
 Antes de abrir publicação e interação: denúncia, bloqueio, limites contra spam,
 regras de spoilers/conteúdo adulto e resposta clara ao autor. IA pode ajudar na
 triagem, com revisão e possibilidade de contestação; não representa garantia de
-moderação correta. Reposts, ranking e notificações dependem de um recorte futuro.
-Posts livres, reposts e triagem por IA ainda não foram implementados. Denúncias, bloqueios e limites iniciais já têm persistência;
+moderação correta. Reposts e ranking continuam fora do escopo.
+Posts de texto ligados a universos/obras e central de atividade foram implementados em 02/10. Push está preparado e desligado até Apple Developer/APNs. Reposts e triagem por IA ainda não foram implementados. Denúncias, bloqueios e limites iniciais já têm persistência;
 as denúncias aguardam revisão manual, sem prazo automático prometido.
 
 As seções seguintes registram propostas antigas e precisam ser reavaliadas frente

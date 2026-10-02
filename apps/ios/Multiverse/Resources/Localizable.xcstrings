@@ -14878,6 +14878,534 @@
           }
         }
       }
+    },
+    "começou a seguir você.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "começou a seguir você."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "started following you."
+          }
+        }
+      }
+    },
+    "comentou na sua publicação.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "comentou na sua publicação."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "commented on your post."
+          }
+        }
+      }
+    },
+    "reagiu à sua publicação ou comentário.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "reagiu à sua publicação ou comentário."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "reacted to your post or comment."
+          }
+        }
+      }
+    },
+    "Esta publicação não está mais disponível para você.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta publicação não está mais disponível para você."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This post is no longer available to you."
+          }
+        }
+      }
+    },
+    "Este envio já foi usado. Confira a comunidade antes de publicar novamente.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este envio já foi usado. Confira a comunidade antes de publicar novamente."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This submission has already been used. Check the community before posting again."
+          }
+        }
+      }
+    },
+    "Permita notificações nos Ajustes do iPhone para receber alertas.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permita notificações nos Ajustes do iPhone para receber alertas."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow notifications in iPhone Settings to receive alerts."
+          }
+        }
+      }
+    },
+    "Curtidas, respostas e novos seguidores": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Curtidas, respostas e novos seguidores"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Likes, replies and new followers"
+          }
+        }
+      }
+    },
+    "Alertas com o app fechado": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alertas com o app fechado"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts when the app is closed"
+          }
+        }
+      }
+    },
+    "Alertas com o app fechado estarão disponíveis em uma próxima versão.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alertas com o app fechado estarão disponíveis em uma próxima versão."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts when the app is closed will be available in a future version."
+          }
+        }
+      }
+    },
+    "COMUNIDADE": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "COMUNIDADE"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "COMMUNITY"
+          }
+        }
+      }
+    },
+    "Perguntas, ideias e conversas sobre este universo.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perguntas, ideias e conversas sobre este universo."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questions, ideas and conversations about this universe."
+          }
+        }
+      }
+    },
+    "NOVA PUBLICAÇÃO": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NOVA PUBLICAÇÃO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NEW POST"
+          }
+        }
+      }
+    },
+    "Nenhuma publicação por aqui ainda. Comece uma conversa.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhuma publicação por aqui ainda. Comece uma conversa."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No posts here yet. Start a conversation."
+          }
+        }
+      }
+    },
+    "PUBLICAÇÃO COM SPOILER": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PUBLICAÇÃO COM SPOILER"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "POST WITH SPOILERS"
+          }
+        }
+      }
+    },
+    "CARREGAR MAIS": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CARREGAR MAIS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LOAD MORE"
+          }
+        }
+      }
+    },
+    "Publicações da comunidade são públicas, mesmo quando seu diário é privado.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publicações da comunidade são públicas, mesmo quando seu diário é privado."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Community posts are public, even when your diary is private."
+          }
+        }
+      }
+    },
+    "Universo": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Universo"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Universe"
+          }
+        }
+      }
+    },
+    "Título": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Título"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title"
+          }
+        }
+      }
+    },
+    "Texto da publicação": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto da publicação"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Post text"
+          }
+        }
+      }
+    },
+    "Envio pendente. Tente novamente para confirmar sem duplicar sua publicação.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envio pendente. Tente novamente para confirmar sem duplicar sua publicação."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Submission pending. Try again to confirm without posting twice."
+          }
+        }
+      }
+    },
+    "ENVIANDO…": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ENVIANDO…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SENDING…"
+          }
+        }
+      }
+    },
+    "FECHAR": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FECHAR"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CLOSE"
+          }
+        }
+      }
+    },
+    "REVELAR SPOILER": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REVELAR SPOILER"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REVEAL SPOILER"
+          }
+        }
+      }
+    },
+    "EXCLUIR PUBLICAÇÃO": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EXCLUIR PUBLICAÇÃO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DELETE POST"
+          }
+        }
+      }
+    },
+    "DENUNCIAR": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DENUNCIAR"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REPORT"
+          }
+        }
+      }
+    },
+    "COMENTÁRIOS": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "COMENTÁRIOS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "COMMENTS"
+          }
+        }
+      }
+    },
+    "Escreva um comentário": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escreva um comentário"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write a comment"
+          }
+        }
+      }
+    },
+    "Excluir esta publicação?": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excluir esta publicação?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this post?"
+          }
+        }
+      }
+    },
+    "Motivo": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motivo"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reason"
+          }
+        }
+      }
+    },
+    "Bloquear também este usuário": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquear também este usuário"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also block this user"
+          }
+        }
+      }
+    },
+    "Nenhuma atividade ainda. As novidades aparecerão aqui.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhuma atividade ainda. As novidades aparecerão aqui."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No activity yet. Updates will appear here."
+          }
+        }
+      }
+    },
+    "MARCAR ESTAS COMO LIDAS": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MARCAR ESTAS COMO LIDAS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MARK THESE AS READ"
+          }
+        }
+      }
+    },
+    "Não lida": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não lida"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unread"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

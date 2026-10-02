@@ -15,6 +15,7 @@ struct UniverseView: View {
             if let uni = store.universe(universeID) {
                 VStack(alignment: .leading, spacing: 20) {
                     hero(uni: uni).padding(.horizontal, MV.pad)
+                    CommunityLink(universe: universeID).padding(.horizontal, MV.pad)
                     tabBar.padding(.horizontal, MV.pad)
 
                     switch tab {

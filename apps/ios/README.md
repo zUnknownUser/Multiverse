@@ -248,3 +248,13 @@ Testes nos dois idiomas, a partir de `apps/ios/`:
 xcodebuild -project Multiverse.xcodeproj -scheme Multiverse -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath DerivedData -testLanguage en -testRegion US test
 xcodebuild -project Multiverse.xcodeproj -scheme Multiverse -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath DerivedData -testLanguage pt-BR -testRegion BR test
 ```
+
+## Comunidade e notificações (02/10/2026)
+
+Posts de texto por universo/obra, comentários/reações, denúncia/bloqueio/exclusão e
+central de atividade/sino usam a API real. Push está preparado, mas desligado até
+Apple Developer/APNs. O build padrão não pede permissão de push.
+
+- [Contrato e ativação](../../backend/api/docs/community-notifications.md).
+- [Inventário completo do que ainda é demonstração](../../docs/DEMONSTRATION_INVENTORY.md).
+- Validação atual: 160 testes iOS; 886 entradas PT-BR/EN.

@@ -1,8 +1,11 @@
 # Multiverse API
 
 API NestJS 12 + TypeScript com Firebase Authentication e PostgreSQL. Persiste conta,
-onboarding, catálogo, diário, reviews, follows, comentários, reações e proteções
+onboarding, catálogo, diário, reviews, follows, posts, comentários, reações, notificações e proteções
 sociais. Não armazena senhas nem emite tokens próprios.
+
+Contrato novo e ativação futura de APNs: [comunidade e notificações](docs/community-notifications.md).
+Push permanece desligado por padrão; a central funciona sem Apple Developer.
 
 ## Executar localmente
 
@@ -49,8 +52,7 @@ railway link --project 3d9b8511-b917-4a7a-8a7d-577853c8a011
 railway up . --path-as-root --service api --environment production --detach
 ```
 
-O último deploy conferido nesta retomada correspondeu ao commit `bf852c8` do
-GitHub; não publique o mesmo lote por CLI enquanto houver autodeploy em andamento. Não copie credenciais para o Dockerfile, código ou app iOS. Para atualizar
+Confira o commit/status atual no Railway; não publique o mesmo lote por CLI enquanto houver autodeploy em andamento. Não copie credenciais para o Dockerfile, código ou app iOS. Para atualizar
 o segredo, use `railway variable set FIREBASE_SERVICE_ACCOUNT_JSON --stdin --service api`
 com o conteúdo do arquivo local via stdin, sem imprimi-lo.
 

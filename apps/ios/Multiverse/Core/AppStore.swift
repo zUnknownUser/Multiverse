@@ -83,6 +83,8 @@ final class AppStore {
     private let repository: MultiverseRepository
     private let catalogAPI: (any CatalogAPI)?
     private let activityAPI: (any ActivityAPI)?
+    let communityAPI: (any CommunityAPI)?
+    let notifications: NotificationStore?
     let social: SocialStore?
     let people: PeopleStore?
     var usesRemotePeople: Bool { people != nil }
@@ -140,7 +142,7 @@ final class AppStore {
     var searchPath: [Route] = []
     var clubsPath: [Route] = []
     var profilePath: [Route] = []
-    var unreadCount: Int = 4
+    var unreadCount: Int { notifications?.unreadCount ?? 0 }
 
     // MARK: - Rede
     var follows: Set<String> = []
@@ -232,7 +234,9 @@ final class AppStore {
 
     // MARK: - Init
 
-    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil, catalogAPI: (any CatalogAPI)? = nil, activityAPI: (any ActivityAPI)? = nil, peopleAPI: (any PeopleAPI)? = nil, socialAPI: (any SocialAPI)? = nil) {
+    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil, catalogAPI: (any CatalogAPI)? = nil, activityAPI: (any ActivityAPI)? = nil, peopleAPI: (any PeopleAPI)? = nil, socialAPI: (any SocialAPI)? = nil, communityAPI: (any CommunityAPI)? = nil, notificationsAPI: (any NotificationsAPI)? = nil) {
+        self.communityAPI = communityAPI
+        self.notifications = notificationsAPI.map { NotificationStore(api: $0) }
         self.social = socialAPI.map { SocialStore(api: $0) }
         self.people = peopleAPI.map { PeopleStore(api: $0, ownerID: session?.userID ?? "duda") }
         self.activityAPI = activityAPI
@@ -1485,10 +1489,9 @@ final class AppStore {
         tab = newTab
     }
 
-    /// Sino de Avisos: empilha a rota na aba atual e zera o contador.
+    /// Abre a central; somente ações confirmadas de leitura alteram o contador.
     func openNotifications() {
         push(.notifications)
-        unreadCount = 0
     }
 
     func openMyProfile() {

@@ -158,12 +158,32 @@ struct SettingsView: View {
     private var notificationsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L10n.text("NOTIFICAÇÕES")).kicker(11).foregroundStyle(MV.C.muted)
-            VStack(spacing: 0) {
-                toggleRow(L10n.text("Curtidas e respostas"), isOn: Binding(get: { settings.likesAndReplies }, set: { settings.likesAndReplies = $0 }))
-                Divider().overlay(MV.C.divider)
-                toggleRow(L10n.text("Duelos e debates novos"), isOn: Binding(get: { settings.newDuelsAndDebates }, set: { settings.newDuelsAndDebates = $0 }))
+            if let notifications = store.notifications {
+                VStack(alignment: .leading, spacing: 12) {
+                    if let preferences = notifications.preferences {
+                        Toggle(L10n.text("Curtidas, respostas e novos seguidores"), isOn: Binding(
+                            get: { preferences.activity },
+                            set: { value in Task { await notifications.savePreferences(activity: value, push: preferences.push) } }
+                        )).disabled(notifications.busy)
+                        if PushCoordinator.isConfigured && preferences.pushAvailable {
+                            Toggle(L10n.text("Alertas com o app fechado"), isOn: Binding(get: { preferences.push }, set: { value in
+                                Task {
+                                    if value {
+                                        do { try await PushCoordinator.shared.enable(api: notifications.api, userID: store.meID) }
+                                        catch { store.showToast(error.localizedDescription); return }
+                                    }
+                                    await notifications.savePreferences(activity: preferences.activity, push: value)
+                                    if !value { await PushCoordinator.shared.disconnect() }
+                                }
+                            })).disabled(notifications.busy)
+                        } else {
+                            Text(L10n.text("Alertas com o app fechado estarão disponíveis em uma próxima versão.")).font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
+                        }
+                    } else { ProgressView() }
+                    if let error = notifications.error { AuthErrorBanner(message: error); Button(L10n.text("TENTAR DE NOVO")) { Task { await notifications.loadPreferences() } } }
+                }.padding(14).comicCard(shadow: MV.Shadow.s)
+                .task { await notifications.loadPreferences() }
             }
-            .comicCard(shadow: MV.Shadow.s)
         }
     }
 

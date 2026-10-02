@@ -23,11 +23,11 @@ import type { AuthenticatedRequest } from '../auth/firebase-auth.guard.js';
 import { InteractionsService } from './interactions.service.js';
 import type { FeedCursor } from './social.service.js';
 
-class CommentDTO {
+export class CommentDTO {
   @IsString() @Length(1, 2000) @Matches(/\S/u) text!: string;
   @IsBoolean() spoiler!: boolean;
 }
-class ReactionDTO {
+export class ReactionDTO {
   @ValidateIf((_o: unknown, value: unknown) => value !== null)
   @IsIn(['POW!', 'ZAP!', 'KRAK!', 'HEH'])
   reaction!: string | null;
@@ -36,12 +36,12 @@ class ReactionDTO {
 class PermissionDTO {
   @IsIn(['everyone', 'following', 'nobody']) commentPermission!: string;
 }
-class ReportDTO {
+export class ReportDTO {
   @IsIn(['spoiler', 'offensive', 'spam', 'wrong_canon', 'other'])
   reason!: string;
   @IsBoolean() alsoBlock!: boolean;
 }
-const bodyPipe = (expectedType: new () => object) =>
+export const bodyPipe = (expectedType: new () => object) =>
   new ValidationPipe({
     expectedType,
     transform: true,
@@ -51,7 +51,7 @@ const bodyPipe = (expectedType: new () => object) =>
       new BadRequestException({ code: 'INVALID_SOCIAL_REQUEST' }),
   });
 const uuid = new ParseUUIDPipe({ version: '4' });
-function cursor(query: Record<string, unknown>): FeedCursor | undefined {
+export function cursor(query: Record<string, unknown>): FeedCursor | undefined {
   if (Object.keys(query).some((k) => k !== 'after'))
     throw new BadRequestException({ code: 'INVALID_FEED_CURSOR' });
   if (query.after === undefined) return undefined;

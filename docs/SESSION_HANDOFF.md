@@ -1,3 +1,25 @@
+# Atualização — posts e notificações (02/10/2026)
+
+Itens 2 e 3 autorizados pelo usuário foram implementados: posts de texto ligados a
+universos/obras, comentários/reações, denúncias/bloqueio/exclusão; central de atividade,
+leitura e sino reais. O usuário pediu push com app fechado, mas depois informou que
+não possui Apple Developer e autorizou deixá-lo preparado. Não criar conta/chave agora.
+
+- Migration nova: `012_community_notifications.sql` (não alterar após deploy).
+- API: 72 unitários + 74 HTTP/PostgreSQL; iOS: 160; idiomas: 886 PT/EN.
+- Push: `PUSH_ENABLED=false` por padrão; build comum sem entitlement APNs.
+  Variante `apps/ios/project-push.yml`, iOS FCM e worker preparados e compilados.
+  Nenhuma entrega APNs real testada. Provedor de envio simulado nos testes.
+- Guia: [comunidade/notificações](../backend/api/docs/community-notifications.md).
+- Lista completa de limitações: [DEMONSTRATION_INVENTORY.md](DEMONSTRATION_INVENTORY.md).
+- Não confundir posts novos com as telas antigas de teorias, duelos, salas e clubes;
+  estas continuam usando demonstrações, conforme o inventário.
+- Testes usam PostgreSQL descartável `multiverse-community-test` em localhost:55433.
+
+O registro abaixo documenta o lote anterior de recuperação/comentários de reviews.
+
+---
+
 # Retomada do Multiverse — 02/10/2026
 
 ## Objetivo recuperado
@@ -32,7 +54,7 @@ fornece módulos do protótipo; sua presença não significa que o app todo seja
 | Revisão de denúncias | CLI privada, decisões auditadas; sem IA ou painel web |
 | Clubes, salas, mensagens, teorias, previsões, duelos | Ainda contêm dados/interações de demonstração |
 | Listas, desejos, conexões e cronologias | Ainda precisam de revisão/migração por fluxo |
-| Wrapped/notificações/presença | Não representam uma operação social completa; há conteúdo estático |
+| Wrapped/presença | Mistos/estáticos; central de notificações substituída no lote descrito acima |
 | Pro | StoreKit implementado; vínculo à conta Multiverse e validação backend pendentes |
 
 ## Alterações locais recuperadas

@@ -1,3 +1,4 @@
+import { reportQuotaSQL } from '../community/community-policy.js';
 import {
   BadRequestException,
   ConflictException,
@@ -202,10 +203,7 @@ export class SocialService {
       if (author === uid)
         throw new BadRequestException({ code: 'INVALID_REPORT' });
       if (!existing.rowCount) {
-        const count = await client.query(
-          "SELECT ((SELECT count(*) FROM review_reports WHERE reporter_uid=$1 AND created_at>now()-interval '24 hours') + (SELECT count(*) FROM comment_reports WHERE reporter_uid=$1 AND created_at>now()-interval '24 hours'))::int AS count",
-          [uid],
-        );
+        const count = await client.query(reportQuotaSQL, [uid]);
         if (count.rows[0].count >= 50)
           throw new HttpException({ code: 'REPORT_LIMIT' }, 429);
         await client.query(

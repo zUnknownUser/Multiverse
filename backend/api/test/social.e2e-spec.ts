@@ -1,3 +1,11 @@
+import { NotificationsService } from '../src/notifications/notifications.service.js';
+import { AccountLifecycleService } from '../src/accounts/account-lifecycle.service.js';
+import { SocialService } from '../src/social/social.service.js';
+import { PushService } from '../src/notifications/push.service.js';
+const { sendPush } = vi.hoisted(() => ({ sendPush: vi.fn() }));
+vi.mock('firebase-admin/messaging', () => ({
+  getMessaging: () => ({ sendEachForMulticast: sendPush }),
+}));
 import { randomUUID } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import { Test } from '@nestjs/testing';
@@ -625,5 +633,444 @@ describe.skipIf(!databaseURL)('Social feed and safety with PostgreSQL', () => {
       .send({ blocked: true, uid: 'bruno' })
       .expect(400);
     await report(randomUUID()).expect(404);
+  });
+  const postInput = {
+    universeID: 'wow',
+    itemID: 'w-wotlk',
+    title: 'Uma pergunta',
+    text: 'O que vocês acharam?',
+    spoiler: false,
+  };
+  const put = (path: string, body: object, uid = 'alice') =>
+    request(app.getHttpServer())
+      .put('/api/v1/' + path)
+      .auth(uid, { type: 'bearer' })
+      .send(body);
+  const publish = (id = randomUUID(), input = postInput, uid = 'alice') =>
+    put('posts/' + id, input, uid);
+  const postSetup = async () => {
+    await setup();
+    await permission('everyone');
+    const id = randomUUID();
+    await publish(id).expect(200);
+    return id;
+  };
+
+  it('publishes independently of a private diary, with discovery, catalog filters and exact retries', async () => {
+    const id = await postSetup();
+    expect(
+      (await get('posts').expect(200)).body.posts.map(
+        (p: { id: string }) => p.id,
+      ),
+    ).toEqual([id]);
+    expect((await get('posts?universe=marvel').expect(200)).body.posts).toEqual(
+      [],
+    );
+    expect(
+      (await get('posts?item=w-wotlk').expect(200)).body.posts[0].universeID,
+    ).toBe('wow');
+    await publish(id).expect(200);
+    await publish(id, { ...postInput, text: 'Alterado' }).expect(409);
+    await publish(id, postInput, 'owner').expect(409);
+    expect(
+      (await db.query('SELECT count(*)::int AS count FROM community_posts'))
+        .rows[0].count,
+    ).toBe(1);
+    expect(
+      (await db.query('SELECT count(*)::int AS count FROM diary_entries'))
+        .rows[0].count,
+    ).toBe(0);
+  });
+  it('rejects invalid catalog links, whitespace, unknown fields, malformed cursors and anonymous posts', async () => {
+    await setup();
+    await publish(randomUUID(), { ...postInput, universeID: 'marvel' }).expect(
+      400,
+    );
+    await publish(randomUUID(), { ...postInput, title: '  ' }).expect(400);
+    await put('posts/' + randomUUID(), {
+      ...postInput,
+      firebase_uid: 'owner',
+    }).expect(400);
+    await get('posts?after=garbage').expect(400);
+    await get('posts?unexpected=true').expect(400);
+    await request(app.getHttpServer()).get('/api/v1/posts').expect(401);
+  });
+  it('enforces post publication limits even when the author deletes posts', async () => {
+    await setup();
+    for (let i = 0; i < 10; i++) await publish().expect(200);
+    await publish().expect(429);
+  });
+  it('paginates same-time posts without omissions and isolates item filters', async () => {
+    await setup();
+    for (let i = 0; i < 34; i++)
+      await db.query(
+        'INSERT INTO community_posts(id,firebase_uid,universe_id,title,text,created_at) VALUES($1,$2,$3,$4,$5,$6)',
+        [randomUUID(), 'alice', 'wow', 'Title', 'Body', '2026-10-01T10:00:00Z'],
+      );
+    const first = (await get('posts').expect(200)).body;
+    const second = (await get('posts?after=' + first.nextCursor).expect(200))
+      .body;
+    expect(first.posts).toHaveLength(30);
+    expect(second.posts).toHaveLength(4);
+    expect(second.nextCursor).toBeNull();
+    expect(
+      new Set([...first.posts, ...second.posts].map((p) => p.id)).size,
+    ).toBe(34);
+  });
+  it('supports post comments and reactions, respects author permission, and does not duplicate alerts', async () => {
+    const id = await postSetup(),
+      c = randomUUID();
+    await put(
+      `posts/${id}/comments/${c}`,
+      { text: 'Resposta', spoiler: true },
+      'owner',
+    ).expect(200);
+    await put(
+      `posts/${id}/comments/${c}`,
+      { text: 'Resposta', spoiler: true },
+      'owner',
+    ).expect(200);
+    await put(
+      `posts/${id}/reaction`,
+      { reaction: 'POW!', liked: true },
+      'owner',
+    ).expect(200);
+    await put(
+      `posts/${id}/reaction`,
+      { reaction: 'POW!', liked: true },
+      'owner',
+    ).expect(200);
+    const page = (await get(`posts/${id}/comments`).expect(200)).body;
+    expect(page.comments).toHaveLength(1);
+    expect(page.comments[0].spoiler).toBe(true);
+    expect(
+      (
+        await get('me/notifications', 'alice').expect(200)
+      ).body.notifications.filter(
+        (n: { kind: string }) => n.kind === 'comment',
+      ),
+    ).toHaveLength(1);
+    await permission('nobody');
+    await put(
+      `posts/${id}/comments/${randomUUID()}`,
+      { text: 'New', spoiler: false },
+      'owner',
+    ).expect(403);
+    await put(
+      `posts/${id}/comments/${randomUUID()}`,
+      { text: 'Own', spoiler: false },
+      'alice',
+    ).expect(200);
+  });
+  it('restricts deletion to the author and removes post activity from recipients', async () => {
+    const id = await postSetup();
+    await put(
+      `posts/${id}/reaction`,
+      { reaction: null, liked: true },
+      'owner',
+    ).expect(200);
+    await request(app.getHttpServer())
+      .delete('/api/v1/posts/' + id)
+      .auth('owner', { type: 'bearer' })
+      .expect(404);
+    await request(app.getHttpServer())
+      .delete('/api/v1/posts/' + id)
+      .auth('alice', { type: 'bearer' })
+      .expect(200);
+    await get('posts/' + id).expect(404);
+    await put(
+      `posts/${id}/reaction`,
+      { reaction: null, liked: true },
+      'owner',
+    ).expect(404);
+    expect(
+      (
+        await get('me/notifications', 'alice').expect(200)
+      ).body.notifications.every(
+        (n: { targetID: string }) => n.targetID !== id,
+      ),
+    ).toBe(true);
+    await publish(id).expect(200); // retry never revives deleted content
+    await get('posts/' + id).expect(404);
+  });
+  it('hides reported post comments, queues moderation, and blocks discovery in both directions', async () => {
+    const id = await postSetup(),
+      c = randomUUID();
+    await put(
+      `posts/${id}/comments/${c}`,
+      { text: 'Resposta', spoiler: false },
+      'bruno',
+    ).expect(200);
+    await put(
+      `posts/${id}/comments/${c}/report`,
+      { reason: 'spam', alsoBlock: false },
+      'owner',
+    ).expect(200);
+    expect(
+      (await get(`posts/${id}/comments`).expect(200)).body.comments,
+    ).toHaveLength(0);
+    const queue = await db.transaction((client) => moderationQueue(client));
+    expect(
+      queue.some((q) => q.targetType === 'post_comment' && q.targetID === c),
+    ).toBe(true);
+    await db.transaction((client) =>
+      moderate(client, {
+        id: randomUUID(),
+        targetType: 'post_comment',
+        targetID: c,
+        action: 'hide',
+        operator: 'test',
+        reason: 'Reviewed',
+      }),
+    );
+    expect(
+      (await get(`posts/${id}/comments`, 'alice').expect(200)).body.comments,
+    ).toHaveLength(0);
+    await put(
+      `posts/${id}/report`,
+      { reason: 'spam', alsoBlock: true },
+      'owner',
+    ).expect(200);
+    await put(
+      `posts/${id}/report`,
+      { reason: 'spam', alsoBlock: true },
+      'owner',
+    ).expect(200);
+    expect((await get('posts').expect(200)).body.posts).toHaveLength(0);
+    expect(
+      (
+        await get('me/notifications', 'alice').expect(200)
+      ).body.notifications.every((n: { user: string }) => n.user !== 'owner'),
+    ).toBe(true);
+  });
+  it('tracks read state per recipient without marking arrivals or another account notifications', async () => {
+    const id = await postSetup();
+    const before = (await get('me/notifications', 'alice').expect(200)).body;
+    expect(before.unreadCount).toBe(1); // owner follows alice
+    await put(
+      `posts/${id}/reaction`,
+      { reaction: null, liked: true },
+      'bruno',
+    ).expect(200);
+    await put(
+      'me/notifications/read',
+      { ids: before.notifications.map((n: { id: string }) => n.id) },
+      'owner',
+    ).expect(200);
+    expect(
+      (await get('me/notifications', 'alice').expect(200)).body.unreadCount,
+    ).toBe(2);
+    await put(
+      'me/notifications/read',
+      { ids: before.notifications.map((n: { id: string }) => n.id) },
+      'alice',
+    ).expect(200);
+    expect(
+      (await get('me/notifications', 'alice').expect(200)).body.unreadCount,
+    ).toBe(1);
+    await put('me/notifications/read', { ids: ['invalid'] }, 'alice').expect(
+      400,
+    );
+  });
+  it('suppresses notifications for withdrawn reactions, private reviews and disabled preferences', async () => {
+    const review = await publicReview();
+    await react(review, 'POW!').expect(200);
+    expect(
+      (await get('me/notifications', 'alice').expect(200)).body.unreadCount,
+    ).toBe(2);
+    await privacy(false).expect(200);
+    // Review owner can still access their own private review; actor's block must hide the notification.
+    await block('alice', 'owner').expect(200);
+    expect(
+      (await get('me/notifications', 'alice').expect(200)).body.unreadCount,
+    ).toBe(0);
+    await block('alice', 'owner', false).expect(200);
+    await privacy(true).expect(200);
+    await react(review, null).expect(200);
+    expect(
+      (
+        await get('me/notifications', 'alice').expect(200)
+      ).body.notifications.some((n: { kind: string }) => n.kind === 'reaction'),
+    ).toBe(false);
+    await put('me/notification-preferences', {
+      activity: false,
+      push: false,
+    }).expect(200);
+    await react(review, 'ZAP!', 'bruno').expect(200);
+    expect(
+      (
+        await get('me/notifications', 'alice').expect(200)
+      ).body.notifications.some((n: { user: string }) => n.user === 'bruno'),
+    ).toBe(false);
+    await put('me/notification-preferences', {
+      activity: true,
+      push: true,
+    }).expect(409);
+    await put('me/push-devices/' + randomUUID(), {
+      token: 'not-a-real-token-value',
+    }).expect(409);
+  });
+  it('deletes notifications, posts and device registrations with the account', async () => {
+    await postSetup();
+    await db.query(
+      'INSERT INTO push_devices(id,firebase_uid,token) VALUES($1,$2,$3)',
+      [randomUUID(), 'alice', 'test-token-never-delivered'],
+    );
+    await db.query('DELETE FROM profiles WHERE firebase_uid=$1', ['alice']);
+    expect((await db.query('SELECT * FROM notifications')).rowCount).toBe(0);
+    expect((await db.query('SELECT * FROM community_posts')).rowCount).toBe(0);
+    expect((await db.query('SELECT * FROM push_devices')).rowCount).toBe(0);
+  });
+  it('delivers only pending visible opted-in activity; retries failures without repeating successful devices', async () => {
+    const id = await postSetup();
+    await db.query(
+      'INSERT INTO notification_preferences(firebase_uid,activity,push) VALUES($1,true,true)',
+      ['alice'],
+    );
+    const devices = [randomUUID(), randomUUID()].sort();
+    for (const [i, device] of devices.entries())
+      await db.query(
+        'INSERT INTO push_devices(id,firebase_uid,token) VALUES($1,$2,$3)',
+        [device, 'alice', 'test-only-never-live-token-' + i],
+      );
+    await put(
+      `posts/${id}/reaction`,
+      { reaction: null, liked: true },
+      'owner',
+    ).expect(200);
+    sendPush.mockReset();
+    sendPush.mockResolvedValueOnce({
+      responses: [
+        { success: true },
+        { success: false, error: { code: 'messaging/server-unavailable' } },
+      ],
+    });
+    const worker = new PushService(
+      new ConfigService({ PUSH_ENABLED: 'true' }),
+      db,
+      { app: () => ({}) } as unknown as FirebaseTokenVerifier,
+    );
+    await worker.tick();
+    expect(sendPush).toHaveBeenCalledTimes(1);
+    const payload = sendPush.mock.calls[0][0];
+    expect(payload.data.notificationID).toBeDefined();
+    expect(JSON.stringify(payload)).not.toContain('Uma pergunta');
+    await db.query(
+      "UPDATE notifications SET push_after=now() WHERE push_state='pending'",
+    );
+    sendPush.mockResolvedValueOnce({ responses: [{ success: true }] });
+    await worker.tick();
+    expect(sendPush.mock.calls[1][0].tokens).toEqual([
+      'test-only-never-live-token-1',
+    ]);
+    await worker.tick();
+    expect(sendPush).toHaveBeenCalledTimes(2);
+  });
+  it('skips push jobs whose content was deleted before delivery', async () => {
+    const id = await postSetup();
+    await db.query(
+      'INSERT INTO notification_preferences(firebase_uid,activity,push) VALUES($1,true,true)',
+      ['alice'],
+    );
+    await put(
+      `posts/${id}/reaction`,
+      { reaction: null, liked: true },
+      'owner',
+    ).expect(200);
+    await db.query('UPDATE community_posts SET deleted_at=now() WHERE id=$1', [
+      id,
+    ]);
+    sendPush.mockReset();
+    const worker = new PushService(
+      new ConfigService({ PUSH_ENABLED: 'true' }),
+      db,
+      { app: () => ({}) } as unknown as FirebaseTokenVerifier,
+    );
+    await worker.tick();
+    expect(sendPush).not.toHaveBeenCalled();
+    expect(
+      (await db.query("SELECT 1 FROM notifications WHERE push_state='pending'"))
+        .rowCount,
+    ).toBe(0);
+  });
+  it('backs off thrown provider errors and stops after five attempts', async () => {
+    const id = await postSetup();
+    await db.query(
+      'INSERT INTO notification_preferences(firebase_uid,activity,push) VALUES($1,true,true)',
+      ['alice'],
+    );
+    await db.query(
+      'INSERT INTO push_devices(id,firebase_uid,token) VALUES($1,$2,$3)',
+      [randomUUID(), 'alice', 'test-only-never-live-token'],
+    );
+    await put(
+      `posts/${id}/reaction`,
+      { reaction: null, liked: true },
+      'owner',
+    ).expect(200);
+    sendPush.mockReset();
+    sendPush.mockRejectedValue(new Error('unavailable'));
+    const worker = new PushService(
+      new ConfigService({ PUSH_ENABLED: 'true' }),
+      db,
+      { app: () => ({}) } as unknown as FirebaseTokenVerifier,
+    );
+    for (let i = 0; i < 6; i++) {
+      await db.query(
+        "UPDATE notifications SET push_after=now() WHERE push_state='pending'",
+      );
+      await worker.tick();
+    }
+    expect(sendPush).toHaveBeenCalledTimes(5);
+    expect(
+      (await db.query("SELECT 1 FROM notifications WHERE push_state='pending'"))
+        .rowCount,
+    ).toBe(0);
+  });
+  it('does not expose a reaction to a comment after its parent diary becomes private', async () => {
+    const review = await publicReview(),
+      c = randomUUID();
+    await permission('everyone');
+    await comment(review, c, 'owner').expect(200);
+    await react(review, 'POW!', 'bruno', c).expect(200);
+    expect((await get('me/notifications').expect(200)).body.unreadCount).toBe(
+      1,
+    );
+    await privacy(false).expect(200);
+    expect(
+      (await get('me/notifications').expect(200)).body.notifications,
+    ).toHaveLength(0);
+  });
+  it('binds device IDs and tokens to one account and sanitizes racing conflicts', async () => {
+    await setup();
+    const service = new NotificationsService(
+      app.get(AccountLifecycleService),
+      app.get(SocialService),
+      new ConfigService({ PUSH_ENABLED: 'true' }),
+    );
+    const id = randomUUID(),
+      other = randomUUID(),
+      token = 'test-only-not-a-live-device-token';
+    await service.device('alice', id, token);
+    await expect(service.device('owner', id, token)).rejects.toThrow();
+    await service.device('owner', id); // Wrong-account removal has no effect.
+    expect(
+      (
+        await db.query('SELECT firebase_uid FROM push_devices WHERE id=$1', [
+          id,
+        ])
+      ).rows[0].firebase_uid,
+    ).toBe('alice');
+    await service.device('alice', id);
+    await service.device('owner', other, token);
+    const concurrent = await Promise.allSettled([
+      service.device('alice', randomUUID(), 'another-test-device-token'),
+      service.device('bruno', randomUUID(), 'another-test-device-token'),
+    ]);
+    expect(concurrent.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    const rejected = concurrent.find(
+      (r) => r.status === 'rejected',
+    ) as PromiseRejectedResult;
+    expect(rejected.reason.getResponse().code).toBe('DEVICE_CONFLICT');
   });
 });

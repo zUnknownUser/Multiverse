@@ -101,6 +101,8 @@ private struct RouteDestination: View {
         case .settings: SettingsView()
         case .blockedUsers: BlockedUsersView()
         case .deleteAccount: DeleteAccountView()
+        case .community(let universe, let item): CommunityView(universe: universe, item: item)
+        case .post(let id): PostView(id: id)
         case .notifications: NotificationsView()
         case .club(let id): ClubDetailView(clubID: id)
         case .clubDiscussion(let clubID, let week): ClubDiscussionView(clubID: clubID, week: week)

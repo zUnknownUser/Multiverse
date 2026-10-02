@@ -3,130 +3,50 @@ import SwiftUI
 struct NotificationsView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
-
     var body: some View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
-            VStack(alignment: .leading, spacing: 22) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.text("ATIVIDADE")).font(MVFont.display(28, width: 122)).foregroundStyle(MV.C.ink)
-                    Text(L10n.text("O que o pessoal fez com o que você postou."))
-                        .font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.muted)
-                }
-
-                VStack(spacing: 10) {
-                    ForEach(StaticContent.notifications) { n in
-                        NotificationRow(notification: n)
+            VStack(alignment: .leading, spacing: 18) {
+                Text(L10n.text("ATIVIDADE")).font(MVFont.display(28, width: 122))
+                Text(L10n.text("O que o pessoal fez com o que você postou.")).font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.muted)
+                if let notifications = store.notifications {
+                    if let error = notifications.error {
+                        AuthErrorBanner(message: error)
+                        Button(L10n.text("TENTAR DE NOVO")) { Task { await notifications.refresh() } }
                     }
-                }
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(L10n.text("TOP LORISTAS DA SEMANA")).font(MVFont.section(17)).foregroundStyle(MV.C.ink)
-                    VStack(spacing: 10) {
-                        ForEach(StaticContent.leaderboard) { entry in
-                            LeaderRow(entry: entry)
-                        }
+                    if notifications.busy { ProgressView() }
+                    if notifications.entries.isEmpty && !notifications.busy && notifications.error == nil {
+                        Text(L10n.text("Nenhuma atividade ainda. As novidades aparecerão aqui."))
                     }
+                    if notifications.entries.contains(where: { $0.readAt == nil }) {
+                        Button(L10n.text("MARCAR ESTAS COMO LIDAS")) { Task { _ = await notifications.markRead(notifications.entries.map(\.id)) } }.disabled(notifications.busy)
+                    }
+                    ForEach(notifications.entries) { entry in
+                        Button { Task { await open(entry, in: notifications) } } label: {
+                            HStack(alignment: .top, spacing: 12) {
+                                if let user = notifications.users[entry.user] { AvatarView(user: user, size: 34) }
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(notifications.users[entry.user]?.name ?? "").font(MVFont.bold(14))
+                                    Text(entry.label).font(MVFont.body(13, weight: 500))
+                                    Text(entry.createdAt, style: .relative).font(MVFont.body(11, weight: 500)).foregroundStyle(MV.C.muted)
+                                }
+                                Spacer()
+                                if entry.readAt == nil { Circle().fill(MV.C.ink).frame(width: 8, height: 8).accessibilityLabel(L10n.text("Não lida")) }
+                            }.foregroundStyle(MV.C.ink).padding(14).comicCard()
+                        }.buttonStyle(.plain).disabled(notifications.busy)
+                    }
+                    if notifications.nextCursor != nil { Button(L10n.text("CARREGAR MAIS")) { Task { await notifications.refresh(more: true) } }.disabled(notifications.busy) }
                 }
-            }
-            .padding(.horizontal, MV.pad)
-            .padding(.bottom, 24)
+            }.padding(MV.pad)
+        }.task { await store.notifications?.refresh() }
+        .refreshable { await store.notifications?.refresh() }
+    }
+    private func open(_ entry: ActivityNotification, in notifications: NotificationStore) async {
+        guard await notifications.markRead([entry.id]) else { return }
+        switch entry.targetType {
+        case "review": store.push(.review(entry.targetID))
+        case "post": store.push(.post(entry.targetID))
+        case "person": store.openUserProfile(entry.targetID)
+        default: break
         }
-        .onAppear { store.unreadCount = 0 }
-    }
-}
-
-private struct NotificationRow: View {
-    let notification: StaticContent.NotificationItem
-    @Environment(AppStore.self) private var store
-
-    var body: some View {
-        guard let user = store.user(notification.userID) else { return AnyView(EmptyView()) }
-        let item = notification.itemID.flatMap { store.item($0) }
-
-        return AnyView(
-            HStack(alignment: .top, spacing: 10) {
-                    AvatarView(user: user, size: 34)
-                    VStack(alignment: .leading, spacing: 6) {
-                        (Text(user.name).font(MVFont.bold(13))
-                            + Text(" " + notification.text + " ").font(MVFont.body(13, weight: 500))
-                            + Text(item?.title ?? "").font(MVFont.bold(13)))
-                            .foregroundStyle(MV.C.ink)
-                        if let quote = notification.quote {
-                            Text(quote)
-                                .font(MVFont.body(12, weight: 500))
-                                .italic()
-                                .foregroundStyle(MV.C.muted)
-                                .padding(.leading, 10)
-                                .overlay(alignment: .leading) { Rectangle().fill(MV.C.ink).frame(width: 3) }
-                        }
-                        Text(notification.when).font(MVFont.body(11, weight: 700)).foregroundStyle(MV.C.muted)
-                    }
-                    Spacer(minLength: 8)
-                    if notification.isNewFollower {
-                        let following = store.isFollowing(user.id)
-                        Text(following ? L10n.text("Seguindo") : L10n.text("Seguir"))
-                            .font(MVFont.bold(11))
-                            .padding(.horizontal, 10).padding(.vertical, 7)
-                            .foregroundStyle(following ? MV.C.ink : MV.C.paper)
-                            .background(following ? Color.clear : MV.C.ink)
-                            .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-                            .clipShape(Capsule())
-                            .burstOnTap("ZAP!", color: MV.C.dc, when: !following) {
-                                store.toggleFollow(user.id)
-                            }
-                    } else if let item {
-                        let uni = store.universe(of: item)
-                        let p = Logic.posterColors(item: item, universe: uni)
-                        ZStack { p.bg; Halftone() }
-                            .frame(width: 36, height: 54)
-                            .comicCard(bg: p.bg, radius: MV.R.sm, shadow: MV.Shadow.s)
-                    }
-            }
-            .padding(10)
-            .comicCard(shadow: MV.Shadow.s)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                if let rid = notification.reviewID { store.push(.review(rid)) }
-                else { store.openUserProfile(user.id) }
-            }
-        )
-    }
-}
-
-private struct LeaderRow: View {
-    let entry: StaticContent.LeaderboardEntry
-    @Environment(AppStore.self) private var store
-
-    var body: some View {
-        guard let user = store.user(entry.userID) else { return AnyView(EmptyView()) }
-        let rank = (StaticContent.leaderboard.firstIndex { $0.userID == entry.userID } ?? 0) + 1
-        let following = store.isFollowing(user.id)
-
-        return AnyView(
-            HStack(spacing: 10) {
-                Text("\(rank)").font(MVFont.black(16)).foregroundStyle(MV.C.muted).frame(width: 22)
-                AvatarView(user: user, size: 34)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(user.name).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
-                    Text(L10n.format("%1$@ reviews · %2$@ curtidas", String(describing: entry.reviews), String(describing: Logic.fmt(entry.likes))))
-                        .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
-                }
-                Spacer()
-                Text(following ? L10n.text("Seguindo") : L10n.text("Seguir"))
-                    .font(MVFont.bold(10))
-                    .padding(.horizontal, 9).padding(.vertical, 6)
-                    .foregroundStyle(following ? MV.C.ink : MV.C.paper)
-                    .background(following ? Color.clear : MV.C.ink)
-                    .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-                    .clipShape(Capsule())
-                    .burstOnTap("ZAP!", color: MV.C.dc, when: !following) {
-                        store.toggleFollow(user.id)
-                    }
-            }
-            .padding(10)
-            .comicCard(shadow: MV.Shadow.s)
-            .contentShape(Rectangle())
-            .onTapGesture { store.openUserProfile(user.id) }
-        )
     }
 }

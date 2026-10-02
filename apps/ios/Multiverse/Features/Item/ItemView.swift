@@ -25,6 +25,7 @@ struct ItemView: View {
                     histogramSection(item: item, uni: uni).padding(.horizontal, MV.pad)
                     timelineSection(item: item, uni: uni).padding(.horizontal, MV.pad)
                     connectionsSection(item: item).padding(.horizontal, MV.pad)
+                    CommunityLink(universe: item.uni, item: item.id).padding(.horizontal, MV.pad)
                     reviewsSection(item: item).padding(.horizontal, MV.pad)
                 }
                 .padding(.bottom, 24)

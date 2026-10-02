@@ -5,6 +5,7 @@ import FirebaseAppCheck
 
 @main
 struct MultiverseApp: App {
+    @UIApplicationDelegateAdaptor(PushAppDelegate.self) private var pushDelegate
     init() {
         #if DEBUG
         AppCheck.setAppCheckProviderFactory(AppCheckDebugProviderFactory())

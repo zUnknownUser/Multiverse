@@ -343,6 +343,7 @@ final class AuthStore {
     // MARK: - Conta (chamado a partir de Ajustes)
 
     func signOut() async {
+        await PushCoordinator.shared.disconnect()
         do {
             try await repository.signOut()
             reset()
@@ -352,6 +353,7 @@ final class AuthStore {
     }
 
     func deleteAccount() async throws {
+        await PushCoordinator.shared.disconnect()
         try await repository.deleteAccount()
         reset()
     }

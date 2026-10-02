@@ -5,6 +5,7 @@ export async function reactionSummaries(
   client: PoolClient,
   uid: string,
   targets: string[],
+  domain: 'review' | 'post' = 'review',
 ) {
   const result = await client.query(
     `SELECT sr.target_id AS id,
@@ -15,9 +16,9 @@ export async function reactionSummaries(
     count(*) FILTER(WHERE sr.reaction='ZAP!')::int AS "ZAP!",
     count(*) FILTER(WHERE sr.reaction='KRAK!')::int AS "KRAK!",
     count(*) FILTER(WHERE sr.reaction='HEH')::int AS "HEH"
-    FROM social_reactions sr JOIN profiles rp ON rp.firebase_uid=sr.firebase_uid
-    JOIN reviews r ON r.id=sr.review_id
-    LEFT JOIN review_comments c ON c.id=sr.comment_id
+    FROM ${domain === 'post' ? 'post_reactions' : 'social_reactions'} sr JOIN profiles rp ON rp.firebase_uid=sr.firebase_uid
+    JOIN ${domain === 'post' ? 'community_posts' : 'reviews'} r ON r.id=sr.${domain === 'post' ? 'post_id' : 'review_id'}
+    LEFT JOIN ${domain === 'post' ? 'post_comments' : 'review_comments'} c ON c.id=sr.comment_id
     WHERE sr.target_id=ANY($2::uuid[]) AND rp.deletion_requested_at IS NULL
     AND ${unblocked('$1', 'sr.firebase_uid')} AND ${unblocked('r.firebase_uid', 'sr.firebase_uid')}
     AND (c.id IS NULL OR ${unblocked('c.firebase_uid', 'sr.firebase_uid')})

@@ -74,17 +74,36 @@ struct RootView: View {
                 catalogAPI: CatalogAPIClient(),
                 activityAPI: api,
                 peopleAPI: api,
-                socialAPI: api
+                socialAPI: api,
+                communityAPI: api,
+                notificationsAPI: api
             )
             store = accountStore
             await accountStore.bootstrap()
+            if accountStore.isOnboarded {
+                await accountStore.notifications?.refresh()
+                await PushCoordinator.shared.resume(api: api, userID: session.userID)
+                openPushActivity()
+            }
+        }
+        .onChange(of: PushCoordinator.shared.openActivity) { _, _ in openPushActivity() }
+        .task(id: store.meID) {
+            while !Task.isCancelled {
+                do { try await Task.sleep(for: .seconds(30)) } catch { break }
+                if scenePhase == .active && store.isOnboarded { await store.notifications?.refresh() }
+            }
         }
         .task { await auth.bootstrap() }
         .task { await proStore.loadProducts() }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await proStore.refreshEntitlement() } }
+            if phase == .active { Task { await proStore.refreshEntitlement(); if store.isOnboarded { await store.notifications?.refresh() } } }
         }
 
+    }
+    private func openPushActivity() {
+        guard PushCoordinator.shared.openActivity, auth.session?.userID == store.meID, store.isOnboarded else { return }
+        PushCoordinator.shared.openActivity = false
+        store.openNotifications()
     }
 }
 

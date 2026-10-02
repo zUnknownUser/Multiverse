@@ -7,6 +7,7 @@ import {
 import type { PoolClient } from 'pg';
 import { AccountLifecycleService } from '../accounts/account-lifecycle.service.js';
 
+import { recordNotification } from '../notifications/notification-events.js';
 import { unblocked } from '../social/social-policy.js';
 
 const eligible = `profiles p JOIN onboarding o ON o.firebase_uid=p.firebase_uid AND o.completed=true`;
@@ -129,6 +130,8 @@ export class PeopleService {
             'DELETE FROM follows WHERE follower_uid=$1 AND followed_uid=$2',
             [uid, id],
           );
+      if (changed.rowCount && following)
+        await recordNotification(client, id, uid, 'follow', 'person', uid);
       if (changed.rowCount)
         await client.query(
           'UPDATE onboarding SET version=version+1,updated_at=now() WHERE firebase_uid=$1',

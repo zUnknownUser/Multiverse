@@ -1,7 +1,7 @@
 import Foundation
 
 @MainActor
-final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI {
+final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, CommunityAPI, NotificationsAPI {
     private let baseURL: URL?
     private let tokens: any APITokenProvider
     private let transport: URLSession
@@ -109,7 +109,7 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI {
         let result: Deletion = try await request("me", method: "DELETE")
         guard result.deleted else { throw AuthError.deletionPending }
     }
-    private func request<Response: Decodable>(_ path: String, method: String = "GET", body: Data? = nil, query: [URLQueryItem] = []) async throws -> Response {
+    func request<Response: Decodable>(_ path: String, method: String = "GET", body: Data? = nil, query: [URLQueryItem] = []) async throws -> Response {
         guard let baseURL else { throw AuthError.apiNotConfigured }
         guard let uid = tokens.userID, expectedUserID == nil || uid == expectedUserID else { throw AuthError.sessionExpired }
         var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
@@ -157,6 +157,9 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI {
             case "COMMENT_LIMIT": throw SocialError.commentLimit
             case "COMMENT_CONFLICT": throw SocialError.commentConflict
             case "REACTION_LIMIT": throw SocialError.reactionLimit
+            case "POST_UNAVAILABLE": throw CommunityError.unavailable
+            case "POST_CONFLICT": throw CommunityError.conflict
+            case "INVALID_POST_CATALOG": throw CatalogError.changed
             case "REVIEW_UNAVAILABLE": throw SocialError.unavailable
             case "INVALID_SOCIAL_REQUEST", "INVALID_REPORT", "INVALID_BLOCK", "INVALID_FEED_CURSOR": throw SocialError.invalid
             case "REPORT_LIMIT": throw SocialError.reportLimit

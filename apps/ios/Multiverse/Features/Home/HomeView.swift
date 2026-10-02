@@ -11,6 +11,7 @@ struct HomeView: View {
                 if store.isShieldActive { ShieldStatusBanner().padding(.horizontal, MV.pad) }
                 wrappedBanner.padding(.horizontal, MV.pad)
                 universeGrid.padding(.horizontal, MV.pad)
+                CommunityLink().padding(.horizontal, MV.pad)
                 if !store.clubs.isEmpty { MyClubsCard().padding(.horizontal, MV.pad) }
                 if !store.homeDiscoveryItems.isEmpty { trendingSection }
                 DuelCard()
@@ -32,6 +33,7 @@ struct HomeView: View {
             .padding(.bottom, 24)
         }
         .task {
+            await store.notifications?.refresh()
             if store.people?.state == nil { await store.people?.loadHome() }
             await store.social?.loadPrivacy()
             if store.social?.hasLoadedFeed == false { await store.social?.loadFeed() }
@@ -41,6 +43,7 @@ struct HomeView: View {
             Task { await store.social?.loadFeed() }
         }
         .refreshable {
+            await store.notifications?.refresh()
             await store.refreshActivity()
             await store.people?.loadHome()
             await store.social?.loadFeed()

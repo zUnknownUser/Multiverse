@@ -9,13 +9,19 @@ export async function moderationQueue(client: PoolClient) {
     SELECT 'comment',c.id,c.text,c.spoiler,c.moderation_status,
       count(*)::int,array_agg(DISTINCT cr.reason),min(cr.created_at)
       FROM comment_reports cr JOIN review_comments c ON c.id=cr.comment_id WHERE cr.status='pending' GROUP BY c.id
+    UNION ALL
+    SELECT 'post',r.id,r.text,r.spoiler,r.moderation_status,count(*)::int,array_agg(DISTINCT pr.reason),min(pr.created_at)
+    FROM post_reports pr JOIN community_posts r ON r.id=pr.post_id WHERE pr.status='pending' GROUP BY r.id
+    UNION ALL
+    SELECT 'post_comment',c.id,c.text,c.spoiler,c.moderation_status,count(*)::int,array_agg(DISTINCT cr.reason),min(cr.created_at)
+    FROM post_comment_reports cr JOIN post_comments c ON c.id=cr.comment_id WHERE cr.status='pending' GROUP BY c.id
     ) queue ORDER BY "oldestReport","targetType","targetID" LIMIT 50`);
   return result.rows;
 }
 
 export interface ModerationDecision {
   id: string;
-  targetType: 'review' | 'comment';
+  targetType: 'review' | 'comment' | 'post' | 'post_comment';
   targetID: string;
   action: 'hide' | 'dismiss' | 'restore';
   operator: string;
@@ -29,7 +35,7 @@ export async function moderate(client: PoolClient, input: ModerationDecision) {
   if (
     !uuid.test(input.id) ||
     !uuid.test(input.targetID) ||
-    !['review', 'comment'].includes(input.targetType) ||
+    !['review', 'comment', 'post', 'post_comment'].includes(input.targetType) ||
     !['hide', 'dismiss', 'restore'].includes(input.action) ||
     !input.operator.trim() ||
     input.operator.length > 128 ||
@@ -56,10 +62,12 @@ export async function moderate(client: PoolClient, input: ModerationDecision) {
       throw new Error('DECISION_CONFLICT');
     return { id: input.id, applied: true };
   }
-  const table = input.targetType === 'review' ? 'reviews' : 'review_comments';
-  const reports =
-    input.targetType === 'review' ? 'review_reports' : 'comment_reports';
-  const key = input.targetType === 'review' ? 'review_id' : 'comment_id';
+  const [table, reports, key] = {
+    review: ['reviews', 'review_reports', 'review_id'],
+    comment: ['review_comments', 'comment_reports', 'comment_id'],
+    post: ['community_posts', 'post_reports', 'post_id'],
+    post_comment: ['post_comments', 'post_comment_reports', 'comment_id'],
+  }[input.targetType];
   const target = await client.query(
     `SELECT 1 FROM ${table} WHERE id=$1 FOR UPDATE`,
     [input.targetID],

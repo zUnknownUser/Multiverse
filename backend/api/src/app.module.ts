@@ -1,3 +1,8 @@
+import { PushService } from './notifications/push.service.js';
+import { NotificationsService } from './notifications/notifications.service.js';
+import { NotificationsController } from './notifications/notifications.controller.js';
+import { CommunityService } from './community/community.service.js';
+import { CommunityController } from './community/community.controller.js';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { FirebaseAuthGuard } from './auth/firebase-auth.guard.js';
@@ -26,6 +31,8 @@ import { InteractionsController } from './social/interactions.controller.js';
 
 @Module({
   controllers: [
+    NotificationsController,
+    CommunityController,
     InteractionsController,
     SocialController,
     PeopleController,
@@ -35,6 +42,9 @@ import { InteractionsController } from './social/interactions.controller.js';
     MarvelController,
   ],
   providers: [
+    PushService,
+    NotificationsService,
+    CommunityService,
     InteractionsService,
     SocialService,
     PeopleService,

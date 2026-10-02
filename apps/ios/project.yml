@@ -58,6 +58,7 @@ targets:
           - group.com.nexussoft.multiverse
     settings:
       base:
+        MULTIVERSE_PUSH_ENABLED: NO
         PRODUCT_BUNDLE_IDENTIFIER: com.nexussoft.multiverse
         INFOPLIST_FILE: Multiverse/Resources/Info.plist
         OTHER_LDFLAGS: ["$(inherited)", "-ObjC"]
@@ -73,6 +74,8 @@ targets:
         product: FirebaseAppCheck
       - package: Firebase
         product: FirebaseAnalyticsCore
+      - package: Firebase
+        product: FirebaseMessaging
       - package: Firebase
         product: FirebaseCore
       - package: GoogleSignIn
