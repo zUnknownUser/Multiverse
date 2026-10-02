@@ -42,7 +42,9 @@ struct SearchView: View {
                     .kicker(11).foregroundStyle(MV.C.muted)
 
                 if rows.isEmpty {
-                    Text(query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    Text(store.usesAccountAPI && filter == .people
+                         ? L10n.text("A busca por loristas estará disponível em breve. Enquanto isso, explore as obras do catálogo.")
+                         : query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                          ? L10n.text("Ainda não há itens nesta categoria. Experimente outro filtro.")
                          : L10n.text("Nenhum resultado para esta busca. Tente outro nome ou filtro."))
                         .font(MVFont.body(14)).foregroundStyle(MV.C.muted)

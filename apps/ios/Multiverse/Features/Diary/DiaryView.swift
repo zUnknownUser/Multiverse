@@ -16,6 +16,7 @@ struct DiaryView: View {
     var body: some View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             VStack(alignment: .leading, spacing: 22) {
+                ActivityRefreshNotice()
                 VStack(alignment: .leading, spacing: 4) {
                     Text(L10n.text("DIÁRIO")).font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
                     Text(store.diary.isEmpty ? L10n.text("Nenhum registro ainda") : L10n.format("diary.recordCount", store.diary.count) + " · " + yearRange)
@@ -51,6 +52,7 @@ struct DiaryView: View {
             .padding(.horizontal, MV.pad)
             .padding(.bottom, 24)
         }
+        .refreshable { await store.refreshActivity() }
     }
 }
 

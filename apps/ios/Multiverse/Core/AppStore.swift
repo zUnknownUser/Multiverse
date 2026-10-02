@@ -84,6 +84,10 @@ final class AppStore {
     private let catalogAPI: (any CatalogAPI)?
     private let activityAPI: (any ActivityAPI)?
     var activityLoadError: String?
+    private(set) var activityRefreshError: String?
+    private(set) var isRefreshingActivity = false
+    private var activityRevision = 0
+    var usesRemoteActivity: Bool { activityAPI != nil }
     var logSaveError: String?
     private(set) var isSavingLog = false
     private var activityFollowerCount = 0
@@ -287,8 +291,10 @@ final class AppStore {
             universesByID = Dictionary(uniqueKeysWithValues: catalog.universes.map { ($0.id, $0) })
             if let remoteCatalog { applyCatalog(remoteCatalog) }
 
-            reviews = try await reviewsResult
-            diary = try await diaryResult
+            let sampleReviews = try await reviewsResult
+            let sampleDiary = try await diaryResult
+            reviews = activityAPI == nil ? sampleReviews : []
+            diary = activityAPI == nil ? sampleDiary : []
             follows = try await followsResult
 
             let itemToggles = try await itemTogglesResult
@@ -373,15 +379,36 @@ final class AppStore {
         activityLoadError = nil
         do {
             let snapshot = try await activityAPI.fetchActivity()
+            try Task.checkCancellation()
             try snapshot.validate(for: meID)
             applyActivity(snapshot)
+        } catch is CancellationError { return
         } catch { activityLoadError = error.localizedDescription }
+    }
+
+    /// Refresh in place: a network error must not turn known history into an empty diary.
+    func refreshActivity() async {
+        guard let activityAPI, !isLoading, !isSavingLog, !isRefreshingActivity else { return }
+        isRefreshingActivity = true
+        activityRefreshError = nil
+        let revision = activityRevision
+        defer { isRefreshingActivity = false }
+        do {
+            let snapshot = try await activityAPI.fetchActivity()
+            try Task.checkCancellation()
+            guard revision == activityRevision else { return }
+            try snapshot.validate(for: meID)
+            applyActivity(snapshot)
+            syncWidgetData()
+        } catch is CancellationError { return
+        } catch {
+            if revision == activityRevision { activityRefreshError = error.localizedDescription }
+        }
     }
 
     private func applyActivity(_ snapshot: ActivitySnapshot) {
         diary = snapshot.entries
-        reviews.removeAll { $0.user == meID }
-        reviews.insert(contentsOf: snapshot.reviews.map(\.display), at: 0)
+        reviews = snapshot.reviews.map(\.display)
         activityFollowerCount = snapshot.followerCount
         for universe in snapshot.universes where universesByID[universe.id] == nil { universesByID[universe.id] = universe }
         for item in snapshot.items { itemsByID[item.id] = item }
@@ -761,6 +788,10 @@ final class AppStore {
     func friendRatings(for item: Item) -> [(user: User, rating: Double)] {
         users.compactMap { u in
             guard u.id != meID, follows.contains(u.id) else { return nil }
+            if usesRemoteActivity {
+                guard let review = reviews.first(where: { $0.user == u.id && $0.item == item.id && $0.rating > 0 }) else { return nil }
+                return (u, review.rating)
+            }
             guard let r = Logic.friendRating(friend: u.id, item: item, reviews: reviews) else { return nil }
             return (u, r)
         }
@@ -793,9 +824,37 @@ final class AppStore {
     }
 
     func trendingBuzz(for item: Item) -> String {
+        if usesRemoteCatalog {
+            let count = item.logCount ?? 0
+            return count == 0 ? L10n.text("Faça o primeiro registro") : L10n.format("diary.recordCount", count)
+        }
         let n = friendRatings(for: item).count
         if n > 0 { return L10n.format("friends.logged", n) }
         return L10n.format("%1$@ esta semana", String(describing: Logic.fmt(Logic.logCount(item))))
+    }
+
+    var homeDiscoveryItems: [Item] {
+        if usesRemoteCatalog {
+            return Array(items.lazy.filter { !["Personagem", "Evento"].contains($0.type) }.prefix(8))
+        }
+        return StaticContent.trendingItemIDs.compactMap { item($0) }
+    }
+
+    var homeSuggestedPeople: [User] {
+        // Post-onboarding discovery/following needs its own persistent API.
+        // Keep sample people confined to the preview until that module is ready.
+        guard !usesAccountAPI else { return [] }
+        return StaticContent.suggestionUserIDs.compactMap { user($0) }.filter { !isFollowing($0.id) }
+    }
+
+    var homeEmptyFeedMessage: String {
+        if usesRemoteActivity {
+            if !diary.isEmpty { return L10n.text("Seus registros estão no diário. Adicione uma nota ou review para aparecer aqui.") }
+            return L10n.text("Seu espaço começa com uma obra. Explore o catálogo e faça seu primeiro registro.")
+        }
+        return homeSuggestedPeople.isEmpty
+            ? L10n.text("Ainda não há reviews por aqui. Que tal registrar uma obra?")
+            : L10n.text("Seu feed ganha vida quando você segue gente. Comece pelos loristas abaixo.")
     }
 
     func review(_ id: String) -> Review? { reviews.first { $0.id == id } }
@@ -841,7 +900,7 @@ final class AppStore {
             })
         }
 
-        if filter == .all || filter == .people {
+        if !usesAccountAPI && (filter == .all || filter == .people) {
             let peopleFiltered = users.filter { u in
                 guard u.id != meID else { return false }
                 let isMatch = matches(u.name + " " + u.handle)
@@ -897,7 +956,14 @@ final class AppStore {
         }
 
         let progress = universes.map { ($0, pctFor($0.id)) }
-        let favIDs: [String] = isMe ? StaticContent.myFavoriteItemIDs : Array(Set(myRevs.map(\.item)).prefix(4))
+        let favIDs: [String]
+        if isMe && usesRemoteActivity {
+            // A revisit is still one favorite; the latest log owns its liked state.
+            var seen = Set<String>()
+            favIDs = Array(diary.filter { seen.insert($0.itemId).inserted && $0.liked }.prefix(4).map(\.itemId))
+        } else {
+            favIDs = isMe ? StaticContent.myFavoriteItemIDs : Array(Set(myRevs.map(\.item)).prefix(4))
+        }
         let favorites = favIDs.compactMap { itemsByID[$0] }
         let recentReviews = Array(myRevs.prefix(4))
 
@@ -983,21 +1049,21 @@ final class AppStore {
         guard !isSavingLog else { return }
         logSaveError = nil
         let mine = myDiaryEntry(for: itemID)
-        logDraft = LogDraft(itemID: itemID, rating: mine?.rating ?? 0, liked: false, rewatch: isSeen(itemID), spoiler: false, text: "")
+        logDraft = LogDraft(itemID: itemID, rating: mine?.rating ?? 0, liked: mine?.liked ?? false, rewatch: isSeen(itemID), spoiler: false, text: "")
     }
     func closeLog() { guard !isSavingLog else { return }; logDraft = nil; logSaveError = nil }
 
     func setLogItem(_ itemID: String) {
-        guard var d = logDraft else { return }
+        guard !isSavingLog, var d = logDraft else { return }
         d.itemID = itemID
         d.rewatch = isSeen(itemID)
         logDraft = d
     }
 
-    /// Tocar na mesma nota de novo marca meia estrela
+    /// Repeated taps cycle through full star, half star and no rating.
     func setLogRating(_ n: Int) {
-        guard var d = logDraft else { return }
-        d.rating = d.rating == Double(n) ? Double(n) - 0.5 : Double(n)
+        guard !isSavingLog, (1...5).contains(n), var d = logDraft else { return }
+        d.rating = d.rating == Double(n) ? Double(n) - 0.5 : (d.rating == Double(n) - 0.5 ? 0 : Double(n))
         logDraft = d
     }
 
@@ -1041,18 +1107,28 @@ final class AppStore {
                                  liked: draft.liked, rewatch: draft.rewatch, spoiler: draft.spoiler, text: text)
         logSaveError = nil
         isSavingLog = true
+        activityRevision += 1
+        activityRefreshError = nil
         Task { @MainActor [self] in
             defer { isSavingLog = false }
             do {
                 let snapshot = try await api.saveLog(id: draft.id, input: input)
                 try snapshot.validate(for: meID)
-                guard snapshot.entries.contains(where: { $0.id == draft.id }) else { throw AuthError.apiUnavailable }
+                guard let confirmed = snapshot.entries.first(where: { $0.id == draft.id }),
+                      confirmed.itemId == input.itemId, confirmed.rating == input.rating,
+                      confirmed.liked == input.liked, confirmed.rewatch == input.rewatch,
+                      abs(confirmed.loggedAt.timeIntervalSince(input.loggedAt)) < 1 else { throw AuthError.apiUnavailable }
                 applyActivity(snapshot)
                 logDraft = nil
                 showToast(L10n.text("Registro salvo no diário."))
                 if shieldAdvanceAutomatically, let idx = timelineIndex(for: item) { advanceShieldPoint(universeID: item.uni, to: idx) }
                 syncWidgetData()
-            } catch { logSaveError = error.localizedDescription }
+            } catch {
+                // A rejected future date was never committed. Allow a retry after
+                // the device clock is corrected, preserving the UUID and review.
+                if error as? ActivityError == .invalidDate { logDraft?.loggedAt = nil }
+                logSaveError = error.localizedDescription
+            }
         }
     }
 
@@ -1070,6 +1146,22 @@ final class AppStore {
     }
 
     // MARK: - Onboarding
+
+    var onboardingStepCount: Int { usesAccountAPI && onboardingCandidates.isEmpty ? 2 : 3 }
+
+    var onboardingSelectedFollowCount: Int {
+        usesAccountAPI ? follows.intersection(onboardingCandidates.map(\.id)).count : friendsCount
+    }
+
+    var canAdvanceOnboarding: Bool {
+        guard !onboardingTransitioning else { return false }
+        switch onboardingPhase {
+        case .step1: return !onboardingUniverses.isEmpty
+        case .step2: return true
+        case .step3: return onboardingSelectedFollowCount >= minimumOnboardingFollows
+        case .loading: return false
+        }
+    }
 
     @discardableResult
     func toggleOnboardingUniverse(_ id: String) -> Bool {
@@ -1164,16 +1256,7 @@ final class AppStore {
         let suggestions = account.onboarding.completed
             ? FollowSuggestions(users: [], minimumFollows: 0)
             : try await accountAPI.suggestions()
-        onboardingCandidates = suggestions.users.map {
-            User(id: $0.userID, name: $0.displayName, handle: "@" + $0.username,
-                 avatarColor: $0.avatarColor, bio: $0.bio, followers: nil, badgeUniverse: "")
-        }
-        minimumOnboardingFollows = suggestions.minimumFollows
-        for user in onboardingCandidates {
-            usersByID[user.id] = user
-            users.removeAll { $0.id == user.id }
-            users.append(user)
-        }
+        try applyOnboardingSuggestions(suggestions)
         let me = User(id: profile.userID, name: profile.displayName, handle: "@" + profile.username,
                       avatarColor: profile.avatarColor, bio: profile.bio, followers: nil, badgeUniverse: "")
         usersByID[meID] = me
@@ -1195,6 +1278,42 @@ final class AppStore {
         if !isOnboarded && onboardingPhase == .step3 && onboardingCandidates.isEmpty {
             onboardingPhase = .step2
         }
+    }
+
+    private func applyOnboardingSuggestions(_ suggestions: FollowSuggestions) throws {
+        try suggestions.validate(for: meID)
+        onboardingCandidates = suggestions.users.map {
+            User(id: $0.userID, name: $0.displayName, handle: "@" + $0.username,
+                 avatarColor: $0.avatarColor, bio: $0.bio, followers: nil, badgeUniverse: "")
+        }
+        minimumOnboardingFollows = suggestions.minimumFollows
+        for user in onboardingCandidates {
+            usersByID[user.id] = user
+            users.removeAll { $0.id == user.id }
+            users.append(user)
+        }
+    }
+
+    private func refreshOnboardingSuggestions() async throws {
+        guard let accountAPI else { return }
+        let suggestions = try await accountAPI.suggestions()
+        try Task.checkCancellation()
+        try applyOnboardingSuggestions(suggestions)
+        follows.formIntersection(onboardingCandidates.map(\.id))
+    }
+
+    func refreshOnboardingPeople() async {
+        guard usesAccountAPI, !isOnboarded, !onboardingTransitioning else { return }
+        onboardingTransitioning = true
+        onboardingDebounce?.cancel()
+        defer { onboardingTransitioning = false }
+        _ = try? await onboardingSaveQueue?.value
+        do {
+            try await refreshOnboardingSuggestions()
+            if onboardingCandidates.isEmpty && onboardingPhase == .step3 { onboardingPhase = .step2 }
+            onboardingError = nil
+        } catch is CancellationError { return
+        } catch { onboardingError = error.localizedDescription }
     }
 
     private func onboardingSnapshot(step: Int? = nil, completed: Bool = false) -> OnboardingState {
@@ -1239,18 +1358,37 @@ final class AppStore {
             defer { onboardingTransitioning = false }
             _ = try? await onboardingSaveQueue?.value
             let step = onboardingPhase == .step1 ? 1 : (onboardingPhase == .step2 ? 2 : 3)
-            let finish = !back && (step == 3 || (step == 2 && onboardingCandidates.isEmpty))
-            let next = back ? max(1, step - 1) : min(3, step + 1)
             do {
+                if !back && step >= 2 {
+                    try await refreshOnboardingSuggestions()
+                    if step == 3 && onboardingSelectedFollowCount < minimumOnboardingFollows {
+                        onboardingError = nil
+                        showToast(L10n.text("As sugestões mudaram. Confira os loristas disponíveis para continuar."))
+                        return
+                    }
+                    if onboardingCandidates.isEmpty { onboardingPhase = .step2 }
+                }
+                let finish = !back && (step == 3 || (step == 2 && onboardingCandidates.isEmpty))
+                let next = back ? max(1, step - 1) : min(3, step + 1)
                 _ = try await enqueueOnboardingSave(onboardingSnapshot(step: next, completed: finish)).value
                 onboardingError = nil
                 if finish {
                     isOnboarded = true
                     tab = .home
                     homePath = []
-                    showToast(L10n.text("Feed pronto. Bem-vindo ao Multiverse."))
+                    showToast(L10n.text("Tudo pronto para explorar. Bem-vindo ao Multiverse."))
                 } else { onboardingPhase = next == 1 ? .step1 : (next == 2 ? .step2 : .step3) }
-            } catch { onboardingError = error.localizedDescription }
+            } catch is CancellationError { return
+            } catch {
+                if error as? AuthError == .suggestionsChanged {
+                    do {
+                        try await refreshOnboardingSuggestions()
+                        onboardingPhase = onboardingCandidates.isEmpty ? .step2 : .step3
+                        onboardingError = nil
+                        showToast(L10n.text("As sugestões mudaram. Confira os loristas disponíveis para continuar."))
+                    } catch { onboardingError = error.localizedDescription }
+                } else { onboardingError = error.localizedDescription }
+            }
         }
     }
 

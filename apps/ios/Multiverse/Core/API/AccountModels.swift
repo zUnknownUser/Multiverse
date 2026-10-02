@@ -17,5 +17,14 @@ struct OnboardingState: Codable, Sendable, Equatable {
     var version = 0
 }
 struct AccountEnvelope: Codable, Sendable { let profile: RemoteProfile?; let onboarding: OnboardingState }
-struct FollowSuggestions: Codable, Sendable { let users: [RemoteProfile]; let minimumFollows: Int }
+struct FollowSuggestions: Codable, Sendable {
+    let users: [RemoteProfile]
+    let minimumFollows: Int
 
+    func validate(for userID: String) throws {
+        let ids = Set(users.map(\.userID))
+        guard ids.count == users.count, !ids.contains(userID),
+              users.allSatisfy({ !$0.userID.isEmpty && !$0.displayName.isEmpty }),
+              minimumFollows == min(3, users.count) else { throw AuthError.apiUnavailable }
+    }
+}

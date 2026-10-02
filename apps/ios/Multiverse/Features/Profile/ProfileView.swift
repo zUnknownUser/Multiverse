@@ -10,6 +10,7 @@ struct ProfileView: View {
         ScreenScaffold(showBack: !isRoot, onBack: { dismiss() }) {
             let data = store.profileData(for: userID)
             VStack(alignment: .leading, spacing: 22) {
+                if data.isMe { ActivityRefreshNotice().padding(.horizontal, MV.pad) }
                 hero(data: data)
                     .padding(.horizontal, MV.pad)
 
@@ -33,6 +34,7 @@ struct ProfileView: View {
             }
             .padding(.bottom, 24)
         }
+        .refreshable { if userID == store.meID { await store.refreshActivity() } }
     }
 
     @ViewBuilder
@@ -158,9 +160,13 @@ struct ProfileView: View {
 
     @ViewBuilder
     private func favoritesSection(data: AppStore.ProfileData) -> some View {
-        if !data.favorites.isEmpty {
+        if !data.favorites.isEmpty || (data.isMe && store.usesRemoteActivity) {
             VStack(alignment: .leading, spacing: 10) {
                 Text(L10n.text("FAVORITOS")).font(MVFont.section(17)).foregroundStyle(MV.C.ink)
+                if data.favorites.isEmpty {
+                    Text(L10n.text("Os registros marcados com ♥ Curti aparecerão aqui."))
+                        .font(MVFont.body(13)).foregroundStyle(MV.C.muted)
+                }
                 HStack(spacing: 10) {
                     ForEach(data.favorites) { item in
                         Button { store.push(.item(item.id)) } label: {
@@ -175,9 +181,13 @@ struct ProfileView: View {
 
     @ViewBuilder
     private func reviewsSection(data: AppStore.ProfileData) -> some View {
-        if !data.recentReviews.isEmpty {
+        if !data.recentReviews.isEmpty || (data.isMe && store.usesRemoteActivity) {
             VStack(alignment: .leading, spacing: 10) {
                 Text(L10n.text("REVIEWS RECENTES")).font(MVFont.section(17)).foregroundStyle(MV.C.ink)
+                if data.recentReviews.isEmpty {
+                    Text(L10n.text("Suas notas e reviews aparecerão aqui após o primeiro registro."))
+                        .font(MVFont.body(13)).foregroundStyle(MV.C.muted)
+                }
                 VStack(spacing: 10) {
                     ForEach(data.recentReviews) { review in
                         CompactReviewRow(review: review)

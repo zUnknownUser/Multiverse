@@ -71,9 +71,11 @@ final class AccountAPIClient: AccountAPI, ActivityAPI {
             let response: URLResponse
             do { (data, response) = try await transport.data(for: request) }
             catch {
+                if Task.isCancelled || (error as? URLError)?.code == .cancelled { throw CancellationError() }
                 if (error as? URLError)?.code == .timedOut, path.hasPrefix("me/diary/") { throw ActivityError.timedOut }
                 throw AuthError.networkUnavailable
             }
+            try Task.checkCancellation()
             guard tokens.userID == uid else { throw AuthError.sessionExpired }
             guard let http = response as? HTTPURLResponse else { throw AuthError.apiUnavailable }
             if http.statusCode == 401 && attempt == 0 { continue }
@@ -107,6 +109,11 @@ final class AccountAPIClient: AccountAPI, ActivityAPI {
             case "DELETION_PENDING", "ACCOUNT_DELETING": throw AuthError.deletionPending
             default:
                 if http.statusCode == 401 { throw AuthError.sessionExpired }
+                if http.statusCode == 429 { throw AuthError.tooManyRequests }
+                if path.hasPrefix("me/diary/") {
+                    if http.statusCode == 413 { throw ActivityError.tooLong }
+                    if http.statusCode == 400 { throw ActivityError.invalidLog }
+                }
                 if http.statusCode == 400 { throw AuthError.invalidProfile }
                 throw AuthError.apiUnavailable
             }

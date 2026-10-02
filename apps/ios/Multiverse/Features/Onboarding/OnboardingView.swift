@@ -30,13 +30,14 @@ struct OnboardingView: View {
             }
 
             BurstOverlay()
+            ToastOverlay()
         }
         .coordinateSpace(name: "screen")
     }
 
     private var progressBars: some View {
         HStack(spacing: 8) {
-            ForEach(1...3, id: \.self) { i in
+            ForEach(1...store.onboardingStepCount, id: \.self) { i in
                 RoundedRectangle(cornerRadius: 3)
                     .fill(barFilled(i) ? MV.C.ink : Color.clear)
                     .frame(height: 6)
@@ -59,23 +60,18 @@ struct OnboardingView: View {
     }
 
     private var isCTAEnabled: Bool {
-        if store.onboardingTransitioning { return false }
-        switch store.onboardingPhase {
-        case .step1: return !store.onboardingUniverses.isEmpty
-        case .step2: return true
-        case .step3: return store.friendsCount >= store.minimumOnboardingFollows
-        case .loading: return false
-        }
+        store.canAdvanceOnboarding
     }
 
     private var ctaLabel: String {
         switch store.onboardingPhase {
         case .step1: return L10n.text("Continuar")
         case .step2:
+            if store.onboardingStepCount == 2 { return L10n.text("Começar a explorar") }
             let n = store.onboardingConsumablePicks().filter { store.isSeen($0.id) }.count
             return n > 0 ? L10n.text("Continuar") : L10n.text("Pular")
         case .step3:
-            let n = store.friendsCount
+            let n = store.onboardingSelectedFollowCount
             return n >= store.minimumOnboardingFollows ? L10n.text("Montar meu feed") : L10n.format("Siga mais %1$@", String(describing: store.minimumOnboardingFollows - n))
         case .loading: return ""
         }

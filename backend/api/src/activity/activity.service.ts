@@ -86,7 +86,7 @@ export class ActivityService {
   private async snapshot(client: PoolClient, uid: string, locale: string) {
     const entries = await client.query(
       `SELECT id,item_id AS "itemId",logged_at AS "loggedAt",rating,liked,rewatch
-      FROM diary_entries WHERE firebase_uid=$1 ORDER BY logged_at DESC,id`,
+      FROM diary_entries WHERE firebase_uid=$1 ORDER BY logged_at DESC,created_at DESC,id`,
       [uid],
     );
     const reviews = await client.query(
@@ -99,6 +99,7 @@ export class ActivityService {
     const items = await client.query(
       `SELECT i.id,i.universe_id AS uni,i.type,coalesce(t.title,p.title) AS title,
       coalesce(t.year,p.year) AS year,s.average AS avg,s.log_count AS "logCount",s.review_count AS "reviewCount",
+      s.rating_histogram AS "ratingHistogram",
       coalesce(t.canon,p.canon) AS canon,${catalogDescription('$2')} AS "desc"
       FROM catalog_items i JOIN catalog_item_translations p ON p.item_id=i.id AND p.locale='pt-BR'
       LEFT JOIN catalog_item_translations t ON t.item_id=i.id AND t.locale=$2

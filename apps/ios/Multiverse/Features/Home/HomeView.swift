@@ -12,14 +12,14 @@ struct HomeView: View {
                 wrappedBanner.padding(.horizontal, MV.pad)
                 universeGrid.padding(.horizontal, MV.pad)
                 if !store.clubs.isEmpty { MyClubsCard().padding(.horizontal, MV.pad) }
-                trendingSection
+                if !store.homeDiscoveryItems.isEmpty { trendingSection }
                 DuelCard()
                     .padding(.horizontal, MV.pad)
                 DebateCard()
                     .padding(.horizontal, MV.pad)
                 theoriesAndPredictionsRow.padding(.horizontal, MV.pad)
                 feedSection.padding(.horizontal, MV.pad)
-                suggestionsSection
+                if !store.homeSuggestedPeople.isEmpty { suggestionsSection }
             }
             .padding(.top, 4)
             .padding(.bottom, 24)
@@ -136,18 +136,14 @@ struct HomeView: View {
 
     private var trendingSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: L10n.text("Em alta no seu círculo"), trailing: L10n.text("VER TUDO")) {
+            SectionHeader(title: L10n.text(store.usesRemoteCatalog ? "Explore o catálogo" : "Em alta no seu círculo"), trailing: L10n.text("VER TUDO")) {
                 store.goToTab(.search)
             }
             .padding(.horizontal, MV.pad)
 
             ScrollView(.horizontal) {
                 HStack(spacing: 12) {
-                    ForEach(StaticContent.trendingItemIDs, id: \.self) { id in
-                        if let item = store.item(id) {
-                            TrendingPosterCard(item: item)
-                        }
-                    }
+                    ForEach(store.homeDiscoveryItems) { item in TrendingPosterCard(item: item) }
                 }
                 .padding(.horizontal, MV.pad)
             }
@@ -158,7 +154,7 @@ struct HomeView: View {
     private var feedSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text(L10n.text("DO SEU PESSOAL")).font(MVFont.section(19)).foregroundStyle(MV.C.ink)
+                Text(L10n.text(store.usesRemoteActivity ? "SUAS REVIEWS" : "DO SEU PESSOAL")).font(MVFont.section(19)).foregroundStyle(MV.C.ink)
                 Spacer()
                 Text(L10n.format("seguindo %1$@", String(describing: store.friendsCount))).kicker(11).foregroundStyle(MV.C.muted)
             }
@@ -179,7 +175,7 @@ struct HomeView: View {
     private var emptyFeed: some View {
         VStack(spacing: 6) {
             Text(L10n.text("SILÊNCIO NO MULTIVERSE")).font(MVFont.section(16)).foregroundStyle(MV.C.ink)
-            Text(L10n.text("Seu feed ganha vida quando você segue gente. Comece pelos loristas abaixo."))
+            Text(store.homeEmptyFeedMessage)
                 .font(MVFont.body(13)).foregroundStyle(MV.C.muted)
                 .multilineTextAlignment(.center)
         }
@@ -221,11 +217,7 @@ struct HomeView: View {
 
             ScrollView(.horizontal) {
                 HStack(spacing: 12) {
-                    ForEach(StaticContent.suggestionUserIDs, id: \.self) { id in
-                        if let user = store.user(id) {
-                            SuggestionCard(user: user)
-                        }
-                    }
+                    ForEach(store.homeSuggestedPeople) { user in SuggestionCard(user: user) }
                 }
                 .padding(.horizontal, MV.pad)
             }
@@ -248,7 +240,7 @@ private struct UniverseMiniCard: View {
                     Text(universe.name.uppercased())
                         .font(MVFont.black(14))
                         .foregroundStyle(universe.inkColor)
-                    Text(L10n.format("%1$@ ativos agora", String(describing: Logic.fmt(universe.live))))
+                    Text(store.usesRemoteCatalog ? L10n.format("%1$@ itens", String(universe.total)) : L10n.format("%1$@ ativos agora", String(describing: Logic.fmt(universe.live))))
                         .font(MVFont.body(9, weight: 700))
                         .foregroundStyle(universe.inkColor.opacity(0.85))
                     Spacer(minLength: 0)
@@ -276,7 +268,7 @@ private struct TrendingPosterCard: View {
         Button { store.push(.item(item.id)) } label: {
             VStack(alignment: .leading, spacing: 4) {
                 PosterView(item: item, universe: uni, width: 96, height: 144, titleSize: 11)
-                Text("★ \(L10n.decimal(item.avg))")
+                Text(store.usesRemoteCatalog && item.avg == 0 ? L10n.text("Sem notas ainda") : "★ \(L10n.decimal(item.avg))")
                     .font(MVFont.bold(11)).foregroundStyle(MV.C.ink)
                 Text(store.trendingBuzz(for: item))
                     .font(MVFont.body(10, weight: 600)).foregroundStyle(MV.C.muted)

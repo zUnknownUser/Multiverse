@@ -1,6 +1,346 @@
 {
   "sourceLanguage": "pt-BR",
   "strings": {
+    "A busca por loristas estará disponível em breve. Enquanto isso, explore as obras do catálogo.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A busca por loristas estará disponível em breve. Enquanto isso, explore as obras do catálogo."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorekeeper search is coming soon. In the meantime, explore the works in the catalog."
+          }
+        }
+      }
+    },
+    "A distribuição de notas ainda não está disponível.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A distribuição de notas ainda não está disponível."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The rating distribution is not available yet."
+          }
+        }
+      }
+    },
+    "Ainda não há notas para esta obra.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no ratings for this work yet."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ainda não há notas para esta obra."
+          }
+        }
+      }
+    },
+    "Ainda não há obras para marcar nos universos escolhidos. Você pode continuar e registrar depois.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ainda não há obras para marcar nos universos escolhidos. Você pode continuar e registrar depois."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no works to mark in your selected universes yet. You can continue and log them later."
+          }
+        }
+      }
+    },
+    "Ainda não há reviews por aqui. Que tal registrar uma obra?": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ainda não há reviews por aqui. Que tal registrar uma obra?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no reviews here yet. How about logging a work?"
+          }
+        }
+      }
+    },
+    "As sugestões mudaram. Confira os loristas disponíveis para continuar.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As sugestões mudaram. Confira os loristas disponíveis para continuar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestions have changed. Check the available lorekeepers to continue."
+          }
+        }
+      }
+    },
+    "Avaliou esta obra.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rated this work."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avaliou esta obra."
+          }
+        }
+      }
+    },
+    "Bem-vindo ao Multiverse · %1$@": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bem-vindo ao Multiverse · %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to Multiverse · %1$@"
+          }
+        }
+      }
+    },
+    "Começar a explorar": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Começar a explorar"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start exploring"
+          }
+        }
+      }
+    },
+    "Escolha quem você quer acompanhar no Multiverse.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha quem você quer acompanhar no Multiverse."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose who you want to follow in Multiverse."
+          }
+        }
+      }
+    },
+    "Faça o primeiro registro": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faça o primeiro registro"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add the first entry"
+          }
+        }
+      }
+    },
+    "Não foi possível atualizar. Seus últimos dados continuam aqui.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not refresh. Your last loaded data is still here."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível atualizar. Seus últimos dados continuam aqui."
+          }
+        }
+      }
+    },
+    "Os registros marcados com ♥ Curti aparecerão aqui.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Works marked with ♥ Liked in your diary will appear here."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os registros marcados com ♥ Curti aparecerão aqui."
+          }
+        }
+      }
+    },
+    "SUAS REVIEWS": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YOUR REVIEWS"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SUAS REVIEWS"
+          }
+        }
+      }
+    },
+    "Sem notas ainda": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem notas ainda"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No ratings yet"
+          }
+        }
+      }
+    },
+    "Seu espaço começa com uma obra. Explore o catálogo e faça seu primeiro registro.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seu espaço começa com uma obra. Explore o catálogo e faça seu primeiro registro."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your space starts with a work. Explore the catalog and add your first entry."
+          }
+        }
+      }
+    },
+    "Seus registros estão no diário. Adicione uma nota ou review para aparecer aqui.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seus registros estão no diário. Adicione uma nota ou review para aparecer aqui."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your entries are in your diary. Add a rating or review to appear here."
+          }
+        }
+      }
+    },
+    "Suas notas e reviews aparecerão aqui após o primeiro registro.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your ratings and reviews will appear here after your first entry."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suas notas e reviews aparecerão aqui após o primeiro registro."
+          }
+        }
+      }
+    },
+    "Tudo pronto para explorar. Bem-vindo ao Multiverse.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tudo pronto para explorar. Bem-vindo ao Multiverse."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready to explore. Welcome to Multiverse."
+          }
+        }
+      }
+    },
+    "Você ainda não registrou uma nota ou review para esta obra.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have not added a rating or review for this work yet."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você ainda não registrou uma nota ou review para esta obra."
+          }
+        }
+      }
+    },
     "CRÉDITOS": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "CREDITS"}}, "pt-BR": {"stringUnit": {"state": "translated", "value": "CRÉDITOS"}}}},
     "Dados de filmes e séries fornecidos pelo TMDB.": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Movie and TV data provided by TMDB."}}, "pt-BR": {"stringUnit": {"state": "translated", "value": "Dados de filmes e séries fornecidos pelo TMDB."}}}},
     "  %1$@ reviews": {

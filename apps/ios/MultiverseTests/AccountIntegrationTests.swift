@@ -11,6 +11,7 @@ private final class AccountStub: AccountAPI {
     var suggestionFailure: AuthError?
     var suggestionCalls = 0
     var savedVersions: [Int] = []
+    var peopleAfterNextSaveConflict: [RemoteProfile]?
     var available = true
     var suspendAvailability = false
     var availabilityRequests: [CheckedContinuation<Bool, Error>] = []
@@ -39,6 +40,11 @@ private final class AccountStub: AccountAPI {
     }
     func saveOnboarding(_ state: OnboardingState) async throws -> OnboardingState {
         if let failure { throw failure }
+        if let changed = peopleAfterNextSaveConflict {
+            people = changed
+            peopleAfterNextSaveConflict = nil
+            throw AuthError.suggestionsChanged
+        }
         guard state.version == progress.version else { throw AuthError.onboardingConflict }
         savedVersions.append(state.version)
         progress = state
@@ -60,6 +66,129 @@ final class IdentityStub: GoogleAuthenticationClient {
 
 @MainActor
 struct AccountIntegrationTests {
+    private func people(_ count: Int) -> [RemoteProfile] {
+        (0..<count).map { RemoteProfile(userID: "person-\($0)", username: "person\($0)", displayName: "Person \($0)", avatarColor: "#F4A814", bio: "") }
+    }
+
+    @Test(arguments: [0, 1, 2, 3, 5]) func onboardingOnlyRequiresAvailablePeople(count: Int) async throws {
+        let uid = UUID().uuidString
+        defer { UserDefaults.standard.removeObject(forKey: "mv-onboarded-\(uid)") }
+        let api = AccountStub(uid: uid)
+        api.people = people(count)
+        api.progress = OnboardingState(universeIDs: ["marvel"], step: 2)
+        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        await store.bootstrap()
+        #expect(store.onboardingStepCount == (count == 0 ? 2 : 3))
+        #expect(store.minimumOnboardingFollows == min(3, count))
+        store.advanceOnboarding()
+        try await waitForTransition(store)
+        if count == 0 { #expect(store.isOnboarded); return }
+        #expect(store.onboardingPhase == .step3)
+        #expect(!store.canAdvanceOnboarding)
+        store.followAll(Array(api.people.prefix(min(3, count))).map(\.userID))
+        #expect(store.canAdvanceOnboarding)
+        store.advanceOnboarding()
+        try await waitForTransition(store)
+        #expect(store.isOnboarded)
+        #expect(api.progress.followedUserIDs.count == min(3, count))
+    }
+
+    @Test func growingCommunityAddsFollowStepBeforeCompleting() async throws {
+        let uid = UUID().uuidString
+        defer { UserDefaults.standard.removeObject(forKey: "mv-onboarded-\(uid)") }
+        let api = AccountStub(uid: uid)
+        api.progress = OnboardingState(universeIDs: ["marvel"], step: 2)
+        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        await store.bootstrap()
+        api.people = people(1)
+        store.advanceOnboarding()
+        try await waitForTransition(store)
+        #expect(!store.isOnboarded)
+        #expect(store.onboardingStepCount == 3)
+        #expect(store.onboardingPhase == .step3)
+        #expect(store.minimumOnboardingFollows == 1)
+        store.toggleFollow("person-0", silent: true)
+        api.people = people(3)
+        store.advanceOnboarding()
+        try await waitForTransition(store)
+        #expect(!store.isOnboarded)
+        #expect(!store.canAdvanceOnboarding)
+        #expect(store.onboardingError == nil)
+        #expect(store.minimumOnboardingFollows == 3)
+        store.followAll(api.people.map(\.userID))
+        store.advanceOnboarding()
+        try await waitForTransition(store)
+        #expect(store.isOnboarded)
+    }
+
+    @Test func departingPeopleDoNotBlockOnboardingOrEraseOtherSelections() async throws {
+        let uid = UUID().uuidString
+        defer { UserDefaults.standard.removeObject(forKey: "mv-onboarded-\(uid)") }
+        let api = AccountStub(uid: uid)
+        api.people = people(3)
+        api.progress = OnboardingState(universeIDs: ["marvel"], seenItemIDs: ["m-civil"], followedUserIDs: api.people.map(\.userID), step: 3)
+        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        await store.bootstrap()
+        api.people = []
+        // Pull to refresh also works while the CTA cannot advance.
+        store.follows = []
+        #expect(!store.canAdvanceOnboarding)
+        await store.refreshOnboardingPeople()
+        #expect(store.onboardingPhase == .step2)
+        #expect(store.canAdvanceOnboarding)
+        store.advanceOnboarding()
+        try await waitForTransition(store)
+        #expect(store.isOnboarded)
+        #expect(api.progress.followedUserIDs.isEmpty)
+        #expect(api.progress.universeIDs == ["marvel"])
+        #expect(api.progress.seenItemIDs == ["m-civil"])
+    }
+
+    @Test func changedSuggestionsRecoverAsInformationAndNetworkFailureIsNotAnEmptyCommunity() async throws {
+        let uid = UUID().uuidString
+        defer { UserDefaults.standard.removeObject(forKey: "mv-onboarded-\(uid)") }
+        let api = AccountStub(uid: uid)
+        api.people = people(1)
+        api.progress = OnboardingState(universeIDs: ["marvel"], followedUserIDs: ["person-0"], step: 3)
+        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        await store.bootstrap()
+        api.suggestionFailure = .networkUnavailable
+        store.advanceOnboarding()
+        try await waitForTransition(store)
+        #expect(!store.isOnboarded)
+        #expect(store.onboardingError == AuthError.networkUnavailable.localizedDescription)
+        #expect(store.follows == ["person-0"])
+        #expect(store.onboardingStepCount == 3)
+        api.suggestionFailure = nil
+        api.peopleAfterNextSaveConflict = []
+        store.advanceOnboarding()
+        try await waitForTransition(store)
+        #expect(!store.isOnboarded)
+        #expect(store.onboardingError == nil)
+        #expect(store.onboardingPhase == .step2)
+        #expect(store.toast != nil)
+        store.advanceOnboarding()
+        try await waitForTransition(store)
+        #expect(store.isOnboarded)
+    }
+
+    @Test func productionDiscoveryDoesNotOfferDemoProfilesOrEphemeralFollows() async {
+        let uid = UUID().uuidString
+        defer { UserDefaults.standard.removeObject(forKey: "mv-onboarded-\(uid)") }
+        let api = AccountStub(uid: uid)
+        api.progress.completed = true
+        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        await store.bootstrap()
+        #expect(store.homeSuggestedPeople.isEmpty)
+        #expect(store.searchResults(query: "", filter: .people).rows.isEmpty)
+        #expect(store.searchResults(query: "Nina", filter: .all).rows.isEmpty)
+    }
+
+    @Test func invalidSuggestionCountsCannotCreateAnImpossibleStep() {
+        #expect(throws: AuthError.apiUnavailable) { try FollowSuggestions(users: [], minimumFollows: 3).validate(for: "me") }
+        #expect(throws: AuthError.apiUnavailable) { try FollowSuggestions(users: people(1) + people(1), minimumFollows: 2).validate(for: "me") }
+        #expect(throws: AuthError.apiUnavailable) { try FollowSuggestions(users: people(1), minimumFollows: 1).validate(for: "person-0") }
+    }
     @Test func accountFailureDoesNotPublishWidgetsAndRetryPublishesRecoveredData() async {
         let uid = UUID().uuidString
         let api = AccountStub(uid: uid)

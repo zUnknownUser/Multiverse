@@ -3,6 +3,20 @@ import Testing
 @testable import Multiverse
 
 struct LocalizationTests {
+    @Test func launchAvailabilityMessagesRemainInformationalInBothLanguages() {
+        #expect(L10n.text("Começar a explorar", preferredLanguages: ["en-US"]) == "Start exploring")
+        #expect(L10n.text("Sem notas ainda", preferredLanguages: ["en"]) == "No ratings yet")
+        #expect(L10n.format("Bem-vindo ao Multiverse · %1$@", arguments: ["1 of 2"], preferredLanguages: ["en"]) == "Welcome to Multiverse · 1 of 2")
+        #expect(L10n.text("Faça o primeiro registro", preferredLanguages: ["pt-BR"]) == "Faça o primeiro registro")
+        #expect(L10n.text("As sugestões mudaram. Confira os loristas disponíveis para continuar.", preferredLanguages: ["en"]) == "Suggestions have changed. Check the available lorekeepers to continue.")
+    }
+    @Test func activityStatesAndRecoveryAreAvailableInBothLanguages() {
+        #expect(L10n.text("SUAS REVIEWS", preferredLanguages: ["en-US"]) == "YOUR REVIEWS")
+        #expect(L10n.text("Avaliou esta obra.", preferredLanguages: ["en"]) == "Rated this work.")
+        #expect(L10n.text("Ainda não há notas para esta obra.", preferredLanguages: ["en"]) == "There are no ratings for this work yet.")
+        #expect(L10n.text("Não foi possível atualizar. Seus últimos dados continuam aqui.", preferredLanguages: ["en"]) == "Could not refresh. Your last loaded data is still here.")
+        #expect(L10n.text("Ainda não há notas para esta obra.", preferredLanguages: ["pt-BR"]) == "Ainda não há notas para esta obra.")
+    }
     @Test func catalogStatesAndCountsAreLocalizedWithoutPresentingEmptyContentAsAnError() {
         #expect(L10n.text("Catálogo em preparação", preferredLanguages: ["en-US"]) == "Catalog coming soon")
         #expect(L10n.text("Sem conexão", preferredLanguages: ["en-US"]) == "No connection")

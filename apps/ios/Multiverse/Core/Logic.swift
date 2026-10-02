@@ -106,6 +106,11 @@ enum Logic {
 
     /// Histograma de notas (10 barras, ½ … ★★★★★)
     static func ratingHistogram(_ item: Item) -> [Int] {
+        if let histogram = item.ratingHistogram, histogram.count == 10, histogram.allSatisfy({ $0 >= 0 }) {
+            return histogram
+        }
+        // Older API responses may omit the distribution; never fabricate votes.
+        if item.logCount != nil { return Array(repeating: 0, count: 10) }
         let sd = seed(item.id)
         let bases = [1, 2, 3, 4, 6, 9, 12, 16, 13, 8]
         return bases.enumerated().map { i, b in

@@ -149,7 +149,9 @@ export class AccountsService {
     const result = await this.db.query<ProfileRow>(
       `SELECT p.* FROM profiles p JOIN onboarding o USING(firebase_uid)
       WHERE p.firebase_uid<>$1 AND p.deletion_requested_at IS NULL AND o.completed=true
-      ORDER BY p.created_at, p.firebase_uid LIMIT 20`,
+      ORDER BY CASE WHEN p.firebase_uid=ANY(coalesce(
+        (SELECT followed_user_ids FROM onboarding WHERE firebase_uid=$1),ARRAY[]::text[]))
+        THEN 0 ELSE 1 END,p.created_at,p.firebase_uid LIMIT 20`,
       [uid],
     );
     return {

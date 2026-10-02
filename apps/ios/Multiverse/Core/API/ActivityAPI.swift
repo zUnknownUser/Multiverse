@@ -26,7 +26,7 @@ struct ActivityReview: Codable, Sendable {
     let createdAt: Date
 
     var display: Review {
-        Review(id: id, user: user, item: item, rating: rating, text: text, spoiler: spoiler, likes: 0,
+        Review(id: id, user: user, item: item, rating: rating, text: text.isEmpty ? L10n.text("Avaliou esta obra.") : text, spoiler: spoiler, likes: 0,
                when: Date.now.timeIntervalSince(createdAt) < 60 ? L10n.text("agora") : L10n.date(createdAt, template: "d MMM yyyy"), comments: [])
     }
 }

@@ -382,6 +382,60 @@ describe.skipIf(!databaseURL)('Account API with real PostgreSQL', () => {
     ).expect(200);
   });
 
+  it('keeps already selected eligible people visible when suggestions exceed the page limit', async () => {
+    const uid = 'suggestion-owner';
+    const people = Array.from(
+      { length: 24 },
+      (_, i) => 'suggestion-person-' + i,
+    );
+    const ids = [uid, ...people];
+    try {
+      await database.query(
+        `INSERT INTO profiles(firebase_uid,username,display_name,avatar_color)
+        SELECT id,replace(id,'-','_'),'Person','#F4A814' FROM unnest($1::text[]) AS id`,
+        [ids],
+      );
+      await database.query(
+        `INSERT INTO onboarding(firebase_uid,completed)
+        SELECT id,true FROM unnest($1::text[]) AS id`,
+        [people],
+      );
+      const selected = people.at(-1)!;
+      await database.query(
+        'INSERT INTO onboarding(firebase_uid,followed_user_ids) VALUES($1,$2)',
+        [uid, [selected]],
+      );
+      const result = await request(app.getHttpServer())
+        .get('/api/v1/me/onboarding/suggestions')
+        .auth(uid, { type: 'bearer' })
+        .expect(200);
+      expect(result.body.users).toHaveLength(20);
+      expect(result.body.minimumFollows).toBe(3);
+      expect(result.body.users[0].userID).toBe(selected);
+      expect(
+        result.body.users.some((p: { userID: string }) => p.userID === uid),
+      ).toBe(false);
+      await database.query(
+        'UPDATE profiles SET deletion_requested_at=now() WHERE firebase_uid=$1',
+        [selected],
+      );
+      const refreshed = await request(app.getHttpServer())
+        .get('/api/v1/me/onboarding/suggestions')
+        .auth(uid, { type: 'bearer' })
+        .expect(200);
+      expect(
+        refreshed.body.users.some(
+          (p: { userID: string }) => p.userID === selected,
+        ),
+      ).toBe(false);
+    } finally {
+      await database.query(
+        'DELETE FROM profiles WHERE firebase_uid=ANY($1::text[])',
+        [ids],
+      );
+    }
+  });
+
   it('does not complete onboarding when the save fails and serializes concurrent progress writes', async () => {
     await putProfile('draft-user').expect(200);
     const results = await Promise.all([

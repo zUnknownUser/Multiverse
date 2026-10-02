@@ -14,7 +14,7 @@ struct OnboardingStep3View: View {
                         .font(MVFont.display(26, width: 118))
                         .lineSpacing(-3)
                         .foregroundStyle(MV.C.ink)
-                    Text(L10n.text("Seu feed é feito das reviews, votos e listas deles."))
+                    Text(store.usesAccountAPI ? L10n.text("Escolha quem você quer acompanhar no Multiverse.") : L10n.text("Seu feed é feito das reviews, votos e listas deles."))
                         .font(MVFont.body(14)).foregroundStyle(MV.C.muted)
                 }
 
@@ -35,6 +35,7 @@ struct OnboardingStep3View: View {
             .padding(.top, 18)
         }
         .scrollIndicators(.hidden)
+        .refreshable { await store.refreshOnboardingPeople() }
     }
 }
 

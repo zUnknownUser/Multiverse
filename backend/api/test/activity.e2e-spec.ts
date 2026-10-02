@@ -130,6 +130,7 @@ describe.skipIf(!databaseURL)('Diary and reviews with PostgreSQL', () => {
       avg: 4.5,
       logCount: 1,
       reviewCount: 1,
+      ratingHistogram: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
     });
     expect(restored.body.items[0].desc).not.toBe(saved.body.items[0].desc);
   });
@@ -169,7 +170,85 @@ describe.skipIf(!databaseURL)('Diary and reviews with PostgreSQL', () => {
       avg: 3,
       logCount: 3,
       reviewCount: 3,
+      ratingHistogram: [0, 0, 0, 1, 0, 0, 0, 1, 0, 0],
     });
+  });
+
+  it('uses the same real rating distribution in activity, search, and details, excluding deleting accounts', async () => {
+    await profile('owner');
+    await profile('other');
+    const empty = (
+      await request(app.getHttpServer())
+        .get('/api/v1/catalog/marvel/m-ultimato')
+        .expect(200)
+    ).body;
+    expect(empty.item.ratingHistogram).toEqual(Array(10).fill(0));
+    await save('owner', randomUUID(), {
+      ...input(),
+      itemId: 'm-ultimato',
+      rating: 0.5,
+    }).expect(200);
+    await save('other', randomUUID(), {
+      ...input(),
+      itemId: 'm-ultimato',
+      rating: 5,
+    }).expect(200);
+    // An unrated revisit does not erase the last actual rating.
+    await save('owner', randomUUID(), {
+      ...input(),
+      itemId: 'm-ultimato',
+      rating: 0,
+      text: '',
+    }).expect(200);
+    await db.query(
+      "UPDATE profiles SET deletion_requested_at=now() WHERE firebase_uid='other'",
+    );
+    const activity = (await read('owner').expect(200)).body;
+    const catalog = (
+      await request(app.getHttpServer()).get('/api/v1/catalog').expect(200)
+    ).body;
+    const search = (
+      await request(app.getHttpServer())
+        .get('/api/v1/catalog/marvel?type=Filme')
+        .expect(200)
+    ).body;
+    const detail = (
+      await request(app.getHttpServer())
+        .get('/api/v1/catalog/marvel/m-ultimato')
+        .expect(200)
+    ).body;
+    for (const item of [
+      activity.items[0],
+      catalog.items.find((i: { id: string }) => i.id === 'm-ultimato'),
+      search.items.find((i: { id: string }) => i.id === 'm-ultimato'),
+      detail.item,
+    ]) {
+      expect(item).toMatchObject({
+        avg: 0.5,
+        logCount: 2,
+        reviewCount: 1,
+        ratingHistogram: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      });
+    }
+  });
+
+  it('orders same-time revisits by creation time so profile favorites use the newest log', async () => {
+    await profile('owner');
+    const first = '00000000-0000-4000-8000-000000000001';
+    const latest = '00000000-0000-4000-8000-000000000002';
+    await save('owner', first, { ...input(), liked: true }).expect(200);
+    const snapshot = (
+      await save('owner', latest, {
+        ...input(),
+        liked: false,
+        rewatch: true,
+      }).expect(200)
+    ).body;
+    expect(snapshot.entries.map((entry: { id: string }) => entry.id)).toEqual([
+      latest,
+      first,
+    ]);
+    expect(snapshot.entries[0].liked).toBe(false);
   });
 
   it('allows no rating or text, validates invalid fields, and updates the same draft safely', async () => {

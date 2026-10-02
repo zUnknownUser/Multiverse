@@ -50,6 +50,32 @@ conta são persistidos. Feed social de outras pessoas, listas,
 timelines, clubes e outros módulos ainda usam os dados anteriores nesta etapa.
 O catálogo inicial não torna esses recursos persistentes nem seus contadores reais.
 
+## Disponibilidade no início do lançamento
+
+O onboarding pede `min(3, loristas elegíveis)`: zero pula a etapa de seguir e
+apresenta duas etapas; um ou dois ajustam o mínimo; três ou mais pedem três.
+Elegibilidade exige outra conta com perfil ativo e onboarding concluído. A API
+retorna até 20 sugestões e prioriza seleções já persistidas para que continuem
+visíveis. Antes de avançar da seleção de obras ou concluir o cadastro, o app
+atualiza a disponibilidade. A etapa de pessoas também permite puxar para atualizar.
+Contas retiradas deixam de ser exigidas; se novas sugestões aumentarem o mínimo,
+o app mantém as demais escolhas e informa o que mudou. Falha de rede não equivale
+a comunidade vazia e não libera uma conclusão sem confirmação da API.
+
+Um universo sem obras permite continuar com uma mensagem informativa. Na Home,
+a seção de descoberta usa obras publicadas do catálogo, inclusive IDs novos;
+contagens são totais reais, sem alegar tendência semanal ou atividade de amigos.
+A ausência de notas e de reviews convida ao primeiro registro. Presença em tempo
+real ainda não está disponível, então os cards de universo mostram quantidade
+de itens em vez de sugerir que zero pessoas estão online.
+
+Sugestões de pessoas de exemplo ficam restritas ao modo de demonstração.
+A Home oculta essa seção na sessão real; a busca por loristas informa que está
+em preparação. Descoberta de pessoas e seguir/deixar de seguir após o onboarding
+ainda precisam de API própria antes de liberar essas ações. Outros módulos do
+protótipo permanecem fora desta etapa; estas regras não tornam o app inteiro
+pronto para lançamento. Todos os novos textos têm PT-BR e inglês.
+
 ## Verificação
 
 Testes HTTP com PostgreSQL isolado cobrem seed, PT/EN, fallback, publicação, novos

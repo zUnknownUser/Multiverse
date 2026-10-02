@@ -88,6 +88,24 @@ struct CatalogTests {
         #expect(store.searchResults(query: "fenix", filter: .works, limit: -1).rows.isEmpty)
     }
 
+    @Test func homeDiscoveryWorksWithNewCatalogIDsAndDoesNotInventTrendingCounts() async throws {
+        let sample = SampleData.load()
+        let marvel = try #require(sample.universes.first { $0.id == "marvel" })
+        var work = Item(id: "new-release", uni: "marvel", type: "HQ", title: "New Work", year: sample.items[0].year,
+                        avg: 0, canon: "—", desc: "", logCount: 0, reviewCount: 0)
+        let api = CatalogStub(CatalogSnapshot(version: 1, locale: "en", universes: [marvel], comingSoon: [], items: [work]))
+        let store = AppStore(catalogAPI: api)
+        await store.bootstrap()
+        #expect(store.homeDiscoveryItems.map(\.id) == ["new-release"])
+        #expect(store.trendingBuzz(for: work) == L10n.text("Faça o primeiro registro"))
+        work.logCount = 1
+        #expect(store.trendingBuzz(for: work) == L10n.format("diary.recordCount", 1))
+        api.snapshot = CatalogSnapshot(version: 1, locale: "en", universes: [marvel], comingSoon: [], items: [])
+        await store.reloadAccount()
+        #expect(store.homeDiscoveryItems.isEmpty)
+        #expect(store.onboardingConsumablePicks().isEmpty)
+    }
+
     @Test func failedCatalogDoesNotFallBackToDemoAndCanBeRetried() async {
         let api = CatalogStub(snapshot())
         api.failure = .unavailable

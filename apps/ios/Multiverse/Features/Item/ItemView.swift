@@ -60,7 +60,7 @@ struct ItemView: View {
                 Text("\(L10n.text(item.type)) · \(item.year.description) · \(item.canon)")
                     .font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted)
 
-                Text(L10n.decimal(item.avg))
+                Text(item.logCount != nil && item.avg == 0 ? "—" : L10n.decimal(item.avg))
                     .font(MVFont.black(30)).foregroundStyle(MV.C.ink)
 
                 Text(L10n.format("%1$@ registros · %2$@ reviews", String(describing: Logic.fmt(Logic.logCount(item))), String(describing: Logic.fmt(Logic.reviewCount(item)))))
@@ -247,12 +247,16 @@ struct ItemView: View {
         let maxVal = max(hist.max() ?? 1, 1)
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.text("NOTAS DA COMUNIDADE")).kicker(11).foregroundStyle(MV.C.muted)
+            if hist.allSatisfy({ $0 == 0 }) {
+                Text(item.avg > 0 ? L10n.text("A distribuição de notas ainda não está disponível.") : L10n.text("Ainda não há notas para esta obra."))
+                    .font(MVFont.body(12)).foregroundStyle(MV.C.muted)
+            }
             HStack(alignment: .bottom, spacing: 4) {
                 ForEach(Array(hist.enumerated()), id: \.offset) { i, v in
                     RoundedRectangle(cornerRadius: 2)
                         .fill(i >= 8 ? uni.color : MV.C.card)
                         .overlay(RoundedRectangle(cornerRadius: 2).strokeBorder(MV.C.ink, lineWidth: 1))
-                        .frame(height: max(4, 60 * CGFloat(v) / CGFloat(maxVal)))
+                        .frame(height: v == 0 ? 0 : max(4, 60 * CGFloat(v) / CGFloat(maxVal)))
                 }
             }
             .frame(height: 60, alignment: .bottom)
@@ -302,27 +306,29 @@ struct ItemView: View {
     private func reviewsSection(item: Item) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("REVIEWS").font(MVFont.section(19)).foregroundStyle(MV.C.ink)
+                Text(store.usesRemoteActivity ? L10n.text("SUAS REVIEWS") : "REVIEWS").font(MVFont.section(19)).foregroundStyle(MV.C.ink)
                 Spacer()
-                HStack(spacing: 6) {
-                    ForEach([ReviewFilter.popular, .friends], id: \.self) { f in
-                        Button { reviewFilter = f } label: {
-                            Text(L10n.text(f.rawValue))
-                                .font(MVFont.bold(11))
-                                .padding(.horizontal, 10).padding(.vertical, 6)
-                                .foregroundStyle(reviewFilter == f ? MV.C.paper : MV.C.ink)
-                                .background(reviewFilter == f ? MV.C.ink : MV.C.card)
-                                .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-                                .clipShape(Capsule())
+                if !store.usesRemoteActivity {
+                    HStack(spacing: 6) {
+                        ForEach([ReviewFilter.popular, .friends], id: \.self) { f in
+                            Button { reviewFilter = f } label: {
+                                Text(L10n.text(f.rawValue))
+                                    .font(MVFont.bold(11))
+                                    .padding(.horizontal, 10).padding(.vertical, 6)
+                                    .foregroundStyle(reviewFilter == f ? MV.C.paper : MV.C.ink)
+                                    .background(reviewFilter == f ? MV.C.ink : MV.C.card)
+                                    .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+                                    .clipShape(Capsule())
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
 
             let revs = Array(store.reviewsForItem(item.id, friendsOnly: reviewFilter == .friends).prefix(5))
             if revs.isEmpty {
-                Text(L10n.text("Nenhum amigo escreveu sobre isso ainda. Seja o primeiro."))
+                Text(store.usesRemoteActivity ? L10n.text("Você ainda não registrou uma nota ou review para esta obra.") : L10n.text("Nenhum amigo escreveu sobre isso ainda. Seja o primeiro."))
                     .font(MVFont.body(13)).foregroundStyle(MV.C.muted)
                     .frame(maxWidth: .infinity)
                     .padding(24)

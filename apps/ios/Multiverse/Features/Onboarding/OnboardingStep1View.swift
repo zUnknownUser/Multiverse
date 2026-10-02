@@ -7,7 +7,7 @@ struct OnboardingStep1View: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(L10n.text("Bem-vindo ao Multiverse · 1 de 3")).kicker(11).foregroundStyle(MV.C.muted)
+                    Text(L10n.format("Bem-vindo ao Multiverse · %1$@", L10n.format("%1$@ de %2$@", "1", String(store.onboardingStepCount)))).kicker(11).foregroundStyle(MV.C.muted)
                     Text(L10n.text("Quais universos são seus?"))
                         .font(MVFont.display(30, width: 120))
                         .lineSpacing(-4)

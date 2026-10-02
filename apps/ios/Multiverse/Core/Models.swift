@@ -44,6 +44,7 @@ struct Item: Codable, Identifiable, Hashable, Sendable {
     let canon: String, desc: String
     var logCount: Int? = nil
     var reviewCount: Int? = nil
+    var ratingHistogram: [Int]? = nil
 }
 
 struct User: Codable, Identifiable, Hashable, Sendable {

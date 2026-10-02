@@ -22,6 +22,10 @@ private final class AccountURLProtocol: URLProtocol, @unchecked Sendable {
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
         let (status, json) = Self.fixture.next(request)
+        if status < 0 {
+            client?.urlProtocol(self, didFailWithError: URLError(URLError.Code(rawValue: status)))
+            return
+        }
         let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json"])!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: Data(json.utf8))
@@ -140,5 +144,22 @@ struct AccountHTTPTests {
         defer { transport.invalidateAndCancel() }
         await #expect(throws: AuthError.sessionExpired) { try await api.saveOnboarding(OnboardingState()) }
         #expect(AccountURLProtocol.fixture.requests.isEmpty)
+    }
+
+    @Test func diaryFailuresHaveRelevantMessagesAndNeverAutomaticallyRepeatWrites() async {
+        let input = SaveLogInput(itemId: "m-civilwar", loggedAt: .now, rating: 4, liked: false, rewatch: false, spoiler: false, text: "Review")
+        let (api, transport) = client(TokenStub())
+        defer { transport.invalidateAndCancel() }
+        for (status, expected) in [(400, ActivityError.invalidLog), (413, .tooLong), (-1001, .timedOut)] {
+            AccountURLProtocol.fixture.reset([(status, "{}")])
+            await #expect(throws: expected) { try await api.saveLog(id: UUID(), input: input) }
+            #expect(AccountURLProtocol.fixture.requests.count == 1)
+        }
+        AccountURLProtocol.fixture.reset([(429, "{}")])
+        await #expect(throws: AuthError.tooManyRequests) { try await api.saveLog(id: UUID(), input: input) }
+        AccountURLProtocol.fixture.reset([(-1009, "{}")])
+        await #expect(throws: AuthError.networkUnavailable) { try await api.saveLog(id: UUID(), input: input) }
+        AccountURLProtocol.fixture.reset([(-999, "{}")])
+        await #expect(throws: CancellationError.self) { try await api.fetchActivity() }
     }
 }
