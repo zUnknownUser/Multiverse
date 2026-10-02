@@ -14,7 +14,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 26) {
                 Text(L10n.text("AJUSTES")).font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
 
-                proPromoRow
+                if store.showsDemoFeatures { proPromoRow }
                 accountSection
                 themeSection
                 privacySection
@@ -64,8 +64,10 @@ struct SettingsView: View {
                 infoRow(L10n.text("Usuário"), value: store.user(store.meID)?.handle ?? "")
                 Divider().overlay(MV.C.divider)
                 infoRow(L10n.text("E-mail"), value: maskedEmail)
-                Divider().overlay(MV.C.divider)
-                infoRow(L10n.text("Senha"), value: L10n.text("Alterar"))
+                if store.showsDemoFeatures {
+                    Divider().overlay(MV.C.divider)
+                    infoRow(L10n.text("Senha"), value: L10n.text("Alterar"))
+                }
             }
             .comicCard(shadow: MV.Shadow.s)
         }
@@ -147,7 +149,7 @@ struct SettingsView: View {
                 }
                 .padding(16)
                 Divider().overlay(MV.C.divider)
-                toggleRow(L10n.text("Esconder spoilers"), note: L10n.text("Borra reviews marcadas com spoiler"), isOn: Binding(get: { settings.hideSpoilers }, set: { settings.hideSpoilers = $0 }))
+                if store.showsDemoFeatures { toggleRow(L10n.text("Esconder spoilers"), note: L10n.text("Borra reviews marcadas com spoiler"), isOn: Binding(get: { settings.hideSpoilers }, set: { settings.hideSpoilers = $0 })) }
                 Divider().overlay(MV.C.divider)
                 infoRow(L10n.text("Usuários bloqueados"), value: "\(store.social?.blocks.count ?? blockedCount)") { store.push(.blockedUsers) }
             }

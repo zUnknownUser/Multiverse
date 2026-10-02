@@ -76,11 +76,13 @@ struct RootView: View {
                 peopleAPI: api,
                 socialAPI: api,
                 communityAPI: api,
-                notificationsAPI: api
+                notificationsAPI: api,
+                libraryAPI: api
             )
             store = accountStore
             await accountStore.bootstrap()
             if accountStore.isOnboarded {
+                await accountStore.library?.refresh()
                 await accountStore.notifications?.refresh()
                 await PushCoordinator.shared.resume(api: api, userID: session.userID)
                 openPushActivity()
@@ -96,7 +98,7 @@ struct RootView: View {
         .task { await auth.bootstrap() }
         .task { await proStore.loadProducts() }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await proStore.refreshEntitlement(); if store.isOnboarded { await store.notifications?.refresh() } } }
+            if phase == .active { Task { await proStore.refreshEntitlement(); if store.isOnboarded { await store.notifications?.refresh(); await store.library?.refresh() } } }
         }
 
     }

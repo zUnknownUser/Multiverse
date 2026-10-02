@@ -1,6 +1,17 @@
 # Backlog — próximos passos sugeridos
 
-## Direção atual — comunidade (02/10/2026)
+## Entrega atual — Biblioteca pessoal (02/10/2026)
+
+Desejos, favoritos e listas privadas agora persistem na API. Biblioteca substitui
+Clubes na barra e módulos demonstrativos foram ocultados nos fluxos reais.
+[Contrato e limites](../backend/api/docs/library.md).
+
+Próxima validação sugerida: homologação manual com duas contas/dispositivos, incluindo
+logout, recuperação de rede e mudança concorrente de listas. Depois escolher um único
+módulo social para tornar real. Compartilhar listas, mídia e chat continuam pendentes.
+Push permanece preparado/desligado até Apple Developer/APNs.
+
+## Direção anterior — comunidade (02/10/2026)
 
 Estado detalhado após os itens 2 e 3: [inventário de demonstrações](DEMONSTRATION_INVENTORY.md) e [contrato/ativação de push](../backend/api/docs/community-notifications.md).
 

@@ -255,7 +255,7 @@ private struct ReviewDetailCard: View {
                             .burstOnTap("POW!", color: MV.C.marvel, when: !store.isRemoteReview(review.id) && store.userReaction(for: review.id) != .pow) {
                                 store.setReaction(.pow, for: review.id)
                             }
-                        if item != nil {
+                        if item != nil && store.showsDemoFeatures {
                             Text(L10n.text("Mandar")).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
                                 .padding(.horizontal, 12).padding(.vertical, 8)
                                 .background(MV.C.card)

@@ -61,6 +61,20 @@ private final class TokenStub: APITokenProvider {
 @Suite(.serialized)
 @MainActor
 struct AccountHTTPTests {
+    @Test func libraryWritesCarryVersionAndReceiptIdentityWithoutOtherActionFields() async throws {
+        let id = UUID().uuidString.lowercased()
+        let json = "{\"mutationID\":\"\(id)\",\"appliedVersion\":1,\"state\":{\"version\":1,\"wantedIDs\":[\"w-wotlk\"],\"favoriteIDs\":[],\"lists\":[]}}"
+        AccountURLProtocol.fixture.reset([(200, json), (409, "{\"code\":\"LIBRARY_STALE\"}")])
+        let (api, transport) = client(TokenStub()); defer { transport.invalidateAndCancel() }
+        let input = LibraryMutation(mutationID: id, version: 0, action: "wanted", itemID: "w-wotlk", enabled: true)
+        #expect(try await api.mutateLibrary(input).state.wantedIDs == ["w-wotlk"])
+        let request = try #require(AccountURLProtocol.fixture.requests.first)
+        let data = try #require(request.httpBody)
+        let body = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        #expect(Set(body.keys) == Set(["mutationID", "version", "action", "itemID", "enabled"]))
+        #expect(request.url?.path == "/api/v1/me/library" && request.httpMethod == "PUT")
+        await #expect(throws: LibraryError.stale) { try await api.mutateLibrary(input) }
+    }
     @Test func communityPublicationEncodesOptionalItemAndUsesIdempotentRoute() async throws {
         let id = UUID().uuidString.lowercased()
         AccountURLProtocol.fixture.reset([(200, "{\"id\":\"\(id)\",\"saved\":true}")])

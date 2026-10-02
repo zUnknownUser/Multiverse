@@ -189,7 +189,7 @@ struct AccountIntegrationTests {
         #expect(throws: AuthError.apiUnavailable) { try FollowSuggestions(users: people(1) + people(1), minimumFollows: 2).validate(for: "me") }
         #expect(throws: AuthError.apiUnavailable) { try FollowSuggestions(users: people(1), minimumFollows: 1).validate(for: "person-0") }
     }
-    @Test func accountFailureDoesNotPublishWidgetsAndRetryPublishesRecoveredData() async {
+    @Test func productionAccountNeverPublishesDemoWidgetDataEvenAfterRecovery() async {
         let uid = UUID().uuidString
         let api = AccountStub(uid: uid)
         api.failure = .apiUnavailable
@@ -202,7 +202,7 @@ struct AccountIntegrationTests {
         api.failure = nil
         await store.reloadAccount()
         #expect(store.accountLoadError == nil)
-        #expect(writer.snapshots.count == 1)
+        #expect(writer.snapshots.isEmpty)
     }
 
     @Test(arguments: [false, true]) func suggestionsAreRequiredOnlyWhileOnboardingIsIncomplete(completed: Bool) async {

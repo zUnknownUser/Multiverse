@@ -1,3 +1,26 @@
+# Atualização — Biblioteca pessoal (02/10/2026)
+
+O usuário aprovou desejos/favoritos persistidos, listas pessoais reais e ocultação
+dos módulos demonstrativos. Biblioteca substitui Clubes na barra principal.
+
+- Migration `013_personal_library.sql`: estado por conta, marcações, listas e recibos
+  de mutação. Importa uma vez os favoritos do último registro de cada obra no diário.
+- `GET/PUT /me/library`: privado, exige conta verificada/onboarding; versionamento,
+  recibos idempotentes, limites e exclusão em cascata com a conta.
+- iOS: biblioteca, edição/exclusão de listas, seletor de obras, coração/desejo reais,
+  estados vazios/erro/retry. Sem gravação otimista ou fila offline durável.
+- Rotas/atalhos demo ocultos na sessão real; widgets não publicam amostras. O código
+  legado foi preservado. Push continua preparado e desligado, sem Apple Developer.
+- Validação: 167 testes iOS, 72 unitários + 85 HTTP/PostgreSQL API, 923 entradas PT/EN.
+- [Contrato da Biblioteca](../backend/api/docs/library.md) e
+  [inventário atualizado](DEMONSTRATION_INVENTORY.md).
+- Testes deste lote usam PostgreSQL descartável `multiverse-library-test`, porta 55433.
+  Não substituir pelo banco de produção. Homologação manual com duas contas ainda pendente.
+
+Os registros abaixo são históricos; estado e limitações atuais estão acima e no inventário.
+
+---
+
 # Atualização — posts e notificações (02/10/2026)
 
 Itens 2 e 3 autorizados pelo usuário foram implementados: posts de texto ligados a

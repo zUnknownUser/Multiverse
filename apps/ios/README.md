@@ -43,6 +43,13 @@ Os dados compartilhados com widgets são vinculados à sessão ativa. Logout e t
 conta limpam o snapshot e solicitam atualização ao WidgetKit; respostas atrasadas da
 sessão anterior são descartadas. O iOS controla quando a atualização aparece na tela.
 
+A sessão real não publica snapshots dos módulos demonstrativos. Os widgets ficam
+sem dados até receberem conteúdo próprio conectado ao backend.
+
+Biblioteca substitui Clubes na barra principal, com desejos, favoritos e listas
+privadas sincronizados. Os módulos de demonstração continuam no código e ficaram
+ocultos da navegação autenticada. [Estado completo](../../docs/DEMONSTRATION_INVENTORY.md).
+
 ### Fonte Archivo
 
 A fonte variável **Archivo** já está incluída no app e nos widgets, com a licença

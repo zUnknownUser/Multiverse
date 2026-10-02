@@ -1,7 +1,7 @@
 import Foundation
 
 @MainActor
-final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, CommunityAPI, NotificationsAPI {
+final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, CommunityAPI, NotificationsAPI, LibraryAPI {
     private let baseURL: URL?
     private let tokens: any APITokenProvider
     private let transport: URLSession
@@ -152,6 +152,14 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, Com
             }
             let code = (try? JSONDecoder().decode(APIError.self, from: data))?.code
             switch code {
+            case "LIBRARY_STALE": throw LibraryError.stale
+            case "LIST_UNAVAILABLE": throw LibraryError.unavailable
+            case "LIBRARY_MUTATION_CONFLICT", "LIBRARY_LIST_CONFLICT": throw LibraryError.conflict
+            case "LIBRARY_LISTS_LIMIT": throw LibraryError.listLimit
+            case "LIST_ITEMS_LIMIT": throw LibraryError.itemLimit
+            case "LIBRARY_ITEMS_LIMIT": throw LibraryError.savedLimit
+            case "INVALID_LIBRARY_REQUEST": throw SocialError.invalid
+
             case "COMMENTS_RESTRICTED": throw SocialError.commentsRestricted
             case "COMMENT_UNAVAILABLE": throw SocialError.commentUnavailable
             case "COMMENT_LIMIT": throw SocialError.commentLimit

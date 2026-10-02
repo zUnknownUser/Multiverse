@@ -1,7 +1,7 @@
 import Foundation
 
 enum AppTab: String, CaseIterable, Hashable {
-    case home, search, clubs, profile
+    case home, search, library, clubs, profile
 }
 
 /// Destinos navegáveis dentro da NavigationStack de cada aba.
@@ -12,6 +12,7 @@ enum Route: Hashable {
     case review(String)
     case order(String)
     case list(String)
+    case library
     case diary
     case wrapped
     case settings
@@ -35,4 +36,13 @@ enum Route: Hashable {
     case room(String)
     case exploreRooms
     case livePremiere
+}
+
+extension Route {
+    var isDemonstration: Bool {
+        switch self {
+        case .order, .wrapped, .club, .clubDiscussion, .theories, .theoryDetail, .predictions, .correctionForm, .adjustShieldPoint, .messages, .conversation, .room, .exploreRooms, .livePremiere, .pro: true
+        default: false
+        }
+    }
 }

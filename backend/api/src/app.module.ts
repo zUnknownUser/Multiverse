@@ -1,3 +1,5 @@
+import { LibraryService } from './library/library.service.js';
+import { LibraryController } from './library/library.controller.js';
 import { PushService } from './notifications/push.service.js';
 import { NotificationsService } from './notifications/notifications.service.js';
 import { NotificationsController } from './notifications/notifications.controller.js';
@@ -31,6 +33,7 @@ import { InteractionsController } from './social/interactions.controller.js';
 
 @Module({
   controllers: [
+    LibraryController,
     NotificationsController,
     CommunityController,
     InteractionsController,
@@ -42,6 +45,7 @@ import { InteractionsController } from './social/interactions.controller.js';
     MarvelController,
   ],
   providers: [
+    LibraryService,
     PushService,
     NotificationsService,
     CommunityService,

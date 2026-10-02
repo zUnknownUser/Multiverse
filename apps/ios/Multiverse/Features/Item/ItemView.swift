@@ -6,6 +6,7 @@ struct ItemView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var reviewFilter: ReviewFilter = .popular
     @State private var showingSend = false
+    @State private var addingToList = false
 
     private enum ReviewFilter: String { case popular = "Populares", friends = "Amigos" }
 
@@ -16,21 +17,28 @@ struct ItemView: View {
                 VStack(alignment: .leading, spacing: 22) {
                     topSection(item: item, uni: uni).padding(.horizontal, MV.pad)
                     actionsRow(item: item, uni: uni).padding(.horizontal, MV.pad)
+                    if let library = store.library {
+                        LibraryStatusNotice(library: library).padding(.horizontal, MV.pad)
+                        Button(L10n.text("ADICIONAR A LISTAS")) { addingToList = true }
+                            .disabled(!library.canMutate).padding(.horizontal, MV.pad)
+                    }
                     friendsSection(item: item, uni: uni).padding(.horizontal, MV.pad)
                     Text(item.desc).font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
                         .padding(.horizontal, MV.pad)
-                    WhereToWatchSection(itemID: item.id).padding(.horizontal, MV.pad)
-                    canonSection(item: item, uni: uni).padding(.horizontal, MV.pad)
-                    essentialSection(item: item, uni: uni).padding(.horizontal, MV.pad)
+                    if store.showsDemoFeatures { WhereToWatchSection(itemID: item.id).padding(.horizontal, MV.pad) }
+                    if store.showsDemoFeatures { canonSection(item: item, uni: uni).padding(.horizontal, MV.pad) }
+                    if store.showsDemoFeatures { essentialSection(item: item, uni: uni).padding(.horizontal, MV.pad) }
                     histogramSection(item: item, uni: uni).padding(.horizontal, MV.pad)
-                    timelineSection(item: item, uni: uni).padding(.horizontal, MV.pad)
-                    connectionsSection(item: item).padding(.horizontal, MV.pad)
+                    if store.showsDemoFeatures { timelineSection(item: item, uni: uni).padding(.horizontal, MV.pad) }
+                    if store.showsDemoFeatures { connectionsSection(item: item).padding(.horizontal, MV.pad) }
                     CommunityLink(universe: item.uni, item: item.id).padding(.horizontal, MV.pad)
                     reviewsSection(item: item).padding(.horizontal, MV.pad)
                 }
                 .padding(.bottom, 24)
             }
         }
+        .task { await store.library?.refresh() }
+        .sheet(isPresented: $addingToList) { AddItemToListSheet(itemID: itemID) }
         .sheet(isPresented: $showingSend) {
             SendCardSheet(itemID: itemID)
         }
@@ -98,6 +106,8 @@ struct ItemView: View {
                     .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
                     .contentShape(Rectangle())
                     .onTapGesture { store.toggleWanted(item.id) }
+                    .allowsHitTesting(store.library?.canMutate ?? true)
+                    .opacity(store.library?.canMutate == false ? 0.5 : 1)
 
                 let liked = store.isItemLiked(item.id)
                 Text(L10n.text("♥ CURTIR"))
@@ -109,7 +119,10 @@ struct ItemView: View {
                     .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
                     .contentShape(Rectangle())
                     .onTapGesture { store.toggleItemLiked(item.id) }
+                    .allowsHitTesting(store.library?.canMutate ?? true)
+                    .opacity(store.library?.canMutate == false ? 0.5 : 1)
 
+                if store.showsDemoFeatures {
                 Text("✉")
                     .font(.system(size: 17, weight: .bold))
                     .frame(width: 46, height: 46)
@@ -119,6 +132,7 @@ struct ItemView: View {
                     .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
                     .contentShape(Rectangle())
                     .onTapGesture { showingSend = true }
+                }
             }
             if let mine = store.myDiaryEntry(for: item.id) {
                 HStack(spacing: 6) {
@@ -126,7 +140,7 @@ struct ItemView: View {
                     StarsText(rating: mine.rating, color: uni.color, size: 14)
                 }
             }
-            if let room = store.room(for: item.id) {
+            if store.showsDemoFeatures, let room = store.room(for: item.id) {
                 Button { store.push(.room(item.id)) } label: {
                     HStack(spacing: 6) {
                         Text(L10n.text("● SALA")).font(MVFont.bold(12)).foregroundStyle(MV.C.marvel)
@@ -342,10 +356,12 @@ struct ItemView: View {
                 }
             }
 
+            if store.showsDemoFeatures {
             Button { store.push(.correctionForm(item.id)) } label: {
                 Text(L10n.text("Sugerir correção")).font(MVFont.bold(12)).underline().foregroundStyle(MV.C.ink)
             }
             .buttonStyle(.plain)
+            }
         }
     }
 }

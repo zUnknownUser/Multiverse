@@ -1,11 +1,13 @@
 # Multiverse API
 
 API NestJS 12 + TypeScript com Firebase Authentication e PostgreSQL. Persiste conta,
-onboarding, catálogo, diário, reviews, follows, posts, comentários, reações, notificações e proteções
+onboarding, catálogo, diário, reviews, follows, posts, comentários, reações, notificações, biblioteca privada e proteções
 sociais. Não armazena senhas nem emite tokens próprios.
 
 Contrato novo e ativação futura de APNs: [comunidade e notificações](docs/community-notifications.md).
 Push permanece desligado por padrão; a central funciona sem Apple Developer.
+
+Biblioteca: [contrato, limites e migração](docs/library.md).
 
 ## Executar localmente
 

@@ -1,12 +1,12 @@
 import SwiftUI
 
-/// Tab bar customizada: Início, Busca, botão + central, Clubes, Perfil.
+/// Tab bar customizada: Início, Busca, botão + central, Biblioteca, Perfil.
 /// Avisos saiu daqui — agora é o sino no topo da Home (ver `AppStore.openNotifications()`).
 struct CustomTabBar: View {
     @Environment(AppStore.self) private var store
     var onPlusTapped: () -> Void
 
-    private let items: [(AppTab, String)] = [(.home, L10n.text("Início")), (.search, L10n.text("Busca")), (.clubs, L10n.text("Clubes")), (.profile, L10n.text("Perfil"))]
+    private let items: [(AppTab, String)] = [(.home, L10n.text("Início")), (.search, L10n.text("Busca")), (.library, L10n.text("Biblioteca")), (.profile, L10n.text("Perfil"))]
 
     var body: some View {
         ZStack(alignment: .top) {

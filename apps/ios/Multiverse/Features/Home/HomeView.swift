@@ -7,18 +7,20 @@ struct HomeView: View {
         ScreenScaffold {
             VStack(alignment: .leading, spacing: 26) {
                 header.padding(.horizontal, MV.pad)
-                if store.liveEvent != nil { LivePremiereBanner().padding(.horizontal, MV.pad) }
-                if store.isShieldActive { ShieldStatusBanner().padding(.horizontal, MV.pad) }
-                wrappedBanner.padding(.horizontal, MV.pad)
+                if store.showsDemoFeatures && store.liveEvent != nil { LivePremiereBanner().padding(.horizontal, MV.pad) }
+                if store.showsDemoFeatures && store.isShieldActive { ShieldStatusBanner().padding(.horizontal, MV.pad) }
+                if store.showsDemoFeatures { wrappedBanner.padding(.horizontal, MV.pad) }
                 universeGrid.padding(.horizontal, MV.pad)
                 CommunityLink().padding(.horizontal, MV.pad)
-                if !store.clubs.isEmpty { MyClubsCard().padding(.horizontal, MV.pad) }
+                if store.showsDemoFeatures && !store.clubs.isEmpty { MyClubsCard().padding(.horizontal, MV.pad) }
                 if !store.homeDiscoveryItems.isEmpty { trendingSection }
+                if store.showsDemoFeatures {
                 DuelCard()
                     .padding(.horizontal, MV.pad)
                 DebateCard()
                     .padding(.horizontal, MV.pad)
                 theoriesAndPredictionsRow.padding(.horizontal, MV.pad)
+                }
                 feedSection.padding(.horizontal, MV.pad)
                 if let people = store.people {
                     if let error = people.homeError {
@@ -33,6 +35,7 @@ struct HomeView: View {
             .padding(.bottom, 24)
         }
         .task {
+            await store.library?.refresh()
             await store.notifications?.refresh()
             if store.people?.state == nil { await store.people?.loadHome() }
             await store.social?.loadPrivacy()
@@ -84,6 +87,7 @@ struct HomeView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(store.unreadCount > 0 ? L10n.format("Avisos, %1$@ não lidos", String(describing: store.unreadCount)) : L10n.text("Avisos"))
 
+                if store.showsDemoFeatures {
                 Button { store.push(.messages) } label: {
                     ZStack(alignment: .topTrailing) {
                         Text("✉").font(.system(size: 18, weight: .bold))
@@ -104,6 +108,7 @@ struct HomeView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(store.totalUnreadMessages > 0 ? L10n.format("Mensagens, %1$@ não lidas", String(describing: store.totalUnreadMessages)) : L10n.text("Mensagens"))
 
+                }
                 Button { store.openMyProfile() } label: {
                     let me = store.user(store.meID)!
                     ZStack {

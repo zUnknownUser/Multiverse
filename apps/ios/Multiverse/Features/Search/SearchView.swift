@@ -24,7 +24,7 @@ struct SearchView: View {
                 }
                 .scrollIndicators(.hidden)
 
-                if query.isEmpty {
+                if query.isEmpty && store.showsDemoFeatures {
                     Button { store.push(.exploreRooms) } label: {
                         HStack(spacing: 8) {
                             Text(L10n.text("● SALAS AO VIVO")).font(MVFont.bold(12)).foregroundStyle(MV.C.ink)

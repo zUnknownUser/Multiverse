@@ -83,6 +83,8 @@ final class AppStore {
     private let repository: MultiverseRepository
     private let catalogAPI: (any CatalogAPI)?
     private let activityAPI: (any ActivityAPI)?
+    let library: LibraryStore?
+    var showsDemoFeatures: Bool { !usesAccountAPI }
     let communityAPI: (any CommunityAPI)?
     let notifications: NotificationStore?
     let social: SocialStore?
@@ -140,6 +142,7 @@ final class AppStore {
     var tab: AppTab = .home
     var homePath: [Route] = []
     var searchPath: [Route] = []
+    var libraryPath: [Route] = []
     var clubsPath: [Route] = []
     var profilePath: [Route] = []
     var unreadCount: Int { notifications?.unreadCount ?? 0 }
@@ -234,7 +237,8 @@ final class AppStore {
 
     // MARK: - Init
 
-    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil, catalogAPI: (any CatalogAPI)? = nil, activityAPI: (any ActivityAPI)? = nil, peopleAPI: (any PeopleAPI)? = nil, socialAPI: (any SocialAPI)? = nil, communityAPI: (any CommunityAPI)? = nil, notificationsAPI: (any NotificationsAPI)? = nil) {
+    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil, catalogAPI: (any CatalogAPI)? = nil, activityAPI: (any ActivityAPI)? = nil, peopleAPI: (any PeopleAPI)? = nil, socialAPI: (any SocialAPI)? = nil, communityAPI: (any CommunityAPI)? = nil, notificationsAPI: (any NotificationsAPI)? = nil, libraryAPI: (any LibraryAPI)? = nil) {
+        self.library = libraryAPI.map { LibraryStore(api: $0) }
         self.communityAPI = communityAPI
         self.notifications = notificationsAPI.map { NotificationStore(api: $0) }
         self.social = socialAPI.map { SocialStore(api: $0) }
@@ -592,16 +596,20 @@ final class AppStore {
         review.comments[index].likes + (isLikedComment(reviewID: review.id, index: index) ? 1 : 0)
     }
 
-    func isItemLiked(_ id: String) -> Bool { likedItems.contains(id) }
+    func isItemLiked(_ id: String) -> Bool { library.map { $0.favoriteIDs.contains(id) } ?? likedItems.contains(id) }
     func toggleItemLiked(_ id: String) {
+        if let library { Task { await library.change("favorite", itemID: id, enabled: !isItemLiked(id)) }; return }
+
         let turningOn = !likedItems.contains(id)
         if turningOn { likedItems.insert(id) } else { likedItems.remove(id) }
         let repository = self.repository
         Task { try? await repository.setItemLiked(itemID: id, liked: turningOn) }
     }
 
-    func isWanted(_ id: String) -> Bool { wantList.contains(id) }
+    func isWanted(_ id: String) -> Bool { library.map { $0.wantedIDs.contains(id) } ?? wantList.contains(id) }
     func toggleWanted(_ id: String) {
+        if let library { Task { await library.change("wanted", itemID: id, enabled: !isWanted(id)) }; return }
+
         let turningOn = !wantList.contains(id)
         if turningOn { wantList.insert(id) } else { wantList.remove(id) }
         let repository = self.repository
@@ -676,6 +684,7 @@ final class AppStore {
 
     /// Manda os números atuais pra extensão de widgets via App Group (ver `WidgetBridge`).
     func syncWidgetData() {
+        guard showsDemoFeatures else { return }
         guard let widgetWriter, !isLoading, catalogLoadError == nil, accountLoadError == nil, activityLoadError == nil, !Task.isCancelled, !duels.isEmpty else { return }
         let mainUniID = user(meID)?.badgeUniverse ?? "wow"
         let followedOrder = readingOrders.first { orderFollows.contains($0.id) } ?? readingOrders.first
@@ -776,7 +785,7 @@ final class AppStore {
 
     func universeStats(_ uniID: String) -> [(count: String, label: String)] {
         guard let u = universesByID[uniID] else { return [] }
-        return [(Logic.fmt(u.total), L10n.text("Itens no cânone")), (Logic.fmt(u.members), L10n.text("Membros")), (Logic.fmt(u.live), L10n.text("Ativos agora"))]
+        return [(Logic.fmt(u.total), L10n.text("Itens no cânone")), (Logic.fmt(u.members), L10n.text("Membros"))] + (showsDemoFeatures ? [(Logic.fmt(u.live), L10n.text("Ativos agora"))] : [])
     }
 
     func topRatedItems(in uniID: String) -> [Item] {
@@ -1015,7 +1024,9 @@ final class AppStore {
 
         let progress = universes.map { ($0, pctFor($0.id)) }
         let favIDs: [String]
-        if isMe && usesRemoteActivity {
+        if isMe, let library {
+            favIDs = Array(library.favoriteIDs.prefix(4))
+        } else if isMe && usesRemoteActivity {
             // A revisit is still one favorite; the latest log owns its liked state.
             var seen = Set<String>()
             favIDs = Array(diary.filter { seen.insert($0.itemId).inserted && $0.liked }.prefix(4).map(\.itemId))
@@ -1468,7 +1479,9 @@ final class AppStore {
     // MARK: - Navegação por aba
 
     func push(_ route: Route) {
+        guard showsDemoFeatures || !route.isDemonstration else { return }
         switch tab {
+        case .library: libraryPath.append(route)
         case .home: homePath.append(route)
         case .search: searchPath.append(route)
         case .clubs: clubsPath.append(route)
@@ -1482,6 +1495,7 @@ final class AppStore {
             switch newTab {
             case .home: homePath = []
             case .search: searchPath = []
+            case .library: libraryPath = []
             case .clubs: clubsPath = []
             case .profile: profilePath = []
             }
@@ -1524,6 +1538,7 @@ final class AppStore {
     }
 
     func isShieldedReview(_ review: Review) -> Bool {
+        guard showsDemoFeatures else { return false }
         guard let item = itemsByID[review.item], isAheadOfShield(item) else { return false }
         return !revealedSpoilers.contains(review.id)
     }

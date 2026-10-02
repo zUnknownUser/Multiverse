@@ -59,7 +59,7 @@ struct UniverseView: View {
 
     private var tabBar: some View {
         HStack(spacing: 8) {
-            ForEach(UniverseTab.allCases, id: \.self) { t in
+            ForEach(store.showsDemoFeatures ? UniverseTab.allCases : [.geral, .pers], id: \.self) { t in
                 Button { tab = t } label: {
                     Text(L10n.text(t.rawValue).uppercased())
                         .font(MVFont.bold(11))
@@ -112,7 +112,7 @@ private struct GeneralTabContent: View {
             }
 
             VStack(alignment: .leading, spacing: 12) {
-                SectionHeader(title: L10n.text("Reviews populares")).padding(.horizontal, MV.pad)
+                SectionHeader(title: L10n.text(store.showsDemoFeatures ? "Reviews populares" : "SUAS REVIEWS")).padding(.horizontal, MV.pad)
                 VStack(spacing: 12) {
                     ForEach(store.reviewsIn(universe: universeID, limit: 3)) { review in
                         FeedReviewCard(review: review)

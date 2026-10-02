@@ -23,7 +23,7 @@ struct ProfileView: View {
                     hero(data: data)
                         .padding(.horizontal, MV.pad)
 
-                    if data.isMe {
+                    if data.isMe && store.showsDemoFeatures {
                         WrappedPromoCard()
                             .padding(.horizontal, MV.pad)
                     } else if let compat = data.compatPercent, let line = data.compatLine, let byUni = data.compatByUniverse {
@@ -32,12 +32,12 @@ struct ProfileView: View {
                     }
 
                     if !data.progress.isEmpty { canonSection(data: data).padding(.horizontal, MV.pad) }
-                    if !data.badges.isEmpty { badgesSection(data: data).padding(.horizontal, MV.pad) }
+                    if store.showsDemoFeatures && !data.badges.isEmpty { badgesSection(data: data).padding(.horizontal, MV.pad) }
                     favoritesSection(data: data).padding(.horizontal, MV.pad)
                     reviewsSection(data: data).padding(.horizontal, MV.pad)
 
                     if data.isMe {
-                        clubsSection().padding(.horizontal, MV.pad)
+                        if store.showsDemoFeatures { clubsSection().padding(.horizontal, MV.pad) }
                         listsSection().padding(.horizontal, MV.pad)
                     }
                 }
@@ -52,7 +52,7 @@ struct ProfileView: View {
     }
 
     private func refreshPeople() async {
-        if userID == store.meID { await store.people?.loadHome() }
+        if userID == store.meID { await store.people?.loadHome(); await store.library?.refresh() }
         else { await store.people?.loadProfile(userID) }
     }
 
@@ -139,6 +139,7 @@ struct ProfileView: View {
                             store.toggleFollow(userID)
                         }
                         .allowsHitTesting(store.people?.canFollow ?? true)
+                    if store.showsDemoFeatures {
                     Text(L10n.text("MENSAGEM"))
                         .font(MVFont.bold(13))
                         .frame(maxWidth: .infinity).padding(.vertical, 12)
@@ -161,6 +162,7 @@ struct ProfileView: View {
                             if store.usesRemotePeople { store.showToast(L10n.text("Desafios entre loristas estarão disponíveis em breve.")) }
                             else { store.showingChallengeUserID = userID }
                         }
+                    }
                 }
             }
         }
@@ -203,7 +205,7 @@ struct ProfileView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(L10n.text("FAVORITOS")).font(MVFont.section(17)).foregroundStyle(MV.C.ink)
                 if data.favorites.isEmpty {
-                    Text(L10n.text("Os registros marcados com ♥ Curti aparecerão aqui."))
+                    Text(L10n.text(store.library == nil ? "Os registros marcados com ♥ Curti aparecerão aqui." : "Marque o coração de uma obra para adicioná-la aos favoritos."))
                         .font(MVFont.body(13)).foregroundStyle(MV.C.muted)
                 }
                 HStack(spacing: 10) {
@@ -244,14 +246,21 @@ struct ProfileView: View {
     @ViewBuilder
     private func listsSection() -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(L10n.text("LISTAS")).font(MVFont.section(17)).foregroundStyle(MV.C.ink)
-            VStack(spacing: 10) {
-                ForEach(store.profileLists(), id: \.list.id) { entry in
-                    ListSummaryRow(list: entry.list, stackColors: entry.stackColors)
-                }
+            HStack {
+                Text(L10n.text("LISTAS")).font(MVFont.section(17))
+                Spacer()
+                if store.library != nil { Button(L10n.text("ABRIR BIBLIOTECA")) { store.goToTab(.library) }.font(MVFont.bold(11)) }
+            }
+            if let library = store.library {
+                LibraryStatusNotice(library: library)
+                if library.lists.isEmpty && library.snapshot != nil { Text(L10n.text("Crie sua primeira lista para organizar as obras.")).font(MVFont.body(13)) }
+                ForEach(library.lists.prefix(3)) { list in PersonalListRow(list: list) }
+            } else if store.showsDemoFeatures {
+                ForEach(store.profileLists(), id: \.list.id) { entry in ListSummaryRow(list: entry.list, stackColors: entry.stackColors) }
             }
         }
     }
+
 }
 
 private struct BadgeDiamond: View {

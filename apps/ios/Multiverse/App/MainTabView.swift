@@ -19,6 +19,7 @@ struct MainTabView: View {
                 switch store.tab {
                 case .home: HomeStack()
                 case .search: SearchStack()
+                case .library: LibraryStack()
                 case .clubs: ClubsStack()
                 case .profile: ProfileStack()
                 }
@@ -63,6 +64,16 @@ private struct SearchStack: View {
     }
 }
 
+private struct LibraryStack: View {
+    @Environment(AppStore.self) private var store
+    var body: some View {
+        @Bindable var store = store
+        NavigationStack(path: $store.libraryPath) {
+            LibraryView().navigationDestination(for: Route.self) { RouteDestination(route: $0) }
+        }
+    }
+}
+
 private struct ClubsStack: View {
     @Environment(AppStore.self) private var store
     var body: some View {
@@ -88,14 +99,21 @@ private struct ProfileStack: View {
 /// Resolve cada `Route` empilhada pra sua tela correspondente.
 private struct RouteDestination: View {
     let route: Route
+    @Environment(AppStore.self) private var store
     var body: some View {
+        if route.isDemonstration && !store.showsDemoFeatures { EmptyView() }
+        else { destination }
+    }
+    @ViewBuilder private var destination: some View {
         switch route {
         case .item(let id): ItemView(itemID: id)
         case .universe(let id): UniverseView(universeID: id)
         case .user(let id): ProfileView(userID: id)
         case .review(let id): ThreadView(reviewID: id)
         case .order(let id): ReadingOrderView(orderID: id)
-        case .list(let id): ListDetailView(listID: id)
+        case .library: LibraryView()
+        case .list(let id):
+            if store.library != nil { PersonalListDetailView(listID: id) } else { ListDetailView(listID: id) }
         case .diary: DiaryView()
         case .wrapped: WrappedView()
         case .settings: SettingsView()

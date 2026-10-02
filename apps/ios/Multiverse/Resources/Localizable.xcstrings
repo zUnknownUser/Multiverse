@@ -15406,6 +15406,598 @@
           }
         }
       }
+    },
+    "Não foi possível confirmar a alteração na biblioteca. Tente novamente.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível confirmar a alteração na biblioteca. Tente novamente."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not confirm the library change. Try again."
+          }
+        }
+      }
+    },
+    "Sua biblioteca mudou em outro dispositivo. Confira os dados atualizados e tente novamente.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sua biblioteca mudou em outro dispositivo. Confira os dados atualizados e tente novamente."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your library changed on another device. Review the updated data and try again."
+          }
+        }
+      }
+    },
+    "Esta lista não está mais disponível.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta lista não está mais disponível."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This list is no longer available."
+          }
+        }
+      }
+    },
+    "Este envio já foi usado. Atualize a biblioteca antes de tentar novamente.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este envio já foi usado. Atualize a biblioteca antes de tentar novamente."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This submission has already been used. Refresh the library before trying again."
+          }
+        }
+      }
+    },
+    "Você pode manter até 50 listas pessoais.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você pode manter até 50 listas pessoais."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can keep up to 50 personal lists."
+          }
+        }
+      }
+    },
+    "Cada lista pode conter até 200 obras.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada lista pode conter até 200 obras."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each list can contain up to 200 works."
+          }
+        }
+      }
+    },
+    "Sua biblioteca pode guardar até 1.000 obras entre desejos e favoritos.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sua biblioteca pode guardar até 1.000 obras entre desejos e favoritos."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your library can save up to 1,000 works across your wishlist and favorites."
+          }
+        }
+      }
+    },
+    "Biblioteca": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biblioteca"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library"
+          }
+        }
+      }
+    },
+    "BIBLIOTECA": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BIBLIOTECA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LIBRARY"
+          }
+        }
+      }
+    },
+    "LISTA PRIVADA": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LISTA PRIVADA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRIVATE LIST"
+          }
+        }
+      }
+    },
+    "ADICIONAR OBRAS": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ADICIONAR OBRAS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ADD WORKS"
+          }
+        }
+      }
+    },
+    "EDITAR LISTA": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EDITAR LISTA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EDIT LIST"
+          }
+        }
+      }
+    },
+    "EXCLUIR LISTA": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EXCLUIR LISTA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DELETE LIST"
+          }
+        }
+      }
+    },
+    "Esta lista ainda não tem obras.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta lista ainda não tem obras."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This list has no works yet."
+          }
+        }
+      }
+    },
+    "Excluir esta lista? As obras e seu diário serão mantidos.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excluir esta lista? As obras e seu diário serão mantidos."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this list? The works and your diary will be kept."
+          }
+        }
+      }
+    },
+    "Nenhuma obra encontrada.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhuma obra encontrada."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No works found."
+          }
+        }
+      }
+    },
+    "Buscar obras": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar obras"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search works"
+          }
+        }
+      }
+    },
+    "CONCLUÍDO": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONCLUÍDO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DONE"
+          }
+        }
+      }
+    },
+    "CRIAR LISTA": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRIAR LISTA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CREATE LIST"
+          }
+        }
+      }
+    },
+    "Crie sua primeira lista para organizar as obras.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crie sua primeira lista para organizar as obras."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create your first list to organize works."
+          }
+        }
+      }
+    },
+    "ADICIONAR A LISTAS": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ADICIONAR A LISTAS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ADD TO LISTS"
+          }
+        }
+      }
+    },
+    "Alteração pendente de confirmação. Tente novamente para concluir sem duplicar.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alteração pendente de confirmação. Tente novamente para concluir sem duplicar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change awaiting confirmation. Try again to complete it without duplicating."
+          }
+        }
+      }
+    },
+    "ATUALIZAR BIBLIOTECA": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATUALIZAR BIBLIOTECA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REFRESH LIBRARY"
+          }
+        }
+      }
+    },
+    "Seus desejos, favoritos e listas. Só você pode ver.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seus desejos, favoritos e listas. Só você pode ver."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your wishlist, favorites and lists. Only you can see them."
+          }
+        }
+      }
+    },
+    "Quero consumir": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quero consumir"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wishlist"
+          }
+        }
+      }
+    },
+    "Favoritos": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favoritos"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favorites"
+          }
+        }
+      }
+    },
+    "Listas": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listas"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lists"
+          }
+        }
+      }
+    },
+    "Nada salvo aqui ainda. Explore uma obra para começar.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada salvo aqui ainda. Explore uma obra para começar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing saved here yet. Explore a work to get started."
+          }
+        }
+      }
+    },
+    "%1$@ obras · lista privada": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ obras · lista privada"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ works · private list"
+          }
+        }
+      }
+    },
+    "Obra indisponível no catálogo": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obra indisponível no catálogo"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Work unavailable in the catalog"
+          }
+        }
+      }
+    },
+    "Remover da seleção": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remover da seleção"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from selection"
+          }
+        }
+      }
+    },
+    "Esta lista é privada. Só você pode acessar e editar.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta lista é privada. Só você pode acessar e editar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This list is private. Only you can access and edit it."
+          }
+        }
+      }
+    },
+    "Nome da lista": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome da lista"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List name"
+          }
+        }
+      }
+    },
+    "Descrição (opcional)": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descrição (opcional)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Description (optional)"
+          }
+        }
+      }
+    },
+    "SALVAR LISTA": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SALVAR LISTA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SAVE LIST"
+          }
+        }
+      }
+    },
+    "ABRIR BIBLIOTECA": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ABRIR BIBLIOTECA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OPEN LIBRARY"
+          }
+        }
+      }
+    },
+    "Marque o coração de uma obra para adicioná-la aos favoritos.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marque o coração de uma obra para adicioná-la aos favoritos."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap the heart on a work to add it to your favorites."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
