@@ -87,7 +87,7 @@ struct SearchView: View {
             .onChange(of: query) { _, _ in visibleResults = 40 }
             .onChange(of: filter) { _, _ in visibleResults = 40 }
         }
-        .task(id: filter.rawValue + "|" + query) {
+        .task(id: filter.rawValue + "|" + query + "|" + String(store.people?.discoveryEpoch ?? 0)) {
             guard let people = store.people else { return }
             waitingForSearch = searchingPeople
             people.prepareSearch(query)

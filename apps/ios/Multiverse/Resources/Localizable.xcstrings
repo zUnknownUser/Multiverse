@@ -1,6 +1,278 @@
 {
   "sourceLanguage": "pt-BR",
   "strings": {
+    "Esta review não está mais disponível para você. Atualize o feed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta review não está mais disponível para você. Atualize o feed."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This review is no longer available to you. Refresh your feed."
+          }
+        }
+      }
+    },
+    "Não foi possível confirmar esta ação. Tente novamente.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível confirmar esta ação. Tente novamente."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn’t confirm this action. Please try again."
+          }
+        }
+      }
+    },
+    "Você atingiu o limite de denúncias por hoje. Tente novamente mais tarde.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você atingiu o limite de denúncias por hoje. Tente novamente mais tarde."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’ve reached today’s report limit. Please try again later."
+          }
+        }
+      }
+    },
+    "Você publicou muitas reviews nesta hora. Aguarde um pouco; seu rascunho continua aqui.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você publicou muitas reviews nesta hora. Aguarde um pouco; seu rascunho continua aqui."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’ve published many reviews this hour. Please wait a little; your draft is still here."
+          }
+        }
+      }
+    },
+    "Ainda não há reviews públicas das pessoas que você segue. Explore os loristas ou registre uma obra.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ainda não há reviews públicas das pessoas que você segue. Explore os loristas ou registre uma obra."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No public reviews from people you follow yet. Discover lorekeepers or log a work."
+          }
+        }
+      }
+    },
+    "Reações e comentários estarão disponíveis em breve.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reações e comentários estarão disponíveis em breve."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reactions and comments are coming soon."
+          }
+        }
+      }
+    },
+    "Ao ativar, suas reviews anteriores e futuras ficam públicas para pessoas no app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ao ativar, suas reviews anteriores e futuras ficam públicas para pessoas no app."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When enabled, your past and future reviews become public to people in the app."
+          }
+        }
+      }
+    },
+    "Para bloquear, abra ••• no perfil da pessoa. Ao desbloquear, as relações anteriores voltam a valer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para bloquear, abra ••• no perfil da pessoa. Ao desbloquear, as relações anteriores voltam a valer."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To block someone, open ••• on their profile. Unblocking restores previous follow relationships."
+          }
+        }
+      }
+    },
+    "Sua denúncia será registrada para análise. A pessoa não recebe sua identidade.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sua denúncia será registrada para análise. A pessoa não recebe sua identidade."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your report will be recorded for review. Your identity is not shared with that person."
+          }
+        }
+      }
+    },
+    "Denúncia registrada. Esta review foi ocultada para você.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denúncia registrada. Esta review foi ocultada para você."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report recorded. This review is now hidden from you."
+          }
+        }
+      }
+    },
+    "Diário público: esta review poderá aparecer para quem segue você.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diário público: esta review poderá aparecer para quem segue você."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public diary: this review may appear to people who follow you."
+          }
+        }
+      }
+    },
+    "Diário privado: esta review fica só para você. Altere em Ajustes quando quiser.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diário privado: esta review fica só para você. Altere em Ajustes quando quiser."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private diary: this review is just for you. You can change this in Settings."
+          }
+        }
+      }
+    },
+    "Confira a visibilidade do diário em Ajustes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confira a visibilidade do diário em Ajustes."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your diary visibility in Settings."
+          }
+        }
+      }
+    },
+    "BLOQUEAR": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BLOQUEAR"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BLOCK"
+          }
+        }
+      }
+    },
+    "Comentários em breve": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comentários em breve"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comments coming soon"
+          }
+        }
+      }
+    },
+    "VER REVIEW": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VER REVIEW"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VIEW REVIEW"
+          }
+        }
+      }
+    },
     "Este perfil não está mais disponível. Atualize as sugestões para encontrar outros loristas.": {
       "localizations": {
         "pt-BR": {

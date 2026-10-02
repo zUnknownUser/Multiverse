@@ -44,7 +44,7 @@ struct ProfileView: View {
                 .padding(.bottom, 24)
             }
         }
-        .task(id: userID) { await refreshPeople() }
+        .task(id: userID + "|" + String(store.people?.discoveryEpoch ?? 0)) { await refreshPeople() }
         .refreshable {
             if userID == store.meID { await store.refreshActivity() }
             await refreshPeople()
@@ -78,6 +78,19 @@ struct ProfileView: View {
                             .overlay(Circle().strokeBorder(MV.C.paper, lineWidth: MV.stroke))
                     }
                     .buttonStyle(.plain)
+                } else if let social = store.social {
+                    Menu {
+                        Button(L10n.text("BLOQUEAR"), role: .destructive) {
+                            Task {
+                                if await social.setBlock(userID, blocked: true) { await store.refreshAfterSafetyChange() }
+                                else { store.showToast(social.actionError ?? SocialError.invalid.localizedDescription) }
+                            }
+                        }
+                    } label: {
+                        Text("•••").font(MVFont.black(16)).foregroundStyle(MV.C.paper).padding(8)
+                    }
+                    .accessibilityLabel(L10n.text("Mais opções"))
+                    .disabled(social.isMutating)
                 }
             }
 

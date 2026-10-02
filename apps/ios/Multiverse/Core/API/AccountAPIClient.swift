@@ -1,7 +1,7 @@
 import Foundation
 
 @MainActor
-final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI {
+final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI {
     private let baseURL: URL?
     private let tokens: any APITokenProvider
     private let transport: URLSession
@@ -32,6 +32,23 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI {
     private struct ProfileInput: Encodable { let displayName: String; let username: String; let avatarColor: String; let bio: String }
     private struct APIError: Decodable { let code: String? }
 
+    func fetchFeed(after: String?) async throws -> SocialPage {
+        try await request("feed", query: after.map { [URLQueryItem(name: "after", value: $0)] } ?? [])
+    }
+    func fetchReview(id: String) async throws -> SocialPage { try await request("reviews/" + id) }
+    func fetchPrivacy() async throws -> DiaryPrivacy { try await request("me/privacy") }
+    func savePrivacy(publicDiary: Bool) async throws -> DiaryPrivacy {
+        try await request("me/privacy", method: "PUT", body: JSONEncoder().encode(DiaryPrivacy(publicDiary: publicDiary)))
+    }
+    func fetchBlocks() async throws -> SocialBlocks { try await request("me/blocks") }
+    func setBlock(id: String, blocked: Bool) async throws -> BlockReceipt {
+        struct Input: Encodable { let blocked: Bool }
+        return try await request("me/blocks/" + id, method: "PUT", body: JSONEncoder().encode(Input(blocked: blocked)))
+    }
+    func reportReview(id: String, reason: String, alsoBlock: Bool) async throws -> ReportReceipt {
+        struct Input: Encodable { let reason: String; let alsoBlock: Bool }
+        return try await request("reviews/" + id + "/report", method: "PUT", body: JSONEncoder().encode(Input(reason: reason, alsoBlock: alsoBlock)))
+    }
     func fetchAccount() async throws -> AccountEnvelope { try await request("me") }
     func fetchActivity() async throws -> ActivitySnapshot { try await request("me/activity") }
     func searchPeople(query: String, after: String?) async throws -> PeoplePage {
@@ -108,6 +125,10 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI {
             }
             let code = (try? JSONDecoder().decode(APIError.self, from: data))?.code
             switch code {
+            case "REVIEW_UNAVAILABLE": throw SocialError.unavailable
+            case "INVALID_SOCIAL_REQUEST", "INVALID_REPORT", "INVALID_BLOCK", "INVALID_FEED_CURSOR": throw SocialError.invalid
+            case "REPORT_LIMIT": throw SocialError.reportLimit
+            case "PUBLICATION_LIMIT": throw SocialError.publicationLimit
             case "PERSON_UNAVAILABLE": throw PeopleError.unavailable
             case "INVALID_PEOPLE_QUERY": throw PeopleError.invalidSearch
             case "INVALID_FOLLOW", "CANNOT_FOLLOW_SELF", "INVALID_PERSON": throw PeopleError.followFailed

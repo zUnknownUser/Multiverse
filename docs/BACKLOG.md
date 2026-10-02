@@ -2,9 +2,10 @@
 
 ## Direção atual — comunidade (01/10/2026)
 
-Pessoas, busca, sugestões e seguir/deixar de seguir já usam a API real. O próximo
-recorte é o feed de reviews de quem o usuário segue, com regras explícitas de
-visibilidade e paginação. Os componentes e a identidade visual atuais devem ser
+Pessoas, busca, sugestões e seguir/deixar de seguir já usam a API real. Em 02/10,
+o feed de reviews também passou a usar a API, com opt-in de diário público,
+paginação, denúncias e bloqueios. O próximo recorte é conectar comentários e
+reações, junto das permissões e operação de moderação. Os componentes e a identidade visual atuais devem ser
 preservados; as propostas históricas de reorganização abaixo não estão aprovadas.
 
 Direção solicitada para depois: a comunidade produzir conteúdo no estilo de
@@ -14,7 +15,9 @@ Antes de abrir publicação e interação: denúncia, bloqueio, limites contra s
 regras de spoilers/conteúdo adulto e resposta clara ao autor. IA pode ajudar na
 triagem, com revisão e possibilidade de contestação; não representa garantia de
 moderação correta. Reposts, ranking e notificações dependem de um recorte futuro.
-Esses recursos ainda não foram implementados nesta entrega.
+Posts livres, comentários, reações, reposts e triagem por IA ainda não foram
+implementados. Denúncias, bloqueios e limites iniciais já têm persistência;
+as denúncias aguardam revisão manual, sem prazo automático prometido.
 
 As seções seguintes registram propostas antigas e precisam ser reavaliadas frente
 ao estado atual: autenticação, diário, tratamentos de erro e App Icon já tiveram

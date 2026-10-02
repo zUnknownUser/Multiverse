@@ -10,6 +10,8 @@ import { DatabaseService } from '../database/database.service.js';
 import { AccountLifecycleService } from './account-lifecycle.service.js';
 import type { OnboardingDTO, ProfileDTO } from './account.dto.js';
 
+import { unblocked } from '../social/social-policy.js';
+
 type ProfileRow = QueryResultRow & {
   firebase_uid: string;
   username: string;
@@ -91,11 +93,11 @@ export class AccountsService {
         ARRAY(
           SELECT p.firebase_uid
           FROM unnest(CASE WHEN o.completed THEN ARRAY(
-            SELECT f.followed_uid FROM follows f WHERE f.follower_uid=o.firebase_uid ORDER BY f.followed_uid
+            SELECT f.followed_uid FROM visible_follows f WHERE f.follower_uid=o.firebase_uid ORDER BY f.followed_uid
           ) ELSE o.followed_user_ids END) WITH ORDINALITY AS selected(uid,ordinal)
           JOIN profiles p ON p.firebase_uid=selected.uid
           JOIN onboarding eligible ON eligible.firebase_uid=p.firebase_uid
-          WHERE p.firebase_uid<>o.firebase_uid AND p.deletion_requested_at IS NULL AND eligible.completed=true
+          WHERE p.firebase_uid<>o.firebase_uid AND p.deletion_requested_at IS NULL AND eligible.completed=true AND ${unblocked('o.firebase_uid', 'p.firebase_uid')}
           ORDER BY selected.ordinal
         ) AS followed_user_ids
         FROM onboarding o WHERE o.firebase_uid=$1`,
@@ -150,7 +152,7 @@ export class AccountsService {
   async suggestions(uid: string) {
     const result = await this.db.query<ProfileRow>(
       `SELECT p.* FROM profiles p JOIN onboarding o USING(firebase_uid)
-      WHERE p.firebase_uid<>$1 AND p.deletion_requested_at IS NULL AND o.completed=true
+      WHERE p.firebase_uid<>$1 AND p.deletion_requested_at IS NULL AND o.completed=true AND ${unblocked('$1', 'p.firebase_uid')}
       ORDER BY CASE WHEN p.firebase_uid=ANY(coalesce(
         (SELECT followed_user_ids FROM onboarding WHERE firebase_uid=$1),ARRAY[]::text[]))
         THEN 0 ELSE 1 END,p.created_at,p.firebase_uid LIMIT 20`,
@@ -191,9 +193,9 @@ export class AccountsService {
       // onboarding write must never restore an unfollowed person or erase new follows.
       if (current.completed) {
         const followed = await client.query<{ followed_uid: string }>(
-          `SELECT f.followed_uid FROM follows f
+          `SELECT f.followed_uid FROM visible_follows f
           JOIN profiles p ON p.firebase_uid=f.followed_uid JOIN onboarding o ON o.firebase_uid=p.firebase_uid
-          WHERE f.follower_uid=$1 AND p.deletion_requested_at IS NULL AND o.completed=true ORDER BY f.followed_uid`,
+          WHERE f.follower_uid=$1 AND p.deletion_requested_at IS NULL AND o.completed=true AND ${unblocked('$1', 'p.firebase_uid')} ORDER BY f.followed_uid`,
           [uid],
         );
         input.followedUserIDs = followed.rows.map((row) => row.followed_uid);
@@ -223,7 +225,7 @@ export class AccountsService {
         throw new ConflictException({ code: 'INVALID_FOLLOWS' });
       const eligible = await client.query<{ firebase_uid: string }>(
         `SELECT p.firebase_uid FROM profiles p JOIN onboarding o USING(firebase_uid)
-        WHERE p.firebase_uid=ANY($1::text[]) AND p.firebase_uid<>$2 AND p.deletion_requested_at IS NULL AND o.completed=true FOR SHARE OF p`,
+        WHERE p.firebase_uid=ANY($1::text[]) AND p.firebase_uid<>$2 AND p.deletion_requested_at IS NULL AND o.completed=true AND ${unblocked('$2', 'p.firebase_uid')} FOR SHARE OF p`,
         [input.followedUserIDs, uid],
       );
       if (eligible.rowCount !== input.followedUserIDs.length)
@@ -231,7 +233,7 @@ export class AccountsService {
       const total = (
         await client.query<{ count: string }>(
           `SELECT count(*) FROM profiles p JOIN onboarding o USING(firebase_uid)
-        WHERE p.firebase_uid<>$1 AND p.deletion_requested_at IS NULL AND o.completed=true`,
+        WHERE p.firebase_uid<>$1 AND p.deletion_requested_at IS NULL AND o.completed=true AND ${unblocked('$1', 'p.firebase_uid')}`,
           [uid],
         )
       ).rows[0];
@@ -257,11 +259,22 @@ export class AccountsService {
           input.completed,
         ],
       );
-      await client.query('DELETE FROM follows WHERE follower_uid=$1', [uid]);
-      await client.query(
-        'INSERT INTO follows(follower_uid,followed_uid) SELECT $1,unnest($2::text[])',
-        [uid, input.followedUserIDs],
-      );
+      if (!current.completed) {
+        await client.query('DELETE FROM follows WHERE follower_uid=$1', [uid]);
+        await client.query(
+          'INSERT INTO follows(follower_uid,followed_uid) SELECT $1,unnest($2::text[])',
+          [uid, input.followedUserIDs],
+        );
+      } else {
+        // Preserve blocked relationships, but continue cleaning unavailable accounts.
+        await client.query(
+          `DELETE FROM follows f WHERE f.follower_uid=$1 AND NOT EXISTS (
+            SELECT 1 FROM profiles p JOIN onboarding o USING(firebase_uid)
+            WHERE p.firebase_uid=f.followed_uid AND p.deletion_requested_at IS NULL AND o.completed=true
+          )`,
+          [uid],
+        );
+      }
       return onboarding(saved.rows[0]);
     });
   }

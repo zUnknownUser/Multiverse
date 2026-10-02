@@ -46,8 +46,8 @@ catálogo são descartadas localmente ao restaurar o onboarding. Universo sem it
 continua válido. A busca filtra o snapshot carregado, sem paginação nesta primeira etapa.
 
 Mocks continuam disponíveis para previews/testes. O diário e as reviews da própria
-conta são persistidos. Feed social de outras pessoas, listas,
-timelines, clubes e outros módulos ainda usam os dados anteriores nesta etapa.
+conta são persistidos. O [feed social](social-feed.md) usa reviews reais com opt-in,
+paginação e bloqueio. Listas, timelines, clubes e outros módulos ainda usam os dados anteriores nesta etapa.
 O catálogo inicial não torna esses recursos persistentes nem seus contadores reais.
 
 ## Disponibilidade no início do lançamento

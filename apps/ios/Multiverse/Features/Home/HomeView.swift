@@ -31,10 +31,19 @@ struct HomeView: View {
             .padding(.top, 4)
             .padding(.bottom, 24)
         }
-        .task { if store.people?.state == nil { await store.people?.loadHome() } }
+        .task {
+            if store.people?.state == nil { await store.people?.loadHome() }
+            await store.social?.loadPrivacy()
+            if store.social?.hasLoadedFeed == false { await store.social?.loadFeed() }
+        }
+        .onChange(of: store.people?.state?.followingIDs) { _, _ in
+            store.social?.invalidateFeed()
+            Task { await store.social?.loadFeed() }
+        }
         .refreshable {
             await store.refreshActivity()
             await store.people?.loadHome()
+            await store.social?.loadFeed()
         }
     }
 
@@ -166,19 +175,29 @@ struct HomeView: View {
     private var feedSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text(L10n.text(store.usesRemoteActivity ? "SUAS REVIEWS" : "DO SEU PESSOAL")).font(MVFont.section(19)).foregroundStyle(MV.C.ink)
+                Text(L10n.text(store.usesRemoteActivity && store.social == nil ? "SUAS REVIEWS" : "DO SEU PESSOAL")).font(MVFont.section(19)).foregroundStyle(MV.C.ink)
                 Spacer()
                 Text(L10n.format("seguindo %1$@", String(describing: store.friendsCount))).kicker(11).foregroundStyle(MV.C.muted)
             }
 
+            if let social = store.social {
+                if let error = social.feedError {
+                    PeopleStatusNotice(message: error) { await social.loadFeed(more: social.nextCursor != nil && !social.feedIDs.isEmpty) }
+                }
+                if social.isLoadingFeed { ProgressView().frame(maxWidth: .infinity) }
+            }
             let feed = store.homeFeed()
             if feed.isEmpty {
-                emptyFeed
+                if store.social == nil || (store.social?.hasLoadedFeed == true && store.social?.feedError == nil) { emptyFeed }
             } else {
-                VStack(spacing: 12) {
+                LazyVStack(spacing: 12) {
                     ForEach(feed) { review in
-                        FeedReviewCard(review: review)
+                        FeedReviewCard(review: review, showFollowingTag: store.isFollowing(review.user))
                     }
+                }
+                if let social = store.social, social.nextCursor != nil {
+                    PrimaryAuthButton(title: L10n.text("VER MAIS")) { Task { await social.loadFeed(more: true) } }
+                        .disabled(social.isLoadingFeed)
                 }
             }
         }

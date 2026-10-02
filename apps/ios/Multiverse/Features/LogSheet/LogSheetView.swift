@@ -28,6 +28,7 @@ struct LogSheetView: View {
         .presentationDragIndicator(.hidden)
         .presentationCornerRadius(20)
         .interactiveDismissDisabled(store.isSavingLog)
+        .task { await store.social?.loadPrivacy() }
     }
 }
 
@@ -70,7 +71,10 @@ private struct LogFormContent: View {
                 ratingPicker(uni: uni, rating: rating)
                 togglePills
                 reviewField
-                Text(L10n.text("Sua nota e review serão salvas com este registro."))
+                Text(L10n.text(store.social == nil ? "Sua nota e review serão salvas com este registro." :
+                    store.social?.publicDiary == true ? "Diário público: esta review poderá aparecer para quem segue você." :
+                    store.social?.publicDiary == false ? "Diário privado: esta review fica só para você. Altere em Ajustes quando quiser." :
+                    "Confira a visibilidade do diário em Ajustes."))
                     .font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
                 if let error = store.logSaveError { AuthErrorBanner(message: error) }
                 publishButton(item: item, uni: uni)

@@ -83,6 +83,7 @@ final class AppStore {
     private let repository: MultiverseRepository
     private let catalogAPI: (any CatalogAPI)?
     private let activityAPI: (any ActivityAPI)?
+    let social: SocialStore?
     let people: PeopleStore?
     var usesRemotePeople: Bool { people != nil }
     var activityLoadError: String?
@@ -231,7 +232,8 @@ final class AppStore {
 
     // MARK: - Init
 
-    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil, catalogAPI: (any CatalogAPI)? = nil, activityAPI: (any ActivityAPI)? = nil, peopleAPI: (any PeopleAPI)? = nil) {
+    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil, catalogAPI: (any CatalogAPI)? = nil, activityAPI: (any ActivityAPI)? = nil, peopleAPI: (any PeopleAPI)? = nil, socialAPI: (any SocialAPI)? = nil) {
+        self.social = socialAPI.map { SocialStore(api: $0) }
         self.people = peopleAPI.map { PeopleStore(api: $0, ownerID: session?.userID ?? "duda") }
         self.activityAPI = activityAPI
         self.catalogAPI = catalogAPI
@@ -426,10 +428,10 @@ final class AppStore {
         return featured + items.filter { !ids.contains($0.id) }
     }
 
-    func item(_ id: String) -> Item? { itemsByID[id] }
-    func user(_ id: String) -> User? { people?.profiles[id]?.user ?? usersByID[id] }
-    func universe(_ id: String) -> Universe? { universesByID[id] }
-    func universe(of item: Item) -> Universe { universesByID[item.uni]! }
+    func item(_ id: String) -> Item? { itemsByID[id] ?? social?.items[id] }
+    func user(_ id: String) -> User? { people?.profiles[id]?.user ?? social?.users[id] ?? usersByID[id] }
+    func universe(_ id: String) -> Universe? { universesByID[id] ?? social?.universes[id] }
+    func universe(of item: Item) -> Universe { universe(item.uni)! }
 
     // MARK: - Visto / diário
 
@@ -513,6 +515,7 @@ final class AppStore {
 
     @discardableResult
     func toggleLikedReview(_ id: String) -> Bool {
+        if isRemoteReview(id) { showToast(L10n.text("Reações e comentários estarão disponíveis em breve.")); return false }
         let turningOn = !likedReviews.contains(id)
         if turningOn { likedReviews.insert(id) } else { likedReviews.remove(id) }
         let repository = self.repository
@@ -530,6 +533,7 @@ final class AppStore {
     /// Contagem base determinística por tipo (~20% chance de ficar em 0 e sumir do rodapé),
     /// mais 1 se for a reação escolhida pelo usuário — mesmo espírito de `Logic.logCount`.
     func reactionCounts(for reviewID: String) -> [(type: ReactionType, count: Int)] {
+        if isRemoteReview(reviewID) { return [] }
         let mine = reactions[reviewID]
         return ReactionType.allCases.compactMap { type in
             let sd = Logic.seed(reviewID + type.rawValue)
@@ -539,10 +543,11 @@ final class AppStore {
         }
     }
 
-    func userReaction(for reviewID: String) -> ReactionType? { reactions[reviewID] }
+    func userReaction(for reviewID: String) -> ReactionType? { isRemoteReview(reviewID) ? nil : reactions[reviewID] }
 
     /// Tocar na mesma reação de novo remove; tocar numa diferente troca.
     func setReaction(_ type: ReactionType, for reviewID: String) {
+        if isRemoteReview(reviewID) { showToast(L10n.text("Reações e comentários estarão disponíveis em breve.")); return }
         reactions[reviewID] = (reactions[reviewID] == type) ? nil : type
         let newValue = reactions[reviewID]
         let repository = self.repository
@@ -823,7 +828,8 @@ final class AppStore {
     }
 
     func homeFeed(limit: Int = 8) -> [Review] {
-        reviews.filter { follows.contains($0.user) || $0.user == meID }.prefix(limit).map { $0 }
+        if let social { return social.feed }
+        return reviews.filter { follows.contains($0.user) || $0.user == meID }.prefix(limit).map { $0 }
     }
 
     func reviewsForItem(_ itemID: String, friendsOnly: Bool) -> [Review] {
@@ -866,6 +872,7 @@ final class AppStore {
     }
 
     var homeEmptyFeedMessage: String {
+        if social != nil { return L10n.text("Ainda não há reviews públicas das pessoas que você segue. Explore os loristas ou registre uma obra.") }
         if usesRemoteActivity {
             if !diary.isEmpty { return L10n.text("Seus registros estão no diário. Adicione uma nota ou review para aparecer aqui.") }
             return L10n.text("Seu espaço começa com uma obra. Explore o catálogo e faça seu primeiro registro.")
@@ -875,7 +882,7 @@ final class AppStore {
             : L10n.text("Seu feed ganha vida quando você segue gente. Comece pelos loristas abaixo.")
     }
 
-    func review(_ id: String) -> Review? { reviews.first { $0.id == id } }
+    func review(_ id: String) -> Review? { social?.reviews[id] ?? reviews.first { $0.id == id } }
 
     // MARK: - Busca
 
@@ -1149,6 +1156,8 @@ final class AppStore {
                       confirmed.liked == input.liked, confirmed.rewatch == input.rewatch,
                       abs(confirmed.loggedAt.timeIntervalSince(input.loggedAt)) < 1 else { throw AuthError.apiUnavailable }
                 applyActivity(snapshot)
+                social?.invalidateFeed()
+                if let social { Task { await social.loadFeed() } }
                 logDraft = nil
                 showToast(L10n.text("Registro salvo no diário."))
                 if shieldAdvanceAutomatically, let idx = timelineIndex(for: item) { advanceShieldPoint(universeID: item.uni, to: idx) }
@@ -1165,6 +1174,7 @@ final class AppStore {
     /// Resposta na thread da review (campo de resposta da Tela 7). `quote` vem de "Citar"
     /// no card segurado (recurso 5h).
     func postComment(reviewID: String, text: String, quote: (author: String, text: String)? = nil) {
+        if isRemoteReview(reviewID) { showToast(L10n.text("Reações e comentários estarão disponíveis em breve.")); return }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let idx = reviews.firstIndex(where: { $0.id == reviewID }) else { return }
         let comment = Comment(user: meID, text: trimmed, likes: 0, when: L10n.text("agora"), quotedAuthor: quote?.author, quotedText: quote?.text)
@@ -1700,6 +1710,15 @@ final class AppStore {
         }
         if let me = usersByID[meID] { entries.append((me, predictionPoints, true)) }
         return entries.sorted { $0.1 > $1.1 }
+    }
+
+    func isRemoteReview(_ id: String) -> Bool { social != nil && UUID(uuidString: id) != nil }
+
+    func refreshAfterSafetyChange() async {
+        people?.invalidateDiscovery()
+        await people?.loadHome()
+        await social?.loadBlocks()
+        await social?.loadFeed()
     }
 
     // MARK: - Denúncia e moderação

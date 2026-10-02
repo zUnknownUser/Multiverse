@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct BlockedUsersView: View {
+    @Environment(AppStore.self) private var store
     @Environment(AuthStore.self) private var auth
     @Environment(\.dismiss) private var dismiss
     @State private var blocked: [BlockedUser] = []
@@ -14,18 +15,27 @@ struct BlockedUsersView: View {
                         .font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
                 }
 
+                if let social = store.social {
+                    if let error = social.blocksError { PeopleStatusNotice(message: error) { await social.loadBlocks() } }
+                    if let error = social.actionError { AuthErrorBanner(message: error) }
+                }
                 VStack(spacing: 10) {
-                    ForEach(blocked) { user in
+                    ForEach(store.social?.blocks.map(\.display) ?? blocked) { user in
                         BlockedUserRow(user: user) {
                             Task {
-                                await auth.unblock(user.id)
-                                blocked.removeAll { $0.id == user.id }
+                                if let social = store.social {
+                                    if await social.setBlock(user.id, blocked: false) { await store.refreshAfterSafetyChange() }
+                                } else {
+                                    await auth.unblock(user.id)
+                                    blocked.removeAll { $0.id == user.id }
+                                }
                             }
                         }
+                        .allowsHitTesting(store.social?.isMutating != true)
                     }
                 }
 
-                Text(L10n.text("Pra bloquear alguém, abra o perfil da pessoa e toque em ••• → Bloquear. Ela não é avisada."))
+                Text(L10n.text("Para bloquear, abra ••• no perfil da pessoa. Ao desbloquear, as relações anteriores voltam a valer."))
                     .font(MVFont.body(13, weight: 500))
                     .foregroundStyle(MV.C.ink)
                     .padding(14)
@@ -35,7 +45,10 @@ struct BlockedUsersView: View {
             .padding(.horizontal, MV.pad)
             .padding(.bottom, 24)
         }
-        .task { blocked = await auth.loadBlockedUsers() }
+        .task {
+            if let social = store.social { await social.loadBlocks() }
+            else { blocked = await auth.loadBlockedUsers() }
+        }
     }
 }
 

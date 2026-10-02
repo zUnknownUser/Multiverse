@@ -3,6 +3,11 @@ import Testing
 @testable import Multiverse
 
 struct LocalizationTests {
+    @Test func socialPrivacyAndSafetyMessagesAreTranslated() {
+        #expect(L10n.text("Diário privado: esta review fica só para você. Altere em Ajustes quando quiser.", preferredLanguages: ["en"]) == "Private diary: this review is just for you. You can change this in Settings.")
+        #expect(L10n.text("Denúncia registrada. Esta review foi ocultada para você.", preferredLanguages: ["en-US"]) == "Report recorded. This review is now hidden from you.")
+        #expect(L10n.text("Esta review não está mais disponível para você. Atualize o feed.", preferredLanguages: ["pt-BR"]) == "Esta review não está mais disponível para você. Atualize o feed.")
+    }
     @Test func peopleStatesRespectThePreferredLanguage() {
         #expect(L10n.text("Agora você segue este lorista.", preferredLanguages: ["en-US"]) == "You’re now following this lorekeeper.")
         #expect(L10n.text("Não foi possível atualizar quem você segue. Tente novamente.", preferredLanguages: ["en"]) == "We couldn’t update who you follow. Please try again.")

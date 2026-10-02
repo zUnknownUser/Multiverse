@@ -43,12 +43,12 @@ identifica explicitamente as reviews da própria conta; avaliações sem texto t
 uma descrição localizada. Tocar repetidamente na mesma estrela permite nota
 inteira, meia estrela e sem nota. Novos estados e mensagens têm PT-BR e inglês.
 
-Esta etapa lê a atividade da própria conta, sem paginação. O feed real de outras
-pessoas ainda não está integrado. Comentários, curtidas sociais, o botão de curtir
+Estas rotas leem a atividade da própria conta, sem paginação. O [feed social](social-feed.md)
+tem paginação e regras próprias de publicação, privacidade e bloqueio. Comentários, curtidas sociais, o botão de curtir
 obra fora do registro, a lista de desejos e listas continuam nos módulos anteriores.
 Não há
-interface de edição/exclusão individual nesta entrega. Paginação e feed social
-são etapas posteriores, antes de ampliar o volume de usuários.
+interface de edição/exclusão individual nesta entrega. A paginação do diário
+pessoal ainda é uma etapa posterior, antes de ampliar o volume de usuários.
 
 As migrations `005_diary_reviews.sql` e `009_rating_histogram.sql` devem preceder o deploy. Testes HTTP usam schema
 PostgreSQL isolado e cobrem isolamento por conta, concorrência, retry, transações,

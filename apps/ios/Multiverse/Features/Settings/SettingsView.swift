@@ -48,7 +48,10 @@ struct SettingsView: View {
         }
         .task {
             settings = await auth.loadAccountSettings()
-            blockedCount = await auth.loadBlockedUsers().count
+            if let social = store.social {
+                await social.loadPrivacy()
+                await social.loadBlocks()
+            } else { blockedCount = await auth.loadBlockedUsers().count }
         }
         .onChange(of: settings) { _, newValue in Task { await auth.saveAccountSettings(newValue) } }
         .sheet(isPresented: $showSignOutSheet) { SignOutSheet() }
@@ -109,8 +112,17 @@ struct SettingsView: View {
     private var privacySection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L10n.text("PRIVACIDADE")).kicker(11).foregroundStyle(MV.C.muted)
+            if let social = store.social, let error = social.privacyError {
+                PeopleStatusNotice(message: error) { await social.loadPrivacy() }
+            }
             VStack(spacing: 0) {
-                toggleRow(L10n.text("Diário público"), note: L10n.text("Qualquer pessoa vê o que você registra"), isOn: Binding(get: { settings.publicDiary }, set: { settings.publicDiary = $0 }))
+                toggleRow(L10n.text("Diário público"), note: L10n.text(store.social == nil ? "Qualquer pessoa vê o que você registra" : "Ao ativar, suas reviews anteriores e futuras ficam públicas para pessoas no app."), isOn: Binding(
+                    get: { store.social?.publicDiary ?? (store.social == nil && settings.publicDiary) },
+                    set: { value in
+                        if let social = store.social { Task { _ = await social.setPublicDiary(value) } }
+                        else { settings.publicDiary = value }
+                    }))
+                    .disabled(store.social.map { $0.publicDiary == nil || $0.isMutating } ?? false)
                 Divider().overlay(MV.C.divider)
                 VStack(alignment: .leading, spacing: 10) {
                     Text(L10n.text("Quem pode comentar")).font(MVFont.bold(15)).foregroundStyle(MV.C.ink)
@@ -123,7 +135,10 @@ struct SettingsView: View {
                                 .foregroundStyle(selected ? MV.C.paper : MV.C.ink)
                                 .background(selected ? MV.C.ink : Color.clear)
                                 .contentShape(Rectangle())
-                                .onTapGesture { settings.whoCanComment = option }
+                                .onTapGesture {
+                                    if store.social != nil { store.showToast(L10n.text("Reações e comentários estarão disponíveis em breve.")) }
+                                    else { settings.whoCanComment = option }
+                                }
                         }
                     }
                     .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
@@ -133,7 +148,7 @@ struct SettingsView: View {
                 Divider().overlay(MV.C.divider)
                 toggleRow(L10n.text("Esconder spoilers"), note: L10n.text("Borra reviews marcadas com spoiler"), isOn: Binding(get: { settings.hideSpoilers }, set: { settings.hideSpoilers = $0 }))
                 Divider().overlay(MV.C.divider)
-                infoRow(L10n.text("Usuários bloqueados"), value: "\(blockedCount)") { store.push(.blockedUsers) }
+                infoRow(L10n.text("Usuários bloqueados"), value: "\(store.social?.blocks.count ?? blockedCount)") { store.push(.blockedUsers) }
             }
             .comicCard(shadow: MV.Shadow.s)
         }

@@ -19,8 +19,12 @@ import { ActivityService } from './activity/activity.service.js';
 import { PeopleController } from './people/people.controller.js';
 import { PeopleService } from './people/people.service.js';
 
+import { SocialController } from './social/social.controller.js';
+import { SocialService } from './social/social.service.js';
+
 @Module({
   controllers: [
+    SocialController,
     PeopleController,
     AccountsController,
     CatalogController,
@@ -28,6 +32,7 @@ import { PeopleService } from './people/people.service.js';
     MarvelController,
   ],
   providers: [
+    SocialService,
     PeopleService,
     DatabaseService,
     CatalogService,

@@ -43,8 +43,9 @@ mensagem própria; consulta vazia é informativa, e falha de rede oferece retry.
 Perfis reais mostram apenas métricas comprovadas. Afinidade, selos e histórico
 público ainda não disponíveis não recebem números de demonstração. Mensagens e
 desafios conservam os controles existentes com aviso de disponibilidade futura.
-O feed ainda mostra as reviews da própria conta; seguir não promete reviews
-novas antes da integração de publicação social.
+O [feed social](social-feed.md) mostra as reviews públicas das pessoas seguidas,
+além das próprias. Bloqueios recíprocos também filtram descoberta, perfis,
+contadores e sugestões do onboarding.
 
 ## Validação
 
@@ -59,5 +60,4 @@ Conferir os contadores nas duas contas após atualizar. Sem internet, a ação
 deve explicar a falha sem anunciar sucesso; reconectar e repetir. Conferir em
 inglês e português. Sem outras contas elegíveis, a Home não mostra sugestões.
 
-Próxima etapa: definir visibilidade de reviews e integrar o feed de quem a pessoa
-segue, com paginação e proteções de publicação antes de ampliar interações.
+Próxima etapa: comentários e reações persistidos, com permissões e moderação.

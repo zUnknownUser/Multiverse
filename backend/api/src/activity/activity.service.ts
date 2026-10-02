@@ -3,6 +3,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  HttpException,
   NotFoundException,
 } from '@nestjs/common';
 import type { PoolClient } from 'pg';
@@ -48,6 +49,18 @@ export class ActivityService {
       );
       if (!item.rowCount)
         throw new ConflictException({ code: 'ITEM_UNAVAILABLE' });
+      if (input.text || input.rating > 0) {
+        const budget = await client.query(
+          `SELECT p.public_diary,
+           EXISTS(SELECT 1 FROM reviews WHERE firebase_uid=$1 AND entry_id=$2) AS existing,
+           (SELECT count(*)::int FROM reviews WHERE firebase_uid=$1 AND created_at>now()-interval '1 hour') AS recent
+           FROM profiles p WHERE p.firebase_uid=$1`,
+          [uid, id],
+        );
+        const { public_diary, existing, recent } = budget.rows[0];
+        if (public_diary && !existing && recent >= 20)
+          throw new HttpException({ code: 'PUBLICATION_LIMIT' }, 429);
+      }
       // The client keeps this UUID across retries, including lost HTTP responses.
       await client.query(
         `INSERT INTO diary_entries(firebase_uid,id,item_id,logged_at,rating,liked,rewatch)
@@ -119,7 +132,7 @@ export class ActivityService {
       [uid, locale],
     );
     const followers = await client.query(
-      `SELECT count(*)::int AS count FROM follows f JOIN profiles p ON p.firebase_uid=f.follower_uid
+      `SELECT count(*)::int AS count FROM visible_follows f JOIN profiles p ON p.firebase_uid=f.follower_uid
       WHERE f.followed_uid=$1 AND p.deletion_requested_at IS NULL`,
       [uid],
     );

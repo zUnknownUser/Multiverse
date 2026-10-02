@@ -8,10 +8,15 @@ struct ThreadView: View {
     @State private var draft = ""
     @State private var quoting: (author: String, text: String)?
     @FocusState private var focused: Bool
+    @State private var validated = false
 
     var body: some View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
-            if let review = store.review(reviewID), let item = store.item(review.item) {
+            if store.isRemoteReview(reviewID), let social = store.social, let error = social.detailErrors[reviewID] {
+                PeopleStatusNotice(message: error) { await social.loadReview(reviewID) }.padding(MV.pad)
+            } else if store.isRemoteReview(reviewID) && (!validated || store.social?.loadingDetails.contains(reviewID) == true) {
+                ProgressView().frame(maxWidth: .infinity).padding(MV.pad)
+            } else if let review = store.review(reviewID), let item = store.item(review.item) {
                 let uni = store.universe(of: item)
                 VStack(alignment: .leading, spacing: 18) {
                     miniHeader(item: item, uni: uni)
@@ -24,10 +29,17 @@ struct ThreadView: View {
                 }
                 .padding(.horizontal, MV.pad)
                 .padding(.bottom, 90)
+            } else if store.isRemoteReview(reviewID), let social = store.social {
+                PeopleStatusNotice(message: SocialError.unavailable.localizedDescription) { await social.loadReview(reviewID) }.padding(MV.pad)
             }
         }
+        .task(id: reviewID) {
+            validated = false
+            if store.isRemoteReview(reviewID) { await store.social?.loadReview(reviewID) }
+            validated = true
+        }
         .safeAreaInset(edge: .bottom) {
-            if let review = store.review(reviewID) {
+            if let review = store.review(reviewID), !store.isRemoteReview(reviewID) || (validated && store.social?.detailErrors[reviewID] == nil) {
                 replyBar(review: review)
             }
         }
@@ -54,7 +66,7 @@ struct ThreadView: View {
     @ViewBuilder
     private func commentsSection(review: Review) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(review.comments.isEmpty ? L10n.text("SEM COMENTÁRIOS AINDA") : L10n.format("comments.uppercase", review.comments.count))
+            Text(store.isRemoteReview(reviewID) ? L10n.text("Reações e comentários estarão disponíveis em breve.") : (review.comments.isEmpty ? L10n.text("SEM COMENTÁRIOS AINDA") : L10n.format("comments.uppercase", review.comments.count)))
                 .font(MVFont.section(16)).foregroundStyle(MV.C.ink)
             VStack(spacing: 12) {
                 ForEach(Array(review.comments.enumerated()), id: \.offset) { index, comment in
@@ -65,6 +77,7 @@ struct ThreadView: View {
     }
 
     private func quote(author: String, text: String) {
+        if store.isRemoteReview(reviewID) { store.showToast(L10n.text("Reações e comentários estarão disponíveis em breve.")); return }
         quoting = (author, text)
         focused = true
     }
@@ -94,7 +107,7 @@ struct ThreadView: View {
             }
             HStack(spacing: 8) {
                 AvatarView(user: me, size: 34)
-                TextField(L10n.text("Responder… (teorias bem-vindas)"), text: $draft)
+                TextField(L10n.text(store.isRemoteReview(reviewID) ? "Comentários em breve" : "Responder… (teorias bem-vindas)"), text: $draft)
                     .font(MVFont.body(14, weight: 500))
                     .focused($focused)
                     .padding(.horizontal, 14)
@@ -103,6 +116,7 @@ struct ThreadView: View {
                     .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                     .clipShape(Capsule())
                     .onSubmit { send(review: review) }
+                    .disabled(store.isRemoteReview(reviewID))
                 Text(L10n.text("ENVIAR"))
                     .font(MVFont.bold(12))
                     .padding(.horizontal, 14)
@@ -121,6 +135,7 @@ struct ThreadView: View {
     }
 
     private func send(review: Review) {
+        if store.isRemoteReview(reviewID) { store.showToast(L10n.text("Reações e comentários estarão disponíveis em breve.")); return }
         guard !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         store.postComment(reviewID: review.id, text: draft, quote: quoting)
         draft = ""
@@ -177,7 +192,7 @@ private struct ReviewDetailCard: View {
                         Text("POW!").font(MVFont.bold(13)).foregroundStyle(MV.C.paper)
                             .padding(.horizontal, 12).padding(.vertical, 8)
                             .background(MV.C.ink)
-                            .burstOnTap("POW!", color: MV.C.marvel, when: store.userReaction(for: review.id) != .pow) {
+                            .burstOnTap("POW!", color: MV.C.marvel, when: !store.isRemoteReview(review.id) && store.userReaction(for: review.id) != .pow) {
                                 store.setReaction(.pow, for: review.id)
                             }
                         if item != nil {
@@ -185,7 +200,10 @@ private struct ReviewDetailCard: View {
                                 .padding(.horizontal, 12).padding(.vertical, 8)
                                 .background(MV.C.card)
                                 .contentShape(Rectangle())
-                                .onTapGesture { showingSend = true }
+                                .onTapGesture {
+                                    if store.isRemoteReview(review.id) { store.showToast(L10n.text("Mensagens entre loristas estarão disponíveis em breve.")) }
+                                    else { showingSend = true }
+                                }
                         }
                     }
                     .clipShape(RoundedRectangle(cornerRadius: MV.R.md))

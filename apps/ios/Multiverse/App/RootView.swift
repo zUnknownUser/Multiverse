@@ -73,7 +73,8 @@ struct RootView: View {
                 widgetWriter: WidgetBridge.beginSession(),
                 catalogAPI: CatalogAPIClient(),
                 activityAPI: api,
-                peopleAPI: api
+                peopleAPI: api,
+                socialAPI: api
             )
             store = accountStore
             await accountStore.bootstrap()

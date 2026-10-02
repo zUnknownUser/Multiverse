@@ -49,6 +49,20 @@ private final class TokenStub: APITokenProvider {
 @Suite(.serialized)
 @MainActor
 struct AccountHTTPTests {
+    @Test func socialRoutesUseAuthenticatedRequestsAndMapVisibilityFailures() async throws {
+        AccountURLProtocol.fixture.reset([(200, "{\"publicDiary\":false}"), (200, "{\"publicDiary\":true}"), (404, "{\"code\":\"REVIEW_UNAVAILABLE\"}"), (429, "{\"code\":\"REPORT_LIMIT\"}")])
+        let (api, transport) = client(TokenStub())
+        defer { transport.invalidateAndCancel() }
+        #expect(try await api.fetchPrivacy().publicDiary == false)
+        #expect(try await api.savePrivacy(publicDiary: true).publicDiary)
+        let id = UUID().uuidString.lowercased()
+        await #expect(throws: SocialError.unavailable) { try await api.fetchReview(id: id) }
+        await #expect(throws: SocialError.reportLimit) { try await api.reportReview(id: id, reason: "spam", alsoBlock: true) }
+        let requests = AccountURLProtocol.fixture.requests
+        #expect(requests.map(\.httpMethod) == ["GET", "PUT", "GET", "PUT"])
+        #expect(requests.last?.url?.path == "/api/v1/reviews/\(id)/report")
+        #expect(requests.allSatisfy { $0.value(forHTTPHeaderField: "Authorization") == "Bearer original-token" })
+    }
     @Test func peopleSearchEncodesHandleAndCursorWithoutLosingAuthentication() async throws {
         AccountURLProtocol.fixture.reset([(200, "{\"users\":[],\"nextCursor\":null,\"state\":{\"version\":0,\"followingIDs\":[],\"followerCount\":0}}")])
         let (api, transport) = client(TokenStub())

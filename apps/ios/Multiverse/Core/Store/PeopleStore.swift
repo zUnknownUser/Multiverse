@@ -19,6 +19,7 @@ final class PeopleStore {
     private(set) var isLoadingHome = false
     private(set) var isSearching = false
     private(set) var savingPersonID: String?
+    private(set) var discoveryEpoch = 0
     private var mutationRevision = 0
     private var searchGeneration = 0
     private var loadingProfiles = Set<String>()
@@ -34,19 +35,28 @@ final class PeopleStore {
         for person in people where revision == mutationRevision || profiles[person.id] == nil { profiles[person.id] = person }
     }
 
+    func invalidateDiscovery() {
+        discoveryEpoch += 1
+        state = nil; profiles = [:]; suggestionIDs = []; isLoadingHome = false
+        loadingProfiles = []; profileErrors = [:]; homeError = nil; followError = nil
+        prepareSearch(searchQuery)
+    }
+
     func loadHome() async {
         guard !isLoadingHome else { return }
         isLoadingHome = true; homeError = nil
+        let epoch = discoveryEpoch
         let revision = mutationRevision
-        defer { isLoadingHome = false }
+        defer { if epoch == discoveryEpoch { isLoadingHome = false } }
         do {
             let page = try await api.suggestedPeople()
             try Task.checkCancellation()
+            guard epoch == discoveryEpoch else { return }
             try page.validate(ownerID: ownerID)
             apply(page.state, people: page.users, revision: revision)
             suggestionIDs = page.users.map(\.id)
         } catch is CancellationError { return }
-        catch { homeError = error.localizedDescription }
+        catch { if epoch == discoveryEpoch { homeError = error.localizedDescription } }
     }
 
     func prepareSearch(_ query: String) {
@@ -59,6 +69,7 @@ final class PeopleStore {
         guard !isSearching, !more || nextCursor != nil else { return }
         guard searchQuery.utf16.count <= 80 else { searchError = PeopleError.invalidSearch.localizedDescription; return }
         let generation = searchGeneration
+        let epoch = discoveryEpoch
         let revision = mutationRevision
         let cursor = more ? nextCursor : nil
         isSearching = true; searchError = nil
@@ -67,6 +78,7 @@ final class PeopleStore {
             let page = try await api.searchPeople(query: searchQuery, after: cursor)
             try Task.checkCancellation()
             guard generation == searchGeneration else { return }
+            guard epoch == discoveryEpoch else { return }
             try page.validate(ownerID: ownerID)
             guard page.nextCursor == nil || page.nextCursor != cursor else { throw AuthError.apiUnavailable }
             apply(page.state, people: page.users, revision: revision)
@@ -80,29 +92,33 @@ final class PeopleStore {
     func loadProfile(_ id: String) async {
         guard !loadingProfiles.contains(id) else { return }
         loadingProfiles.insert(id); profileErrors[id] = nil
+        let epoch = discoveryEpoch
         let revision = mutationRevision
-        defer { loadingProfiles.remove(id) }
+        defer { if epoch == discoveryEpoch { loadingProfiles.remove(id) } }
         do {
             let result = try await api.fetchPerson(id: id)
             try Task.checkCancellation()
+            guard epoch == discoveryEpoch else { return }
             try result.validate(ownerID: ownerID, personID: id)
             apply(result.state, people: [result.person], revision: revision)
         } catch is CancellationError { return }
-        catch { profileErrors[id] = error.localizedDescription }
+        catch { if epoch == discoveryEpoch { profileErrors[id] = error.localizedDescription } }
     }
 
     func setFollowing(_ id: String, following: Bool) async -> Bool {
         guard id != ownerID, canFollow else { return false }
+        let epoch = discoveryEpoch
         savingPersonID = id; followError = nil; mutationRevision += 1
         defer { savingPersonID = nil }
         do {
             let result = try await api.setFollowing(id: id, following: following)
+            guard epoch == discoveryEpoch else { return false }
             try result.validate(ownerID: ownerID, personID: id)
             guard result.state.followingIDs.contains(id) == following else { throw PeopleError.followFailed }
             apply(result.state, people: [result.person], revision: mutationRevision)
             return true
         } catch {
-            followError = error.localizedDescription
+            if epoch == discoveryEpoch { followError = error.localizedDescription }
             return false
         }
     }

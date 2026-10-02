@@ -103,11 +103,13 @@ struct FeedReviewCard: View {
                         .background(RoundedRectangle(cornerRadius: MV.R.xs).fill(MV.C.ink))
                 }
                 Spacer()
-                Button { showReportSheet = true } label: {
-                    Text("•••").font(MVFont.black(14)).foregroundStyle(MV.C.muted).padding(4)
+                if !store.isRemoteReview(review.id) || review.user != store.meID {
+                    Button { showReportSheet = true } label: {
+                        Text("•••").font(MVFont.black(14)).foregroundStyle(MV.C.muted).padding(4)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(L10n.text("Mais opções"))
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(L10n.text("Mais opções"))
             }
             HStack(spacing: 4) {
                 Text(Logic.verb3(item.type)).font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.ink)
@@ -155,8 +157,8 @@ struct FeedReviewCard: View {
         let reactions = ReactionPillsRow(reviewID: review.id)
             .accessibilityLabel(reactionsAccessibilityLabel(review))
 
-        let commentButton = PillButton(title: store.commentsLabel(for: review)) { store.push(.review(review.id)) }
-            .accessibilityLabel(L10n.format("Ver comentários, %1$@", String(describing: review.comments.count)))
+        let commentButton = PillButton(title: store.isRemoteReview(review.id) ? L10n.text("VER REVIEW") : store.commentsLabel(for: review)) { store.push(.review(review.id)) }
+            .accessibilityLabel(store.isRemoteReview(review.id) ? L10n.text("VER REVIEW") : L10n.format("Ver comentários, %1$@", String(describing: review.comments.count)))
 
         let timeLabel = Text(review.when).font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
 
