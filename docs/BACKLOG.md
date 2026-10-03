@@ -1,5 +1,82 @@
 # Backlog — próximos passos sugeridos
 
+## Monetização — adiada por decisão do usuário (03/10/2026)
+
+**Status: somente levantamento.** Lucas decidiu documentar RevenueCat e afiliados
+para analisar depois. Não implementar, ativar programas, contratar serviços ou
+alterar o paywall até uma nova solicitação. Não há prazo definido para retomada.
+O escopo atual do produto permanece Marvel e DC, com o visual e PT-BR/EN preservados.
+
+### Estado atual e RevenueCat
+
+- O app usa StoreKit 2 diretamente em `Core/Store/ProStore.swift` e apresenta
+  `Features/Pro/ProPaywallView.swift`. RevenueCat ainda não está integrado.
+- O usuário criou uma tela no RevenueCat, mas seu projeto, offering, entitlement
+  e configuração visual ainda não foram inspecionados.
+- Possível integração futura: SDK RevenueCat/RevenueCatUI, paywall vinculado à
+  offering, identidade alinhada ao Firebase e acesso Pro confirmado por entitlement.
+  Definir uma única autoridade para compras/restauração e, se necessário, sincronizar
+  permissões do backend por webhooks validados. Evitar dois fluxos de compra concorrentes.
+- Test Store permite testar sem conectar a App Store. Vendas reais no iPhone dependem
+  da conta Apple Developer, produtos e configuração no App Store Connect.
+- RevenueCat atende às assinaturas Pro; comissões de lojas pertencem ao módulo de afiliados.
+
+### Proposta de ofertas — ainda não implementada
+
+Fluxo proposto pelo usuário: obra → opções em “Onde encontrar” → clique no backend
+(`/out/{offerId}`) → loja → eventual comissão pela conversão qualificada.
+
+- Separar **obra**, **edição/produto** e **oferta comercial**. O catálogo atual não
+  garante correspondência automática com a edição vendida. Vincular ISBN/EAN,
+  editora, idioma, formato e identificador externo; revisar correspondências ambíguas.
+- `CommerceOffer`: ID estável, obra/edição, provedor, produto externo, formato,
+  preço opcional, moeda, país, disponibilidade, última verificação e condição de afiliado.
+  Preço monetário deve preservar precisão. País/moeda independem do idioma do app.
+- Backend mantém credenciais e regras de destino. O app recebe dados de exibição e
+  ação de abertura. Tags de afiliado podem aparecer na URL final; não são segredos de API.
+- Redirecionamento apenas quando permitido pelo parceiro. Para abertura direta,
+  medir o clique separadamente, sem bloquear a navegação por falha de telemetria.
+  Restringir destinos a ofertas cadastradas e domínios autorizados.
+- Carregar ofertas da nossa API/cache, atualizar fora do caminho de abertura da obra
+  e ocultar preço vencido ou sem fonte autorizada (“Ver preço na loja”). Sem scraping
+  indiscriminado ou promessa de busca automática em todas as lojas.
+- Clique não confirma venda: conversões e comissões dependem dos relatórios ou
+  integrações do parceiro, incluindo cancelamentos e devoluções.
+- `Features/Item/WhereToWatchSection.swift` é demonstrativo, oculto em sessões reais,
+  e ainda não realiza compras. Reaproveitar seu estilo para “Onde encontrar”, com
+  indicação de afiliado e sem exigir Pro para acessar links da Amazon.
+
+### Dependências identificadas no levantamento
+
+| Parceiro/tema | Situação a revalidar na retomada |
+| --- | --- |
+| Amazon | Exige aprovação do app; orienta evitar redirecionadores e abrir no app Amazon/navegador externo. Preços e disponibilidade exigem fontes autorizadas. Não presumir que `/out` sirva para todos os parceiros. |
+| Mercado Livre | Programa existe; documentação consultada lista redes sociais, sites e blogs cadastrados. Aceitação de um app como o Multiverse ainda precisa ser confirmada. |
+| Panini Brasil | Não foi confirmado programa oficial adequado à integração. Prever ofertas sem comissão até comprovar parceria. |
+| Apple Books | Programa existe, com admissão seletiva; participação não está garantida. |
+| Produtos digitais | Avaliar regras da App Store por região para Kindle, ebooks, streaming e outros conteúdos digitais. Não tratar como equivalentes a produtos físicos. |
+| TMDB | Verificar licença comercial antes de monetizar; a modalidade gratuita documentada é para uso não comercial. Não presumir que a chave atual autorize monetização. |
+
+**Possível primeira etapa, sujeita a nova decisão:** poucas edições físicas
+verificadas, ofertas reais, abertura da loja e medição de cliques; RevenueCat em
+ambiente de teste. Ativar comissões somente após aprovação dos respectivos canais.
+Não há garantia de receita ou de aprovação dos parceiros.
+
+### Fontes consultadas em 03/10/2026
+
+Revalidar políticas, disponibilidade e requisitos antes de implementar:
+
+- [RevenueCat: apresentação de paywalls](https://www.revenuecat.com/docs/tools/paywalls/displaying-paywalls)
+- [RevenueCat: Test Store e conexão das lojas](https://www.revenuecat.com/docs/projects/connect-a-store)
+- [Amazon: aplicativos móveis](https://associados.amazon.com.br/help/node/topic/G227UW3NK58649S4)
+- [Amazon: políticas, preços e disponibilidade](https://associados.amazon.com.br/help/operating/policies/)
+- [Mercado Livre: canais de divulgação](https://www.mercadolivre.com.br/l/afiliados-compartilhamento-de-publicacao)
+- [Apple: Performance Partners](https://performance-partners.apple.com/program-overview)
+- [Apple: App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)
+- [TMDB: uso comercial](https://developer.themoviedb.org/docs/faq)
+
+---
+
 ## Entrega atual — Biblioteca pessoal (02/10/2026)
 
 Desejos, favoritos e listas privadas agora persistem na API. Biblioteca substitui

@@ -1,3 +1,13 @@
+# Decisão — monetização adiada (03/10/2026)
+
+Lucas pediu documentar RevenueCat e afiliados e deixar a implementação para análise
+posterior. **Não é uma tarefa ativa; aguardar nova solicitação para retomar.**
+Levantamento, arquitetura proposta, pendências e fontes estão no
+[backlog de monetização](BACKLOG.md#monetização--adiada-por-decisão-do-usuário-03102026).
+Nenhuma integração de monetização foi implementada nesta etapa.
+
+---
+
 # Atualização — escopo Marvel e DC (03/10/2026)
 
 - Produto limitado a Marvel/DC. Retirados os demais universos do onboarding,
