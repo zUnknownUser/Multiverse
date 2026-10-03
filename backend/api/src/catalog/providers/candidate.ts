@@ -17,6 +17,16 @@ export interface CatalogCandidate {
     runtimeMinutes?: number;
     pageCount?: number;
     posterURL?: string;
+    artworkOnly?: boolean;
+    originalLanguage?: string;
+    publisher?: { id: number; name: string };
+    format?: string;
+    isbn?: string;
+    upc?: string;
+    genres?: string[];
+    cast?: { id: number; name: string; character: string }[];
+    episodeCount?: number;
+    seasonCount?: number;
     series?: { id: number; title: string; year: number; number: string };
     creators: { id: number; name: string; roles: string[] }[];
     characters: { id: number; name: string }[];

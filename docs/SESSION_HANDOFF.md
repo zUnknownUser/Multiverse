@@ -1,3 +1,19 @@
+# Atualização — expansão Marvel/DC (03/10/2026)
+
+- Usuário pediu ampliar DC e trazer o máximo de conteúdo útil, preservando o visual.
+- Lote fechado: 119 novas obras (62 revistas DC + 57 filmes/séries); mais três
+  vínculos de capas para obras existentes. Migration 023, sem chamadas externas no deploy.
+- Sete séries completas DC, títulos/sinopses PT-BR/EN, capas e metadados de fonte reais.
+  Nenhuma nota/review/progresso importada. ID da revista não substitui o da obra agregada.
+- Watchmen/Crise usam capas de encadernados completos conferidos, com artworkOnly;
+  datas, sinopses e diário dos agregados preservados. Sem redesenho no iOS.
+- Rotas de catálogo/detalhe agora atendem DC também. Script sync-heroes.mjs atualiza
+  o lote aprovado com limites de requisição, validação e transação.
+- Validação API: 98 unitários +132 HTTP/PostgreSQL, formatação/lint/tipos/build.
+- [Cobertura e operação](../backend/api/docs/catalog-covers.md#expansão-de-conteúdo--03102026).
+
+---
+
 # Atualização — capas reais sem redesenho (03/10/2026)
 
 - Pedido explícito: serviço completo de capas reais, preservando identidade visual.

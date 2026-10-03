@@ -102,6 +102,88 @@ describe.skipIf(!databaseURL)(
         await admin.end();
       }
     });
+    it('publishes complete DC series and bilingual hero content without borrowing aggregate progress', async () => {
+      const pt = (
+        await request(app.getHttpServer()).get('/api/v1/catalog').expect(200)
+      ).body;
+      const en = (
+        await request(app.getHttpServer())
+          .get('/api/v1/catalog')
+          .set('Accept-Language', 'en')
+          .expect(200)
+      ).body;
+      expect(pt.items).toHaveLength(139);
+      for (const [seriesID, count] of [
+        [1208, 12],
+        [537, 12],
+        [2185, 4],
+        [2539, 5],
+        [1029, 13],
+        [6891, 4],
+        [3988, 12],
+      ]) {
+        const issues = pt.items.filter(
+          (i: { series?: { id: string } }) =>
+            i.series?.id === `metron-${seriesID}`,
+        );
+        expect(issues).toHaveLength(count);
+        expect(
+          issues
+            .map((i: { series: { position: number } }) => i.series.position)
+            .sort((a: number, b: number) => a - b),
+        ).toEqual(Array.from({ length: count }, (_, i) => i + 1));
+        expect(
+          issues.every(
+            (i: { cover: unknown; desc: string; avg: number }) =>
+              i.cover && i.desc && i.avg === 0,
+          ),
+        ).toBe(true);
+      }
+      const watchmen = pt.items.find(
+        (i: { id: string }) => i.id === 'd-watchmen',
+      );
+      expect(watchmen).toMatchObject({
+        year: '1986',
+        title: 'Watchmen',
+        series: null,
+      });
+      expect(watchmen.cover.url).toContain('.jpg.webp');
+      const issue = pt.items.find(
+        (i: { id: string }) => i.id === 'd-metron-issue-4743',
+      );
+      expect(issue.title).toBe('Watchmen #1');
+      expect(issue.desc).not.toBe(
+        en.items.find((i: { id: string }) => i.id === issue.id).desc,
+      );
+      const detail = (
+        await request(app.getHttpServer())
+          .get('/api/v1/catalog/dc/d-metron-issue-4743')
+          .expect(200)
+      ).body;
+      expect(detail.sources[0].metadata.creators.length).toBeGreaterThan(0);
+      expect(detail.item.cover).toEqual(issue.cover);
+      await request(app.getHttpServer())
+        .get('/api/v1/catalog/dc/m-civil')
+        .expect(404);
+      await request(app.getHttpServer()).get('/api/v1/catalog/wow').expect(404);
+      const before = pt.items.map((i: { id: string }) => i.id);
+      await db.transaction(async (client) => {
+        await client.query(
+          await readFile(
+            new URL(
+              '../migrations/023_hero_catalog_expansion.sql',
+              import.meta.url,
+            ),
+            'utf8',
+          ),
+        );
+      });
+      expect(
+        (
+          await request(app.getHttpServer()).get('/api/v1/catalog').expect(200)
+        ).body.items.map((i: { id: string }) => i.id),
+      ).toEqual(before);
+    });
     it('supports localized search, type filters and stable pagination without provider calls', async () => {
       const get = (query: object) =>
         request(app.getHttpServer())
@@ -173,8 +255,11 @@ describe.skipIf(!databaseURL)(
         ),
       );
       expect(
-        (await db.query('SELECT count(*)::int AS count FROM catalog_sources'))
-          .rows[0].count,
+        (
+          await db.query(
+            "SELECT count(*)::int AS count FROM catalog_sources WHERE provider='wikidata'",
+          )
+        ).rows[0].count,
       ).toBe(batch.length);
       expect(
         (
@@ -675,8 +760,11 @@ describe.skipIf(!databaseURL)(
       });
       expect(library.lists[0].itemIDs).toEqual([itemID]);
       expect(
-        (await db.query('SELECT count(*)::int AS n FROM catalog_series_items'))
-          .rows[0].n,
+        (
+          await db.query(
+            "SELECT count(*)::int AS n FROM catalog_series_items WHERE item_id LIKE 'm-%'",
+          )
+        ).rows[0].n,
       ).toBe(30);
       expect(
         (

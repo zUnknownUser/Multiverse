@@ -40,6 +40,7 @@ struct CatalogCoverTests {
     private let cover = CatalogCover(provider: "tmdb", url: "https://image.tmdb.org/t/p/w500/abc123.jpg",
                                      sourceURL: "https://www.themoviedb.org/movie/299534")
     @Test func providerValidationAndSizeSelection() {
+        #expect(CatalogCover(provider: "metron", url: "https://static.metron.cloud/media/issue/2025/watchmen.jpg.webp", sourceURL: "").imageURL != nil)
         #expect(cover.sizedURL(pixels: 180)?.path == "/t/p/w185/abc123.jpg")
         #expect(cover.sizedURL(pixels: 300)?.path == "/t/p/w342/abc123.jpg")
         #expect(cover.sizedURL(pixels: 800)?.path == "/t/p/w500/abc123.jpg")

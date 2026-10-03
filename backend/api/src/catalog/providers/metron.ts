@@ -1,3 +1,4 @@
+import { metronDCRegistry } from './hero-expansion-registry.js';
 import { providerCoverURL } from '../catalog-cover.js';
 import { setTimeout } from 'node:timers/promises';
 import {
@@ -26,11 +27,14 @@ export function parseMetronIssue(
   const data = record(payload);
   const series = record(data.series);
   const publisher = record(data.publisher);
+  const dc = metronDCRegistry.find((m) => m.id === requestedID);
   if (
     !positiveInt(requestedID) ||
     data.id !== requestedID ||
-    publisher.id !== 1 ||
-    !['Marvel', 'Marvel Comics'].includes(String(publisher.name)) ||
+    (dc
+      ? publisher.id !== 2 || publisher.name !== 'DC Comics'
+      : publisher.id !== 1 ||
+        !['Marvel', 'Marvel Comics'].includes(String(publisher.name))) ||
     !positiveInt(series.id) ||
     !positiveInt(series.year_began) ||
     series.year_began < 1900 ||
@@ -41,9 +45,14 @@ export function parseMetronIssue(
   )
     throw new Error('METRON_NOT_MARVEL_ISSUE');
   if (
-    !metronMarvelSeries.some(
-      (s) => s.name === series.name && s.year === series.year_began,
-    )
+    dc
+      ? series.id !== dc.seriesID ||
+        series.name !== dc.series ||
+        series.year_began !== dc.year ||
+        data.number !== dc.number
+      : !metronMarvelSeries.some(
+          (s) => s.name === series.name && s.year === series.year_began,
+        )
   )
     throw new Error('METRON_SERIES_OUTSIDE_SCOPE');
   const title = `${plainText(series.name, 260)} #${plainText(data.number, 30)}`;
@@ -53,7 +62,7 @@ export function parseMetronIssue(
   return {
     provider: 'metron',
     externalId: `issue:${requestedID}`,
-    suggestedItemId: `m-metron-issue-${requestedID}`,
+    suggestedItemId: dc?.itemId ?? `m-metron-issue-${requestedID}`,
     kind: 'issue',
     type: 'HQ',
     sourceUrl: `https://metron.cloud/issue/${requestedID}/`,
@@ -69,6 +78,12 @@ export function parseMetronIssue(
       year: (releaseDate || coverDate).slice(0, 4),
       releaseDate,
       coverDate,
+      originalLanguage: String(series.language),
+      publisher: { id: Number(publisher.id), name: String(publisher.name) },
+      format: plainText(record(series.series_type).name, 80),
+      ...(plainText(data.isbn, 30) ? { isbn: plainText(data.isbn, 30) } : {}),
+      ...(plainText(data.upc, 40) ? { upc: plainText(data.upc, 40) } : {}),
+      ...(dc?.artworkOnly ? { artworkOnly: true } : {}),
       ...(posterURL ? { posterURL } : {}),
       ...(positiveInt(data.page) && data.page <= 10_000
         ? { pageCount: data.page }

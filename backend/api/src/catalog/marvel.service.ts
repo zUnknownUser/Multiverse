@@ -15,7 +15,12 @@ export class MarvelService {
     @Inject(DatabaseService) private readonly db: DatabaseService,
   ) {}
 
-  async list(language: string | undefined, query: Record<string, unknown>) {
+  async list(
+    language: string | undefined,
+    query: Record<string, unknown>,
+    universe = 'marvel',
+  ) {
+    if (!['marvel', 'dc'].includes(universe)) throw new NotFoundException();
     if (
       Object.keys(query).some(
         (k) => !['type', 'q', 'limit', 'after'].includes(k),
@@ -38,7 +43,7 @@ export class MarvelService {
       (after && !/^[a-z0-9-]{1,80}$/.test(after))
     )
       throw new BadRequestException({ code: 'INVALID_CATALOG_QUERY' });
-    return this.catalog.page(catalogLanguage(language), 'marvel', {
+    return this.catalog.page(catalogLanguage(language), universe, {
       type: type || undefined,
       search: q,
       after: after || undefined,
@@ -46,11 +51,12 @@ export class MarvelService {
     });
   }
 
-  async detail(id: string, language?: string) {
+  async detail(id: string, language?: string, universe = 'marvel') {
+    if (!['marvel', 'dc'].includes(universe)) throw new NotFoundException();
     const locale = catalogLanguage(language);
     if (!/^[a-z0-9-]{1,80}$/.test(id))
       throw new NotFoundException({ code: 'CATALOG_ITEM_NOT_FOUND' });
-    const item = await this.catalog.item(locale, 'marvel', id);
+    const item = await this.catalog.item(locale, universe, id);
     if (!item) throw new NotFoundException({ code: 'CATALOG_ITEM_NOT_FOUND' });
     const sources = await this.db.query(
       `SELECT provider,external_id AS "externalId",source_url AS url,

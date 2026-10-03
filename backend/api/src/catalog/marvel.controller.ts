@@ -10,7 +10,7 @@ import {
 import { Public } from '../auth/firebase-auth.guard.js';
 import { MarvelService } from './marvel.service.js';
 
-@Controller('catalog/marvel')
+@Controller('catalog/:universe')
 export class MarvelController {
   constructor(@Inject(MarvelService) private readonly marvel: MarvelService) {}
   @Public()
@@ -20,8 +20,9 @@ export class MarvelController {
   list(
     @Headers('accept-language') language: string | undefined,
     @Query() query: Record<string, unknown>,
+    @Param('universe') universe: string,
   ) {
-    return this.marvel.list(language, query);
+    return this.marvel.list(language, query, universe);
   }
   @Public()
   @Get(':id')
@@ -29,8 +30,9 @@ export class MarvelController {
   @Header('Cache-Control', 'no-store')
   detail(
     @Param('id') id: string,
+    @Param('universe') universe: string,
     @Headers('accept-language') language?: string,
   ) {
-    return this.marvel.detail(id, language);
+    return this.marvel.detail(id, language, universe);
   }
 }

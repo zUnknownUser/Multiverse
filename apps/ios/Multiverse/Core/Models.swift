@@ -400,7 +400,7 @@ struct CatalogCover: Codable, Hashable, Sendable {
         let pattern: String
         switch provider {
         case "tmdb": pattern = #"^https://image\.tmdb\.org/t/p/w500/[a-zA-Z0-9]+\.(jpg|png)$"#
-        case "metron": pattern = #"^https://static\.metron\.cloud/media/issue/[a-zA-Z0-9_/-]+\.(jpg|jpeg|png|webp)$"#
+        case "metron": pattern = #"^https://static\.metron\.cloud/media/issue/[a-zA-Z0-9_/-]+(\.(jpg|jpeg|png))?\.(jpg|jpeg|png|webp)$"#
         default: return nil
         }
         guard url.count <= 1000, url.range(of: pattern, options: .regularExpression) != nil else { return nil }

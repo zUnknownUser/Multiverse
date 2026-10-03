@@ -309,7 +309,7 @@ describe.skipIf(!databaseURL)('Account API with real PostgreSQL', () => {
       'marvel',
       'dc',
     ]);
-    expect(pt.body.items).toHaveLength(20);
+    expect(pt.body.items).toHaveLength(139);
     expect(pt.body.comingSoon.map((u: { name: string }) => u.name)).toEqual([]);
     expect(
       pt.body.items.find((i: { id: string }) => i.id === 'm-civil').title,

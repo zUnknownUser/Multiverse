@@ -1,3 +1,4 @@
+import { tmdbExpansionRegistry } from './hero-expansion-registry.js';
 import {
   type CatalogCandidate,
   date,
@@ -26,7 +27,8 @@ export const tmdbMarvelRegistry = [
   },
   { itemId: 'm-loki', kind: 'tv', id: 84958, title: 'Loki', year: '2021' },
 ] as const;
-export type TMDBMapping = (typeof tmdbMarvelRegistry)[number];
+export type TMDBMapping =
+  (typeof tmdbMarvelRegistry)[number] | (typeof tmdbExpansionRegistry)[number];
 
 export function parseTMDB(
   payload: unknown,
@@ -41,7 +43,7 @@ export function parseTMDB(
     mapping.kind === 'movie' ? data.release_date : data.first_air_date,
   );
   if (
-    !tmdbMarvelRegistry.some(
+    ![...tmdbMarvelRegistry, ...tmdbExpansionRegistry].some(
       (m) =>
         m.itemId === mapping.itemId &&
         m.id === mapping.id &&
@@ -117,6 +119,25 @@ export function parseTMDB(
         'pt-BR': plainText(portuguese.overview),
       },
       year: releaseDate.slice(0, 4),
+      originalLanguage: plainText(data.original_language, 20),
+      genres: records(data.genres)
+        .map((g) => plainText(g.name, 80))
+        .filter(Boolean)
+        .slice(0, 20),
+      cast: records(record(data.credits).cast)
+        .filter((c) => positiveInt(c.id) && plainText(c.name))
+        .slice(0, 20)
+        .map((c) => ({
+          id: Number(c.id),
+          name: plainText(c.name, 300),
+          character: plainText(c.character, 300),
+        })),
+      ...(mapping.kind === 'tv' && positiveInt(data.number_of_episodes)
+        ? { episodeCount: data.number_of_episodes }
+        : {}),
+      ...(mapping.kind === 'tv' && positiveInt(data.number_of_seasons)
+        ? { seasonCount: data.number_of_seasons }
+        : {}),
       releaseDate,
       ...(mapping.kind === 'movie' &&
       positiveInt(data.runtime) &&

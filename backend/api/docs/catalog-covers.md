@@ -16,8 +16,8 @@ cores e navegação existentes. A imagem substitui somente a arte interna da cap
   30 edições Metron (Guerra Civil, Dinastia M, Guerras Secretas 2015, Desafio Infinito)
   e três TMDB (Ultimato, Através do Aranhaverso, Loki). Dados obtidos em 03/10/2026.
   Não cria obras, não muda títulos/sinopses/progresso e não chama APIs no deploy.
-- DC, personagens e obras agregadas ainda sem fonte de imagem confirmada conservam
-  o fallback. Uma capa de #1 não passa a representar o arco ou encadernado inteiro.
+- A expansão 023 acrescenta DC e mais Marvel: 119 novas obras e três vínculos
+  com obras existentes. Personagens e obras sem fonte confirmada conservam o fallback. Uma capa de #1 não passa a representar o arco ou encadernado inteiro.
 - Texto da interface e do catálogo permanece PT-BR/EN. A capa é a arte da edição
   original: texto impresso nela não é traduzido nem representa uma edição brasileira.
 
@@ -72,3 +72,45 @@ Fontes: [TMDB imagens](https://developer.themoviedb.org/docs/image-basics),
 - API: 93 unitários e 131 HTTP/PostgreSQL; lint, tipos, build e formatação.
 - 1111 entradas PT-BR/EN validadas. Render de QA com PosterView real e duas imagens
   reais conferido no simulador, lado a lado com fallback, em tamanhos 96×144 e 118×177.
+
+## Expansão de conteúdo — 03/10/2026
+
+Migration 023 publica um lote conferido de 122 fontes: 119 novas obras, o vínculo
+TMDB de O Cavaleiro das Trevas e capas de edições completas para Watchmen/Crise.
+São 62 revistas DC em sete séries completas e 57 novos filmes/séries Marvel/DC.
+As sete séries são Crise nas Infinitas Terras (12), Watchmen (12), Reino do Amanhã (4),
+Flashpoint (5), O Longo Dia das Bruxas (13), O Cavaleiro das Trevas (4) e Grandes
+Astros: Superman (12). Cada edição tem ID próprio e progresso independente.
+
+Watchmen usa a edição DC Compact Comics que reúne #1–12; Crise usa a edição
+Absolute que reúne #1–12. Essas fontes são `artworkOnly`: não mudam o ano original,
+a sinopse editorial ou o progresso da obra agregada. Reino do Amanhã e Flashpoint
+agregados permanecem sem capa confirmada; as revistas individuais têm capas reais.
+A identidade foi conferida por IDs, série, ano, número e editora, nunca só pelo título.
+
+TMDB fornece sinopses/títulos PT-BR/EN; as sinopses DC em português são adaptações
+curtas revisadas das fontes. Metadados de fonte incluem créditos, personagens,
+datas, páginas/duração, editora, formato/ISBN quando disponíveis e, para audiovisual,
+elenco/gêneros e quantidade de temporadas/episódios quando informados. Estes detalhes
+estão no endpoint de fonte; não foram criados novos painéis na interface.
+
+As rotas paginadas e de detalhe agora aceitam `/catalog/dc` e `/catalog/marvel`;
+outros escopos retornam 404. Snapshot permanece leve, com metadados extensos somente
+no detalhe. Todas as capas do lote responderam HTTP 200. Nenhum engajamento da fonte
+foi importado: notas, votos, reviews e progresso continuam derivados dos usuários.
+
+Atualizar o lote aprovado sem duplicar obras:
+
+```sh
+node scripts/sync-heroes.mjs           # busca e valida, sem publicar
+node scripts/sync-heroes.mjs --publish # transação no banco configurado
+```
+
+Falha de fonte/tradução/identidade interrompe o lote. Consultas Metron espaçadas
+em 3,3 segundos; nada roda durante login, navegação ou inicialização da API.
+Novas seleções exigem revisão explícita do registro. Arquivamento e traduções
+editoriais existentes são preservados. A migration é uma fotografia dos dados
+normalizados obtidos em 03/10/2026; não exige API externa durante deploy.
+
+Validação desta expansão: 98 testes unitários API e 132 HTTP/PostgreSQL, incluindo
+migration reaplicada, séries completas, preservação de agregados e rotas DC.

@@ -248,7 +248,7 @@ describe.skipIf(!databaseURL)('Diary and reviews with PostgreSQL', () => {
     ).body;
     const search = (
       await request(app.getHttpServer())
-        .get('/api/v1/catalog/marvel?type=Filme')
+        .get('/api/v1/catalog/marvel?type=Filme&q=Ultimato')
         .expect(200)
     ).body;
     const detail = (
