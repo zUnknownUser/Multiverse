@@ -22,7 +22,7 @@ struct PremiereLiveActivity: Widget {
             } compactLeading: {
                 logoBadge
             } compactTrailing: {
-                Text("\(context.state.optionAPercent)%").font(MVFont.bold(13)).foregroundStyle(MV.C.wow)
+                Text("\(context.state.optionAPercent)%").font(MVFont.bold(13)).foregroundStyle(MV.C.accent)
             } minimal: {
                 logoBadge
             }
@@ -49,7 +49,7 @@ struct PremiereLiveActivity: Widget {
                     .background(MV.C.marvel)
                     .clipShape(Capsule())
                 Spacer()
-                Text(state.votingCountLabel).font(MVFont.bold(11)).foregroundStyle(MV.C.wow)
+                Text(state.votingCountLabel).font(MVFont.bold(11)).foregroundStyle(MV.C.accent)
             }
             Text(L10n.format("ESTREIA · %1$@", String(describing: state.question)).uppercased())
                 .font(MVFont.black(15)).foregroundStyle(MV.C.paper).lineLimit(2)
@@ -72,7 +72,7 @@ struct PremiereLiveActivity: Widget {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 MV.C.ink.opacity(0.4)
-                Rectangle().fill(chosen ? MV.C.wow : MV.C.ink.opacity(0.15))
+                Rectangle().fill(chosen ? MV.C.accent : MV.C.ink.opacity(0.15))
                     .frame(width: geo.size.width * Double(percent) / 100)
                 HStack {
                     Text((chosen ? "✓ " : "") + label).font(MVFont.bold(12)).foregroundStyle(MV.C.paper)

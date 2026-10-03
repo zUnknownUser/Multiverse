@@ -102,6 +102,18 @@ struct LocalizationTests {
         }
         let pt = try sample("pt-BR")
         let en = try sample("en-US")
+        for sample in [pt, en] {
+            #expect(sample.universes.map(\.id) == ["marvel", "dc"])
+            let ids = Set(sample.items.map(\.id))
+            #expect(sample.items.allSatisfy { ["marvel", "dc"].contains($0.uni) })
+            #expect(sample.users.allSatisfy { ["marvel", "dc"].contains($0.badgeUniverse) })
+            #expect(sample.connections.allSatisfy { ids.contains($0.key) && Set($0.value).isSubset(of: ids) })
+            #expect(sample.timelines.values.flatMap { $0 }.allSatisfy { ids.contains($0.itemId) })
+            #expect(sample.readingOrders.allSatisfy { Set($0.steps).isSubset(of: ids) })
+            #expect(sample.lists.allSatisfy { Set($0.items).isSubset(of: ids) })
+            #expect(sample.reviews.allSatisfy { ids.contains($0.item) })
+            #expect(sample.duels.allSatisfy { ids.contains($0.a) && ids.contains($0.b) && $0.a != $0.b })
+        }
         #expect(en.items.map(\.id) == pt.items.map(\.id))
         #expect(en.items.map(\.type) == pt.items.map(\.type))
         #expect(en.connections == pt.connections)
@@ -111,6 +123,14 @@ struct LocalizationTests {
         #expect(pt.items.first?.title == "Guerra Civil")
         let enResources = try resources("en")
         let ptResources = try resources("pt-BR")
+        for resources in [ptResources, enResources] {
+            let ids = Set(pt.items.map(\.id))
+            #expect(resources.clubs.allSatisfy { ["marvel", "dc"].contains($0.uni) && $0.weeks.allSatisfy { ids.contains($0.itemID) } })
+            #expect(resources.theories.allSatisfy { ["marvel", "dc"].contains($0.uni) })
+            #expect(resources.predictionEvents.allSatisfy { ["marvel", "dc"].contains($0.uni) })
+            #expect(resources.rooms.allSatisfy { ids.contains($0.itemID) })
+            #expect(resources.messages.allSatisfy { $0.itemID.map { ids.contains($0) } ?? true })
+        }
         #expect(enResources.theories.map(\.status) == ptResources.theories.map(\.status))
         #expect(enResources.correctionSuggestions.map(\.changeType) == ptResources.correctionSuggestions.map(\.changeType))
         #expect(enResources.rooms.map(\.itemID) == ptResources.rooms.map(\.itemID))

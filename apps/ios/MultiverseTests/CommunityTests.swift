@@ -25,7 +25,7 @@ import Testing
     func summary(_ id: String) -> InteractionSummary { .init(id: id, likes: 0, liked: false, myReaction: nil, reactions: ["POW!": 0, "ZAP!": 0, "KRAK!": 0, "HEH": 0]) }
     func page() throws -> CommunityPage {
         if unavailable { throw CommunityError.unavailable }
-        return .init(posts: [.init(id: id, user: "alice", universeID: "wow", itemID: nil, title: "Title", text: "Text", spoiler: false, createdAt: .now, commentCount: commentRows.count, interaction: summary(id))], users: [user], nextCursor: nil)
+        return .init(posts: [.init(id: id, user: "alice", universeID: "marvel", itemID: nil, title: "Title", text: "Text", spoiler: false, createdAt: .now, commentCount: commentRows.count, interaction: summary(id))], users: [user], nextCursor: nil)
     }
     func fetchPosts(universe: String?, item: String?, after: String?) async throws -> CommunityPage { try page() }
     func fetchPost(_ id: String) async throws -> CommunityPage { try page() }
@@ -45,7 +45,7 @@ import Testing
 @Suite(.serialized) @MainActor struct CommunityTests {
     private func roomPost(_ api: CommunityStub, at time: Double, text: String = "Message", segment: Int = 0) -> CommunityPost {
         let id = UUID().uuidString.lowercased()
-        return .init(id: id, user: api.user.id, universeID: "wow", itemID: "room-work", title: "Room", text: text, spoiler: false, createdAt: Date(timeIntervalSince1970: time), commentCount: 0, interaction: api.summary(id), segment: segment, kind: "room")
+        return .init(id: id, user: api.user.id, universeID: "marvel", itemID: "room-work", title: "Room", text: text, spoiler: false, createdAt: Date(timeIntervalSince1970: time), commentCount: 0, interaction: api.summary(id), segment: segment, kind: "room")
     }
     @Test func roomBuffersNewMessagesWithoutMovingHistoryAndShowsLatestOnRequest() async {
         let api = CommunityStub(), room = RoomTimeline()
@@ -131,9 +131,9 @@ import Testing
     }
     @Test func timelineRejectsAnotherUniverseAndNeverFallsBackToSamples() async {
         let api = CommunityStub(), timeline = CommunityTimeline()
-        await timeline.load(api: api, universe: "marvel", item: nil)
+        await timeline.load(api: api, universe: "dc", item: nil)
         #expect(timeline.posts.isEmpty && timeline.error != nil)
-        await timeline.load(api: api, universe: "wow", item: nil)
+        await timeline.load(api: api, universe: "marvel", item: nil)
         #expect(timeline.posts.count == 1 && timeline.error == nil)
     }
 

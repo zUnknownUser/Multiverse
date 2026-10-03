@@ -26,7 +26,7 @@ describe.skipIf(!databaseURL)('Diary and reviews with PostgreSQL', () => {
     deleteUser: vi.fn(async () => {}),
   };
   const input = () => ({
-    itemId: 'w-wotlk',
+    itemId: 'm-civil',
     loggedAt: '2026-09-30T23:30:00.000Z',
     rating: 4.5,
     liked: true,
@@ -83,6 +83,45 @@ describe.skipIf(!databaseURL)('Diary and reviews with PostgreSQL', () => {
     await db.query('DELETE FROM account_deletions');
   });
 
+  it('keeps retired-universe history in storage without returning it to the app', async () => {
+    await profile('owner');
+    const retiredID = randomUUID();
+    await db.query(
+      "INSERT INTO diary_entries(firebase_uid,id,item_id,logged_at,rating) VALUES('owner',$1,'w-wotlk',now(),4)",
+      [retiredID],
+    );
+    await db.query(
+      "INSERT INTO reviews(firebase_uid,entry_id,text,spoiler) VALUES('owner',$1,'Legacy review',false)",
+      [retiredID],
+    );
+    const heroID = randomUUID();
+    await save('owner', heroID, input()).expect(200);
+    for (const locale of ['pt-BR', 'en']) {
+      const snapshot = (
+        await read('owner').set('Accept-Language', locale).expect(200)
+      ).body;
+      expect(snapshot.entries.map((e: { id: string }) => e.id)).toEqual([
+        heroID,
+      ]);
+      expect(snapshot.reviews.map((r: { item: string }) => r.item)).toEqual([
+        'm-civil',
+      ]);
+      expect(snapshot.items.map((i: { id: string }) => i.id)).toEqual([
+        'm-civil',
+      ]);
+      expect(snapshot.universes.map((u: { id: string }) => u.id)).toEqual([
+        'marvel',
+      ]);
+    }
+    expect(
+      (await db.query('SELECT 1 FROM diary_entries WHERE id=$1', [retiredID]))
+        .rowCount,
+    ).toBe(1);
+    await save('owner', randomUUID(), { ...input(), itemId: 'w-wotlk' }).expect(
+      409,
+    );
+  });
+
   it('requires authentication and a real profile; an empty diary is a successful read', async () => {
     await request(app.getHttpServer()).get('/api/v1/me/activity').expect(401);
     await read('missing').expect(404);
@@ -107,7 +146,7 @@ describe.skipIf(!databaseURL)('Diary and reviews with PostgreSQL', () => {
     expect(saved.body.entries).toEqual([
       {
         id,
-        itemId: 'w-wotlk',
+        itemId: 'm-civil',
         loggedAt: input().loggedAt,
         rating: 4.5,
         liked: true,
@@ -116,7 +155,7 @@ describe.skipIf(!databaseURL)('Diary and reviews with PostgreSQL', () => {
     ]);
     expect(saved.body.reviews[0]).toMatchObject({
       user: 'owner',
-      item: 'w-wotlk',
+      item: 'm-civil',
       rating: 4.5,
       text: input().text,
       spoiler: true,
@@ -297,22 +336,22 @@ describe.skipIf(!databaseURL)('Diary and reviews with PostgreSQL', () => {
     await profile('owner');
     await save('owner', randomUUID(), input()).expect(200);
     await db.query(
-      "UPDATE catalog_items SET status='archived' WHERE id='w-wotlk'",
+      "UPDATE catalog_items SET status='archived' WHERE id='m-civil'",
     );
     try {
       const diary = (await read('owner').expect(200)).body;
       expect(diary.entries).toHaveLength(1);
-      expect(diary.items[0].id).toBe('w-wotlk');
+      expect(diary.items[0].id).toBe('m-civil');
       const catalog = (
         await request(app.getHttpServer()).get('/api/v1/catalog').expect(200)
       ).body;
       expect(
-        catalog.items.some((i: { id: string }) => i.id === 'w-wotlk'),
+        catalog.items.some((i: { id: string }) => i.id === 'm-civil'),
       ).toBe(false);
       await save('owner', randomUUID(), input()).expect(409);
     } finally {
       await db.query(
-        "UPDATE catalog_items SET status='published' WHERE id='w-wotlk'",
+        "UPDATE catalog_items SET status='published' WHERE id='m-civil'",
       );
     }
   });
@@ -347,7 +386,7 @@ describe.skipIf(!databaseURL)('Diary and reviews with PostgreSQL', () => {
     expect(
       (
         await db.query(
-          "SELECT average,log_count FROM catalog_item_statistics WHERE item_id='w-wotlk'",
+          "SELECT average,log_count FROM catalog_item_statistics WHERE item_id='m-civil'",
         )
       ).rows[0],
     ).toEqual({ average: 0, log_count: 0 });

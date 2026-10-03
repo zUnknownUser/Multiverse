@@ -2839,19 +2839,19 @@
         }
       }
     },
-    "Acontece até com o Arthas. Informe seu e-mail e mandamos um link pra criar uma senha nova.": {
+    "Acontece até com os heróis. Informe seu e-mail e mandamos um link pra criar uma senha nova.": {
       "extractionState": "manual",
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acontece até com o Arthas. Informe seu e-mail e mandamos um link pra criar uma senha nova."
+            "value": "Acontece até com os heróis. Informe seu e-mail e mandamos um link pra criar uma senha nova."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Even Arthas forgets sometimes. Enter your email and we'll send a link to reset your password."
+            "value": "Even heroes forget sometimes. Enter your email and we'll send a link to reset your password."
           }
         }
       }
@@ -13100,19 +13100,19 @@
         }
       }
     },
-    "top 12%\nde Azeroth": {
+    "top 12%\nda comunidade": {
       "extractionState": "manual",
       "localizations": {
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "top 12%\nde Azeroth"
+            "value": "top 12%\nda comunidade"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "top 12%\nin Azeroth"
+            "value": "top 12%\nin the community"
           }
         }
       }
@@ -14675,18 +14675,18 @@
         }
       }
     },
-    "MARVEL · DC · WARCRAFT": {
+    "MARVEL · DC": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "MARVEL · DC · WARCRAFT"
+            "value": "MARVEL · DC"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "MARVEL · DC · WARCRAFT"
+            "value": "MARVEL · DC"
           }
         }
       }

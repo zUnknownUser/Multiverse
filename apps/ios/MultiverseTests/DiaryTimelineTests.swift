@@ -12,7 +12,7 @@ struct DiaryTimelineTests {
         try #require(ISO8601DateFormatter().date(from: value))
     }
     private func entry(_ value: String) throws -> DiaryEntry {
-        DiaryEntry(itemId: "w-wotlk", loggedAt: try date(value), rating: 4)
+        DiaryEntry(itemId: "m-civil", loggedAt: try date(value), rating: 4)
     }
 
     @Test func groupsIdenticalMonthsFromDifferentYearsSeparatelyAndSortsEntries() throws {
@@ -61,7 +61,7 @@ struct DiaryTimelineTests {
         await store.bootstrap()
         let instant = try date("2027-02-14T14:35:22Z")
         for _ in 0..<2 {
-            store.openLog(for: "w-wotlk")
+            store.openLog(for: "m-civil")
             store.logDraft?.rating = 4
             store.saveLog(at: instant)
         }

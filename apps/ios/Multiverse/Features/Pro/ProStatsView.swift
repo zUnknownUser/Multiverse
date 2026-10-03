@@ -101,7 +101,7 @@ struct ProStatsView: View {
                 LazyVGrid(columns: columns, spacing: 4) {
                     ForEach(0..<frequency.count, id: \.self) { i in
                         RoundedRectangle(cornerRadius: 3)
-                            .fill(frequency[i] ? MV.C.wow : MV.C.card)
+                            .fill(frequency[i] ? MV.C.accent : MV.C.card)
                             .aspectRatio(1, contentMode: .fit)
                             .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(MV.C.ink, lineWidth: 1))
                     }

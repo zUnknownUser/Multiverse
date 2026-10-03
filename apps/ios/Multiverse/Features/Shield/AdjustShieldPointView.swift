@@ -9,7 +9,7 @@ struct AdjustShieldPointView: View {
     @State private var advanceAutomatically: Bool
 
     init() {
-        _selectedUniverse = State(initialValue: "wow")
+        _selectedUniverse = State(initialValue: "marvel")
         _pendingIndex = State(initialValue: 0)
         _advanceAutomatically = State(initialValue: true)
     }

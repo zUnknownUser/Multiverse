@@ -43,8 +43,8 @@ describe.skipIf(!databaseURL)('Account API with real PostgreSQL', () => {
     completed = false,
     followedUserIDs: string[] = [],
   ) => ({
-    universeIDs: ['wow'],
-    seenItemIDs: ['w-wotlk'],
+    universeIDs: ['marvel'],
+    seenItemIDs: ['m-civil'],
     followedUserIDs,
     step: completed ? 3 : 2,
     completed,
@@ -73,6 +73,14 @@ describe.skipIf(!databaseURL)('Account API with real PostgreSQL', () => {
     for (const name of (await readdir(migrations))
       .filter((name) => name.endsWith('.sql'))
       .sort()) {
+      if (name === '019_heroes_scope.sql') {
+        await database.query(`INSERT INTO profiles(firebase_uid,username,display_name,avatar_color)
+          VALUES('pivot-mixed','pivot_mixed','Mixed','#000000'),('pivot-old','pivot_old','Old','#000000'),('pivot-done','pivot_done','Done','#000000');
+          INSERT INTO onboarding(firebase_uid,universe_ids,seen_item_ids,step,version,completed) VALUES
+          ('pivot-mixed','{wow,dc,marvel}','{w-wotlk,d-crise,m-civil}',2,5,false),
+          ('pivot-old','{wow}','{w-wotlk}',2,5,false),
+          ('pivot-done','{wow}','{w-wotlk}',3,5,true)`);
+      }
       await database.query(await readFile(new URL(name, migrations), 'utf8'));
       if (name === '001_accounts.sql') {
         // Simulate an existing installation with an interrupted deletion before the upgrade.
@@ -114,6 +122,61 @@ describe.skipIf(!databaseURL)('Account API with real PostgreSQL', () => {
       ).rowCount,
     ).toBe(0);
     await putProfile('legacy-deletion').expect(403);
+  });
+
+  it('migrates retired preferences without inventing choices or resetting completed accounts', async () => {
+    const result = await database.query(
+      "SELECT firebase_uid,universe_ids,seen_item_ids,step,version,completed FROM onboarding WHERE firebase_uid LIKE 'pivot-%' ORDER BY firebase_uid",
+    );
+    expect(result.rows).toEqual([
+      {
+        firebase_uid: 'pivot-done',
+        universe_ids: [],
+        seen_item_ids: [],
+        step: 3,
+        version: 6,
+        completed: true,
+      },
+      {
+        firebase_uid: 'pivot-mixed',
+        universe_ids: ['dc', 'marvel'],
+        seen_item_ids: ['d-crise', 'm-civil'],
+        step: 2,
+        version: 6,
+        completed: false,
+      },
+      {
+        firebase_uid: 'pivot-old',
+        universe_ids: [],
+        seen_item_ids: [],
+        step: 1,
+        version: 6,
+        completed: false,
+      },
+    ]);
+    await database.query(
+      "DELETE FROM profiles WHERE firebase_uid LIKE 'pivot-%'",
+    );
+    for (const locale of ['pt-BR', 'en']) {
+      const response = await request(app.getHttpServer())
+        .get('/api/v1/catalog')
+        .set('Accept-Language', locale)
+        .expect(200);
+      expect(response.body.universes.map((u: { id: string }) => u.id)).toEqual([
+        'marvel',
+        'dc',
+      ]);
+      expect(response.body.comingSoon).toEqual([]);
+      expect(
+        response.body.items.every((i: { uni: string }) =>
+          ['marvel', 'dc'].includes(i.uni),
+        ),
+      ).toBe(true);
+      await request(app.getHttpServer())
+        .get('/api/v1/catalog/wow/w-wotlk')
+        .set('Accept-Language', locale)
+        .expect(404);
+    }
   });
 
   it('requires a valid, verified identity and leaves health public', async () => {
@@ -245,14 +308,9 @@ describe.skipIf(!databaseURL)('Account API with real PostgreSQL', () => {
     expect(pt.body.universes.map((u: { id: string }) => u.id)).toEqual([
       'marvel',
       'dc',
-      'wow',
     ]);
-    expect(pt.body.items).toHaveLength(31);
-    expect(pt.body.comingSoon.map((u: { name: string }) => u.name)).toEqual([
-      'Star Wars',
-      'League of Legends',
-      'Tolkien',
-    ]);
+    expect(pt.body.items).toHaveLength(20);
+    expect(pt.body.comingSoon.map((u: { name: string }) => u.name)).toEqual([]);
     expect(
       pt.body.items.find((i: { id: string }) => i.id === 'm-civil').title,
     ).toBe('Guerra Civil');
@@ -299,7 +357,7 @@ describe.skipIf(!databaseURL)('Account API with real PostgreSQL', () => {
       for (const overrides of [
         { universeIDs: ['league-of-legends'] },
         { universeIDs: ['missing'] },
-        { seenItemIDs: ['c-arthas'] },
+        { seenItemIDs: ['c-wanda'] },
         { seenItemIDs: ['missing'] },
       ]) {
         const rejected = await putProgress(uid, {

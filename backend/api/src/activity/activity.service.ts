@@ -103,16 +103,18 @@ export class ActivityService {
   private async snapshot(client: PoolClient, uid: string, locale: string) {
     const entries = await client.query(
       `SELECT id,item_id AS "itemId",logged_at AS "loggedAt",rating,liked,rewatch
-      FROM diary_entries WHERE firebase_uid=$1 ORDER BY logged_at DESC,created_at DESC,id`,
+      FROM diary_entries WHERE firebase_uid=$1 AND item_id IN
+      (SELECT id FROM catalog_items WHERE universe_id IN ('marvel','dc')) ORDER BY logged_at DESC,created_at DESC,id`,
       [uid],
     );
     const reviews = await client.query(
       `SELECT r.id,r.firebase_uid AS "user",d.item_id AS item,d.rating,r.text,r.spoiler,
       r.created_at AS "createdAt" FROM reviews r JOIN diary_entries d ON d.firebase_uid=r.firebase_uid AND d.id=r.entry_id
-      WHERE r.firebase_uid=$1 ORDER BY r.created_at DESC,r.id`,
+      WHERE r.firebase_uid=$1 AND d.item_id IN
+      (SELECT id FROM catalog_items WHERE universe_id IN ('marvel','dc')) ORDER BY r.created_at DESC,r.id`,
       [uid],
     );
-    // Include archived references so a catalog retirement never erases a diary row.
+    // Preserve archived hero works in private history without resurfacing retired universes.
     const items = await client.query(
       `SELECT i.id,i.universe_id AS uni,i.type,coalesce(t.title,p.title) AS title,
       coalesce(t.year,p.year) AS year,s.average AS avg,s.log_count AS "logCount",s.review_count AS "reviewCount",
@@ -122,7 +124,7 @@ export class ActivityService {
       LEFT JOIN catalog_item_translations t ON t.item_id=i.id AND t.locale=$2
       ${descriptionSourceJoin} ${catalogSeriesJoin('$2')}
       JOIN catalog_item_statistics s ON s.item_id=i.id
-      WHERE i.id IN (SELECT item_id FROM diary_entries WHERE firebase_uid=$1) ORDER BY i.sort_order,i.id`,
+      WHERE i.universe_id IN ('marvel','dc') AND i.id IN (SELECT item_id FROM diary_entries WHERE firebase_uid=$1) ORDER BY i.sort_order,i.id`,
       [uid, locale],
     );
     const universes = await client.query(
@@ -131,7 +133,7 @@ export class ActivityService {
       0 AS base,0 AS total,0 AS members,0 AS live FROM catalog_universes u
       JOIN catalog_universe_translations p ON p.universe_id=u.id AND p.locale='pt-BR'
       LEFT JOIN catalog_universe_translations t ON t.universe_id=u.id AND t.locale=$2
-      WHERE u.id IN (SELECT i.universe_id FROM catalog_items i JOIN diary_entries d ON d.item_id=i.id WHERE d.firebase_uid=$1)
+      WHERE u.id IN ('marvel','dc') AND u.id IN (SELECT i.universe_id FROM catalog_items i JOIN diary_entries d ON d.item_id=i.id WHERE d.firebase_uid=$1)
       ORDER BY u.sort_order,u.id`,
       [uid, locale],
     );

@@ -2,7 +2,7 @@
 
 # Multiverse — iOS
 
-Rede social pra fãs de universos fictícios (Marvel, DC, Warcraft) — diário + reviews + rede.
+Rede social pra fãs de heróis (Marvel e DC) — diário + reviews + rede.
 App iOS nativo em SwiftUI, construído no Windows/VS Code e preparado pra abrir direto no
 Xcode via [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 

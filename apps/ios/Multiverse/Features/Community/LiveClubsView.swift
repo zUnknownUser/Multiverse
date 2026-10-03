@@ -92,7 +92,7 @@ struct LiveClubView: View {
                             }
                             if detail.club.joined {
                                 Stepper(value: $units, in: 0...plan.totalUnits) { Text("\(units)/\(plan.totalUnits) \(plan.unitLabel)").font(MVFont.bold(13)) }
-                                ComicProgress(value: Double(units) / Double(plan.totalUnits), fill: MV.C.wow, height: 12)
+                                ComicProgress(value: Double(units) / Double(plan.totalUnits), fill: MV.C.accent, height: 12)
                                 Button(L10n.text("SALVAR PROGRESSO")) { Task { await saveProgress(plan) } }.disabled(busy || units == plan.myUnits)
                             }
                             Button(L10n.text("CONVERSAR SOBRE ESTA ETAPA")) { store.push(.communityFeed(.init(universe: detail.club.universeID, item: plan.itemID, club: id, schedule: plan.id))) }
@@ -138,7 +138,7 @@ struct LiveClubView: View {
             Text(club.name.uppercased()).font(MVFont.display(30, width: 122))
             Text(club.description).font(MVFont.body(14, weight: 500))
             Label("\(club.memberCount)", systemImage: "person.3").font(MVFont.bold(12))
-        }.foregroundStyle(uni?.inkColor ?? MV.C.ink).frame(maxWidth: .infinity, alignment: .leading).padding(16).background(uni?.color ?? MV.C.wow).comicCard()
+        }.foregroundStyle(uni?.inkColor ?? MV.C.ink).frame(maxWidth: .infinity, alignment: .leading).padding(16).background(uni?.color ?? MV.C.accent).comicCard()
     }
     private func membership(_ club: LiveClub) -> some View {
         HStack {

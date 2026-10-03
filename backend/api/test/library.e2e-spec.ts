@@ -47,7 +47,7 @@ describe.skipIf(!databaseURL)('Personal library with PostgreSQL', () => {
       [uid, '#F4A814'],
     );
     await db.query(
-      "INSERT INTO onboarding(firebase_uid,completed,step,universe_ids) VALUES($1,true,3,'{wow}')",
+      "INSERT INTO onboarding(firebase_uid,completed,step,universe_ids) VALUES($1,true,3,'{marvel}')",
       [uid],
     );
   };
@@ -66,10 +66,10 @@ describe.skipIf(!databaseURL)('Personal library with PostgreSQL', () => {
       if (name === '013_personal_library.sql') {
         await profile('migrated');
         await db.query(`INSERT INTO diary_entries(firebase_uid,id,item_id,logged_at,rating,liked) VALUES
-          ('migrated',gen_random_uuid(),'w-wotlk','2026-01-01',4,true),
-          ('migrated',gen_random_uuid(),'w-wotlk','2026-02-01',4,false),
-          ('migrated',gen_random_uuid(),'w-cata','2026-01-01',4,false),
-          ('migrated',gen_random_uuid(),'w-cata','2026-02-01',4,true)`);
+          ('migrated',gen_random_uuid(),'m-civil','2026-01-01',4,true),
+          ('migrated',gen_random_uuid(),'m-civil','2026-02-01',4,false),
+          ('migrated',gen_random_uuid(),'d-flash','2026-01-01',4,false),
+          ('migrated',gen_random_uuid(),'d-flash','2026-02-01',4,true)`);
       }
       await db.query(await readFile(new URL(name, migrations), 'utf8'));
     }
@@ -102,7 +102,7 @@ describe.skipIf(!databaseURL)('Personal library with PostgreSQL', () => {
   });
 
   it('preserves only the latest diary favorite state during migration', () => {
-    expect(migratedFavorites).toEqual(['w-cata']);
+    expect(migratedFavorites).toEqual(['d-flash']);
   });
 
   it('requires verified membership and returns an empty private library', async () => {
@@ -120,18 +120,18 @@ describe.skipIf(!databaseURL)('Personal library with PostgreSQL', () => {
     await profile();
     await profile('other');
     await mutate(
-      operation('wanted', 0, { itemID: 'w-wotlk', enabled: true }),
+      operation('wanted', 0, { itemID: 'm-civil', enabled: true }),
     ).expect(200);
     await mutate(
-      operation('favorite', 1, { itemID: 'w-wotlk', enabled: true }),
+      operation('favorite', 1, { itemID: 'm-civil', enabled: true }),
     ).expect(200);
     await mutate(
-      operation('wanted', 2, { itemID: 'w-wotlk', enabled: false }),
+      operation('wanted', 2, { itemID: 'm-civil', enabled: false }),
     ).expect(200);
     expect((await read().expect(200)).body).toMatchObject({
       version: 3,
       wantedIDs: [],
-      favoriteIDs: ['w-wotlk'],
+      favoriteIDs: ['m-civil'],
     });
     expect((await read('other').expect(200)).body.favoriteIDs).toEqual([]);
   });
@@ -146,10 +146,10 @@ describe.skipIf(!databaseURL)('Personal library with PostgreSQL', () => {
       }),
     ).expect(200);
     await mutate(
-      operation('add_item', 1, { listID: id, itemID: 'w-wotlk' }),
+      operation('add_item', 1, { listID: id, itemID: 'm-civil' }),
     ).expect(200);
     await mutate(
-      operation('add_item', 2, { listID: id, itemID: 'w-wotlk' }),
+      operation('add_item', 2, { listID: id, itemID: 'm-civil' }),
     ).expect(200);
     const renamed = (
       await mutate(
@@ -164,10 +164,10 @@ describe.skipIf(!databaseURL)('Personal library with PostgreSQL', () => {
       id,
       title: 'Minha lista',
       description: '',
-      itemIDs: ['w-wotlk'],
+      itemIDs: ['m-civil'],
     });
     await mutate(
-      operation('remove_item', 4, { listID: id, itemID: 'w-wotlk' }),
+      operation('remove_item', 4, { listID: id, itemID: 'm-civil' }),
     ).expect(200);
     expect((await read().expect(200)).body.lists[0].itemIDs).toEqual([]);
     await mutate(operation('delete_list', 5, { listID: id })).expect(200);
@@ -193,8 +193,8 @@ describe.skipIf(!databaseURL)('Personal library with PostgreSQL', () => {
   it('rejects stale writes and serializes simultaneous devices without lost changes', async () => {
     await profile();
     const results = await Promise.all([
-      mutate(operation('wanted', 0, { itemID: 'w-wotlk', enabled: true })),
-      mutate(operation('favorite', 0, { itemID: 'w-wotlk', enabled: true })),
+      mutate(operation('wanted', 0, { itemID: 'm-civil', enabled: true })),
+      mutate(operation('favorite', 0, { itemID: 'm-civil', enabled: true })),
     ]);
     expect(results.map((r) => r.status).sort()).toEqual([200, 409]);
     expect(results.find((r) => r.status === 409)?.body.code).toBe(
@@ -222,7 +222,7 @@ describe.skipIf(!databaseURL)('Personal library with PostgreSQL', () => {
       'other',
     ).expect(404);
     await mutate(
-      operation('add_item', 0, { listID: id, itemID: 'w-wotlk' }),
+      operation('add_item', 0, { listID: id, itemID: 'm-civil' }),
       'other',
     ).expect(404);
     await mutate(operation('delete_list', 0, { listID: id }), 'other').expect(
@@ -233,18 +233,18 @@ describe.skipIf(!databaseURL)('Personal library with PostgreSQL', () => {
   it('validates action-specific fields, rejects whitespace, extra ownership and null flags', async () => {
     await profile();
     await mutate(
-      operation('favorite', 0, { itemID: 'w-wotlk', enabled: null }),
+      operation('favorite', 0, { itemID: 'm-civil', enabled: null }),
     ).expect(400);
     await mutate(
       operation('favorite', 0, {
-        itemID: 'w-wotlk',
+        itemID: 'm-civil',
         enabled: true,
         title: 'extra',
       }),
     ).expect(400);
     await mutate(
       operation('favorite', 0, {
-        itemID: 'w-wotlk',
+        itemID: 'm-civil',
         enabled: true,
         firebase_uid: 'other',
       }),
@@ -278,27 +278,27 @@ describe.skipIf(!databaseURL)('Personal library with PostgreSQL', () => {
       }),
     ).expect(200);
     await mutate(
-      operation('wanted', 1, { itemID: 'w-wotlk', enabled: true }),
+      operation('wanted', 1, { itemID: 'm-civil', enabled: true }),
     ).expect(200);
     await mutate(
-      operation('add_item', 2, { listID: id, itemID: 'w-wotlk' }),
+      operation('add_item', 2, { listID: id, itemID: 'm-civil' }),
     ).expect(200);
     await db.query(
-      "UPDATE catalog_items SET status='archived' WHERE id='w-wotlk'",
+      "UPDATE catalog_items SET status='archived' WHERE id='m-civil'",
     );
     try {
       await mutate(
-        operation('favorite', 3, { itemID: 'w-wotlk', enabled: true }),
+        operation('favorite', 3, { itemID: 'm-civil', enabled: true }),
       ).expect(404);
       await mutate(
-        operation('remove_item', 3, { listID: id, itemID: 'w-wotlk' }),
+        operation('remove_item', 3, { listID: id, itemID: 'm-civil' }),
       ).expect(200);
       await mutate(
-        operation('wanted', 4, { itemID: 'w-wotlk', enabled: false }),
+        operation('wanted', 4, { itemID: 'm-civil', enabled: false }),
       ).expect(200);
     } finally {
       await db.query(
-        "UPDATE catalog_items SET status='published' WHERE id='w-wotlk'",
+        "UPDATE catalog_items SET status='published' WHERE id='m-civil'",
       );
     }
   });
@@ -320,7 +320,7 @@ describe.skipIf(!databaseURL)('Personal library with PostgreSQL', () => {
       }),
     ).expect(409);
     const input = operation('favorite', 50, {
-      itemID: 'w-wotlk',
+      itemID: 'm-civil',
       enabled: true,
     });
     await mutate(input).expect(200);
@@ -329,7 +329,7 @@ describe.skipIf(!databaseURL)('Personal library with PostgreSQL', () => {
     );
     await mutate(input).expect(200);
     await mutate(
-      operation('favorite', 51, { itemID: 'w-wotlk', enabled: false }),
+      operation('favorite', 51, { itemID: 'm-civil', enabled: false }),
     ).expect(429);
   });
   it('cascades lists, marks, receipts and version on account deletion', async () => {
@@ -343,10 +343,10 @@ describe.skipIf(!databaseURL)('Personal library with PostgreSQL', () => {
       }),
     ).expect(200);
     await mutate(
-      operation('add_item', 1, { listID: id, itemID: 'w-wotlk' }),
+      operation('add_item', 1, { listID: id, itemID: 'm-civil' }),
     ).expect(200);
     await mutate(
-      operation('favorite', 2, { itemID: 'w-wotlk', enabled: true }),
+      operation('favorite', 2, { itemID: 'm-civil', enabled: true }),
     ).expect(200);
     await db.query("DELETE FROM profiles WHERE firebase_uid='owner'");
     for (const table of [

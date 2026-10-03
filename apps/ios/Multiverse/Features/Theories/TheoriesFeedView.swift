@@ -59,7 +59,7 @@ struct TheoryCard: View {
                             .font(MVFont.black(10)).tracking(0.2)
                             .foregroundStyle(MV.C.ink)
                             .padding(.horizontal, 8).padding(.vertical, 4)
-                            .background(MV.C.wow)
+                            .background(MV.C.accent)
                             .overlay(RoundedRectangle(cornerRadius: MV.R.xs).strokeBorder(MV.C.ink, lineWidth: 1.5))
                             .clipShape(RoundedRectangle(cornerRadius: MV.R.xs))
                         Spacer()

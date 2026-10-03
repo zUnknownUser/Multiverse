@@ -7,7 +7,7 @@ struct ChooseUsernameView: View {
     private var suggestions: [String] {
         let base = auth.draft.name.split(separator: " ").first.map { $0.lowercased() } ?? "lorista"
         let seed = Logic.seed(auth.draft.name.isEmpty ? "lorista" : auth.draft.name)
-        return ["\(base).azeroth", "\(base)\(100 + Int(seed % 900))"]
+        return ["\(base).herois", "\(base)\(100 + Int(seed % 900))"]
     }
 
     var body: some View {

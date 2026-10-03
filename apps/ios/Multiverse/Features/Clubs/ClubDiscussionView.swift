@@ -148,7 +148,7 @@ private struct ClubMessageBubble: View {
                         if isMe { AvatarView(user: user, size: 30) }
                     }
                     .padding(12)
-                    .background(isMe ? MV.C.wow : MV.C.card)
+                    .background(isMe ? MV.C.accent : MV.C.card)
                     .overlay(RoundedRectangle(cornerRadius: MV.R.lg).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                     .clipShape(RoundedRectangle(cornerRadius: MV.R.lg))
 
@@ -157,7 +157,7 @@ private struct ClubMessageBubble: View {
                             reactionPill(text: "♥ \(message.hearts)", active: hearted, color: MV.C.marvel) {
                                 store.toggleClubMessageHeart(message.id)
                             }
-                            reactionPill(text: "POW! \(message.pows)", active: store.powedClubMessages.contains(message.id), color: MV.C.wow) {
+                            reactionPill(text: "POW! \(message.pows)", active: store.powedClubMessages.contains(message.id), color: MV.C.accent) {
                                 store.powClubMessage(message.id)
                             }
                         }

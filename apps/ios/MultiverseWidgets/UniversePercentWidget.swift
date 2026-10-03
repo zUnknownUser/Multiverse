@@ -6,7 +6,7 @@ struct UniversePercentWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "UniversePercentWidget", provider: SnapshotProvider()) { entry in
             UniversePercentWidgetView(entry: entry)
-                .containerBackground(MV.C.wow, for: .widget)
+                .containerBackground(MV.C.accent, for: .widget)
         }
         .configurationDisplayName(L10n.text("% do universo"))
         .description(L10n.text("Quanto do cânone do seu universo principal você já viu."))
@@ -20,7 +20,7 @@ private struct UniversePercentWidgetView: View {
     var body: some View {
         let snapshot = entry.snapshot
         VStack(alignment: .leading, spacing: 6) {
-            Text((snapshot?.universeName ?? "AZEROTH").uppercased())
+            Text((snapshot?.universeName ?? "MARVEL").uppercased())
                 .font(MVFont.black(12)).foregroundStyle(MV.C.ink)
             Spacer(minLength: 0)
             Text("\(snapshot?.universePercent ?? 0)%")

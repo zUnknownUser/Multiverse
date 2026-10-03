@@ -38,7 +38,7 @@ struct WhereToWatchSection: View {
                     Text(L10n.text("Me avise quando entrar num serviço que eu assino"))
                         .font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
                     Spacer()
-                    Toggle("", isOn: $notifyOnServiceIOwn).labelsHidden().tint(MV.C.wow)
+                    Toggle("", isOn: $notifyOnServiceIOwn).labelsHidden().tint(MV.C.accent)
                 }
                 .padding(14)
                 .comicCard(shadow: MV.Shadow.s)
@@ -69,7 +69,7 @@ private struct WatchOptionRow: View {
                 .font(MVFont.bold(12))
                 .padding(.horizontal, 12).padding(.vertical, 10)
                 .foregroundStyle(option.actionLabel == "ASSISTIR" ? MV.C.paper : MV.C.ink)
-                .background(option.actionLabel == "ASSISTIR" ? MV.C.ink : MV.C.wow)
+                .background(option.actionLabel == "ASSISTIR" ? MV.C.ink : MV.C.accent)
                 .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                 .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
         }
@@ -94,7 +94,7 @@ private struct ReadFirstRow: View {
                 .font(MVFont.bold(12))
                 .padding(.horizontal, 12).padding(.vertical, 10)
                 .foregroundStyle(MV.C.ink)
-                .background(MV.C.wow)
+                .background(MV.C.accent)
                 .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                 .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
         }

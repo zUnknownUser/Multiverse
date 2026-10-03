@@ -36,7 +36,7 @@ struct PredictionsView: View {
                 .font(MVFont.black(13))
                 .padding(.horizontal, 12).padding(.vertical, 8)
                 .foregroundStyle(MV.C.ink)
-                .background(MV.C.wow)
+                .background(MV.C.accent)
                 .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                 .clipShape(Capsule())
         }
@@ -93,7 +93,7 @@ struct PredictionsView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
-                    .background(entry.isMe ? MV.C.wow : MV.C.card)
+                    .background(entry.isMe ? MV.C.accent : MV.C.card)
                     .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                     .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
                 }
@@ -144,7 +144,7 @@ private struct QuestionCard: View {
             .font(MVFont.bold(14))
             .frame(maxWidth: .infinity).frame(height: 46)
             .foregroundStyle(picked ? MV.C.ink : MV.C.ink)
-            .background(picked ? MV.C.wow : MV.C.card)
+            .background(picked ? MV.C.accent : MV.C.card)
             .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
             .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
             .contentShape(Rectangle())
@@ -158,7 +158,7 @@ private struct QuestionCard: View {
             Slider(value: $sliderValue, in: 1...5, step: 0.1) { editing in
                 if !editing { store.submitPredictionSlider(questionID: question.id, value: sliderValue) }
             }
-            .tint(MV.C.wow)
+            .tint(MV.C.accent)
             Text("5").font(MVFont.bold(13)).foregroundStyle(MV.C.muted)
             Text(L10n.decimal(sliderValue)).font(MVFont.black(15)).foregroundStyle(MV.C.ink).frame(width: 36)
         }

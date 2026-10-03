@@ -11,7 +11,7 @@ struct AffinityCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack {
-                MV.C.wow
+                MV.C.accent
                 Halftone(color: MV.C.ink.opacity(0.15))
                 VStack(spacing: 2) {
                     Text("\(percent)%").font(MVFont.black(44)).foregroundStyle(MV.C.ink)

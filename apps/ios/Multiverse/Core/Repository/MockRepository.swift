@@ -55,9 +55,9 @@ actor MockRepository: MultiverseRepository {
         diary = MockRepository.initialDiary()
 
         recursos = .load()
-        shieldState = ShieldState(points: ["wow": 4, "marvel": 3], advanceAutomatically: true)
+        shieldState = ShieldState(points: ["dc": 4, "marvel": 3], advanceAutomatically: true)
         clubState = ClubState(
-            memberUnits: ["c-cidadela|nina": 18, "c-cidadela|duda": 11, "c-cidadela|gui": 7, "c-cidadela|bia": 2],
+            memberUnits: ["c-crises|nina": 12, "c-crises|duda": 11, "c-crises|gui": 7, "c-crises|bia": 2],
             heartedMessages: [], powedMessages: []
         )
         clubMessages = recursos.clubMessages
@@ -67,7 +67,7 @@ actor MockRepository: MultiverseRepository {
         conversations = recursos.conversations
         messages = recursos.messages
         roomMessages = recursos.roomMessages
-        roomProgress = ["w-wotlk": 1]
+        roomProgress = ["d-crise": 1]
         if session != nil {
             // Real identities must not inherit the demo account's personal activity.
             follows = []
@@ -87,6 +87,7 @@ actor MockRepository: MultiverseRepository {
     private func delay() async {
         try? await Task.sleep(for: simulatedLatency)
     }
+
 
     // MARK: - Catálogo
 
@@ -434,14 +435,14 @@ actor MockRepository: MultiverseRepository {
     private static func initialDiary() -> [DiaryEntry] {
         let calendar = Calendar(identifier: .gregorian)
         return [
-            ("w-crimes", 27, 9, 4.5, true, false),
-            ("w-wotlk", 24, 9, 5, false, true),
+            ("m-secret", 27, 9, 4.5, true, false),
+            ("m-civil", 24, 9, 5, false, true),
             ("d-crise", 19, 9, 4, false, false),
             ("m-loki", 12, 9, 3.5, false, false),
-            ("w-wc3", 3, 9, 5, true, false),
+            ("m-ultimato", 3, 9, 5, true, false),
             ("d-watchmen", 28, 8, 5, true, false),
             ("m-civil", 20, 8, 3, false, false),
-            ("e-cataclismo", 14, 8, 3.5, false, false),
+            ("e-superman", 14, 8, 3.5, false, false),
             ("d-flash", 9, 8, 4, false, false),
         ].compactMap { itemID, day, month, rating, liked, rewatch in
             guard let date = calendar.date(from: DateComponents(year: 2026, month: month, day: day, hour: 12)) else { return nil }

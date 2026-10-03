@@ -14,7 +14,7 @@ struct LaunchLoadingView: View {
                     .tracking(-0.4)
                     .foregroundStyle(MV.C.ink)
                 HStack(spacing: 8) {
-                    ForEach([MV.C.marvel, MV.C.dc, MV.C.wow], id: \.self) { c in
+                    ForEach([MV.C.marvel, MV.C.dc], id: \.self) { c in
                         Circle().fill(c)
                             .frame(width: 12, height: 12)
                             .overlay(Circle().strokeBorder(MV.C.ink, lineWidth: 1.5))

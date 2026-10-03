@@ -89,7 +89,7 @@ struct ItemRoomView: View {
                 Spacer()
             }
             .padding(10)
-            .background(MV.C.wow.opacity(0.25))
+            .background(MV.C.accent.opacity(0.25))
             .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
             .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
         }
@@ -204,7 +204,7 @@ private struct RoomMessageBubble: View {
                         }
                     }
                     .padding(10)
-                    .background(isMe ? MV.C.wow : MV.C.card)
+                    .background(isMe ? MV.C.accent : MV.C.card)
                     .overlay(RoundedRectangle(cornerRadius: MV.R.lg).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                     .clipShape(RoundedRectangle(cornerRadius: MV.R.lg))
                     .reactionBar(isPresented: $showReactionBar, onReact: { store.setReaction($0, for: reactionKey) })

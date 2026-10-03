@@ -28,7 +28,7 @@ enum Logic {
         name.split(separator: " ").compactMap { $0.first }.prefix(2).map(String.init).joined().uppercased()
     }
 
-    /// Texto sobre cor: âmbar (Warcraft) usa ink; o resto usa branco-papel
+    /// Texto sobre cor: âmbar do app usa ink; o resto usa branco-papel
     static func inkOn(hex: String) -> Color { hex.uppercased() == "#F4A814" ? MV.C.ink : MV.C.card }
 
     /// Capa: seed(id) % 3 → 0 = cor principal, 1 = preto com texto na cor, 2 = variante escura

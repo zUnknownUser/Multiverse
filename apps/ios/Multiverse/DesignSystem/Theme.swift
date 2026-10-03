@@ -41,7 +41,8 @@ enum MV {
         // Cores de universo são chapadas e não mudam de tema.
         static let marvel  = Color(hex: "#E4412F"), marvel2 = Color(hex: "#C9362A")
         static let dc      = Color(hex: "#2E5BE8"), dc2     = Color(hex: "#2349C4")
-        static let wow     = Color(hex: "#F4A814"), wow2    = Color(hex: "#D99210")
+        // Amarelo editorial do app, independente dos universos.
+        static let accent  = Color(hex: "#F4A814"), accent2 = Color(hex: "#D99210")
 
         static let divider = ink.opacity(0.15)
         /// Sempre escuro, nos dois temas — é o véu atrás de sheets/modais.

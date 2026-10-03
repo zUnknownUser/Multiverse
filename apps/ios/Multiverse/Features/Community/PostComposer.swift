@@ -275,7 +275,7 @@ struct PostComposer: View {
             }
             .foregroundStyle(canSend ? Color(hex: "#16130F") : MV.C.muted)
             .padding(.horizontal, 16).padding(.vertical, 16).frame(maxWidth: .infinity, minHeight: 52)
-            .comicCard(bg: canSend ? MV.C.wow : MV.C.desk, radius: MV.R.md, shadow: MV.Shadow.s)
+            .comicCard(bg: canSend ? MV.C.accent : MV.C.desk, radius: MV.R.md, shadow: MV.Shadow.s)
         }
         .buttonStyle(.plain).disabled(!canSend)
         .padding(.horizontal, MV.pad).padding(.top, 12).padding(.bottom, 12)

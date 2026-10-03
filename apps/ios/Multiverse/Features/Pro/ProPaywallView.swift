@@ -38,7 +38,7 @@ struct ProPaywallView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     ForEach(features, id: \.title) { feature in
                         HStack(spacing: 12) {
-                            ZStack { Circle().fill(MV.C.ink); Text("✓").font(MVFont.black(11)).foregroundStyle(MV.C.wow) }
+                            ZStack { Circle().fill(MV.C.ink); Text("✓").font(MVFont.black(11)).foregroundStyle(MV.C.accent) }
                                 .frame(width: 26, height: 26)
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(feature.title).font(MVFont.bold(15)).foregroundStyle(MV.C.ink)
@@ -103,7 +103,7 @@ struct ProPaywallView: View {
                     .font(MVFont.display(26))
                     .foregroundStyle(MV.C.ink)
                     .padding(.horizontal, 14).padding(.vertical, 4)
-                    .background(MV.C.wow)
+                    .background(MV.C.accent)
                     .overlay(RoundedRectangle(cornerRadius: MV.R.sm).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                     .clipShape(RoundedRectangle(cornerRadius: MV.R.sm))
                     .rotationEffect(.degrees(-4))
@@ -140,7 +140,7 @@ struct ProPaywallView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(isAnnual ? MV.C.wow : MV.C.card)
+        .background(isAnnual ? MV.C.accent : MV.C.card)
         .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
         .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
         .background(RoundedRectangle(cornerRadius: MV.R.md).fill(MV.C.shadow).offset(x: MV.Shadow.s, y: MV.Shadow.s))

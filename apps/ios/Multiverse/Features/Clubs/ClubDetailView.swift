@@ -132,7 +132,7 @@ struct ClubDetailView: View {
             AvatarView(user: user, size: 30)
             Text(user.id == store.meID ? L10n.text("Você") : user.name.components(separatedBy: " ").first ?? user.name)
                 .font(MVFont.bold(13)).foregroundStyle(MV.C.ink).frame(width: 60, alignment: .leading)
-            ComicProgress(value: week.totalUnits > 0 ? Double(units) / Double(week.totalUnits) : 0, fill: MV.C.wow, height: 12)
+            ComicProgress(value: week.totalUnits > 0 ? Double(units) / Double(week.totalUnits) : 0, fill: MV.C.accent, height: 12)
             Text(label).font(MVFont.bold(12)).foregroundStyle(MV.C.muted).frame(width: 70, alignment: .trailing)
         }
     }

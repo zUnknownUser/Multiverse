@@ -1,3 +1,24 @@
+# Atualização — escopo Marvel e DC (03/10/2026)
+
+- Produto limitado a Marvel/DC. Retirados os demais universos do onboarding,
+  fixtures PT-BR/EN, widgets, sugestões, ordens, conexões e exemplos de comunidade.
+- Cartões de universo seguem o HStack com larguras flexíveis iguais (agora dois).
+  Tipografia, navegação e cores preservadas; amarelo renomeado de wow para accent.
+  Grids de obras continuam com três colunas: não representam universos.
+- Migration aditiva 019 arquiva universos/itens fora do escopo, filtra preferências
+  antigas e incrementa sua versão. Não apaga histórico nem reinicia contas concluídas.
+  Diário privado mantém obras Marvel/DC arquivadas, mas não reintroduz universos retirados.
+- Validação: 81 testes unitários API, 108 HTTP/PostgreSQL e 184 iOS; 1060 entradas
+  localizadas. Inclui migração de preferências antigas e referências PT-BR/EN.
+- Migrações anteriores e design de referência são históricos; não são conteúdo ativo.
+- Próximo pedido: levantamento de RevenueCat e monetização por afiliados. Usuário
+  criou um paywall no RevenueCat, mas ainda não forneceu offering/projeto. Código
+  atual usa StoreKit 2 diretamente; Onde assistir é mock e oculto em sessões reais.
+  Pediu avaliar entidade oferta/edição e redirecionamento por backend, regras de
+  parceiros e viabilidade, antes de integrar. Não foi implementado nesta entrega.
+
+---
+
 # Atualização — voz LiveKit nativa nas salas (03/10/2026)
 
 Usuário autorizou integrar voz, sem vídeo, com UI discreta, performance e fluidez.

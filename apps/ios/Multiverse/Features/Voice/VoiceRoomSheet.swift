@@ -91,7 +91,7 @@ struct VoiceRoomSheet: View {
                     if loading || voice.active { ProgressView() }
                     Text(voice.active ? L10n.text("CANCELAR") : L10n.text("ENTRAR NA VOZ")).font(MVFont.label(13))
                 }.foregroundStyle(Color(hex: "#16130F")).frame(maxWidth: .infinity, minHeight: 52)
-                    .comicCard(bg: MV.C.wow, radius: MV.R.md)
+                    .comicCard(bg: MV.C.accent, radius: MV.R.md)
             }.buttonStyle(.plain).disabled(loading || availability?.enabled != true || voice.state == .leaving)
         }
     }

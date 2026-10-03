@@ -63,11 +63,11 @@ private final class TokenStub: APITokenProvider {
 struct AccountHTTPTests {
     @Test func libraryWritesCarryVersionAndReceiptIdentityWithoutOtherActionFields() async throws {
         let id = UUID().uuidString.lowercased()
-        let json = "{\"mutationID\":\"\(id)\",\"appliedVersion\":1,\"state\":{\"version\":1,\"wantedIDs\":[\"w-wotlk\"],\"favoriteIDs\":[],\"lists\":[]}}"
+        let json = "{\"mutationID\":\"\(id)\",\"appliedVersion\":1,\"state\":{\"version\":1,\"wantedIDs\":[\"m-civil\"],\"favoriteIDs\":[],\"lists\":[]}}"
         AccountURLProtocol.fixture.reset([(200, json), (409, "{\"code\":\"LIBRARY_STALE\"}")])
         let (api, transport) = client(TokenStub()); defer { transport.invalidateAndCancel() }
-        let input = LibraryMutation(mutationID: id, version: 0, action: "wanted", itemID: "w-wotlk", enabled: true)
-        #expect(try await api.mutateLibrary(input).state.wantedIDs == ["w-wotlk"])
+        let input = LibraryMutation(mutationID: id, version: 0, action: "wanted", itemID: "m-civil", enabled: true)
+        #expect(try await api.mutateLibrary(input).state.wantedIDs == ["m-civil"])
         let request = try #require(AccountURLProtocol.fixture.requests.first)
         let data = try #require(request.httpBody)
         let body = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
@@ -79,7 +79,7 @@ struct AccountHTTPTests {
         let id = UUID().uuidString.lowercased()
         AccountURLProtocol.fixture.reset([(200, "{\"id\":\"\(id)\",\"saved\":true}")])
         let (api, transport) = client(TokenStub()); defer { transport.invalidateAndCancel() }
-        let result = try await api.publishPost(id: id, input: .init(universeID: "wow", itemID: nil, title: "Title", text: "Body", spoiler: true))
+        let result = try await api.publishPost(id: id, input: .init(universeID: "marvel", itemID: nil, title: "Title", text: "Body", spoiler: true))
         #expect(result.saved && result.id == id)
         let request = try #require(AccountURLProtocol.fixture.requests.first)
         #expect(request.url?.path == "/api/v1/posts/\(id)" && request.httpMethod == "PUT")

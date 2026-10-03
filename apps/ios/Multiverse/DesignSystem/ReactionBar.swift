@@ -36,7 +36,7 @@ struct ReactionBarModifier: ViewModifier {
     private var bar: some View {
         HStack(spacing: 0) {
             if let onQuote {
-                pill(label: quoteLabel ?? L10n.text("❝ Citar"), bg: MV.C.wow, fg: MV.C.ink) {
+                pill(label: quoteLabel ?? L10n.text("❝ Citar"), bg: MV.C.accent, fg: MV.C.ink) {
                     isPresented = false
                     onQuote()
                 }

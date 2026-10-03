@@ -23,11 +23,11 @@ private struct DuelOfDayWidgetView: View {
             HStack {
                 Text(L10n.text("DUELO DO DIA")).font(MVFont.black(11)).foregroundStyle(MV.C.paper)
                 Spacer()
-                Text(snapshot?.duelVotesLabel ?? "").font(MVFont.bold(10)).foregroundStyle(MV.C.wow)
+                Text(snapshot?.duelVotesLabel ?? "").font(MVFont.bold(10)).foregroundStyle(MV.C.accent)
             }
             Text(snapshot?.duelQuestion ?? "").font(MVFont.black(14)).foregroundStyle(MV.C.paper).lineLimit(2)
             HStack(spacing: 8) {
-                sidePlate(title: snapshot?.duelSideATitle ?? "", color: MV.C.wow)
+                sidePlate(title: snapshot?.duelSideATitle ?? "", color: MV.C.accent)
                 Text("VS").font(MVFont.black(11)).foregroundStyle(MV.C.paper)
                 sidePlate(title: snapshot?.duelSideBTitle ?? "", color: MV.C.marvel)
             }
@@ -38,7 +38,7 @@ private struct DuelOfDayWidgetView: View {
     private func sidePlate(title: String, color: Color) -> some View {
         Text(title.uppercased())
             .font(MVFont.black(11))
-            .foregroundStyle(color == MV.C.wow ? MV.C.ink : MV.C.paper)
+            .foregroundStyle(color == MV.C.accent ? MV.C.ink : MV.C.paper)
             .lineLimit(2)
             .minimumScaleFactor(0.6)
             .frame(maxWidth: .infinity, alignment: .leading)

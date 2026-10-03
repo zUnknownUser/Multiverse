@@ -236,7 +236,7 @@ struct LiveRoomView: View {
             } label: {
                 Text(savingProgress ? L10n.text("ENVIANDO…") : L10n.text("SALVAR PROGRESSO"))
                     .font(MVFont.label(13)).foregroundStyle(Color(hex: "#16130F"))
-                    .frame(maxWidth: .infinity, minHeight: 50).comicCard(bg: MV.C.wow)
+                    .frame(maxWidth: .infinity, minHeight: 50).comicCard(bg: MV.C.accent)
             }.buttonStyle(.plain).disabled(savingProgress || sending || pending != nil)
         }.padding(24).foregroundStyle(MV.C.ink)
         .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)

@@ -325,27 +325,27 @@ struct AccountIntegrationTests {
         let uid = UUID().uuidString
         defer { UserDefaults.standard.removeObject(forKey: "mv-onboarded-\(uid)") }
         let api = AccountStub(uid: uid)
-        api.progress = OnboardingState(universeIDs: ["wow"], seenItemIDs: ["w-wotlk"], step: 2, version: 7)
+        api.progress = OnboardingState(universeIDs: ["marvel"], seenItemIDs: ["m-civil"], step: 2, version: 7)
         UserDefaults.standard.set(true, forKey: "mv-onboarded-\(uid)")
         let session = AuthSession(userID: uid, email: "test@example.com", handle: "")
         let store = AppStore(session: session, accountAPI: api)
         await store.bootstrap()
         #expect(!store.isOnboarded)
         #expect(store.onboardingPhase == .step2)
-        #expect(store.onboardingUniverses == ["wow"])
-        #expect(store.isSeen("w-wotlk"))
+        #expect(store.onboardingUniverses == ["marvel"])
+        #expect(store.isSeen("m-civil"))
         #expect(store.user(uid)?.name == "Real Name")
         #expect(store.onboardingPeopleSorted().isEmpty)
         api.progress.seenItemIDs = []
         await store.reloadAccount()
-        #expect(!store.isSeen("w-wotlk"))
+        #expect(!store.isSeen("m-civil"))
     }
 
     @Test func zeroPeopleSkipsFollowStepAndOnlyCompletesAfterSuccessfulSave() async throws {
         let uid = UUID().uuidString
         defer { UserDefaults.standard.removeObject(forKey: "mv-onboarded-\(uid)") }
         let api = AccountStub(uid: uid)
-        api.progress = OnboardingState(universeIDs: ["wow"], step: 2)
+        api.progress = OnboardingState(universeIDs: ["marvel"], step: 2)
         let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
         await store.bootstrap()
         #expect(store.minimumOnboardingFollows == 0)
@@ -368,7 +368,7 @@ struct AccountIntegrationTests {
         defer { UserDefaults.standard.removeObject(forKey: "mv-onboarded-\(uid)") }
         let api = AccountStub(uid: uid)
         api.people = [RemoteProfile(userID: "real-person", username: "lorista", displayName: "Lorista", avatarColor: "#F4A814", bio: "Real person")]
-        api.progress = OnboardingState(universeIDs: ["wow"])
+        api.progress = OnboardingState(universeIDs: ["marvel"])
         let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
         await store.bootstrap()
         #expect(store.minimumOnboardingFollows == 1)

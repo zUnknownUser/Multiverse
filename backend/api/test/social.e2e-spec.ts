@@ -104,7 +104,7 @@ describe.skipIf(!databaseURL)('Social feed and safety with PostgreSQL', () => {
       .auth('owner', { type: 'bearer' })
       .send({ reason: 'spam', alsoBlock });
   const input = {
-    itemId: 'w-wotlk',
+    itemId: 'm-civil',
     loggedAt: '2026-09-30T23:30:00.000Z',
     rating: 4.5,
     liked: true,
@@ -575,8 +575,8 @@ describe.skipIf(!databaseURL)('Social feed and safety with PostgreSQL', () => {
         "UPDATE reviews SET moderation_status='visible'",
       ],
       [
-        "UPDATE catalog_items SET status='archived' WHERE id='w-wotlk'",
-        "UPDATE catalog_items SET status='published' WHERE id='w-wotlk'",
+        "UPDATE catalog_items SET status='archived' WHERE id='m-civil'",
+        "UPDATE catalog_items SET status='published' WHERE id='m-civil'",
       ],
       [
         "UPDATE onboarding SET completed=false WHERE firebase_uid='alice'",
@@ -596,7 +596,7 @@ describe.skipIf(!databaseURL)('Social feed and safety with PostgreSQL', () => {
     await setup();
     await privacy(true).expect(200);
     await db.query(`INSERT INTO diary_entries(firebase_uid,id,item_id,logged_at,rating)
-      SELECT 'alice',gen_random_uuid(),'w-wotlk',now(),4 FROM generate_series(1,51)`);
+      SELECT 'alice',gen_random_uuid(),'m-civil',now(),4 FROM generate_series(1,51)`);
     const reviews =
       await db.query(`INSERT INTO reviews(firebase_uid,entry_id,text)
       SELECT firebase_uid,id,'Review' FROM diary_entries WHERE firebase_uid='alice' RETURNING id`);
@@ -635,8 +635,8 @@ describe.skipIf(!databaseURL)('Social feed and safety with PostgreSQL', () => {
     await report(randomUUID()).expect(404);
   });
   const postInput = {
-    universeID: 'wow',
-    itemID: 'w-wotlk',
+    universeID: 'marvel',
+    itemID: 'm-civil',
     title: 'Uma pergunta',
     text: 'O que vocês acharam?',
     spoiler: false,
@@ -663,12 +663,10 @@ describe.skipIf(!databaseURL)('Social feed and safety with PostgreSQL', () => {
         (p: { id: string }) => p.id,
       ),
     ).toEqual([id]);
-    expect((await get('posts?universe=marvel').expect(200)).body.posts).toEqual(
-      [],
-    );
+    expect((await get('posts?universe=dc').expect(200)).body.posts).toEqual([]);
     expect(
-      (await get('posts?item=w-wotlk').expect(200)).body.posts[0].universeID,
-    ).toBe('wow');
+      (await get('posts?item=m-civil').expect(200)).body.posts[0].universeID,
+    ).toBe('marvel');
     await publish(id).expect(200);
     await publish(id, { ...postInput, text: 'Alterado' }).expect(409);
     await publish(id, postInput, 'owner').expect(409);
@@ -683,9 +681,7 @@ describe.skipIf(!databaseURL)('Social feed and safety with PostgreSQL', () => {
   });
   it('rejects invalid catalog links, whitespace, unknown fields, malformed cursors and anonymous posts', async () => {
     await setup();
-    await publish(randomUUID(), { ...postInput, universeID: 'marvel' }).expect(
-      400,
-    );
+    await publish(randomUUID(), { ...postInput, universeID: 'dc' }).expect(400);
     await publish(randomUUID(), { ...postInput, title: '  ' }).expect(400);
     await put('posts/' + randomUUID(), {
       ...postInput,
@@ -705,7 +701,14 @@ describe.skipIf(!databaseURL)('Social feed and safety with PostgreSQL', () => {
     for (let i = 0; i < 34; i++)
       await db.query(
         'INSERT INTO community_posts(id,firebase_uid,universe_id,title,text,created_at) VALUES($1,$2,$3,$4,$5,$6)',
-        [randomUUID(), 'alice', 'wow', 'Title', 'Body', '2026-10-01T10:00:00Z'],
+        [
+          randomUUID(),
+          'alice',
+          'marvel',
+          'Title',
+          'Body',
+          '2026-10-01T10:00:00Z',
+        ],
       );
     const first = (await get('posts').expect(200)).body;
     const second = (await get('posts?after=' + first.nextCursor).expect(200))

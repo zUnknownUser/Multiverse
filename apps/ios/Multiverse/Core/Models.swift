@@ -6,7 +6,7 @@ struct SampleData: Codable, Sendable {
     let universes: [Universe]
     let items: [Item]
     let users: [User]
-    let badgeNames: [String: String]          // wow → "Azeroth", marvel → "Terra-616", dc → "Multi-DC"
+    let badgeNames: [String: String]          // marvel → "Terra-616", dc → "Multi-DC"
     let connections: [String: [String]]       // itemId → [itemId]
     let timelines: [String: [TimelineEntry]]  // universeId → entradas em ordem canônica
     let readingOrders: [ReadingOrder]
@@ -139,7 +139,7 @@ enum ReactionType: String, CaseIterable, Codable, Sendable {
         switch self {
         case .pow: return MV.C.marvel
         case .zap: return MV.C.dc
-        case .krak: return MV.C.wow
+        case .krak: return MV.C.accent
         case .heh: return MV.C.card
         }
     }

@@ -32,7 +32,7 @@ private struct NextInOrderWidgetView: View {
                     .font(MVFont.bold(11)).foregroundStyle(MV.C.muted)
                 Spacer()
             }
-            ComicProgress(value: (snapshot?.nextOrderTotal ?? 0) > 0 ? Double(snapshot!.nextOrderDone) / Double(snapshot!.nextOrderTotal) : 0, fill: MV.C.wow, height: 8)
+            ComicProgress(value: (snapshot?.nextOrderTotal ?? 0) > 0 ? Double(snapshot!.nextOrderDone) / Double(snapshot!.nextOrderTotal) : 0, fill: MV.C.accent, height: 8)
         }
         .padding(4)
     }

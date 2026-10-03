@@ -1,10 +1,10 @@
 {
   "clubs": [
     {
-      "id": "c-cidadela",
-      "name": "Citadel Club",
-      "uni": "wow",
-      "orderID": "o-azeroth",
+      "id": "c-crises",
+      "name": "DC Crisis Club",
+      "uni": "dc",
+      "orderID": "o-crises",
       "memberIDs": [
         "duda",
         "nina",
@@ -14,145 +14,20 @@
       "weeks": [
         {
           "week": 1,
-          "itemID": "w-wcfilme",
-          "totalUnits": 1,
-          "unitLabel": "Movie",
-          "paceLabel": "Movie · 123 min",
-          "segments": [
-            "Discussion"
-          ]
-        },
-        {
-          "week": 2,
-          "itemID": "w-wc3",
-          "totalUnits": 1,
-          "unitLabel": "Campaign",
-          "paceLabel": "Game · 4 campaigns",
-          "segments": [
-            "Discussion"
-          ]
-        },
-        {
-          "week": 3,
-          "itemID": "w-arthas",
-          "totalUnits": 18,
-          "unitLabel": "Ch.",
-          "paceLabel": "Book · 400 pages · ≈57 per day",
-          "segments": [
-            "Ch. 1–8",
-            "Ch. 9–16",
-            "Ending"
-          ]
-        },
-        {
-          "week": 4,
-          "itemID": "w-wotlk",
-          "totalUnits": 1,
-          "unitLabel": "Expansion",
-          "paceLabel": "Game · ≈40h",
-          "segments": [
-            "Discussion"
-          ]
-        },
-        {
-          "week": 5,
-          "itemID": "w-cata",
-          "totalUnits": 1,
-          "unitLabel": "Expansion",
-          "paceLabel": "Game · ≈25h",
-          "segments": [
-            "Discussion"
-          ]
-        },
-        {
-          "week": 6,
-          "itemID": "w-crimes",
+          "itemID": "d-crise",
           "totalUnits": 12,
-          "unitLabel": "Ch.",
-          "paceLabel": "Book · 320 pages",
+          "unitLabel": "Issue",
+          "paceLabel": "Comic · 12 issues",
           "segments": [
-            "Ch. 1–6",
-            "Ch. 7–12"
+            "Issues 1–6",
+            "Issues 7–12"
           ]
         }
       ],
-      "currentWeek": 3
+      "currentWeek": 1
     }
   ],
-  "clubMessages": [
-    {
-      "id": "cm1",
-      "clubID": "c-cidadela",
-      "week": 3,
-      "segment": "Ch. 9–16",
-      "userID": "gui",
-      "text": "The Mal'Ganis scene in Northrend is SO much better in the book than in the game.",
-      "when": "14:02",
-      "hearts": 0,
-      "pows": 0,
-      "aboutUnit": 10
-    },
-    {
-      "id": "cm2",
-      "clubID": "c-cidadela",
-      "week": 3,
-      "segment": "Ch. 9–16",
-      "userID": "nina",
-      "text": "Muradin realizing he's lost Arthas 😳 hurts so much",
-      "when": "14:10",
-      "hearts": 12,
-      "pows": 4,
-      "aboutUnit": 11
-    },
-    {
-      "id": "cm3",
-      "clubID": "c-cidadela",
-      "week": 3,
-      "segment": "Ch. 9–16",
-      "userID": "duda",
-      "text": "I'm on chapter 11. No chapter 12 spoilers please",
-      "when": "14:15",
-      "hearts": 0,
-      "pows": 0,
-      "aboutUnit": 11
-    },
-    {
-      "id": "cm4",
-      "clubID": "c-cidadela",
-      "week": 3,
-      "segment": "Ch. 9–16",
-      "userID": "bia",
-      "text": "The way he calls out to Frostmourne for the first time gives me chills.",
-      "when": "15:02",
-      "hearts": 6,
-      "pows": 1,
-      "aboutUnit": 12
-    },
-    {
-      "id": "cm5",
-      "clubID": "c-cidadela",
-      "week": 3,
-      "segment": "Ch. 9–16",
-      "userID": "gui",
-      "text": "Chapter 12 confirms Muradin survives, but in such a sad way.",
-      "when": "15:20",
-      "hearts": 3,
-      "pows": 0,
-      "aboutUnit": 12
-    },
-    {
-      "id": "cm6",
-      "clubID": "c-cidadela",
-      "week": 3,
-      "segment": "Ch. 9–16",
-      "userID": "nina",
-      "text": "After chapter 12, Sylvanas practically steals the show.",
-      "when": "16:01",
-      "hearts": 5,
-      "pows": 2,
-      "aboutUnit": 13
-    }
-  ],
+  "clubMessages": [],
   "theories": [
     {
       "id": "th1",
@@ -168,21 +43,6 @@
       "resolutionNote": null,
       "accuracyBefore": null,
       "accuracyAfter": null
-    },
-    {
-      "id": "th2",
-      "userID": "bia",
-      "uni": "wow",
-      "text": "Sylvanas will return as an ally of the Horde",
-      "status": "confirmada",
-      "postedDaysAgo": 214,
-      "plausibleBase": 493,
-      "travelBase": 711,
-      "resolvesAtItemID": null,
-      "resolutionTitle": "The War Within",
-      "resolutionNote": "Cinematic 3 · marked by 3 reviewers",
-      "accuracyBefore": 64,
-      "accuracyAfter": 66
     },
     {
       "id": "th3",
@@ -202,27 +62,27 @@
   ],
   "predictionEvents": [
     {
-      "id": "pe-tww",
-      "uni": "wow",
-      "title": "Next expansion",
+      "id": "pe-heroes",
+      "uni": "marvel",
+      "title": "Next Marvel premiere",
       "closesAt": "2026-10-11T21:47:00-03:00",
       "questions": [
         {
           "id": "pq1",
-          "text": "Who dies in the opening cinematic?",
+          "text": "Who will have the biggest role?",
           "points": 100,
           "options": [
-            "Anduin",
-            "Thrall",
-            "Alleria",
-            "Nobody"
+            "Spider-Man",
+            "Doctor Strange",
+            "Wanda",
+            "Loki"
           ],
           "correctOptionIndex": null,
           "revealed": false
         },
         {
           "id": "pq2",
-          "text": "Average community rating in week 1",
+          "text": "Average community rating in week one",
           "points": 60,
           "options": null,
           "correctOptionIndex": null,
@@ -230,19 +90,19 @@
         },
         {
           "id": "pq3",
-          "text": "Which faction wins the first major battle?",
+          "text": "Which team will appear?",
           "points": 80,
           "options": [
-            "Horde",
-            "Alliance",
-            "Neither—a narrative draw"
+            "Avengers",
+            "X-Men",
+            "Fantastic Four"
           ],
           "correctOptionIndex": null,
           "revealed": false
         },
         {
           "id": "pq4",
-          "text": "Will we see Sylvanas in the first week?",
+          "text": "Will we see a new Loki variant?",
           "points": 40,
           "options": [
             "Yes",
@@ -253,12 +113,12 @@
         },
         {
           "id": "pq5",
-          "text": "How many servers will go down on launch day?",
+          "text": "How many post-credit scenes?",
           "points": 50,
           "options": [
             "None",
-            "1 to 3",
-            "4 or more"
+            "One",
+            "Two or more"
           ],
           "correctOptionIndex": null,
           "revealed": false
@@ -324,14 +184,14 @@
   "conversations": [
     {
       "userID": "nina",
-      "lastPreview": "sent a card: Cataclysm",
+      "lastPreview": "sent a card: Flashpoint",
       "lastWhen": "now",
       "unreadCount": 2,
       "isRequest": false
     },
     {
       "userID": "caio",
-      "lastPreview": "challenged you to a duel · Arthas vs Thanos",
+      "lastPreview": "challenged you to a duel · Wanda vs Thanos",
       "lastWhen": "12 min",
       "unreadCount": 1,
       "isRequest": false
@@ -345,7 +205,7 @@
     },
     {
       "userID": "bia",
-      "lastPreview": "sent a theory: Sylvanas returns",
+      "lastPreview": "sent a theory about Wanda",
       "lastWhen": "3h",
       "unreadCount": 0,
       "isRequest": false
@@ -366,7 +226,7 @@
     },
     {
       "userID": "gui",
-      "lastPreview": "Hey! I saw you're an Azeroth lorekeeper too",
+      "lastPreview": "Hey! I saw you also enjoy DC Crises",
       "lastWhen": "5 days",
       "unreadCount": 1,
       "isRequest": true
@@ -386,8 +246,8 @@
       "senderID": "nina",
       "when": "14:02",
       "kind": "workCard",
-      "text": "Play this NOW. Seriously. Tell me what you think afterward.",
-      "itemID": "w-wotlk"
+      "text": "Read this NOW. Seriously. Tell me what you think.",
+      "itemID": "m-civil"
     },
     {
       "id": "msg2",
@@ -395,7 +255,7 @@
       "senderID": "duda",
       "when": "14:10",
       "kind": "text",
-      "text": "Added to my list! I'm still in Year 27, no Cata spoilers please"
+      "text": "Added to my list! Still reading Crisis, no Flashpoint spoilers please."
     },
     {
       "id": "msg3",
@@ -404,7 +264,7 @@
       "when": "14:32",
       "kind": "workCard",
       "text": "You need to see this when you get there",
-      "itemID": "w-cata"
+      "itemID": "d-flash"
     },
     {
       "id": "msg4",
@@ -414,7 +274,7 @@
       "kind": "duelChallenge",
       "duelChallenge": {
         "itemAID": "c-coringa",
-        "itemBID": "c-sylvanas",
+        "itemBID": "c-loki",
         "question": "The best-written villain?",
         "wager": "50 pts",
         "chooserChoice": 1,
@@ -428,7 +288,7 @@
       "when": "12 min",
       "kind": "duelChallenge",
       "duelChallenge": {
-        "itemAID": "w-arthas",
+        "itemAID": "d-reino",
         "itemBID": "m-ultimato",
         "question": "Which ending was more satisfying?",
         "wager": "The loser writes a review of the winner",
@@ -458,7 +318,7 @@
       "senderID": "bia",
       "when": "3h",
       "kind": "text",
-      "text": "sent a theory: Sylvanas returns"
+      "text": "sent a theory about Wanda"
     },
     {
       "id": "msg9",
@@ -478,15 +338,6 @@
     }
   ],
   "rooms": [
-    {
-      "itemID": "w-wotlk",
-      "segments": [
-        "Northrend",
-        "Ulduar",
-        "Citadel"
-      ],
-      "onlineCount": 1204
-    },
     {
       "itemID": "d-crise",
       "segments": [
@@ -518,13 +369,6 @@
       "onlineCount": 88
     },
     {
-      "itemID": "e-cataclismo",
-      "segments": [
-        "The Shattering"
-      ],
-      "onlineCount": 640
-    },
-    {
       "itemID": "m-secret",
       "segments": [
         "Issue 1",
@@ -536,48 +380,7 @@
       "onlineCount": 18400
     }
   ],
-  "roomMessages": [
-    {
-      "id": "rm1",
-      "itemID": "w-wotlk",
-      "segmentIndex": 1,
-      "userID": "gui",
-      "text": "Yogg with 0 keepers is still the hardest raid fight I've ever done",
-      "when": "21:02"
-    },
-    {
-      "id": "rm2",
-      "itemID": "w-wotlk",
-      "segmentIndex": 1,
-      "userID": "nina",
-      "text": "Ulduar's soundtrack is unfairly forgotten",
-      "when": "21:04"
-    },
-    {
-      "id": "rm3",
-      "itemID": "w-wotlk",
-      "segmentIndex": 1,
-      "userID": "duda",
-      "text": "Agreed, the Celestial Planetarium music gives me chills",
-      "when": "21:05"
-    },
-    {
-      "id": "rm4",
-      "itemID": "w-wotlk",
-      "segmentIndex": 1,
-      "userID": "lu",
-      "text": "Anyone else read the books before playing this part?",
-      "when": "21:06"
-    },
-    {
-      "id": "rm5",
-      "itemID": "w-wotlk",
-      "segmentIndex": 2,
-      "userID": "gui",
-      "text": "Icecrown Citadel wraps everything up perfectly",
-      "when": "21:20"
-    }
-  ],
+  "roomMessages": [],
   "liveEvent": {
     "id": "le1",
     "itemID": "m-secret",

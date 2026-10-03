@@ -22,11 +22,6 @@ struct OnboardingStep1View: View {
                     }
                 }
 
-                VStack(spacing: 10) {
-                    ForEach(store.comingSoonUniverses) { universe in
-                        ComingSoonRow(name: universe.name)
-                    }
-                }
             }
             .padding(.horizontal, MV.pad)
             .padding(.top, 18)
@@ -79,23 +74,5 @@ private struct UniverseSelectRow: View {
             store.toggleOnboardingUniverse(universe.id)
         }
         .animation(.spring(response: 0.28, dampingFraction: 0.7), value: selected)
-    }
-}
-
-private struct ComingSoonRow: View {
-    let name: String
-    var body: some View {
-        HStack {
-            Text(name.uppercased())
-                .font(MVFont.archivo(16, weight: 900, width: 115))
-                .foregroundStyle(MV.C.muted)
-            Spacer()
-            Text(L10n.text("EM BREVE"))
-                .font(MVFont.black(9)).tracking(0.6)
-                .foregroundStyle(MV.C.muted)
-        }
-        .padding(.horizontal, 14)
-        .frame(height: 52)
-        .overlay(RoundedRectangle(cornerRadius: MV.R.xl).strokeBorder(style: StrokeStyle(lineWidth: MV.stroke, dash: [6, 4])).foregroundStyle(MV.C.muted.opacity(0.6)))
     }
 }

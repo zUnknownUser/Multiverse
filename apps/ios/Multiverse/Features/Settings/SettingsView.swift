@@ -239,7 +239,7 @@ struct SettingsView: View {
                 if let note { Text(note).font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted) }
             }
             Spacer()
-            Toggle("", isOn: isOn).labelsHidden().tint(MV.C.wow)
+            Toggle("", isOn: isOn).labelsHidden().tint(MV.C.accent)
         }
         .padding(16)
     }

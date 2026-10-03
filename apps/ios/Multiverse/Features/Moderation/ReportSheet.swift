@@ -78,7 +78,7 @@ struct ReportSheet: View {
             Spacer()
         }
         .padding(14)
-        .background(selected ? MV.C.wow : MV.C.card)
+        .background(selected ? MV.C.accent : MV.C.card)
         .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
         .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
         .contentShape(Rectangle())

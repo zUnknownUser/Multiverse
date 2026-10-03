@@ -58,7 +58,7 @@ struct CatalogTests {
         #expect(store.catalogLoadError == nil)
         #expect(store.universes.map(\.id) == snapshot.universes.map(\.id))
         #expect(store.items == snapshot.items)
-        #expect(store.item("w-wotlk") == nil)
+        #expect(store.item("d-crise") == nil)
         #expect(store.comingSoonUniverses.map(\.name) == ["Upcoming"])
         #expect(store.profileData(for: store.meID).progress.count == 1)
         #expect(store.wrappedData().universe.id == snapshot.universes[0].id)

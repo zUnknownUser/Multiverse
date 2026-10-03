@@ -45,7 +45,7 @@ struct ActivityTests {
     }
     private func saved(_ id: UUID = UUID()) -> ActivitySnapshot {
         let sample = SampleData.load()
-        let item = sample.items.first { $0.id == "w-wotlk" }!
+        let item = sample.items.first { $0.id == "m-civil" }!
         return ActivitySnapshot(entries: [DiaryEntry(id: id, itemId: item.id, loggedAt: Date(timeIntervalSince1970: 1_790_000_000), rating: 4)],
             reviews: [ActivityReview(id: UUID().uuidString, user: "duda", item: item.id, rating: 4, text: "Minha review", spoiler: true, createdAt: .now)],
             items: [item], universes: sample.universes.filter { $0.id == item.uni }, followerCount: 2)
@@ -79,14 +79,14 @@ struct ActivityTests {
             await store.bootstrap()
             #expect(store.diary == api.snapshot.entries)
             #expect(store.reviews.filter { $0.user == store.meID }.map(\.text) == ["Minha review"])
-            #expect(store.item("w-wotlk") != nil)
+            #expect(store.item("m-civil") != nil)
         }
     }
     @Test func failedSaveKeepsDraftAndRetryKeepsIdentityUntilConfirmed() async throws {
         let api = ActivityStub()
         let store = AppStore(activityAPI: api)
         await store.bootstrap()
-        store.openLog(for: "w-wotlk")
+        store.openLog(for: "m-civil")
         store.logDraft?.text = "Minha review"
         store.logDraft?.rating = 4
         let id = try #require(store.logDraft?.id)
@@ -119,7 +119,7 @@ struct ActivityTests {
         let api = ActivityStub()
         let store = AppStore(activityAPI: api)
         await store.bootstrap()
-        store.openLog(for: "w-wotlk")
+        store.openLog(for: "m-civil")
         store.logDraft?.text = String(repeating: "a", count: 5001)
         store.saveLog()
         #expect(api.requests.isEmpty)

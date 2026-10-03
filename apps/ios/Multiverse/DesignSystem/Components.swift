@@ -107,7 +107,7 @@ struct AvatarView: View {
     }
 }
 
-// MARK: - Selo de universo ao lado do nome ("AZEROTH")
+// MARK: - Selo de universo ao lado do nome ("TERRA-616")
 
 struct BadgeChip: View {
     let label: String

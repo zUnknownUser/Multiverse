@@ -687,7 +687,7 @@ final class AppStore {
     func syncWidgetData() {
         guard showsDemoFeatures else { return }
         guard let widgetWriter, !isLoading, catalogLoadError == nil, accountLoadError == nil, activityLoadError == nil, !Task.isCancelled, !duels.isEmpty else { return }
-        let mainUniID = user(meID)?.badgeUniverse ?? "wow"
+        let mainUniID = user(meID)?.badgeUniverse ?? "marvel"
         let followedOrder = readingOrders.first { orderFollows.contains($0.id) } ?? readingOrders.first
         let progress = followedOrder.map { orderProgress($0) } ?? (done: 0, total: 0)
         let nextItem = followedOrder
@@ -1053,7 +1053,7 @@ final class AppStore {
             disagreeLine = StaticContent.compatDisagreeWorks[Int(sd >> 2) % StaticContent.compatDisagreeWorks.count]
         }
 
-        let badgeUniverses = ["wow", "marvel", "dc"].compactMap { universesByID[$0] } + universes.filter { !["wow", "marvel", "dc"].contains($0.id) }
+        let badgeUniverses = ["marvel", "dc"].compactMap { universesByID[$0] } + universes.filter { !["marvel", "dc"].contains($0.id) }
         let badges = badgeUniverses.map { universe -> BadgeProgress in
             let pct = pctFor(universe.id)
             return BadgeProgress(universe: universe, achieved: pct >= 50, remainingPct: max(0, 50 - pct))
@@ -1086,9 +1086,9 @@ final class AppStore {
             guard let it = itemsByID[d.itemId] else { continue }
             byUniverse[it.uni, default: 0] += 1
         }
-        let topUni = byUniverse.max { $0.value < $1.value }?.key ?? "wow"
+        let topUni = byUniverse.max { $0.value < $1.value }?.key ?? "marvel"
         let topDiary = sep.max { $0.rating < $1.rating }
-        let topItem = topDiary.flatMap { itemsByID[$0.itemId] } ?? itemsByID["w-wotlk"]
+        let topItem = topDiary.flatMap { itemsByID[$0.itemId] } ?? itemsByID["m-civil"]
         let mostLiked = reviews.filter { $0.user == meID }.max { reviewLikeCount($0) < reviewLikeCount($1) }
         let hours = sep.reduce(0.0) { total, d in
             total + (itemsByID[d.itemId].map { Logic.loreHours($0.type) } ?? 1)
@@ -1556,7 +1556,7 @@ final class AppStore {
 
     var isShieldActive: Bool { !shieldPoints.isEmpty }
 
-    /// "Você está em Ano 27 (Warcraft) e Fase 3 (Marvel)." — texto do banner da Home.
+    /// "Você está em Fase 3 (Marvel) e Pré-Crise (DC)." — texto do banner da Home.
     func shieldStatusLine() -> String? {
         let segments = universes.compactMap { u -> String? in
             guard let idx = shieldPoints[u.id], let entries = timelines[u.id], entries.indices.contains(idx) else { return nil }

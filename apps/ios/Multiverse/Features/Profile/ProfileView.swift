@@ -154,7 +154,7 @@ struct ProfileView: View {
                         .font(MVFont.bold(13))
                         .frame(maxWidth: .infinity).padding(.vertical, 12)
                         .foregroundStyle(MV.C.ink)
-                        .background(MV.C.wow)
+                        .background(MV.C.accent)
                         .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.paper, lineWidth: MV.stroke))
                         .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
                         .contentShape(Rectangle())

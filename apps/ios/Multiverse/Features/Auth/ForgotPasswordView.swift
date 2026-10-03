@@ -9,7 +9,7 @@ struct ForgotPasswordView: View {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(L10n.text("ESQUECEU A\nSENHA?")).font(MVFont.display(32, width: 122)).lineSpacing(-6).foregroundStyle(MV.C.ink)
-                    Text(L10n.text("Acontece até com o Arthas. Informe seu e-mail e mandamos um link pra criar uma senha nova."))
+                    Text(L10n.text("Acontece até com os heróis. Informe seu e-mail e mandamos um link pra criar uma senha nova."))
                         .font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
                 }
 

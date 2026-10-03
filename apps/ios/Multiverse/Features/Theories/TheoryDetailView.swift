@@ -86,7 +86,7 @@ struct TheoryDetailView: View {
                 Text("→").font(MVFont.black(20)).foregroundStyle(MV.C.muted)
                 Text("\(after)%").font(MVFont.black(30)).foregroundStyle(MV.C.dc)
                 Spacer()
-                Text(L10n.text("top 12%\nde Azeroth")).font(MVFont.bold(11)).multilineTextAlignment(.trailing).foregroundStyle(MV.C.muted)
+                Text(L10n.text("top 12%\nda comunidade")).font(MVFont.bold(11)).multilineTextAlignment(.trailing).foregroundStyle(MV.C.muted)
             }
             ComicProgress(value: Double(after) / 100, fill: MV.C.dc, height: 8)
         }
@@ -98,9 +98,9 @@ struct TheoryDetailView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(confirmed ? L10n.text("CONFIRMADA POR") : L10n.text("REFUTADA POR")).kicker(11).foregroundStyle(MV.C.muted)
             HStack(spacing: 12) {
-                ZStack { MV.C.wow; Halftone() }
+                ZStack { MV.C.accent; Halftone() }
                     .frame(width: 52, height: 78)
-                    .comicCard(bg: MV.C.wow, radius: MV.R.md, shadow: MV.Shadow.s)
+                    .comicCard(bg: MV.C.accent, radius: MV.R.md, shadow: MV.Shadow.s)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(MVFont.bold(15)).foregroundStyle(MV.C.ink)
                     if let note { Text(note).font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.muted) }

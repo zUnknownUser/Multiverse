@@ -128,7 +128,7 @@ describe.skipIf(!databaseURL)(
       ])
         await get(query).expect(400);
       await request(app.getHttpServer())
-        .get('/api/v1/catalog/marvel/w-wotlk')
+        .get('/api/v1/catalog/marvel/d-watchmen')
         .expect(404);
     });
     it('searches accents literally and reaches the end of a filtered SQL page', async () => {
@@ -404,7 +404,7 @@ describe.skipIf(!databaseURL)(
             },
             {
               ...batch[1],
-              mapping: { ...batch[1].mapping, itemId: 'w-wotlk' },
+              mapping: { ...batch[1].mapping, itemId: 'd-watchmen' },
             },
           ]),
         ),

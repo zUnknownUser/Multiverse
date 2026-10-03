@@ -6,8 +6,9 @@ struct OnboardingLoadingView: View {
     private let columns = [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
 
     var body: some View {
-        let selected = store.onboardingUniverses.isEmpty ? ["wow"] : Array(store.onboardingUniverses)
-        let colors = selected.compactMap { store.universe($0)?.color }
+        let choices = store.universes.filter { store.onboardingUniverses.contains($0.id) }
+        let selected = choices.isEmpty ? store.universes : choices
+        let colors = selected.isEmpty ? [MV.C.marvel, MV.C.dc] : selected.map(\.color)
         let nFol = store.friendsCount
 
         VStack(spacing: 22) {

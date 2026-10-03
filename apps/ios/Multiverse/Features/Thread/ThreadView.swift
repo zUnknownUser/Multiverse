@@ -119,7 +119,7 @@ struct ThreadView: View {
         VStack(spacing: 8) {
             if let quoting {
                 HStack(alignment: .top, spacing: 8) {
-                    Rectangle().fill(MV.C.wow).frame(width: 3)
+                    Rectangle().fill(MV.C.accent).frame(width: 3)
                     (Text(L10n.format("CITANDO %1$@: ", String(describing: quoting.author.uppercased()))).font(MVFont.black(11))
                         + Text("\"\(quoting.text)\"").font(MVFont.body(12, weight: 600)).italic())
                         .foregroundStyle(MV.C.ink)
@@ -131,9 +131,9 @@ struct ThreadView: View {
                     .buttonStyle(.plain)
                 }
                 .padding(10)
-                .background(MV.C.wow.opacity(0.25))
+                .background(MV.C.accent.opacity(0.25))
                 .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
-                .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.wow, lineWidth: MV.stroke))
+                .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.accent, lineWidth: MV.stroke))
                 .padding(.horizontal, MV.pad)
             }
             if store.isRemoteReview(reviewID) {
@@ -241,7 +241,7 @@ private struct ReviewDetailCard: View {
                     HStack(spacing: 0) {
                         Text(L10n.text(store.isRemoteReview(review.id) ? "Responder" : "❝ Citar")).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
                             .padding(.horizontal, 12).padding(.vertical, 8)
-                            .background(MV.C.wow)
+                            .background(MV.C.accent)
                             .contentShape(Rectangle())
                             .onTapGesture(perform: onQuote)
                         Text(L10n.text("Copiar")).font(MVFont.bold(13)).foregroundStyle(MV.C.paper)

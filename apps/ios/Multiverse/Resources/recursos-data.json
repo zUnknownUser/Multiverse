@@ -1,68 +1,128 @@
 {
   "clubs": [
     {
-      "id": "c-cidadela",
-      "name": "Clube da Cidadela",
-      "uni": "wow",
-      "orderID": "o-azeroth",
-      "memberIDs": ["duda", "nina", "gui", "bia"],
-      "weeks": [
-        { "week": 1, "itemID": "w-wcfilme", "totalUnits": 1, "unitLabel": "Filme", "paceLabel": "Filme · 123 min", "segments": ["Discussão"] },
-        { "week": 2, "itemID": "w-wc3", "totalUnits": 1, "unitLabel": "Campanha", "paceLabel": "Jogo · 4 campanhas", "segments": ["Discussão"] },
-        { "week": 3, "itemID": "w-arthas", "totalUnits": 18, "unitLabel": "Cap.", "paceLabel": "Livro · 400 páginas · ≈57 por dia", "segments": ["Cap. 1–8", "Cap. 9–16", "Final"] },
-        { "week": 4, "itemID": "w-wotlk", "totalUnits": 1, "unitLabel": "Expansão", "paceLabel": "Jogo · ≈40h", "segments": ["Discussão"] },
-        { "week": 5, "itemID": "w-cata", "totalUnits": 1, "unitLabel": "Expansão", "paceLabel": "Jogo · ≈25h", "segments": ["Discussão"] },
-        { "week": 6, "itemID": "w-crimes", "totalUnits": 12, "unitLabel": "Cap.", "paceLabel": "Livro · 320 páginas", "segments": ["Cap. 1–6", "Cap. 7–12"] }
+      "id": "c-crises",
+      "name": "Clube das Crises",
+      "uni": "dc",
+      "orderID": "o-crises",
+      "memberIDs": [
+        "duda",
+        "nina",
+        "gui",
+        "bia"
       ],
-      "currentWeek": 3
+      "weeks": [
+        {
+          "week": 1,
+          "itemID": "d-crise",
+          "totalUnits": 12,
+          "unitLabel": "Edição",
+          "paceLabel": "HQ · 12 edições",
+          "segments": [
+            "Edições 1–6",
+            "Edições 7–12"
+          ]
+        }
+      ],
+      "currentWeek": 1
     }
   ],
-  "clubMessages": [
-    { "id": "cm1", "clubID": "c-cidadela", "week": 3, "segment": "Cap. 9–16", "userID": "gui", "text": "A cena da Mal'Ganis na Nortúndria é MUITO melhor no livro que no jogo.", "when": "14:02", "hearts": 0, "pows": 0, "aboutUnit": 10 },
-    { "id": "cm2", "clubID": "c-cidadela", "week": 3, "segment": "Cap. 9–16", "userID": "nina", "text": "O Muradin percebendo que perdeu o Arthas 😳 dói demais", "when": "14:10", "hearts": 12, "pows": 4, "aboutUnit": 11 },
-    { "id": "cm3", "clubID": "c-cidadela", "week": 3, "segment": "Cap. 9–16", "userID": "duda", "text": "Tô no cap. 11, sem spoiler do 12 hein", "when": "14:15", "hearts": 0, "pows": 0, "aboutUnit": 11 },
-    { "id": "cm4", "clubID": "c-cidadela", "week": 3, "segment": "Cap. 9–16", "userID": "bia", "text": "O jeito que ele chama o Gélido Lamento pela primeira vez é arrepiante.", "when": "15:02", "hearts": 6, "pows": 1, "aboutUnit": 12 },
-    { "id": "cm5", "clubID": "c-cidadela", "week": 3, "segment": "Cap. 9–16", "userID": "gui", "text": "Cap. 12 confirma que o Muradin sobrevive, mas de um jeito bem triste.", "when": "15:20", "hearts": 3, "pows": 0, "aboutUnit": 12 },
-    { "id": "cm6", "clubID": "c-cidadela", "week": 3, "segment": "Cap. 9–16", "userID": "nina", "text": "Depois do 12 a Sylvanas praticamente rouba a cena.", "when": "16:01", "hearts": 5, "pows": 2, "aboutUnit": 13 }
-  ],
+  "clubMessages": [],
   "theories": [
     {
-      "id": "th1", "userID": "joao", "uni": "marvel",
+      "id": "th1",
+      "userID": "joao",
+      "uni": "marvel",
       "text": "O Estalo criou a divergência que a TVA nunca conseguiu podar",
-      "status": "aberta", "postedDaysAgo": 12,
-      "plausibleBase": 2035, "travelBase": 1145,
-      "resolvesAtItemID": "m-secret", "resolutionTitle": null, "resolutionNote": null,
-      "accuracyBefore": null, "accuracyAfter": null
+      "status": "aberta",
+      "postedDaysAgo": 12,
+      "plausibleBase": 2035,
+      "travelBase": 1145,
+      "resolvesAtItemID": "m-secret",
+      "resolutionTitle": null,
+      "resolutionNote": null,
+      "accuracyBefore": null,
+      "accuracyAfter": null
     },
     {
-      "id": "th2", "userID": "bia", "uni": "wow",
-      "text": "Sylvanas vai voltar como aliada da Horda",
-      "status": "confirmada", "postedDaysAgo": 214,
-      "plausibleBase": 493, "travelBase": 711,
-      "resolvesAtItemID": null, "resolutionTitle": "The War Within", "resolutionNote": "Cinemática 3 · marcada por 3 revisores",
-      "accuracyBefore": 64, "accuracyAfter": 66
-    },
-    {
-      "id": "th3", "userID": "caio", "uni": "dc",
+      "id": "th3",
+      "userID": "caio",
+      "uni": "dc",
       "text": "O Batman da Terra-22 é o mesmo de O Cavaleiro das Trevas",
-      "status": "refutada", "postedDaysAgo": 340,
-      "plausibleBase": 441, "travelBase": 1563,
-      "resolvesAtItemID": null, "resolutionTitle": "entrevista com o roteirista", "resolutionNote": null,
-      "accuracyBefore": null, "accuracyAfter": null
+      "status": "refutada",
+      "postedDaysAgo": 340,
+      "plausibleBase": 441,
+      "travelBase": 1563,
+      "resolvesAtItemID": null,
+      "resolutionTitle": "entrevista com o roteirista",
+      "resolutionNote": null,
+      "accuracyBefore": null,
+      "accuracyAfter": null
     }
   ],
   "predictionEvents": [
     {
-      "id": "pe-tww",
-      "uni": "wow",
-      "title": "Próxima expansão",
+      "id": "pe-heroes",
+      "uni": "marvel",
+      "title": "Próxima estreia Marvel",
       "closesAt": "2026-10-11T21:47:00-03:00",
       "questions": [
-        { "id": "pq1", "text": "Quem morre na cinemática de abertura?", "points": 100, "options": ["Anduin", "Thrall", "Alleria", "Ninguém"], "correctOptionIndex": null, "revealed": false },
-        { "id": "pq2", "text": "Nota média da comunidade na 1ª semana", "points": 60, "options": null, "correctOptionIndex": null, "revealed": false },
-        { "id": "pq3", "text": "Qual facção ganha a primeira grande batalha?", "points": 80, "options": ["Horda", "Aliança", "Nenhuma — empate narrativo"], "correctOptionIndex": null, "revealed": false },
-        { "id": "pq4", "text": "Vamos ver a Sylvanas na primeira semana?", "points": 40, "options": ["Sim", "Não"], "correctOptionIndex": null, "revealed": false },
-        { "id": "pq5", "text": "Quantos servidores vão cair no lançamento?", "points": 50, "options": ["Nenhum", "1 a 3", "4 ou mais"], "correctOptionIndex": null, "revealed": false }
+        {
+          "id": "pq1",
+          "text": "Quem terá a maior participação?",
+          "points": 100,
+          "options": [
+            "Homem-Aranha",
+            "Doutor Estranho",
+            "Wanda",
+            "Loki"
+          ],
+          "correctOptionIndex": null,
+          "revealed": false
+        },
+        {
+          "id": "pq2",
+          "text": "Nota média da comunidade na 1ª semana",
+          "points": 60,
+          "options": null,
+          "correctOptionIndex": null,
+          "revealed": false
+        },
+        {
+          "id": "pq3",
+          "text": "Qual equipe vai aparecer?",
+          "points": 80,
+          "options": [
+            "Vingadores",
+            "X-Men",
+            "Quarteto Fantástico"
+          ],
+          "correctOptionIndex": null,
+          "revealed": false
+        },
+        {
+          "id": "pq4",
+          "text": "Teremos uma nova variante do Loki?",
+          "points": 40,
+          "options": [
+            "Sim",
+            "Não"
+          ],
+          "correctOptionIndex": null,
+          "revealed": false
+        },
+        {
+          "id": "pq5",
+          "text": "Quantas cenas pós-créditos?",
+          "points": 50,
+          "options": [
+            "Nenhuma",
+            "Uma",
+            "Duas ou mais"
+          ],
+          "correctOptionIndex": null,
+          "revealed": false
+        }
       ]
     }
   ],
@@ -70,60 +130,257 @@
     {
       "itemID": "m-ultimato",
       "options": [
-        { "service": "Disney+", "initials": "DI", "colorHex": "#113CCF", "note": "Incluso na sua assinatura", "actionLabel": "ASSISTIR" },
-        { "service": "Apple TV", "initials": "AP", "colorHex": "#16130F", "note": "Alugar R$ 14,90 · Comprar R$ 39,90", "actionLabel": "ALUGAR" },
-        { "service": "Amazon", "initials": "AM", "colorHex": "#F4A814", "note": "Blu-ray 4K · R$ 89,90", "actionLabel": "COMPRAR" }
+        {
+          "service": "Disney+",
+          "initials": "DI",
+          "colorHex": "#113CCF",
+          "note": "Incluso na sua assinatura",
+          "actionLabel": "ASSISTIR"
+        },
+        {
+          "service": "Apple TV",
+          "initials": "AP",
+          "colorHex": "#16130F",
+          "note": "Alugar R$ 14,90 · Comprar R$ 39,90",
+          "actionLabel": "ALUGAR"
+        },
+        {
+          "service": "Amazon",
+          "initials": "AM",
+          "colorHex": "#F4A814",
+          "note": "Blu-ray 4K · R$ 89,90",
+          "actionLabel": "COMPRAR"
+        }
       ],
       "readFirst": [
-        { "id": "rf1", "title": "Desafio Infinito", "subtitle": "HQ", "colorHex": "#E4412F", "note": "Panini · encadernado · R$ 59,90", "actionLabel": "COMPRAR" }
+        {
+          "id": "rf1",
+          "title": "Desafio Infinito",
+          "subtitle": "HQ",
+          "colorHex": "#E4412F",
+          "note": "Panini · encadernado · R$ 59,90",
+          "actionLabel": "COMPRAR"
+        }
       ]
     }
   ],
   "correctionSuggestions": [
     {
-      "id": "cs1", "itemID": "d-crise", "userID": "rafa",
-      "changeType": "Status de cânone", "fromValue": "Cânone", "toValue": "Retconado",
+      "id": "cs1",
+      "itemID": "d-crise",
+      "userID": "rafa",
+      "changeType": "Status de cânone",
+      "fromValue": "Cânone",
+      "toValue": "Retconado",
       "source": "dc.fandom.com/wiki/Infinite_Crisis",
       "reasoning": "Crise Infinita (2005) desfez partes do resultado e trouxe a Terra-2 de volta.",
-      "approverIDs": ["tati", "lu"], "approvalsNeeded": 3
+      "approverIDs": [
+        "tati",
+        "lu"
+      ],
+      "approvalsNeeded": 3
     }
   ],
   "conversations": [
-    { "userID": "nina", "lastPreview": "mandou uma carta: Cataclysm", "lastWhen": "agora", "unreadCount": 2, "isRequest": false },
-    { "userID": "caio", "lastPreview": "te chamou pro duelo · Arthas vs Thanos", "lastWhen": "12 min", "unreadCount": 1, "isRequest": false },
-    { "userID": "leo", "lastPreview": "Você: KKKKK a TVA não perdoa", "lastWhen": "1h", "unreadCount": 0, "isRequest": false },
-    { "userID": "bia", "lastPreview": "mandou uma teoria: Sylvanas volta", "lastWhen": "3h", "unreadCount": 0, "isRequest": false },
-    { "userID": "tati", "lastPreview": "reagiu POW! à sua carta", "lastWhen": "ontem", "unreadCount": 0, "isRequest": false },
-    { "userID": "rafa", "lastPreview": "Pré-Crise é superior e eu morro nessa colina", "lastWhen": "2 dias", "unreadCount": 0, "isRequest": false },
-    { "userID": "gui", "lastPreview": "Oi! Vi que você também é lorista de Azeroth", "lastWhen": "5 dias", "unreadCount": 1, "isRequest": true },
-    { "userID": "mari", "lastPreview": "Adorei sua review de Guerra Civil", "lastWhen": "1 sem", "unreadCount": 1, "isRequest": true }
+    {
+      "userID": "nina",
+      "lastPreview": "mandou uma carta: Flashpoint",
+      "lastWhen": "agora",
+      "unreadCount": 2,
+      "isRequest": false
+    },
+    {
+      "userID": "caio",
+      "lastPreview": "te chamou pro duelo · Wanda vs Thanos",
+      "lastWhen": "12 min",
+      "unreadCount": 1,
+      "isRequest": false
+    },
+    {
+      "userID": "leo",
+      "lastPreview": "Você: KKKKK a TVA não perdoa",
+      "lastWhen": "1h",
+      "unreadCount": 0,
+      "isRequest": false
+    },
+    {
+      "userID": "bia",
+      "lastPreview": "mandou uma teoria sobre a Wanda",
+      "lastWhen": "3h",
+      "unreadCount": 0,
+      "isRequest": false
+    },
+    {
+      "userID": "tati",
+      "lastPreview": "reagiu POW! à sua carta",
+      "lastWhen": "ontem",
+      "unreadCount": 0,
+      "isRequest": false
+    },
+    {
+      "userID": "rafa",
+      "lastPreview": "Pré-Crise é superior e eu morro nessa colina",
+      "lastWhen": "2 dias",
+      "unreadCount": 0,
+      "isRequest": false
+    },
+    {
+      "userID": "gui",
+      "lastPreview": "Oi! Vi que você também curte as Crises da DC",
+      "lastWhen": "5 dias",
+      "unreadCount": 1,
+      "isRequest": true
+    },
+    {
+      "userID": "mari",
+      "lastPreview": "Adorei sua review de Guerra Civil",
+      "lastWhen": "1 sem",
+      "unreadCount": 1,
+      "isRequest": true
+    }
   ],
   "messages": [
-    { "id": "msg1", "conversationID": "nina", "senderID": "nina", "when": "14:02", "kind": "workCard", "text": "Joga isso AGORA. Sério. Depois me conta.", "itemID": "w-wotlk" },
-    { "id": "msg2", "conversationID": "nina", "senderID": "duda", "when": "14:10", "kind": "text", "text": "Coloquei na lista! Tô no Ano 27 ainda, sem spoiler de Cata pfv" },
-    { "id": "msg3", "conversationID": "nina", "senderID": "nina", "when": "14:32", "kind": "workCard", "text": "Você precisa ver isso quando chegar lá", "itemID": "w-cata" },
-    { "id": "msg4", "conversationID": "nina", "senderID": "nina", "when": "15:00", "kind": "duelChallenge", "duelChallenge": { "itemAID": "c-coringa", "itemBID": "c-sylvanas", "question": "Vilão mais bem escrito?", "wager": "50 pts", "chooserChoice": 1, "responderChoice": null } },
-    { "id": "msg5", "conversationID": "caio", "senderID": "caio", "when": "12 min", "kind": "duelChallenge", "duelChallenge": { "itemAID": "w-arthas", "itemBID": "m-ultimato", "question": "Qual final foi mais satisfatório?", "wager": "Quem perder escreve uma review do vencedor", "chooserChoice": 0, "responderChoice": null } },
-    { "id": "msg6", "conversationID": "leo", "senderID": "leo", "when": "58 min", "kind": "text", "text": "A TVA prender ele de novo foi covardia" },
-    { "id": "msg7", "conversationID": "leo", "senderID": "duda", "when": "1h", "kind": "text", "text": "KKKKK a TVA não perdoa" },
-    { "id": "msg8", "conversationID": "bia", "senderID": "bia", "when": "3h", "kind": "text", "text": "mandou uma teoria: Sylvanas volta" },
-    { "id": "msg9", "conversationID": "tati", "senderID": "tati", "when": "ontem", "kind": "text", "text": "reagiu POW! à sua carta" },
-    { "id": "msg10", "conversationID": "rafa", "senderID": "rafa", "when": "2 dias", "kind": "text", "text": "Pré-Crise é superior e eu morro nessa colina" }
+    {
+      "id": "msg1",
+      "conversationID": "nina",
+      "senderID": "nina",
+      "when": "14:02",
+      "kind": "workCard",
+      "text": "Lê isso AGORA. Sério. Depois me conta.",
+      "itemID": "m-civil"
+    },
+    {
+      "id": "msg2",
+      "conversationID": "nina",
+      "senderID": "duda",
+      "when": "14:10",
+      "kind": "text",
+      "text": "Coloquei na lista! Ainda tô lendo Crise, sem spoiler de Flashpoint pfv."
+    },
+    {
+      "id": "msg3",
+      "conversationID": "nina",
+      "senderID": "nina",
+      "when": "14:32",
+      "kind": "workCard",
+      "text": "Você precisa ver isso quando chegar lá",
+      "itemID": "d-flash"
+    },
+    {
+      "id": "msg4",
+      "conversationID": "nina",
+      "senderID": "nina",
+      "when": "15:00",
+      "kind": "duelChallenge",
+      "duelChallenge": {
+        "itemAID": "c-coringa",
+        "itemBID": "c-loki",
+        "question": "Vilão mais bem escrito?",
+        "wager": "50 pts",
+        "chooserChoice": 1,
+        "responderChoice": null
+      }
+    },
+    {
+      "id": "msg5",
+      "conversationID": "caio",
+      "senderID": "caio",
+      "when": "12 min",
+      "kind": "duelChallenge",
+      "duelChallenge": {
+        "itemAID": "d-reino",
+        "itemBID": "m-ultimato",
+        "question": "Qual final foi mais satisfatório?",
+        "wager": "Quem perder escreve uma review do vencedor",
+        "chooserChoice": 0,
+        "responderChoice": null
+      }
+    },
+    {
+      "id": "msg6",
+      "conversationID": "leo",
+      "senderID": "leo",
+      "when": "58 min",
+      "kind": "text",
+      "text": "A TVA prender ele de novo foi covardia"
+    },
+    {
+      "id": "msg7",
+      "conversationID": "leo",
+      "senderID": "duda",
+      "when": "1h",
+      "kind": "text",
+      "text": "KKKKK a TVA não perdoa"
+    },
+    {
+      "id": "msg8",
+      "conversationID": "bia",
+      "senderID": "bia",
+      "when": "3h",
+      "kind": "text",
+      "text": "mandou uma teoria sobre a Wanda"
+    },
+    {
+      "id": "msg9",
+      "conversationID": "tati",
+      "senderID": "tati",
+      "when": "ontem",
+      "kind": "text",
+      "text": "reagiu POW! à sua carta"
+    },
+    {
+      "id": "msg10",
+      "conversationID": "rafa",
+      "senderID": "rafa",
+      "when": "2 dias",
+      "kind": "text",
+      "text": "Pré-Crise é superior e eu morro nessa colina"
+    }
   ],
   "rooms": [
-    { "itemID": "w-wotlk", "segments": ["Nortúndria", "Ulduar", "Cidadela"], "onlineCount": 1204 },
-    { "itemID": "d-crise", "segments": ["Edição 1", "Edição 2", "Edição 3", "Edição 4", "Edição 5", "Edição 6", "Edição 7", "Edição 8", "Edição 9", "Edição 10", "Edição 11", "Edição 12"], "onlineCount": 312 },
-    { "itemID": "m-loki", "segments": ["Episódio 1", "Episódio 2", "Episódio 3", "Episódio 4", "Episódio 5", "Episódio 6"], "onlineCount": 88 },
-    { "itemID": "e-cataclismo", "segments": ["O Rompimento"], "onlineCount": 640 },
-    { "itemID": "m-secret", "segments": ["Edição 1", "Edição 2", "Edição 3", "Edição 4", "Edição 5"], "onlineCount": 18400 }
+    {
+      "itemID": "d-crise",
+      "segments": [
+        "Edição 1",
+        "Edição 2",
+        "Edição 3",
+        "Edição 4",
+        "Edição 5",
+        "Edição 6",
+        "Edição 7",
+        "Edição 8",
+        "Edição 9",
+        "Edição 10",
+        "Edição 11",
+        "Edição 12"
+      ],
+      "onlineCount": 312
+    },
+    {
+      "itemID": "m-loki",
+      "segments": [
+        "Episódio 1",
+        "Episódio 2",
+        "Episódio 3",
+        "Episódio 4",
+        "Episódio 5",
+        "Episódio 6"
+      ],
+      "onlineCount": 88
+    },
+    {
+      "itemID": "m-secret",
+      "segments": [
+        "Edição 1",
+        "Edição 2",
+        "Edição 3",
+        "Edição 4",
+        "Edição 5"
+      ],
+      "onlineCount": 18400
+    }
   ],
-  "roomMessages": [
-    { "id": "rm1", "itemID": "w-wotlk", "segmentIndex": 1, "userID": "gui", "text": "A luta do Yogg com 0 guardiões ainda é o maior desafio de raid que já fiz", "when": "21:02" },
-    { "id": "rm2", "itemID": "w-wotlk", "segmentIndex": 1, "userID": "nina", "text": "A trilha sonora de Ulduar é injustamente esquecida", "when": "21:04" },
-    { "id": "rm3", "itemID": "w-wotlk", "segmentIndex": 1, "userID": "duda", "text": "Concordo, a música da Câmara das Estrelas me arrepia", "when": "21:05" },
-    { "id": "rm4", "itemID": "w-wotlk", "segmentIndex": 1, "userID": "lu", "text": "Alguém mais leu os livros antes de jogar essa parte?", "when": "21:06" },
-    { "id": "rm5", "itemID": "w-wotlk", "segmentIndex": 2, "userID": "gui", "text": "A Cidadela da Coroa de Gelo fecha tudo com perfeição", "when": "21:20" }
-  ],
+  "roomMessages": [],
   "liveEvent": {
     "id": "le1",
     "itemID": "m-secret",

@@ -18,8 +18,8 @@ struct LogicTests {
     }
 
     @Test func seedIsDeterministic() {
-        #expect(Logic.seed("w-wotlk") == Logic.seed("w-wotlk"))
-        #expect(Logic.seed("w-wotlk") != Logic.seed("w-wc3"))
+        #expect(Logic.seed("m-civil") == Logic.seed("m-civil"))
+        #expect(Logic.seed("m-civil") != Logic.seed("m-ultimato"))
     }
 
     @Test func pollPercentsOnlyCountVoteAfterChoice() {

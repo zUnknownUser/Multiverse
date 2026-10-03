@@ -226,7 +226,7 @@ struct HomeView: View {
     private var theoriesAndPredictionsRow: some View {
         HStack(spacing: 10) {
             promoTile(title: L10n.text("TEORIAS"), subtitle: L10n.format("theories.open", store.theoriesFiltered(.open).count), bg: MV.C.dc) { store.push(.theories) }
-            promoTile(title: L10n.text("PREVISÕES"), subtitle: "\(store.predictionPoints) pts", bg: MV.C.wow, fg: MV.C.ink) { store.push(.predictions) }
+            promoTile(title: L10n.text("PREVISÕES"), subtitle: "\(store.predictionPoints) pts", bg: MV.C.accent, fg: MV.C.ink) { store.push(.predictions) }
         }
     }
 

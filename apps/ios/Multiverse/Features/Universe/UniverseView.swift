@@ -242,7 +242,7 @@ private struct OrderSummaryCard: View {
                 .background(voted ? uni.color : MV.C.card)
                 .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                 .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
-                .burstOnTap("BOOM!", color: MV.C.wow, when: !voted) {
+                .burstOnTap("BOOM!", color: MV.C.accent, when: !voted) {
                     store.voteOrder(order.id)
                 }
 

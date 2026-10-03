@@ -40,7 +40,7 @@ struct ConversationView: View {
                     .font(MVFont.bold(11))
                     .padding(.horizontal, 12).frame(height: 34)
                     .foregroundStyle(MV.C.ink)
-                    .background(MV.C.wow)
+                    .background(MV.C.accent)
                     .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                     .clipShape(Capsule())
             }

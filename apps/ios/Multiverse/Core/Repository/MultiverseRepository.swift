@@ -47,7 +47,7 @@ struct PollVotes: Sendable {
 
 struct ItemToggles: Sendable {
     var seenOverrides: [String: Bool] = [:]
-    var wanted: Set<String> = ["w-cata"]
+    var wanted: Set<String> = ["d-flash"]
     var liked: Set<String> = []
 }
 
@@ -59,7 +59,7 @@ struct ReviewToggles: Sendable {
 
 struct OrderState: Sendable {
     var upvoted: Set<String> = []
-    var following: Set<String> = ["o-azeroth"]
+    var following: Set<String> = ["o-crises"]
 }
 
 // MARK: - Escudo de spoiler

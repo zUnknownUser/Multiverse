@@ -1,16 +1,21 @@
 import SwiftUI
 
-/// "Debate da semana" — Home. Sempre sobre O Cataclismo (Warcraft), como no protótipo.
+/// "Debate da semana" — Home. Exemplo editorial sobre A Morte do Superman.
 struct DebateCard: View {
     @Environment(AppStore.self) private var store
     private let options = StaticContent.weeklyDebateOptions
 
     var body: some View {
-        let item = store.item("e-cataclismo")!
+        if let item = store.item("e-superman") {
+            debate(item)
+        }
+    }
+
+    private func debate(_ item: Item) -> some View {
         let uni = store.universe(of: item)
         let percents = store.weeklyPollPercents()
 
-        VStack(alignment: .leading, spacing: 0) {
+        return VStack(alignment: .leading, spacing: 0) {
             Button { store.push(.item(item.id)) } label: {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(L10n.format("DEBATE DA SEMANA · %1$@", String(describing: uni.name.uppercased()))).kicker(11).foregroundStyle(MV.C.ink)
@@ -19,7 +24,7 @@ struct DebateCard: View {
                 }
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(MV.C.wow)
+                .background(MV.C.accent)
             }
             .buttonStyle(.plain)
 
@@ -53,7 +58,7 @@ private struct DebateOptionRow: View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 MV.C.ink.opacity(0.12)
-                Rectangle().fill(chosen ? MV.C.wow : MV.C.ink.opacity(0.12))
+                Rectangle().fill(chosen ? MV.C.accent : MV.C.ink.opacity(0.12))
                     .frame(width: geo.size.width * Double(percent ?? 0) / 100)
                     .animation(.timingCurve(0.2, 0.8, 0.2, 1, duration: 0.5), value: percent)
                 HStack {
@@ -67,7 +72,7 @@ private struct DebateOptionRow: View {
         .frame(height: 36)
         .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
         .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-        .burstOnTap("BAM!", color: MV.C.wow, when: store.pollVote == nil) {
+        .burstOnTap("BAM!", color: MV.C.accent, when: store.pollVote == nil) {
             store.voteWeekly(index)
         }
     }

@@ -88,8 +88,8 @@ struct PasswordStrengthMeter: View {
     private var color: Color {
         switch strength {
         case .fraca: return MV.C.marvel
-        case .media: return MV.C.wow
-        case .boa: return MV.C.wow
+        case .media: return MV.C.accent
+        case .boa: return MV.C.accent
         case .excelente: return MV.C.dc
         }
     }

@@ -27,20 +27,6 @@
       "total": 980,
       "members": 142000,
       "live": 873
-    },
-    {
-      "id": "wow",
-      "name": "Warcraft",
-      "c": "#F4A814",
-      "c2": "#D99210",
-      "ink": "#16130F",
-      "track": "rgba(22,19,15,.2)",
-      "canon": "Azeroth",
-      "tagline": "Três décadas de guerras, expansões, livros e retcons. Pela Horda ou pela Aliança.",
-      "base": 58,
-      "total": 312,
-      "members": 96000,
-      "live": 641
     }
   ],
   "items": [
@@ -165,96 +151,6 @@
       "desc": "Depois de perder Lois, Superman instala um regime."
     },
     {
-      "id": "w-wc3",
-      "uni": "wow",
-      "type": "Jogo",
-      "title": "Warcraft III: Reign of Chaos",
-      "year": 2002,
-      "avg": 4.8,
-      "canon": "Azeroth",
-      "desc": "O Flagelo se espalha, Arthas cai e a Legião Ardente chega. A base de quase tudo."
-    },
-    {
-      "id": "w-wotlk",
-      "uni": "wow",
-      "type": "Jogo",
-      "title": "Wrath of the Lich King",
-      "year": 2008,
-      "avg": 4.7,
-      "canon": "Azeroth",
-      "desc": "Horda e Aliança marcham até Nortúndria para enfrentar Arthas no Trono de Gelo."
-    },
-    {
-      "id": "w-cata",
-      "uni": "wow",
-      "type": "Jogo",
-      "title": "Cataclysm",
-      "year": 2010,
-      "avg": 3.6,
-      "canon": "Azeroth",
-      "desc": "Deathwing emerge e redesenha o mapa de Azeroth. O mundo antigo nunca mais volta."
-    },
-    {
-      "id": "w-arthas",
-      "uni": "wow",
-      "type": "Livro",
-      "title": "Arthas: A Ascensão do Lich King",
-      "year": 2009,
-      "avg": 4.4,
-      "canon": "Azeroth",
-      "desc": "De príncipe de Lordaeron a Lich King: a queda contada de dentro."
-    },
-    {
-      "id": "w-wcfilme",
-      "uni": "wow",
-      "type": "Filme",
-      "title": "Warcraft: O Primeiro Encontro",
-      "year": 2016,
-      "avg": 3.2,
-      "canon": "Adaptação",
-      "desc": "Orcs atravessam o Portal Negro e o primeiro contato vira guerra."
-    },
-    {
-      "id": "w-crimes",
-      "uni": "wow",
-      "type": "Livro",
-      "title": "Crimes de Guerra",
-      "year": 2014,
-      "avg": 4.3,
-      "canon": "Azeroth",
-      "desc": "Garrosh Grito Infernal vai a julgamento. Todas as facções têm sangue nas mãos."
-    },
-    {
-      "id": "c-arthas",
-      "uni": "wow",
-      "type": "Personagem",
-      "title": "Arthas Menethil",
-      "year": "1ª ap. 2002",
-      "avg": 4.6,
-      "canon": "Azeroth",
-      "desc": "Príncipe paladino que empunhou Gélido Lamento e virou o Lich King."
-    },
-    {
-      "id": "c-thrall",
-      "uni": "wow",
-      "type": "Personagem",
-      "title": "Thrall",
-      "year": "1ª ap. 2002",
-      "avg": 4.1,
-      "canon": "Azeroth",
-      "desc": "Ex-escravo, xamã e fundador da Nova Horda."
-    },
-    {
-      "id": "c-sylvanas",
-      "uni": "wow",
-      "type": "Personagem",
-      "title": "Sylvanas Correventos",
-      "year": "1ª ap. 2002",
-      "avg": 3.4,
-      "canon": "Azeroth",
-      "desc": "Patrulheira, Rainha Banshee, Chefe Guerreira. A mais debatida da lore."
-    },
-    {
       "id": "c-wanda",
       "uni": "marvel",
       "type": "Personagem",
@@ -325,26 +221,6 @@
       "desc": "Thanos estala os dedos e metade da vida no universo desaparece."
     },
     {
-      "id": "e-lordaeron",
-      "uni": "wow",
-      "type": "Evento",
-      "title": "Queda de Lordaeron",
-      "year": "Ano 21",
-      "avg": 4.7,
-      "canon": "Azeroth",
-      "desc": "Arthas mata o próprio pai e entrega o reino ao Flagelo."
-    },
-    {
-      "id": "e-cataclismo",
-      "uni": "wow",
-      "type": "Evento",
-      "title": "O Cataclismo",
-      "year": "Ano 30",
-      "avg": 3.9,
-      "canon": "Azeroth",
-      "desc": "Deathwing rompe Azeroth. Terras afundam e regiões inteiras mudam pra sempre."
-    },
-    {
       "id": "e-superman",
       "uni": "dc",
       "type": "Evento",
@@ -363,16 +239,16 @@
       "avatarColor": "#F4A814",
       "bio": "Lorista nível 34",
       "followers": null,
-      "badgeUniverse": "wow"
+      "badgeUniverse": "marvel"
     },
     {
       "id": "nina",
       "name": "Nina S.",
       "handle": "@nina.s",
       "avatarColor": "#2E5BE8",
-      "bio": "Raider desde Vanilla",
+      "bio": "Gotham é minha segunda casa",
       "followers": null,
-      "badgeUniverse": "wow"
+      "badgeUniverse": "dc"
     },
     {
       "id": "caio",
@@ -381,7 +257,7 @@
       "avatarColor": "#E4412F",
       "bio": "Monta ordens de leitura",
       "followers": null,
-      "badgeUniverse": "wow"
+      "badgeUniverse": "dc"
     },
     {
       "id": "leo",
@@ -397,9 +273,9 @@
       "name": "Bia R.",
       "handle": "@bia.r",
       "avatarColor": "#F4A814",
-      "bio": "Defensora da Sylvanas",
+      "bio": "Defensora da Wanda",
       "followers": null,
-      "badgeUniverse": "wow"
+      "badgeUniverse": "marvel"
     },
     {
       "id": "rafa",
@@ -424,9 +300,9 @@
       "name": "Gui H.",
       "handle": "@gui.h",
       "avatarColor": "#16130F",
-      "bio": "Historiador de Azeroth",
+      "bio": "Historiador do Multiverso DC",
       "followers": 8400,
-      "badgeUniverse": "wow"
+      "badgeUniverse": "dc"
     },
     {
       "id": "mari",
@@ -457,41 +333,10 @@
     }
   ],
   "badgeNames": {
-    "wow": "Azeroth",
     "marvel": "Terra-616",
     "dc": "Multi-DC"
   },
   "connections": {
-    "w-wc3": [
-      "c-arthas",
-      "c-thrall",
-      "c-sylvanas",
-      "e-lordaeron"
-    ],
-    "w-wotlk": [
-      "c-arthas",
-      "c-sylvanas",
-      "w-arthas"
-    ],
-    "w-arthas": [
-      "c-arthas",
-      "e-lordaeron"
-    ],
-    "w-cata": [
-      "e-cataclismo",
-      "c-thrall"
-    ],
-    "w-crimes": [
-      "c-sylvanas",
-      "c-thrall"
-    ],
-    "e-cataclismo": [
-      "w-cata"
-    ],
-    "e-lordaeron": [
-      "c-arthas",
-      "w-wc3"
-    ],
     "m-ultimato": [
       "c-thanos",
       "e-estalo",
@@ -533,15 +378,6 @@
     "d-reino": [
       "c-batman"
     ],
-    "c-arthas": [
-      "w-wc3",
-      "w-arthas",
-      "w-wotlk"
-    ],
-    "c-sylvanas": [
-      "w-wc3",
-      "w-crimes"
-    ],
     "c-batman": [
       "d-tdk",
       "d-reino",
@@ -556,48 +392,6 @@
     ]
   },
   "timelines": {
-    "wow": [
-      {
-        "era": "Ano 0 · Primeira Guerra",
-        "itemId": "w-wcfilme",
-        "note": "O Portal Negro se abre"
-      },
-      {
-        "era": "Ano 20 · Terceira Guerra",
-        "itemId": "w-wc3",
-        "note": "A praga chega"
-      },
-      {
-        "era": "Ano 21",
-        "itemId": "e-lordaeron",
-        "note": "O rei morre"
-      },
-      {
-        "era": "Ano 21–25",
-        "itemId": "w-arthas",
-        "note": "Leitura de apoio"
-      },
-      {
-        "era": "Ano 27 · Nortúndria",
-        "itemId": "w-wotlk",
-        "note": "Assalto à Cidadela"
-      },
-      {
-        "era": "Ano 30",
-        "itemId": "e-cataclismo",
-        "note": "O mundo se parte"
-      },
-      {
-        "era": "Ano 30",
-        "itemId": "w-cata",
-        "note": "Expansão"
-      },
-      {
-        "era": "Ano 35",
-        "itemId": "w-crimes",
-        "note": "Pós-Pandária"
-      }
-    ],
     "marvel": [
       {
         "era": "Terra-616 · 1980",
@@ -675,34 +469,6 @@
   },
   "readingOrders": [
     {
-      "id": "o-azeroth",
-      "uni": "wow",
-      "title": "Azeroth do zero",
-      "by": "caio",
-      "votes": 3240,
-      "steps": [
-        "w-wcfilme",
-        "w-wc3",
-        "w-arthas",
-        "w-wotlk",
-        "w-cata",
-        "w-crimes"
-      ]
-    },
-    {
-      "id": "o-lich",
-      "uni": "wow",
-      "title": "Só a saga do Lich King",
-      "by": "nina",
-      "votes": 1810,
-      "steps": [
-        "w-wc3",
-        "e-lordaeron",
-        "w-arthas",
-        "w-wotlk"
-      ]
-    },
-    {
       "id": "o-mcu",
       "uni": "marvel",
       "title": "Multiverso Marvel essencial",
@@ -764,23 +530,8 @@
       "comments": 58,
       "items": [
         "c-thanos",
-        "c-sylvanas",
         "c-loki",
-        "c-arthas",
         "c-coringa"
-      ]
-    },
-    {
-      "id": "l-porta",
-      "title": "Porta de entrada pra Azeroth",
-      "desc": "Pra quem nunca jogou e quer entender por que todo mundo chora com o Arthas.",
-      "likes": 890,
-      "comments": 104,
-      "items": [
-        "w-wc3",
-        "w-arthas",
-        "w-wotlk",
-        "w-crimes"
       ]
     },
     {
@@ -794,61 +545,11 @@
         "m-secret",
         "d-flash",
         "e-estalo",
-        "m-aranha",
-        "e-cataclismo"
+        "m-aranha"
       ]
     }
   ],
   "reviews": [
-    {
-      "id": "r1",
-      "user": "nina",
-      "item": "w-wotlk",
-      "rating": 5,
-      "text": "Subir a Cidadela da Coroa de Gelo com a guilda e ver o Arthas cair é o motivo de eu ainda jogar isso. Melhor narrativa que a Blizzard já fez.",
-      "spoiler": false,
-      "likes": 214,
-      "when": "2h",
-      "comments": [
-        {
-          "user": "duda",
-          "text": "Aquele cinematic final ainda me pega.",
-          "likes": 12
-        },
-        {
-          "user": "caio",
-          "text": "Discordo só no ritmo da Coliseu, o resto é perfeito.",
-          "likes": 4
-        }
-      ]
-    },
-    {
-      "id": "r2",
-      "user": "caio",
-      "item": "e-cataclismo",
-      "rating": 2.5,
-      "text": "Apagaram metade das zonas clássicas e trocaram por quests de piada. Deathwing merecia mais.",
-      "spoiler": true,
-      "likes": 96,
-      "when": "3h",
-      "comments": [
-        {
-          "user": "bia",
-          "text": "Mas o Twilight Highlands é lindo!",
-          "likes": 7
-        },
-        {
-          "user": "gui",
-          "text": "A reforma de Durotar foi necessária, vai.",
-          "likes": 15
-        },
-        {
-          "user": "caio",
-          "text": "Necessária sim, bem feita não.",
-          "likes": 9
-        }
-      ]
-    },
     {
       "id": "r3",
       "user": "leo",
@@ -863,23 +564,6 @@
           "user": "mari",
           "text": "Nos quadrinhos já tinha isso, mas aqui ficou redondo.",
           "likes": 21
-        }
-      ]
-    },
-    {
-      "id": "r4",
-      "user": "bia",
-      "item": "c-sylvanas",
-      "rating": 3,
-      "text": "Queimar Teldrassil não tem volta, mas Shadowlands tentou limpar a barra dela de um jeito que ninguém pediu.",
-      "spoiler": true,
-      "likes": 152,
-      "when": "7h",
-      "comments": [
-        {
-          "user": "nina",
-          "text": "A queda dela foi mal escrita, não mal pensada.",
-          "likes": 18
         }
       ]
     },
@@ -912,23 +596,6 @@
       ]
     },
     {
-      "id": "r7",
-      "user": "gui",
-      "item": "w-wc3",
-      "rating": 5,
-      "text": "A campanha do Arthas é tragédia grega com orcs. Obrigatório pra entender qualquer coisa depois.",
-      "spoiler": false,
-      "likes": 1203,
-      "when": "2 dias",
-      "comments": [
-        {
-          "user": "lu",
-          "text": "Joguei na ordem da comunidade, fez toda diferença.",
-          "likes": 44
-        }
-      ]
-    },
-    {
       "id": "r8",
       "user": "mari",
       "item": "m-civil",
@@ -938,23 +605,6 @@
       "likes": 241,
       "when": "2 dias",
       "comments": []
-    },
-    {
-      "id": "r9",
-      "user": "duda",
-      "item": "w-wotlk",
-      "rating": 5,
-      "text": "Revi pela terceira vez. O arco do Tirion fecha tudo que Warcraft III abriu.",
-      "spoiler": false,
-      "likes": 64,
-      "when": "5 dias",
-      "comments": [
-        {
-          "user": "nina",
-          "text": "Tirion merecia um livro só dele.",
-          "likes": 6
-        }
-      ]
     },
     {
       "id": "r10",
@@ -993,18 +643,6 @@
     "Obrigatório. Muda o jeito que você lê todo o resto."
   ],
   "canonStatus": {
-    "c-sylvanas": {
-      "status": "Contestado",
-      "note": "Shadowlands reescreveu as motivações dela depois de Teldrassil."
-    },
-    "w-arthas": {
-      "status": "Contestado",
-      "note": "Partes do livro contradizem Shadowlands."
-    },
-    "w-wcfilme": {
-      "status": "Variante",
-      "note": "Adaptação: diverge dos jogos em vários pontos."
-    },
     "d-tdk": {
       "status": "Variante",
       "note": "Trilogia Nolan, fora da continuidade das HQs."
@@ -1058,7 +696,7 @@
   },
   "duels": [
     {
-      "a": "c-arthas",
+      "a": "c-wanda",
       "b": "c-thanos",
       "question": "Qual queda foi mais trágica?",
       "baseVotes": [
@@ -1077,7 +715,7 @@
     },
     {
       "a": "e-estalo",
-      "b": "e-cataclismo",
+      "b": "e-superman",
       "question": "Qual evento mudou mais o universo?",
       "baseVotes": [
         2980,
@@ -1086,7 +724,7 @@
     },
     {
       "a": "c-coringa",
-      "b": "c-sylvanas",
+      "b": "c-loki",
       "question": "Vilão mais bem escrito?",
       "baseVotes": [
         6010,

@@ -153,7 +153,7 @@ struct LivePremiereView: View {
             HStack {
                 Text(L10n.text("⚡ RELÂMPAGO")).font(MVFont.black(11)).foregroundStyle(.black)
                     .padding(.horizontal, 8).padding(.vertical, 4)
-                    .background(MV.C.wow).clipShape(Capsule())
+                    .background(MV.C.accent).clipShape(Capsule())
                 Spacer()
                 if !revealed {
                     Text("\(pollSecondsLeft)s").font(MVFont.black(13)).foregroundStyle(.white.opacity(0.7))
@@ -177,7 +177,7 @@ struct LivePremiereView: View {
             if revealed {
                 GeometryReader { geo in
                     RoundedRectangle(cornerRadius: MV.R.sm)
-                        .fill(pollVote == index ? MV.C.wow.opacity(0.8) : Color.white.opacity(0.25))
+                        .fill(pollVote == index ? MV.C.accent.opacity(0.8) : Color.white.opacity(0.25))
                         .frame(width: geo.size.width * CGFloat(percent) / 100)
                 }
             }

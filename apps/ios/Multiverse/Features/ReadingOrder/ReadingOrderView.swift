@@ -44,7 +44,7 @@ struct ReadingOrderView: View {
                     .background(voted ? uni.color : uni.inkColor)
                     .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                     .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
-                    .burstOnTap("BOOM!", color: MV.C.wow, when: !voted) {
+                    .burstOnTap("BOOM!", color: MV.C.accent, when: !voted) {
                         store.voteOrder(order.id)
                     }
 
