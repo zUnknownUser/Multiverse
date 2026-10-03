@@ -1,3 +1,5 @@
+import { VoiceMediaService } from '../src/voice/voice-media.service.js';
+import { VoiceService } from '../src/voice/voice.service.js';
 import sharp from 'sharp';
 import { moderate, moderationQueue } from '../src/social/moderation.js';
 import { randomUUID } from 'node:crypto';
@@ -17,6 +19,15 @@ describe.skipIf(!databaseURL)('Live community features with PostgreSQL', () => {
   let app: INestApplication;
   let admin: pg.Pool;
   let db: DatabaseService;
+  const voiceMedia = {
+    enabled: true,
+    configured: true,
+    ticket: vi.fn(async (_room: string, identity: string) => ({
+      serverURL: 'wss://test.livekit.cloud',
+      token: 'test-token-' + identity,
+    })),
+    remove: vi.fn(async () => {}),
+  };
   const schema = 'community_test_' + randomUUID().replaceAll('-', '');
   const get = (path: string, uid = 'owner') =>
     request(app.getHttpServer())
@@ -51,6 +62,8 @@ describe.skipIf(!databaseURL)('Live community features with PostgreSQL', () => {
       .sort())
       await db.query(await readFile(new URL(name, folder), 'utf8'));
     const module = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(VoiceMediaService)
+      .useValue(voiceMedia)
       .overrideProvider(DatabaseService)
       .useValue(db)
       .overrideProvider(FirebaseTokenVerifier)
@@ -69,6 +82,9 @@ describe.skipIf(!databaseURL)('Live community features with PostgreSQL', () => {
     await app.listen(0, '127.0.0.1'); // Keep one port per suite; concurrent Supertest requests must not close/rebind it.
   });
   afterEach(async () => {
+    await db.query('DELETE FROM room_voice_sessions');
+    voiceMedia.remove.mockClear();
+    voiceMedia.enabled = true;
     await db.query('DELETE FROM profiles');
     await db.query('DELETE FROM account_deletions');
     await db.query('DELETE FROM moderation_decisions');
@@ -541,6 +557,137 @@ describe.skipIf(!databaseURL)('Live community features with PostgreSQL', () => {
     await request(app.getHttpServer())
       .get('/api/v1/' + path)
       .expect(401);
+  });
+
+  it('authorizes voice by account and segment, keeps retries stable and separates spoiler rooms', async () => {
+    await member('owner');
+    await member('alice');
+    await member('incomplete', false);
+    const item = (
+      await db.query(
+        "SELECT id FROM catalog_items WHERE universe_id='marvel' AND status='published' LIMIT 1",
+      )
+    ).rows[0].id;
+    const id = randomUUID(),
+      path = `community/rooms/${item}/voice/${id}`;
+    await put(path, { segment: 2 }).expect(403);
+    await put(path, { segment: 0 }, 'incomplete').expect(409);
+    await put(path, { segment: 4 }).expect(400);
+    await put(`community/rooms/${item}/visit`, { progress: 100 }).expect(200);
+    const first = (await put(path, { segment: 2 }).expect(200)).body;
+    const retry = (await put(path, { segment: 2 }).expect(200)).body;
+    expect(first).toEqual(retry);
+    expect(first.id).toBe(id);
+    await put(path, { segment: 0 }, 'alice').expect(409);
+    const other = (
+      await put(
+        `community/rooms/${item}/voice/${randomUUID()}`,
+        { segment: 0 },
+        'alice',
+      ).expect(200)
+    ).body;
+    expect(first.room).not.toBe(other.room);
+    await put(`community/voice/${id}/heartbeat`, {}).expect(200);
+    await put(`community/voice/${id}/heartbeat`, {}, 'alice').expect(403);
+    expect(voiceMedia.remove).not.toHaveBeenCalled();
+    await put(`community/rooms/${item}/visit`, { progress: 0 }).expect(200);
+    await put(`community/voice/${id}/heartbeat`, {}).expect(403);
+    expect(voiceMedia.remove).toHaveBeenCalledWith(first.room, id);
+  });
+
+  it('limits voice capacity, enforces blocks and cleans up expired media leases', async () => {
+    const item = (
+      await db.query(
+        "SELECT id FROM catalog_items WHERE universe_id='marvel' AND status='published' LIMIT 1",
+      )
+    ).rows[0].id;
+    const joined: { id: string; uid: string; room: string }[] = [];
+    for (let i = 0; i < 8; i++) {
+      const uid = 'voice' + i,
+        id = randomUUID();
+      await member(uid);
+      const response = await put(
+        `community/rooms/${item}/voice/${id}`,
+        { segment: 0 },
+        uid,
+      ).expect(200);
+      joined.push({ uid, id, room: response.body.room });
+    }
+    await member('extra');
+    const full = await put(
+      `community/rooms/${item}/voice/${randomUUID()}`,
+      { segment: 0 },
+      'extra',
+    ).expect(409);
+    expect(full.body.code).toBe('VOICE_FULL');
+    await db.query(
+      'INSERT INTO user_blocks(blocker_uid,blocked_uid) VALUES($1,$2)',
+      ['extra', joined[0].uid],
+    );
+    const blocked = await put(
+      `community/rooms/${item}/voice/${randomUUID()}`,
+      { segment: 0 },
+      'extra',
+    ).expect(403);
+    expect(blocked.body.code).toBe('VOICE_BLOCKED');
+    await db.query(
+      "UPDATE room_voice_sessions SET expires_at=now()-interval '1 second' WHERE id=$1",
+      [joined[0].id],
+    );
+    await app.get(VoiceService).cleanup();
+    expect(voiceMedia.remove).toHaveBeenCalledWith(
+      joined[0].room,
+      joined[0].id,
+    );
+    await del(`community/voice/${joined[1].id}`, joined[1].uid).expect(200);
+    await del(`community/voice/${joined[1].id}`, joined[1].uid).expect(200);
+    await put(
+      `community/voice/${joined[1].id}/heartbeat`,
+      {},
+      joined[1].uid,
+    ).expect(403);
+  });
+
+  it('limits repeated joins while preserving retry and revokes sessions when voice is disabled', async () => {
+    await member('owner');
+    const item = (
+      await db.query(
+        "SELECT id FROM catalog_items WHERE universe_id='marvel' AND status='published' LIMIT 1",
+      )
+    ).rows[0].id;
+    const id = randomUUID(),
+      path = `community/rooms/${item}/voice/${id}`;
+    const joined = (await put(path, { segment: 0 }).expect(200)).body;
+    await db.query(
+      'UPDATE room_voice_join_limits SET attempts=30 WHERE firebase_uid=$1',
+      ['owner'],
+    );
+    await put(path, { segment: 0 }).expect(200);
+    await del(`community/voice/${id}`).expect(200);
+    const blocked = await put(`community/rooms/${item}/voice/${randomUUID()}`, {
+      segment: 0,
+    }).expect(429);
+    expect(blocked.body.code).toBe('VOICE_JOIN_LIMIT');
+    voiceMedia.enabled = false;
+    expect((await get('community/voice').expect(200)).body.enabled).toBe(false);
+    await app.get(VoiceService).cleanup();
+    expect(voiceMedia.remove).toHaveBeenCalledWith(joined.room, id);
+  });
+
+  it('disconnects a deleted account even after its profile has disappeared', async () => {
+    await member('owner');
+    const item = (
+      await db.query(
+        "SELECT id FROM catalog_items WHERE universe_id='marvel' AND status='published' LIMIT 1",
+      )
+    ).rows[0].id;
+    const id = randomUUID();
+    const joined = await put(`community/rooms/${item}/voice/${id}`, {
+      segment: 0,
+    }).expect(200);
+    await db.query('DELETE FROM profiles WHERE firebase_uid=$1', ['owner']);
+    await app.get(VoiceService).cleanup();
+    expect(voiceMedia.remove).toHaveBeenCalledWith(joined.body.room, id);
   });
 
   it('protects room spoiler segments, including image endpoints and search', async () => {

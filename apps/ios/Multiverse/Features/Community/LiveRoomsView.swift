@@ -57,6 +57,8 @@ struct LiveRoomView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @State private var voice = VoiceSession()
+    @State private var showingVoice = false
     @State private var timeline = RoomTimeline()
     @State private var presence: RoomVisit?
     @State private var progress = 0.0
@@ -148,12 +150,19 @@ struct LiveRoomView: View {
             guard scenePhase == .active else { return }
             await watchRoom()
         }
+        .onDisappear { Task { await voice.leave() } }
+        .onChange(of: scenePhase) { _, phase in if phase == .background { Task { await voice.leave() } } }
+        .sheet(isPresented: $showingVoice) {
+            VoiceRoomSheet(voice: voice, api: store.communityAPI as? any VoiceAPI, item: itemID, title: store.item(itemID)?.title ?? "", segment: segment)
+        }
         .task(id: segment) {
+            await voice.leave()
             timeline.reset(); following = true
             await load(forceFollow: true)
         }
         .onChange(of: locked) { _, isLocked in
             timeline.reset()
+            if isLocked { Task { await voice.leave() } }
             if !isLocked { Task { await load(forceFollow: true) } }
         }
         .sheet(isPresented: $editingProgress) { progressSheet }
@@ -181,6 +190,18 @@ struct LiveRoomView: View {
                     }.buttonStyle(.plain).accessibilityLabel(L10n.text("AJUSTAR PROGRESSO"))
                         .accessibilityValue(L10n.format("Meu progresso: %1$@%%", String(presence?.progress ?? 0)))
                 }
+            }
+            HStack {
+                Button { showingVoice = true } label: {
+                    Label(voice.active ? L10n.text("NA VOZ") : L10n.text("VOZ"), systemImage: voice.active ? "waveform" : "headphones")
+                        .font(MVFont.label(11)).padding(.horizontal, 12).frame(minHeight: 44)
+                        .comicCard(bg: voice.active ? MV.C.desk : MV.C.card, radius: MV.R.md, shadow: MV.Shadow.s)
+                }.buttonStyle(.plain).disabled(locked)
+                if voice.active {
+                    Text(voice.muted ? L10n.text("Microfone desligado") : L10n.text("Microfone ligado"))
+                        .font(MVFont.body(11)).foregroundStyle(MV.C.muted)
+                }
+                Spacer(minLength: 0)
             }
             Picker(L10n.text("Trecho da conversa"), selection: $segment) {
                 Text(L10n.text("Geral")).tag(0); Text(L10n.text("Até a metade")).tag(1); Text(L10n.text("Final")).tag(2)

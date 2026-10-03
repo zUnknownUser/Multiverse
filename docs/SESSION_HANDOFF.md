@@ -1,3 +1,27 @@
+# Atualização — voz LiveKit nativa nas salas (03/10/2026)
+
+Usuário autorizou integrar voz, sem vídeo, com UI discreta, performance e fluidez.
+Forneceu credenciais LiveKit Cloud; configuradas no .env ignorado e no Railway por
+stdin, sem exposição no código/Git. Rotação será posterior por decisão do usuário.
+
+- Botão VOZ e sheet nativa recolhível sobre o chat, preservando abas/design system.
+- SDK só conecta ao entrar; microfone desligado até ação explícita e permissão.
+  Ouvintes sem permissão continuam ouvindo; participantes/fala por eventos do SDK.
+- Até 8 pessoas por obra/trecho. Voz termina ao sair da tela, trocar trecho ou ir ao
+  background. Chat segue independente. Sem vídeo, gravação, palco/anfitrião ou pedir fala.
+- API autoriza Firebase/conta/onboarding/obra/progresso e bloqueios. JWT 60s só para
+  microphone; UUID opaco de sessão; 1 sessão por conta e 30 entradas novas/hora.
+- Migration aditiva 018; lease 60s renovada a cada20s, limpeza de inválidos a cada15s.
+  Perfil/obra apagados ainda permitem desconectar a mídia. Desligamento por VOICE_ENABLED.
+- Testes: 81 unitários API + 106 HTTP/PostgreSQL +184 iOS; PT-BR/EN1060 entradas.
+  Dois clientes WebRTC reais trocaram áudio sintético no projeto; sala de teste removida.
+  Microfone físico/Bluetooth/interrupções no iPhone ainda precisam de QA em dispositivos.
+- [Contrato, operação e limites](../backend/api/docs/voice-rooms.md).
+
+Os registros abaixo são históricos.
+
+---
+
 # Atualização — salas com eventos e composer (03/10/2026)
 
 - Sheet de criar/editar posts com design system, thumbnails/remover, menções/spoiler

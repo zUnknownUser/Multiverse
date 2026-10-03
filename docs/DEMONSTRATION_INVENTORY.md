@@ -136,7 +136,7 @@ não prometem persistência entre sessões/dispositivos.
 - **Comunidade:** recursos solicitados ligados ao backend; sem reposts, vídeo, ranking
   personalizado, fila offline durável, DMs ou live de estreia. Clubes são públicos,
   sem coorganizador/expulsão/transferência. Teorias não têm validação editorial automática
-  nem pontos/ranking. Salas usam long polling acordado por eventos do banco; sem voz/vídeo, WebSocket ou indicador de digitação.
+  nem pontos/ranking. Salas usam long polling acordado por eventos do banco; com voz nativa opcional via LiveKit, sem vídeo, WebSocket para o chat ou indicador de digitação.
   As amostras antigas não foram publicadas no servidor. Imagens ficam no PostgreSQL
   com limites; object storage/CDN é evolução necessária antes de escala de mídia.
   [Contrato e limites detalhados](../backend/api/docs/live-community.md).

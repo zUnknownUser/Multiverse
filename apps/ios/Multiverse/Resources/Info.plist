@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Use o microfone para conversar por voz nas salas do Multiverse.</string>
     <key>MultiversePushEnabled</key><string>$(MULTIVERSE_PUSH_ENABLED)</string>
     <key>FirebaseMessagingAutoInitEnabled</key><false/>
 	<key>MultiverseAPIBaseURL</key>

@@ -17,6 +17,10 @@ export default defineRailway(() => {
       FIREBASE_SERVICE_ACCOUNT_JSON: preserve(),
       OPENAI_API_KEY: preserve(),
       OPENAI_MODEL: preserve(),
+      VOICE_ENABLED: preserve(),
+      LIVEKIT_URL: preserve(),
+      LIVEKIT_API_KEY: preserve(),
+      LIVEKIT_API_SECRET: preserve(),
     },
     // dockerfilePath from CaC: "Dockerfile"
     // builder from CaC: "DOCKERFILE"

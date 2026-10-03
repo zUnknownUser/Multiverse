@@ -152,6 +152,12 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, Com
             }
             let code = (try? JSONDecoder().decode(APIError.self, from: data))?.code
             switch code {
+            case "VOICE_UNAVAILABLE": throw VoiceError.unavailable
+            case "VOICE_FULL": throw VoiceError.full
+            case "VOICE_BLOCKED": throw VoiceError.blocked
+            case "VOICE_SESSION_ENDED": throw VoiceError.ended
+            case "VOICE_SESSION_CONFLICT": throw VoiceError.conflict
+
             case "LIBRARY_STALE": throw LibraryError.stale
             case "LIST_UNAVAILABLE": throw LibraryError.unavailable
             case "LIBRARY_MUTATION_CONFLICT", "LIBRARY_LIST_CONFLICT": throw LibraryError.conflict

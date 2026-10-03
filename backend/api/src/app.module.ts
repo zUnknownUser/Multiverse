@@ -1,3 +1,6 @@
+import { VoiceController } from './voice/voice.controller.js';
+import { VoiceService } from './voice/voice.service.js';
+import { VoiceMediaService } from './voice/voice-media.service.js';
 import { RoomEventsService } from './community/room-events.service.js';
 import { SpacesController } from './community/spaces.controller.js';
 import { SpacesService } from './community/spaces.service.js';
@@ -37,6 +40,7 @@ import { InteractionsController } from './social/interactions.controller.js';
 
 @Module({
   controllers: [
+    VoiceController,
     SpacesController,
     LibraryController,
     NotificationsController,
@@ -50,6 +54,8 @@ import { InteractionsController } from './social/interactions.controller.js';
     MarvelController,
   ],
   providers: [
+    VoiceService,
+    VoiceMediaService,
     RoomEventsService,
     SpacesService,
     ImagesService,

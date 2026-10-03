@@ -89,7 +89,8 @@ nenhuma criação editorial ou amostra é necessária.
 - Trechos Geral / Até a metade / Final exigem progresso 0 / 50 / 100, respectivamente.
   A API verifica o progresso na publicação e leitura, incluindo imagens/notificações.
   O progresso é autodeclarado e sincronizado; não é reconhecimento de leitura.
-- Não inclui DMs, digitação, entrega/leitura por destinatário, estreia ao vivo ou WebSocket.
+- [Voz nativa opcional](voice-rooms.md) sobre o chat, até oito pessoas por trecho.
+- Não inclui DMs, digitação, entrega/leitura por destinatário, estreia ao vivo ou WebSocket para o chat.
 
 ## Teorias e duelos
 

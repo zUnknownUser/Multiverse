@@ -1,6 +1,346 @@
 {
   "sourceLanguage": "pt-BR",
   "strings": {
+    "A voz está indisponível agora. Tente novamente em instantes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A voz está indisponível agora. Tente novamente em instantes."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice is unavailable right now. Please try again shortly."
+          }
+        }
+      }
+    },
+    "A sala de voz está cheia. Tente novamente quando alguém sair.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A sala de voz está cheia. Tente novamente quando alguém sair."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The voice room is full. Try again when someone leaves."
+          }
+        }
+      }
+    },
+    "Não é possível entrar nesta conversa de voz devido a um bloqueio entre participantes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não é possível entrar nesta conversa de voz devido a um bloqueio entre participantes."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You cannot join this voice conversation because of a block between participants."
+          }
+        }
+      }
+    },
+    "Você saiu da conversa de voz. Entre novamente para continuar.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você saiu da conversa de voz. Entre novamente para continuar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You left the voice conversation. Join again to continue."
+          }
+        }
+      }
+    },
+    "Você já tem uma conexão de voz. Saia dela ou aguarde um minuto para tentar novamente.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você já tem uma conexão de voz. Saia dela ou aguarde um minuto para tentar novamente."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You already have a voice connection. Leave it or wait a minute before trying again."
+          }
+        }
+      }
+    },
+    "Permita o acesso ao microfone nos Ajustes para falar. Você pode continuar ouvindo.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permita o acesso ao microfone nos Ajustes para falar. Você pode continuar ouvindo."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow microphone access in Settings to speak. You can keep listening."
+          }
+        }
+      }
+    },
+    "Participante": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Participante"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Participant"
+          }
+        }
+      }
+    },
+    "CONVERSA POR VOZ": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONVERSA POR VOZ"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VOICE CONVERSATION"
+          }
+        }
+      }
+    },
+    "%1$@ pessoas na voz": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ pessoas na voz"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ people in voice"
+          }
+        }
+      }
+    },
+    "Microfone desligado": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microfone desligado"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone off"
+          }
+        }
+      }
+    },
+    "Microfone ligado": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microfone ligado"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone on"
+          }
+        }
+      }
+    },
+    "Entre para ouvir. Ligue o microfone quando quiser falar.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entre para ouvir. Ligue o microfone quando quiser falar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join to listen. Turn on your microphone when you want to speak."
+          }
+        }
+      }
+    },
+    "Até 8 pessoas. O áudio termina ao sair da sala ou colocar o app em segundo plano.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Até 8 pessoas. O áudio termina ao sair da sala ou colocar o app em segundo plano."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to 8 people. Audio ends when you leave the room or put the app in the background."
+          }
+        }
+      }
+    },
+    "FALAR": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FALAR"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SPEAK"
+          }
+        }
+      }
+    },
+    "SILENCIAR": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SILENCIAR"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MUTE"
+          }
+        }
+      }
+    },
+    "SAÍDA DE ÁUDIO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SAÍDA DE ÁUDIO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AUDIO OUTPUT"
+          }
+        }
+      }
+    },
+    "SAIR DA VOZ": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SAIR DA VOZ"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LEAVE VOICE"
+          }
+        }
+      }
+    },
+    "ENTRAR NA VOZ": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ENTRAR NA VOZ"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JOIN VOICE"
+          }
+        }
+      }
+    },
+    "NA VOZ": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NA VOZ"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IN VOICE"
+          }
+        }
+      }
+    },
+    "VOZ": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VOZ"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VOICE"
+          }
+        }
+      }
+    },
     "%@/%@ %@": {
       "localizations": {
         "en": {

@@ -6,6 +6,10 @@ export interface Environment {
   OPENAI_API_KEY?: string;
   OPENAI_MODEL: string;
   PUSH_ENABLED: 'true' | 'false';
+  VOICE_ENABLED: 'true' | 'false';
+  LIVEKIT_URL?: string;
+  LIVEKIT_API_KEY?: string;
+  LIVEKIT_API_SECRET?: string;
 }
 
 export function validateEnvironment(
@@ -68,8 +72,40 @@ export function validateEnvironment(
   const pushEnabled = config.PUSH_ENABLED ?? 'false';
   if (pushEnabled !== 'true' && pushEnabled !== 'false')
     throw new Error('PUSH_ENABLED must be true or false.');
+  const voiceEnabled = config.VOICE_ENABLED ?? 'false';
+  if (voiceEnabled !== 'true' && voiceEnabled !== 'false')
+    throw new Error('VOICE_ENABLED must be true or false.');
+  const livekit = ['LIVEKIT_URL', 'LIVEKIT_API_KEY', 'LIVEKIT_API_SECRET'].map(
+    (key) => {
+      const value = config[key];
+      if (value !== undefined && typeof value !== 'string')
+        throw new Error(key + ' must be a string.');
+      return typeof value === 'string' ? value.trim() || undefined : undefined;
+    },
+  );
+  if (voiceEnabled === 'true') {
+    if (livekit.some((value) => !value))
+      throw new Error(
+        'Voice requires LIVEKIT_URL, LIVEKIT_API_KEY and LIVEKIT_API_SECRET.',
+      );
+    const url = new URL(livekit[0]!);
+    if (
+      url.protocol !== 'wss:' ||
+      !url.hostname.endsWith('.livekit.cloud') ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash ||
+      url.pathname !== '/'
+    )
+      throw new Error('Voice requires a LiveKit Cloud wss URL.');
+  }
   return {
     NODE_ENV: nodeEnv,
+    VOICE_ENABLED: voiceEnabled,
+    LIVEKIT_URL: livekit[0],
+    LIVEKIT_API_KEY: livekit[1],
+    LIVEKIT_API_SECRET: livekit[2],
     PUSH_ENABLED: pushEnabled,
     PORT: port,
     DATABASE_URL: databaseURL as string | undefined,
