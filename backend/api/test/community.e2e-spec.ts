@@ -448,6 +448,101 @@ describe.skipIf(!databaseURL)('Live community features with PostgreSQL', () => {
     ).toBe(0);
   });
 
+  it('delivers room changes immediately and recovers missed revisions without exposing messages', async () => {
+    await member('owner');
+    await member('alice');
+    const item = (
+      await db.query(
+        "SELECT id FROM catalog_items WHERE universe_id='marvel' AND status='published' LIMIT 1",
+      )
+    ).rows[0].id;
+    const path = `community/rooms/${item}/changes`;
+    const initial = (await get(path, 'alice').expect(200)).body;
+    expect(initial).toMatchObject({ itemID: item, progress: 0 });
+    let resolved = false;
+    const waiting = get(`${path}?after=${initial.revision}`, 'alice')
+      .timeout({ response: 3000 })
+      .expect(200)
+      .then((r) => {
+        resolved = true;
+        return r.body;
+      });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(resolved).toBe(false);
+    const id = randomUUID();
+    await put(`posts/${id}`, { ...input, kind: 'room', itemID: item }).expect(
+      200,
+    );
+    const changed = await waiting;
+    expect(BigInt(changed.revision)).toBeGreaterThan(BigInt(initial.revision));
+    expect(Object.keys(changed).sort()).toEqual([
+      'itemID',
+      'online',
+      'progress',
+      'revision',
+    ]);
+    // Editing while the viewer is disconnected is recovered from the durable cursor.
+    await request(app.getHttpServer())
+      .patch(`/api/v1/posts/${id}`)
+      .auth('owner', { type: 'bearer' })
+      .send({
+        title: 'Edited',
+        text: 'Changed text',
+        spoiler: false,
+        imageIDs: [],
+        version: 1,
+        mutationID: randomUUID(),
+      })
+      .expect(200);
+    const edited = (
+      await get(`${path}?after=${changed.revision}`, 'alice')
+        .timeout({ response: 3000 })
+        .expect(200)
+    ).body;
+    expect(BigInt(edited.revision)).toBeGreaterThan(BigInt(changed.revision));
+    await del(`posts/${id}`).expect(200);
+    const deleted = (
+      await get(`${path}?after=${edited.revision}`, 'alice')
+        .timeout({ response: 3000 })
+        .expect(200)
+    ).body;
+    expect(BigInt(deleted.revision)).toBeGreaterThan(BigInt(edited.revision));
+  });
+
+  it('does not advance room revisions for rolled-back writes and validates subscriptions', async () => {
+    await member('owner');
+    await member('incomplete', false);
+    const item = (
+      await db.query(
+        "SELECT id FROM catalog_items WHERE universe_id='marvel' AND status='published' LIMIT 1",
+      )
+    ).rows[0].id;
+    const id = randomUUID(),
+      path = `community/rooms/${item}/changes`;
+    await put(`posts/${id}`, { ...input, kind: 'room', itemID: item }).expect(
+      200,
+    );
+    const before = (await get(path).expect(200)).body;
+    await expect(
+      db.transaction(async (client) => {
+        await client.query('UPDATE community_posts SET text=$2 WHERE id=$1', [
+          id,
+          'Must roll back',
+        ]);
+        throw new Error('rollback');
+      }),
+    ).rejects.toThrow();
+    expect((await get(path).expect(200)).body.revision).toBe(before.revision);
+    await get(`${path}?after=-1`).expect(400);
+    await get(`${path}?unexpected=1`).expect(400);
+    await get('community/rooms/nonexistent/changes').expect(404);
+    const incomplete = await get(path, 'incomplete').expect(409);
+    expect(incomplete.body.code).toBe('ONBOARDING_REQUIRED');
+    await request(app.getHttpServer())
+      .get('/api/v1/' + path)
+      .expect(401);
+  });
+
   it('protects room spoiler segments, including image endpoints and search', async () => {
     await member('owner');
     await member('alice');

@@ -1,3 +1,5 @@
+import { RoomEventsService } from './room-events.service.js';
+import { DatabaseService } from '../database/database.service.js';
 import { reportQuotaSQL } from './community-policy.js';
 import {
   BadRequestException,
@@ -20,7 +22,10 @@ const fields = `cl.id,cl.owner_uid AS owner,cl.universe_id AS "universeID",cl.na
  EXISTS(SELECT 1 FROM club_members m WHERE m.club_id=cl.id AND m.firebase_uid=$1) AS joined`;
 @Injectable()
 export class SpacesService {
+  private readonly waiting = new Map<string, number>();
   constructor(
+    @Inject(DatabaseService) private readonly db: DatabaseService,
+    @Inject(RoomEventsService) private readonly events: RoomEventsService,
     @Inject(AccountLifecycleService)
     private readonly lifecycle: AccountLifecycleService,
     @Inject(SocialService) private readonly social: SocialService,
@@ -392,6 +397,41 @@ export class SpacesService {
         nextCursor: rows.length > 30 ? rows[29].itemID : null,
       };
     });
+  }
+  async changes(
+    uid: string,
+    item: string,
+    after: string | undefined,
+    signal: AbortSignal,
+  ) {
+    if ((this.waiting.get(uid) ?? 0) >= 3)
+      throw new HttpException({ code: 'RATE_LIMITED' }, 429);
+    this.waiting.set(uid, (this.waiting.get(uid) ?? 0) + 1);
+    try {
+      // Validate membership/catalog before allocating a waiting subscription.
+      await this.visit(uid, item);
+      const watch = await this.events.watch(item, signal);
+      try {
+        const revision = async () =>
+          (
+            await this.db.query<{ revision: string }>(
+              "SELECT coalesce((SELECT revision::text FROM room_revisions WHERE item_id=$1), '0') AS revision",
+              [item],
+            )
+          ).rows[0].revision;
+        const current = await revision();
+        if (after === current && !signal.aborted) await watch.changed;
+        // Revalidate after waiting; account/catalog access may have changed.
+        const room = await this.visit(uid, item);
+        return { ...room, revision: await revision() };
+      } finally {
+        watch.dispose();
+      }
+    } finally {
+      const remaining = (this.waiting.get(uid) ?? 1) - 1;
+      if (remaining) this.waiting.set(uid, remaining);
+      else this.waiting.delete(uid);
+    }
   }
   async visit(uid: string, item: string, progress?: number) {
     return this.lifecycle.withActiveAccount(uid, async (client) => {

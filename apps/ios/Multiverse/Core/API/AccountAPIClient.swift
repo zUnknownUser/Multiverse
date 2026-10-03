@@ -109,13 +109,13 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, Com
         let result: Deletion = try await request("me", method: "DELETE")
         guard result.deleted else { throw AuthError.deletionPending }
     }
-    func request<Response: Decodable>(_ path: String, method: String = "GET", body: Data? = nil, query: [URLQueryItem] = []) async throws -> Response {
+    func request<Response: Decodable>(_ path: String, method: String = "GET", body: Data? = nil, query: [URLQueryItem] = [], timeout: TimeInterval = 20) async throws -> Response {
         guard let baseURL else { throw AuthError.apiNotConfigured }
         guard let uid = tokens.userID, expectedUserID == nil || uid == expectedUserID else { throw AuthError.sessionExpired }
         var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
         if !query.isEmpty { components.queryItems = query }
         for attempt in 0...1 {
-            var request = URLRequest(url: components.url!, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 20)
+            var request = URLRequest(url: components.url!, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)
             request.httpMethod = method
             request.httpBody = body
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")

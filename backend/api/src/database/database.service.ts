@@ -5,13 +5,15 @@ import {
   type OnModuleDestroy,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Pool, type PoolClient, type QueryResultRow } from 'pg';
+import { Client, Pool, type PoolClient, type QueryResultRow } from 'pg';
 
 @Injectable()
 export class DatabaseService implements OnModuleDestroy {
+  private readonly connectionString: string | undefined;
   private readonly pool: Pool | undefined;
   constructor(@Inject(ConfigService) config: ConfigService) {
     const connectionString = config.get<string>('DATABASE_URL');
+    this.connectionString = connectionString;
     if (connectionString) {
       this.pool = new Pool({
         connectionString,
@@ -23,6 +25,23 @@ export class DatabaseService implements OnModuleDestroy {
       this.pool.on('error', () => {
         /* Requests report availability without logging connection secrets. */
       });
+    }
+  }
+  async roomListener() {
+    if (!this.connectionString)
+      throw new ServiceUnavailableException({ code: 'DATABASE_UNAVAILABLE' });
+    const client = new Client({
+      connectionString: this.connectionString,
+      connectionTimeoutMillis: 5000,
+      keepAlive: true,
+    });
+    client.on('error', () => {});
+    try {
+      await client.connect();
+      return client;
+    } catch (error) {
+      await client.end().catch(() => {});
+      throw this.mapError(error);
     }
   }
   async query<T extends QueryResultRow>(sql: string, values: unknown[] = []) {

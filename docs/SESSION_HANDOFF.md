@@ -1,3 +1,34 @@
+# Atualização — salas com eventos e composer (03/10/2026)
+
+- Sheet de criar/editar posts com design system, thumbnails/remover, menções/spoiler
+  e publicar fixo acima do teclado. Mantidas regras de envio, imagens e retry.
+- Salas: long polling autenticado acordado por LISTEN/NOTIFY do PostgreSQL, revision
+  durável na migration aditiva 017. Sem mensagens nos avisos; conteúdo sempre relido
+  pelas regras existentes. Timeout de 20s renova presença e revalida visibilidade;
+  cliente reconecta com recuo 1–20s. Uma conexão de escuta por instância da API.
+- Mensagens cronológicas, abertura no fim, histórico acima, aviso de novidades sem
+  puxar a leitura, cache de novas mensagens e descarte de resultados de outro trecho.
+- Progresso em sheet com slider e atalhos 0/50/100; limites de spoiler no backend.
+- Verificação: 78 unitários API, 102 HTTP/PostgreSQL, 181 iOS, 1040 entradas PT-BR/EN.
+  Banco de teste descartável `multiverse-rooms-test`; nenhuma fixture em produção.
+- Mudanças locais preexistentes de formatação no catálogo e espaço em MockRepository
+  foram preservadas. Commit do catálogo inclui apenas as seis novas entradas traduzidas.
+- WebRTC foi solicitado como **mapeamento após esta entrega**, não implementação.
+  Não adicionar SDK nem contratar serviço até o usuário pedir essa etapa.
+  Proposta: sala de voz por obra/trecho, participantes e anfitrião, entrar/sair,
+  microfone, pedir fala, silenciar/remover. Chat persistido continua na API atual.
+  `LiveRoomView` hospedaria controles; um store separado gerenciaria áudio/conexão;
+  API NestJS validaria Firebase, obra/progresso e papel antes de emitir token curto;
+  um serviço de mídia SFU/TURN, como LiveKit Cloud, distribuiria o áudio.
+  Hoje não há SDK WebRTC, permissão de microfone ou moderação de sessões de voz.
+  Fonte oficial: https://github.com/livekit/client-sdk-swift e
+  https://docs.livekit.io/transport/self-hosting/deployment/.
+- Push/APNs permanecem desligados; WebRTC em primeiro plano é uma etapa separada.
+
+Os registros abaixo são históricos.
+
+---
+
 # Atualização — Comunidade dinâmica (02/10/2026)
 
 Usuário autorizou edição/imagens, respostas/menções, busca/descoberta e módulos reais

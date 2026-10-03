@@ -1,3 +1,4 @@
+import { RoomEventsService } from './community/room-events.service.js';
 import { SpacesController } from './community/spaces.controller.js';
 import { SpacesService } from './community/spaces.service.js';
 import { ImagesService } from './community/images.service.js';
@@ -49,6 +50,7 @@ import { InteractionsController } from './social/interactions.controller.js';
     MarvelController,
   ],
   providers: [
+    RoomEventsService,
     SpacesService,
     ImagesService,
     LibraryService,

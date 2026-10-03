@@ -36,6 +36,7 @@ struct LiveRoom: Decodable, Identifiable, Sendable {
     var id: String { itemID }
 }
 struct LiveRoomsPage: Decodable, Sendable { let rooms: [LiveRoom]; let nextCursor: String? }
+struct RoomChanges: Decodable, Sendable { let itemID: String; let online: Int; let progress: Int; let revision: String }
 struct RoomVisit: Decodable, Sendable { let itemID: String; let online: Int; let progress: Int }
 struct ClubInput: Encodable, Sendable { let name: String; let description: String; let universeID: String; let version: Int? }
 struct ScheduleInput: Encodable, Sendable { let itemID: String; let startsOn: String; let totalUnits: Int; let unitLabel: String }
@@ -53,6 +54,7 @@ struct ScheduleInput: Encodable, Sendable { let itemID: String; let startsOn: St
     func fetchClubMembers(club: String, schedule: String?, after: String?) async throws -> ClubMembersPage
     func fetchRooms(query: String, universe: String?, after: String?) async throws -> LiveRoomsPage
     func visitRoom(_ item: String, progress: Int?) async throws -> RoomVisit
+    func roomChanges(_ item: String, after: String?) async throws -> RoomChanges
 }
 extension CommunityAPI {
     func fetchPosts(filter: CommunityFilter, after: String?) async throws -> CommunityPage {
@@ -103,6 +105,9 @@ extension AccountAPIClient: SpacesAPI {
     }
     func fetchRooms(query: String, universe: String?, after: String?) async throws -> LiveRoomsPage {
         try await request("community/rooms", query: [("q", Optional(query)), ("universe", universe), ("after", after)].compactMap { key, value in value.map { URLQueryItem(name: key, value: $0) } })
+    }
+    func roomChanges(_ item: String, after: String?) async throws -> RoomChanges {
+        try await request("community/rooms/\(item)/changes", query: after.map { [URLQueryItem(name: "after", value: $0)] } ?? [], timeout: 35)
     }
     func visitRoom(_ item: String, progress: Int?) async throws -> RoomVisit {
         try await request("community/rooms/\(item)/visit", method: "PUT", body: JSONSerialization.data(withJSONObject: progress.map { ["progress": $0] } ?? [:]))

@@ -70,8 +70,22 @@ nenhuma criação editorial ou amostra é necessária.
   Presença considera visitas no último minuto, com filtros de conta ativa/bloqueios.
 - Mensagens são posts `kind=room`, fora do feed global. Carregamento inicial de 30;
   páginas anteriores por cursor. Abrir mensagem permite respostas, reação e denúncia.
-- Atualiza a cada 10s em primeiro plano. Ao consultar histórico, atualização automática
-  da lista pausa até “ver mensagens recentes”; presença continua atualizada.
+- `GET /community/rooms/:item/changes?after=<revision>`: long polling autenticado,
+  acordado imediatamente por PostgreSQL LISTEN/NOTIFY após commit. Sem alteração,
+  responde em até 20s para renovar presença e acesso. Resposta contém somente
+  `itemID`, `online`, `progress` e `revision` (string); nunca mensagens/spoilers.
+  Revisão durável recupera eventos perdidos. Uma conexão LISTEN por instância da API;
+  no máximo três esperas simultâneas por conta; cancelamento desconecta a espera.
+  Migration aditiva `017_room_realtime.sql`; inserção/edição/exclusão de mensagens
+  altera a revisão transacionalmente, inclusive operações da moderação.
+- iOS acompanha alterações enquanto ativo e reconecta com recuo de 1 até 20s.
+  A leitura autorizada dos posts continua separada. Presença mantém TTL de um minuto.
+  Os heartbeats também revalidam visibilidade, inclusive bloqueios e progresso.
+- Conversa em ordem cronológica, abrindo nas mensagens mais recentes. No histórico,
+  novas mensagens são guardadas até tocar no aviso; atualizações não puxam a tela.
+  Páginas antigas carregam acima e preservam a mensagem que estava sendo lida.
+- Progresso ajustável por slider de 10 em 10 e atalhos 0/50/100, com confirmação.
+  A sheet de criar/editar também usa agora os cards/tipografia do app e rodapé fixo.
 - Trechos Geral / Até a metade / Final exigem progresso 0 / 50 / 100, respectivamente.
   A API verifica o progresso na publicação e leitura, incluindo imagens/notificações.
   O progresso é autodeclarado e sincronizado; não é reconhecimento de leitura.

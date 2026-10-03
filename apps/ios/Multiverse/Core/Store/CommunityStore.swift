@@ -147,3 +147,68 @@ enum CommunityError: LocalizedError {
         } catch { self.error = error.localizedDescription; return false }
     }
 }
+
+/// Room messages are chronological. Incoming pages are buffered while reading history.
+@MainActor @Observable final class RoomTimeline {
+    private(set) var posts: [CommunityPost] = []
+    private(set) var users: [String: User] = [:]
+    private(set) var cursor: String?
+    private(set) var busy = false
+    private(set) var error: String?
+    private(set) var hasNewMessages = false
+    private var filter: CommunityFilter?
+    private var generation = 0
+    private var buffered: CommunityPage?
+
+    func reset() {
+        generation += 1; filter = nil; posts = []; users = [:]; cursor = nil
+        buffered = nil; hasNewMessages = false; error = nil; busy = false
+    }
+    @discardableResult
+    func load(api: any CommunityAPI, filter requested: CommunityFilter, more: Bool = false, following: () -> Bool = { true }) async -> Bool {
+        if filter != requested { reset(); filter = requested }
+        guard !busy, !more || cursor != nil else { return false }
+        let current = generation
+        busy = true; error = nil
+        defer { if current == generation { busy = false } }
+        do {
+            let after = more ? cursor : nil
+            let page = try await api.fetchPosts(filter: requested, after: after)
+            try Task.checkCancellation()
+            guard generation == current else { return false }
+            try page.validate()
+            guard page.nextCursor == nil || page.nextCursor != after,
+                  page.posts.allSatisfy({ $0.itemID == requested.item && $0.kind == "room" && $0.segment == requested.segment }) else { throw SocialError.invalid }
+            for user in page.users { users[user.id] = user }
+            if more {
+                let known = Set(posts.map(\.id))
+                posts = ordered(posts + page.posts.filter { !known.contains($0.id) }); cursor = page.nextCursor
+            } else if following() || posts.isEmpty {
+                posts = ordered(page.posts); cursor = page.nextCursor; buffered = nil; hasNewMessages = false
+            } else {
+                buffered = page
+                let known = Set(posts.map(\.id))
+                hasNewMessages = page.posts.contains { !known.contains($0.id) }
+                let fresh = Dictionary(uniqueKeysWithValues: page.posts.map { ($0.id, $0) })
+                // Refresh edits/deletions in the covered range without inserting new rows.
+                let oldest = ordered(page.posts).first
+                posts = posts.compactMap { post in
+                    if let updated = fresh[post.id] { return updated }
+                    guard let oldest else { return nil }
+                    return precedes(post, oldest) ? post : nil
+                }
+            }
+            return true
+        } catch is CancellationError { return false }
+        catch { if current == generation { self.error = error.localizedDescription }; return false }
+    }
+    func showBuffered() {
+        guard let buffered else { return }
+        posts = ordered(buffered.posts); cursor = buffered.nextCursor
+        self.buffered = nil; hasNewMessages = false
+    }
+    private func precedes(_ a: CommunityPost, _ b: CommunityPost) -> Bool {
+        a.createdAt == b.createdAt ? a.id < b.id : a.createdAt < b.createdAt
+    }
+    private func ordered(_ values: [CommunityPost]) -> [CommunityPost] { values.sorted(by: precedes) }
+}

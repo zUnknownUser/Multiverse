@@ -1,6 +1,102 @@
 {
   "sourceLanguage": "pt-BR",
   "strings": {
+    "%@/%@ %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@/%2$@ %3$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@/%2$@ %3$@"
+          }
+        }
+      }
+    },
+    "AJUSTAR PROGRESSO": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AJUSTAR PROGRESSO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ADJUST PROGRESS"
+          }
+        }
+      }
+    },
+    "MEU PROGRESSO": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MEU PROGRESSO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MY PROGRESS"
+          }
+        }
+      }
+    },
+    "NOVAS MENSAGENS": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NOVAS MENSAGENS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NEW MESSAGES"
+          }
+        }
+      }
+    },
+    "Reconectando à sala…": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconectando à sala…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnecting to the room…"
+          }
+        }
+      }
+    },
+    "Geral: livre. Até a metade: 50%. Final: 100%. Você informa seu progresso para evitar spoilers.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geral: livre. Até a metade: 50%. Final: 100%. Você informa seu progresso para evitar spoilers."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General: open. Halfway: 50%. Ending: 100%. Set your progress to avoid spoilers."
+          }
+        }
+      }
+    },
     "Esta review não está mais disponível para você. Atualize o feed.": {
       "extractionState": "manual",
       "localizations": {

@@ -6,6 +6,7 @@ import Testing
 @MainActor private final class CommunityStub: CommunityAPI {
     let id = UUID().uuidString.lowercased()
     let user = User(id: "alice", name: "Alice", handle: "@alice", avatarColor: "#F4A814", bio: "", followers: nil, badgeUniverse: "")
+    var roomPage: CommunityPage?
     var unavailable = false
     var failWrites = false
     var writes: [String] = []
@@ -15,7 +16,7 @@ import Testing
     var replyParents: [String?] = []
     func fetchPosts(filter: CommunityFilter, after: String?) async throws -> CommunityPage {
         if holdQueries { return try await withCheckedThrowingContinuation { heldQueries[filter.search] = $0 } }
-        return try page()
+        return try roomPage ?? page()
     }
     func postReply(post: String, id: String, text: String, spoiler: Bool, parent: String?) async throws -> CommentReceipt {
         replyParents.append(parent)
@@ -42,6 +43,65 @@ import Testing
     func reportPostComment(_ id: String, comment: String, reason: String, alsoBlock: Bool) async throws -> CommentReportReceipt { .init(reported: true, reviewID: id, commentID: comment, blockedUserID: alsoBlock ? "alice" : nil) }
 }
 @Suite(.serialized) @MainActor struct CommunityTests {
+    private func roomPost(_ api: CommunityStub, at time: Double, text: String = "Message", segment: Int = 0) -> CommunityPost {
+        let id = UUID().uuidString.lowercased()
+        return .init(id: id, user: api.user.id, universeID: "wow", itemID: "room-work", title: "Room", text: text, spoiler: false, createdAt: Date(timeIntervalSince1970: time), commentCount: 0, interaction: api.summary(id), segment: segment, kind: "room")
+    }
+    @Test func roomBuffersNewMessagesWithoutMovingHistoryAndShowsLatestOnRequest() async {
+        let api = CommunityStub(), room = RoomTimeline()
+        let filter = CommunityFilter(item: "room-work", kind: "room", segment: 0)
+        let first = roomPost(api, at: 1), second = roomPost(api, at: 2), third = roomPost(api, at: 3)
+        api.roomPage = .init(posts: [second, first], users: [api.user], nextCursor: "older")
+        #expect(await room.load(api: api, filter: filter))
+        #expect(room.posts.map(\.id) == [first.id, second.id])
+        api.roomPage = .init(posts: [third, second, first], users: [api.user], nextCursor: "older")
+        #expect(await room.load(api: api, filter: filter, following: { false }))
+        #expect(room.hasNewMessages)
+        #expect(room.posts.map(\.id) == [first.id, second.id])
+        room.showBuffered()
+        #expect(room.posts.map(\.id) == [first.id, second.id, third.id])
+        #expect(!room.hasNewMessages)
+        // A deletion updates the visible range without a false new-message badge.
+        api.roomPage = .init(posts: [third, first], users: [api.user], nextCursor: nil)
+        #expect(await room.load(api: api, filter: filter, following: { false }))
+        #expect(room.posts.map(\.id) == [first.id, third.id])
+        #expect(!room.hasNewMessages)
+    }
+    @Test func roomHistoryDeduplicatesAndResetDiscardsAnInFlightSpoilerPage() async {
+        let api = CommunityStub(), room = RoomTimeline()
+        let filter = CommunityFilter(item: "room-work", kind: "room", segment: 0)
+        let first = roomPost(api, at: 1), second = roomPost(api, at: 2)
+        api.roomPage = .init(posts: [second], users: [api.user], nextCursor: "older")
+        await room.load(api: api, filter: filter)
+        api.roomPage = .init(posts: [second, first], users: [api.user], nextCursor: nil)
+        await room.load(api: api, filter: filter, more: true, following: { false })
+        #expect(room.posts.map(\.id) == [first.id, second.id])
+        api.holdQueries = true
+        let work = Task { await room.load(api: api, filter: filter) }
+        while api.heldQueries[""] == nil { await Task.yield() }
+        room.reset()
+        api.heldQueries.removeValue(forKey: "")?.resume(returning: .init(posts: [second], users: [api.user], nextCursor: nil))
+        #expect(await work.value == false)
+        #expect(room.posts.isEmpty)
+        #expect(!room.busy)
+    }
+    @Test func roomDoesNotJumpIfReaderScrollsAwayDuringFetch() async {
+        let api = CommunityStub(), room = RoomTimeline()
+        let filter = CommunityFilter(item: "room-work", kind: "room", segment: 0)
+        let first = roomPost(api, at: 1), second = roomPost(api, at: 2)
+        api.roomPage = .init(posts: [first], users: [api.user], nextCursor: nil)
+        await room.load(api: api, filter: filter)
+        api.holdQueries = true
+        var following = true
+        let work = Task { await room.load(api: api, filter: filter, following: { following }) }
+        while api.heldQueries[""] == nil { await Task.yield() }
+        following = false
+        api.heldQueries.removeValue(forKey: "")?.resume(returning: .init(posts: [second, first], users: [api.user], nextCursor: nil))
+        #expect(await work.value)
+        #expect(room.posts.map(\.id) == [first.id])
+        #expect(room.hasNewMessages)
+    }
+
     @Test func losingAccessClearsCachedPostAndReplies() async {
         let api = CommunityStub(), id = UUID().uuidString.lowercased()
         _ = try? await api.postReply(post: api.id, id: id, text: "Hello", spoiler: false)

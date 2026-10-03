@@ -46,7 +46,7 @@ sendo apresentação/cálculo local; não são novos serviços de mídia ou medi
   progresso por membro/etapa, discussões, convite por link e denúncia/moderação.
 - **Salas reais:** uma por obra publicada; mensagens, respostas, reações, presença
   por visitas no último minuto e progresso sincronizado; trechos 0/50/100 com proteção
-  no servidor. Atualização por consulta a cada 10s enquanto a sala está aberta.
+  no servidor. Atualização por eventos do banco enquanto a sala está aberta, com reconexão e aviso de novas mensagens.
 - **Teorias e duelos reais:** publicação, descoberta, votos únicos por conta e contagens
   persistidas. Teoria tem conclusão identificada como decisão do autor com explicação;
   duelo tem opções e prazo. Nada de votos-base, ranking ou precisão inventada.
@@ -136,7 +136,7 @@ não prometem persistência entre sessões/dispositivos.
 - **Comunidade:** recursos solicitados ligados ao backend; sem reposts, vídeo, ranking
   personalizado, fila offline durável, DMs ou live de estreia. Clubes são públicos,
   sem coorganizador/expulsão/transferência. Teorias não têm validação editorial automática
-  nem pontos/ranking. Salas atualizam por polling, sem WebSocket/indicador de digitação.
+  nem pontos/ranking. Salas usam long polling acordado por eventos do banco; sem voz/vídeo, WebSocket ou indicador de digitação.
   As amostras antigas não foram publicadas no servidor. Imagens ficam no PostgreSQL
   com limites; object storage/CDN é evolução necessária antes de escala de mídia.
   [Contrato e limites detalhados](../backend/api/docs/live-community.md).
