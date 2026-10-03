@@ -1,3 +1,30 @@
+# Atualização — ordens de leitura reais (03/10/2026)
+
+Usuário autorizou implementar ordens de leitura e fará QA de mensagens/voz depois.
+
+- Migration 021: percursos editoriais Marvel/DC em PT-BR/EN, passos ligados ao catálogo,
+  seguir/votar reais, versões/recibos por UID e exclusão em cascata. API autenticada
+  `/me/reading-orders`; conta ativa/onboarding, limites e conflitos entre dispositivos.
+- Três percursos iniciais: Marvel (Fênix Negra → Guerra Civil → Guerras Secretas 2015),
+  DC crises (Crise nas Infinitas Terras → Flashpoint), DC perspectivas (Watchmen →
+  Reino do Amanhã). Seleções editoriais, não cronologia completa ou lista oficial.
+- Reativada aba Ordens no universo com o layout existente. Contadores reais e autoria
+  Multiverse. Seguidas primeiro; próxima leitura abre obra. Passos abrem diário, sem
+  check paralelo; progresso conta IDs distintos do diário, ignora checks de onboarding.
+- Ordem inteira oculta se etapa ficar indisponível. Não inventa substituições, não
+  trata edição individual como volume inteiro. Estado privado é preservado no arquivo.
+- Snapshot sob demanda/foreground, sem polling. Retry conserva UUID/payload; erros,
+  cancelamento e conflitos não confirmam votos/follows no cliente antes do servidor.
+- Validação: 81 testes unitários API, 130 HTTP/PostgreSQL, 205 iOS; 1110 entradas PT-BR/EN.
+  Teste legado de limite de reações atravessou virada do minuto no conjunto e passou
+  na reexecução isolada; nenhuma regra de produção de reações foi alterada.
+- [Contrato, fontes editoriais e QA](../backend/api/docs/reading-orders.md).
+- Próximos passos: QA manual acumulado (ordens/DMs em duas contas, voz em iPhones),
+  depois ampliar catálogo e curadoria por personagem/edição. Monetização segue adiada;
+  push aguarda Apple Developer/APNs. Ordens comunitárias ainda não implementadas.
+
+---
+
 # Atualização — mensagens privadas reais (03/10/2026)
 
 Pedido ativo concluído: mensagens privadas, preservando estilo/PT-BR/EN e prioridade

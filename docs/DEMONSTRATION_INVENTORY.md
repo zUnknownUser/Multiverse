@@ -1,6 +1,6 @@
 # Inventário de dados reais e demonstrações — 03/10/2026
 
-Auditoria atualizada após mensagens privadas (migration 020), voz nas salas e escopo Marvel/DC. “Demonstração”
+Auditoria atualizada após ordens de leitura (migration 021), mensagens privadas, voz nas salas e escopo Marvel/DC. “Demonstração”
 significa dados de exemplo ou interação que não chega a outro usuário/servidor.
 Uma função local pode funcionar de verdade sem ser sincronizada. A distinção abaixo
 considera a sessão autenticada normal, não previews/testes com repositórios mockados.
@@ -11,8 +11,8 @@ A sessão autenticada usa Home, Busca, Biblioteca e Perfil. A Biblioteca substit
 Clubes na barra: desejos, favoritos e listas privadas agora persistem na conta.
 Os módulos demonstrativos descritos abaixo permanecem no código para previews e
 trabalho futuro, mas seus atalhos foram ocultados e suas rotas bloqueadas na sessão
-real. As abas de universo mostram Geral e Personagens; ordens e timeline
-ficaram ocultas. Clubes, salas, teorias e duelos reais são acessados pela Comunidade;
+real. As abas de universo mostram Geral, Ordens e Personagens; a timeline
+continua oculta. Clubes, salas, teorias e duelos reais são acessados pela Comunidade;
 salas também pela obra. As telas legadas desses módulos não são usadas pela conta real. Pro, Wrapped, escudo automático por cronologia e ações sem backend
 também saíram dos acessos normais. Spoilers explícitos continuam funcionando.
 Widgets não recebem mais snapshots mistos em sessões reais: ficam sem dados.
@@ -28,6 +28,10 @@ sendo apresentação/cálculo local; não são novos serviços de mídia ou medi
   Universo “membros” conta onboarding real; o contador de presença foi ocultado.
 - Diário, notas, revisitas, reviews e favorito escolhido **dentro do registro**:
   persistidos na conta; histórico e contadores pessoais não recebem amostras.
+- **Ordens de leitura:** três percursos editoriais Marvel/DC em PT-BR/EN no banco,
+  seguir/votar/desfazer por conta e contagens reais. Progresso usa obras distintas do
+  diário, com próxima leitura; checks locais não concluem etapas.
+  [Contrato, referências e limites](../backend/api/docs/reading-orders.md).
 - **Séries de HQs:** agrupamento real das edições publicadas, ordenação numérica e
   progresso por obras distintas do diário, sem duplicar releituras.
 - **Biblioteca privada:** desejos e favoritos por obra, criar/editar/excluir listas,
@@ -80,7 +84,7 @@ Fontes: [RootView](../apps/ios/Multiverse/App/RootView.swift),
 | Teorias (legado/demo) | Precisão, pontos de lore, revisores fictícios e teorias de exemplo continuam isolados. Teorias acessíveis na Comunidade têm conteúdo/votos reais e conclusão do autor explicitamente identificada. |
 | Previsões | Eventos/perguntas, respostas, pontos e liga/ranking: exemplos/memória. Não há apuração real nem competição compartilhada. |
 | Check de visto fora do diário | Após onboarding, check/uncheck em ordem/timeline usa estado local. O diário real marca a obra vista ao recarregar; desmarcar localmente não exclui um registro. Os vistos escolhidos no onboarding são persistidos naquele fluxo. |
-| Ordens de leitura | Títulos, passos, autores e votos-base vêm do JSON; seguir ordem e votar são locais. O cálculo de progresso funciona, mas mistura passos fixos com diário/checks locais. |
+| Ordens de leitura (legado/demo) | JSON antigo, autores fictícios, votos-base e checks locais continuam só em previews. A sessão real usa percursos editoriais no banco e progresso do diário. Criação/edição comunitária de ordens ainda não foi implementada. |
 | Linha do tempo | Eras, posição e vínculos com obras vêm do JSON. Não há cronologia editorial completa no banco; obras novas importadas não ganham automaticamente posição. A navegação entre itens existentes funciona. |
 | Mapa de conexões | Relações entre obras/personagens são fixas no JSON. O mapa desenha/navega, mas não há grafo de relações remoto atualizado. |
 | Cânone / essencial ou pulável | Rótulos editoriais específicos vêm de tabelas locais; contagens das enquetes são geradas por seed e voto em memória. Não representam votação real da comunidade. O campo básico de cânone da obra existe no catálogo remoto. |
@@ -125,6 +129,9 @@ não prometem persistência entre sessões/dispositivos.
   usuário, que ainda não tem Apple Developer. Faltam credencial APNs no Firebase,
   provisioning/build habilitado e validação de entrega em iPhone. Testes simulam FCM;
   não demonstram entrega real. [Passo a passo de ativação](../backend/api/docs/community-notifications.md).
+- **Ordens de leitura:** seleção inicial de três percursos; não é cronologia completa.
+  Sem criação comunitária, comentários, widget real ou equivalência automática entre
+  volumes e edições avulsas. Curadoria/publicação administrativa; retry só na sessão.
 - **Mensagens privadas:** somente texto e cartas, sem mídia/áudio/grupos ou edição/
   exclusão individual. Rascunho/retry não persistem ao encerrar o app. Pedidos recusados
   não podem ser recuperados nesta versão. Push depende de APNs, como descrito acima.

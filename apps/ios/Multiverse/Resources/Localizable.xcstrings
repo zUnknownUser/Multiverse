@@ -18805,6 +18805,261 @@
           }
         }
       }
+    },
+    "Esta ordem não está disponível. Atualize para ver os percursos atuais.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta ordem não está disponível. Atualize para ver os percursos atuais."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This reading order is unavailable. Refresh to see current journeys."
+          }
+        }
+      }
+    },
+    "Não foi possível confirmar essa alteração. Atualize suas ordens.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível confirmar essa alteração. Atualize suas ordens."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn't confirm this change. Refresh your reading orders."
+          }
+        }
+      }
+    },
+    "Você alterou muitas ordens. Tente novamente mais tarde.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você alterou muitas ordens. Tente novamente mais tarde."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've made too many changes. Try again later."
+          }
+        }
+      }
+    },
+    "Não conseguimos atualizar as ordens de leitura. Tente novamente.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não conseguimos atualizar as ordens de leitura. Tente novamente."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn't update the reading orders. Try again."
+          }
+        }
+      }
+    },
+    "ORDEM EDITORIAL · %1$@": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ORDEM EDITORIAL · %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EDITORIAL READING ORDER · %1$@"
+          }
+        }
+      }
+    },
+    "Multiverse · %1$@ obras · %2$@ seguem": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multiverse · %1$@ obras · %2$@ seguem"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multiverse · %1$@ works · %2$@ following"
+          }
+        }
+      }
+    },
+    "Registre cada obra no diário para avançar. Releituras não contam duas vezes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registre cada obra no diário para avançar. Releituras não contam duas vezes."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log each work in your diary to make progress. Rereads only count once."
+          }
+        }
+      }
+    },
+    "PRÓXIMA LEITURA · %1$@": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRÓXIMA LEITURA · %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "READ NEXT · %1$@"
+          }
+        }
+      }
+    },
+    "Uma obra deste percurso mudou. Atualize o catálogo para continuar.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma obra deste percurso mudou. Atualize o catálogo para continuar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A work in this journey has changed. Refresh the catalog to continue."
+          }
+        }
+      }
+    },
+    "ATUALIZAR CATÁLOGO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATUALIZAR CATÁLOGO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REFRESH CATALOG"
+          }
+        }
+      }
+    },
+    "Marcar como visto": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcar como visto"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as seen"
+          }
+        }
+      }
+    },
+    "Registrar no diário": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar no diário"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log in diary"
+          }
+        }
+      }
+    },
+    "Percursos editoriais do Multiverse. Siga uma ordem e acompanhe a leitura pelo diário.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Percursos editoriais do Multiverse. Siga uma ordem e acompanhe a leitura pelo diário."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editorial journeys by Multiverse. Follow an order and track your reading through your diary."
+          }
+        }
+      }
+    },
+    "Novos percursos estão em preparação. Volte em breve.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Novos percursos estão em preparação. Volte em breve."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New journeys are being prepared. Check back soon."
+          }
+        }
+      }
+    },
+    "Suas ordens mudaram em outro dispositivo. Atualize e tente novamente.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suas ordens mudaram em outro dispositivo. Atualize e tente novamente."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your reading orders changed on another device. Refresh and try again."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

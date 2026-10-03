@@ -152,6 +152,11 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, Com
             }
             let code = (try? JSONDecoder().decode(APIError.self, from: data))?.code
             switch code {
+            case "ORDER_UNAVAILABLE": throw ReadingOrdersError.unavailable
+            case "ORDER_STALE": throw ReadingOrdersError.stale
+            case "ORDER_CONFLICT": throw ReadingOrdersError.conflict
+            case "ORDER_LIMIT": throw ReadingOrdersError.limit
+            case "INVALID_ORDER_REQUEST": throw ReadingOrdersError.invalid
             case "MESSAGE_UNAVAILABLE": throw DirectMessageError.unavailable
             case "MESSAGE_REQUEST_PENDING": throw DirectMessageError.pending
             case "MESSAGE_CONFLICT": throw DirectMessageError.conflict

@@ -83,6 +83,7 @@ final class AppStore {
     private let repository: MultiverseRepository
     private let catalogAPI: (any CatalogAPI)?
     private let activityAPI: (any ActivityAPI)?
+    let readingOrderStore: ReadingOrdersStore?
     let directMessages: DirectMessagesStore?
     let library: LibraryStore?
     var showsDemoFeatures: Bool { !usesAccountAPI }
@@ -113,7 +114,8 @@ final class AppStore {
     var badgeNames: [String: String] = [:]
     var connections: [String: [String]] = [:]
     var timelines: [String: [TimelineEntry]] = [:]
-    var readingOrders: [ReadingOrder] = []
+    private var demoReadingOrders: [ReadingOrder] = []
+    var readingOrders: [ReadingOrder] { readingOrderStore?.orders ?? (showsDemoFeatures ? demoReadingOrders : []) }
     var lists: [LoreList] = []
     var genericReviewTexts: [String] = []
     var canonStatus: [String: CanonInfo] = [:]
@@ -239,7 +241,8 @@ final class AppStore {
 
     // MARK: - Init
 
-    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil, catalogAPI: (any CatalogAPI)? = nil, activityAPI: (any ActivityAPI)? = nil, peopleAPI: (any PeopleAPI)? = nil, socialAPI: (any SocialAPI)? = nil, communityAPI: (any CommunityAPI)? = nil, notificationsAPI: (any NotificationsAPI)? = nil, libraryAPI: (any LibraryAPI)? = nil, directMessagesAPI: (any DirectMessagesAPI)? = nil) {
+    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil, catalogAPI: (any CatalogAPI)? = nil, activityAPI: (any ActivityAPI)? = nil, peopleAPI: (any PeopleAPI)? = nil, socialAPI: (any SocialAPI)? = nil, communityAPI: (any CommunityAPI)? = nil, notificationsAPI: (any NotificationsAPI)? = nil, libraryAPI: (any LibraryAPI)? = nil, directMessagesAPI: (any DirectMessagesAPI)? = nil, readingOrdersAPI: (any ReadingOrdersAPI)? = nil) {
+        self.readingOrderStore = readingOrdersAPI.map { ReadingOrdersStore(api: $0) }
         self.directMessages = directMessagesAPI.map { DirectMessagesStore(api: $0, ownerID: session?.userID ?? "duda") }
         self.library = libraryAPI.map { LibraryStore(api: $0) }
         self.communityAPI = communityAPI
@@ -295,7 +298,7 @@ final class AppStore {
             badgeNames = catalog.badgeNames
             connections = catalog.connections
             timelines = catalog.timelines
-            readingOrders = catalog.readingOrders
+            demoReadingOrders = catalog.readingOrders
             lists = catalog.lists
             genericReviewTexts = catalog.genericReviewTexts
             canonStatus = catalog.canonStatus
@@ -415,6 +418,7 @@ final class AppStore {
             guard revision == activityRevision else { return }
             try snapshot.validate(for: meID)
             applyActivity(snapshot)
+            activityLoadError = nil
             syncWidgetData()
         } catch is CancellationError { return
         } catch {
@@ -730,10 +734,12 @@ final class AppStore {
         return pollVote == nil ? L10n.format("%1$@ votos · vote pra ver o resultado", String(describing: Logic.fmt(total))) : L10n.format("%1$@ votos · você votou", String(describing: Logic.fmt(total)))
     }
 
-    func isOrderVoted(_ id: String) -> Bool { orderVotes.contains(id) }
-    func orderVoteCount(_ order: ReadingOrder) -> Int { order.votes + (isOrderVoted(order.id) ? 1 : 0) }
+    func isOrderVoted(_ id: String) -> Bool { readingOrderStore?.orders.first { $0.id == id }?.voted ?? (showsDemoFeatures && orderVotes.contains(id)) }
+    func orderVoteCount(_ order: ReadingOrder) -> Int { order.votes + (readingOrderStore == nil && isOrderVoted(order.id) ? 1 : 0) }
     @discardableResult
     func voteOrder(_ id: String) -> Bool {
+        if let remote = readingOrderStore { Task { await remote.toggle(id, action: "voted") }; return !isOrderVoted(id) }
+        guard showsDemoFeatures else { return false }
         let turningOn = !orderVotes.contains(id)
         if turningOn { orderVotes.insert(id) } else { orderVotes.remove(id) }
         let repository = self.repository
@@ -741,8 +747,10 @@ final class AppStore {
         return turningOn
     }
 
-    func isFollowingOrder(_ id: String) -> Bool { orderFollows.contains(id) }
+    func isFollowingOrder(_ id: String) -> Bool { readingOrderStore?.orders.first { $0.id == id }?.following ?? (showsDemoFeatures && orderFollows.contains(id)) }
     func toggleOrderFollow(_ id: String) {
+        if let remote = readingOrderStore { Task { await remote.toggle(id, action: "following") }; return }
+        guard showsDemoFeatures else { return }
         let turningOn = !orderFollows.contains(id)
         if turningOn { orderFollows.insert(id) } else { orderFollows.remove(id) }
         let repository = self.repository
@@ -798,10 +806,17 @@ final class AppStore {
         items.filter { $0.uni == uniID && $0.type == "Personagem" }
     }
     func ordersList(in uniID: String) -> [ReadingOrder] {
-        readingOrders.filter { $0.uni == uniID }.sorted { $0.votes > $1.votes }
+        readingOrders.filter { $0.uni == uniID }.sorted {
+            if $0.following != $1.following { return $0.following == true }
+            return $0.votes == $1.votes ? $0.id < $1.id : $0.votes > $1.votes
+        }
     }
     func orderProgress(_ order: ReadingOrder) -> (done: Int, total: Int) {
-        (order.steps.filter { isSeen($0) }.count, order.steps.count)
+        (order.steps.filter { isOrderStepRead($0) }.count, order.steps.count)
+    }
+
+    func isOrderStepRead(_ id: String) -> Bool {
+        readingOrderStore == nil ? isSeen(id) : diary.contains { $0.itemId == id }
     }
 
     struct TimelineRow: Identifiable {

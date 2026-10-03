@@ -68,6 +68,10 @@ struct ReadingOrder: Codable, Identifiable, Hashable, Sendable {
     let id: String, uni: String, title: String, by: String
     let votes: Int
     let steps: [String]
+    var description: String? = nil
+    var followers: Int? = nil
+    var following: Bool? = nil
+    var voted: Bool? = nil
 }
 
 struct LoreList: Codable, Identifiable, Hashable, Sendable {

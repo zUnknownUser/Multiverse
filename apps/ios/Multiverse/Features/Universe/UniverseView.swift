@@ -59,7 +59,7 @@ struct UniverseView: View {
 
     private var tabBar: some View {
         HStack(spacing: 8) {
-            ForEach(store.showsDemoFeatures ? UniverseTab.allCases : [.geral, .pers], id: \.self) { t in
+            ForEach(store.showsDemoFeatures ? UniverseTab.allCases : (store.readingOrderStore != nil ? [.geral, .ordens, .pers] : [.geral, .pers]), id: \.self) { t in
                 Button { tab = t } label: {
                     Text(L10n.text(t.rawValue).uppercased())
                         .font(MVFont.bold(11))
@@ -205,13 +205,19 @@ private struct TimelineRailRow: View {
 }
 
 private struct OrdersTabContent: View {
+    @Environment(\.scenePhase) private var scenePhase
     let universeID: String
     @Environment(AppStore.self) private var store
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(L10n.text("Ordens montadas e votadas pela comunidade. A mais votada sobe pro topo."))
+            ReadingOrdersStatus()
+            Text(store.readingOrderStore == nil ? L10n.text("Ordens montadas e votadas pela comunidade. A mais votada sobe pro topo.") : L10n.text("Percursos editoriais do Multiverse. Siga uma ordem e acompanhe a leitura pelo diário."))
                 .font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.muted)
+            if let remote = store.readingOrderStore, remote.version != nil, store.ordersList(in: universeID).isEmpty {
+                Text(L10n.text("Novos percursos estão em preparação. Volte em breve."))
+                    .font(MVFont.body(14)).foregroundStyle(MV.C.muted).frame(maxWidth: .infinity).padding(24).comicCard(shadow: 0, dashed: true)
+            }
             VStack(spacing: 12) {
                 ForEach(store.ordersList(in: universeID)) { order in
                     OrderSummaryCard(order: order)
@@ -219,6 +225,10 @@ private struct OrdersTabContent: View {
             }
         }
         .padding(.horizontal, MV.pad)
+        .task(id: scenePhase) {
+            guard scenePhase == .active else { return }
+            await store.readingOrderStore?.refresh(); await store.refreshActivity()
+        }
     }
 }
 
@@ -245,16 +255,23 @@ private struct OrderSummaryCard: View {
                 .burstOnTap("BOOM!", color: MV.C.accent, when: !voted) {
                     store.voteOrder(order.id)
                 }
+                .allowsHitTesting(store.readingOrderStore?.canMutate ?? true)
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(order.title).font(MVFont.bold(15)).foregroundStyle(MV.C.ink)
-                    if let by = store.user(order.by) {
+                    if let followers = order.followers {
+                        Text(L10n.format("Multiverse · %1$@ obras · %2$@ seguem", String(order.steps.count), String(followers)))
+                            .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
+                        if store.isFollowingOrder(order.id) { Text(L10n.text("✓ SEGUINDO")).font(MVFont.bold(10)).foregroundStyle(uni.color) }
+                    } else if let by = store.user(order.by) {
                         Text(L10n.format("por %1$@ · %2$@ itens · %3$@ seguem", String(describing: by.handle), String(describing: order.steps.count), String(describing: Logic.fmt(Int((Double(order.votes) / 3).rounded())))))
                             .font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
                     }
+                    if store.readingOrderStore == nil || store.activityLoadError == nil {
                     HStack(spacing: 8) {
                         ComicProgress(value: progress.total > 0 ? Double(progress.done) / Double(progress.total) : 0, fill: uni.color, height: 10)
                         Text("\(progress.done)/\(progress.total)").font(MVFont.bold(11)).foregroundStyle(MV.C.muted)
+                    }
                     }
                 }
                 Spacer(minLength: 0)

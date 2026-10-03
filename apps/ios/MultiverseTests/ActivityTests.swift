@@ -66,7 +66,7 @@ struct ActivityTests {
         #expect(store.activityLoadError != nil)
         #expect(writer.snapshots.isEmpty)
         api.readFailure = false
-        await store.reloadAccount()
+        await store.refreshActivity()
         #expect(store.activityLoadError == nil)
         #expect(store.diary.isEmpty)
         #expect(store.reviews.allSatisfy { $0.user != store.meID })

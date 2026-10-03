@@ -1,3 +1,5 @@
+import { ReadingOrdersController } from './reading-orders/reading-orders.controller.js';
+import { ReadingOrdersService } from './reading-orders/reading-orders.service.js';
 import { MessagesController } from './messages/messages.controller.js';
 import { MessagesService } from './messages/messages.service.js';
 import { VoiceController } from './voice/voice.controller.js';
@@ -42,6 +44,7 @@ import { InteractionsController } from './social/interactions.controller.js';
 
 @Module({
   controllers: [
+    ReadingOrdersController,
     MessagesController,
     VoiceController,
     SpacesController,
@@ -57,6 +60,7 @@ import { InteractionsController } from './social/interactions.controller.js';
     MarvelController,
   ],
   providers: [
+    ReadingOrdersService,
     MessagesService,
     VoiceService,
     VoiceMediaService,
