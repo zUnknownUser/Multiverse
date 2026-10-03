@@ -132,7 +132,9 @@ export class CommunityController {
     if (
       (q.q !== undefined && (typeof q.q !== 'string' || q.q.length > 120)) ||
       (q.feed !== undefined &&
-        !['recent', 'following', 'active'].includes(q.feed as string)) ||
+        !['recent', 'following', 'active', 'unanswered'].includes(
+          q.feed as string,
+        )) ||
       (q.kind !== undefined &&
         !['discussion', 'theory', 'duel', 'room'].includes(q.kind as string)) ||
       ['club', 'schedule'].some(

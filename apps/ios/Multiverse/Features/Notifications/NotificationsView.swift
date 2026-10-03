@@ -21,7 +21,7 @@ struct NotificationsView: View {
                         Button(L10n.text("MARCAR ESTAS COMO LIDAS")) { Task { _ = await notifications.markRead(notifications.entries.map(\.id)) } }.disabled(notifications.busy)
                     }
                     ForEach(notifications.entries) { entry in
-                        Button { Task { await open(entry, in: notifications) } } label: {
+                        Button { Task { await store.openNotification(entry) } } label: {
                             HStack(alignment: .top, spacing: 12) {
                                 if let user = notifications.users[entry.user] { AvatarView(user: user, size: 34) }
                                 VStack(alignment: .leading, spacing: 6) {
@@ -32,22 +32,12 @@ struct NotificationsView: View {
                                 Spacer()
                                 if entry.readAt == nil { Circle().fill(MV.C.ink).frame(width: 8, height: 8).accessibilityLabel(L10n.text("Não lida")) }
                             }.foregroundStyle(MV.C.ink).padding(14).comicCard()
-                        }.buttonStyle(.plain).disabled(notifications.busy)
+                        }.buttonStyle(.plain)
                     }
                     if notifications.nextCursor != nil { Button(L10n.text("CARREGAR MAIS")) { Task { await notifications.refresh(more: true) } }.disabled(notifications.busy) }
                 }
             }.padding(MV.pad)
         }.task { await store.notifications?.refresh() }
         .refreshable { await store.notifications?.refresh() }
-    }
-    private func open(_ entry: ActivityNotification, in notifications: NotificationStore) async {
-        guard await notifications.markRead([entry.id]) else { return }
-        switch entry.targetType {
-        case "message": store.push(.conversation(entry.user))
-        case "review": store.push(.review(entry.targetID))
-        case "post": store.push(.post(entry.targetID))
-        case "person": store.openUserProfile(entry.targetID)
-        default: break
-        }
     }
 }

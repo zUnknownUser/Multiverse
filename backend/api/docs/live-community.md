@@ -9,7 +9,14 @@ Conteúdo escrito por usuários preserva o idioma original; interface/erros em P
 - `GET /posts`: filtros `q` (até 120 caracteres), `universe`, `item`, `kind`, `club`,
   `schedule`, `segment`, `feed` e `after`. Página de 30 com cursor `(created_at,id)`.
   `feed=recent` mostra recentes; `following`, autores seguidos; `active`, posts dos
-  últimos sete dias com comentários visíveis. **Não é ranking personalizado**.
+  últimos sete dias com comentários visíveis; `unanswered`, posts sem comentários
+  visíveis para quem consulta. Mantém filtros de universo/obra/contexto, busca,
+  paginação e controles de acesso. **Não é ranking personalizado**.
+- A Home exibe até três posts da página recente usando os cards existentes, sem
+  carregar suas imagens. A página é consultada ao aparecer, no refresh e ao fechar
+  o compositor; não há polling adicional. Estado separado por conta, sem amostras
+  quando não houver conteúdo. O atalho de publicação reutiliza o compositor atual:
+  universo obrigatório, obra opcional. “Sem respostas” abre a tela de comunidade.
 - `PUT /posts/:id`: UUID v4 estável do cliente. Campos anteriores + `kind`
   (`discussion`, `theory`, `duel`, `room`), `imageIDs` (até 4), `clubID`, `scheduleID`.
   Duelo exige `optionA`, `optionB` diferentes (até 120 caracteres) e `closesAt`

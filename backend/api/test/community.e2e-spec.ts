@@ -239,6 +239,104 @@ describe.skipIf(!databaseURL)('Live community features with PostgreSQL', () => {
         .parentID,
     ).toBeNull();
   });
+  it('discovers unanswered discussions without a catalog item and removes them after a reply', async () => {
+    await member('owner');
+    await member('alice');
+    const marvel = randomUUID(),
+      dc = randomUUID(),
+      answered = randomUUID();
+    await put(
+      'posts/' + marvel,
+      { ...input, title: 'Galactus' },
+      'alice',
+    ).expect(200);
+    await put(
+      'posts/' + dc,
+      {
+        ...input,
+        universeID: 'dc',
+        title: 'Batman',
+      },
+      'alice',
+    ).expect(200);
+    await put('posts/' + answered, input).expect(200);
+    const reply = randomUUID();
+    await comment(answered, reply, { text: 'Conversa', spoiler: false }).expect(
+      200,
+    );
+    const pending = (await get('posts?feed=unanswered').expect(200)).body.posts;
+    expect(pending.map((p: { id: string }) => p.id).sort()).toEqual(
+      [marvel, dc].sort(),
+    );
+    expect(
+      pending.every(
+        (p: { itemID: string | null; commentCount: number }) =>
+          p.itemID === null && p.commentCount === 0,
+      ),
+    ).toBe(true);
+    expect(
+      (
+        await get('posts?feed=unanswered&universe=dc&q=Batman').expect(200)
+      ).body.posts.map((p: { id: string }) => p.id),
+    ).toEqual([dc]);
+    await comment(
+      marvel,
+      randomUUID(),
+      { text: 'Primeira resposta', spoiler: false },
+      'owner',
+    ).expect(200);
+    expect(
+      (await get('posts?feed=unanswered&universe=marvel').expect(200)).body
+        .posts,
+    ).toHaveLength(0);
+    // Existing discovery and the notification loop continue to include the answered post.
+    expect(
+      (await get('posts?feed=active').expect(200)).body.posts.map(
+        (p: { id: string }) => p.id,
+      ),
+    ).toContain(marvel);
+    expect(
+      (await get('me/notifications', 'alice').expect(200)).body.notifications,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targetType: 'post',
+          targetID: marvel,
+          kind: 'comment',
+        }),
+      ]),
+    );
+    await put(`posts/${dc}/report`, {
+      reason: 'spam',
+      alsoBlock: false,
+    }).expect(200);
+    expect(
+      (await get('posts?feed=unanswered').expect(200)).body.posts,
+    ).toHaveLength(0);
+  });
+  it('applies comment visibility and author blocks to unanswered discovery', async () => {
+    await member('owner');
+    await member('alice');
+    const post = randomUUID(),
+      reply = randomUUID(),
+      hiddenAuthorPost = randomUUID();
+    await put('posts/' + post, input).expect(200);
+    await put('posts/' + hiddenAuthorPost, input, 'alice').expect(200);
+    await comment(post, reply, { text: 'Reply', spoiler: false }).expect(200);
+    await put(`posts/${post}/comments/${reply}/report`, {
+      reason: 'spam',
+      alsoBlock: false,
+    }).expect(200);
+    expect(
+      (await get('posts?feed=unanswered').expect(200)).body.posts.map(
+        (p: { id: string }) => p.id,
+      ),
+    ).toContain(post);
+    await put('me/blocks/alice', { blocked: true }).expect(200);
+    const page = (await get('posts?feed=unanswered').expect(200)).body;
+    expect(page.posts.map((p: { id: string }) => p.id)).toEqual([post]);
+    expect(page.posts[0].commentCount).toBe(0);
+  });
   it('searches content and filters followed, active, theory and duel discovery', async () => {
     await member('owner');
     await member('alice');

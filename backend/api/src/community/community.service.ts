@@ -62,6 +62,7 @@ export class CommunityService {
    AND ($7::text='' OR to_tsvector('simple',r.title || ' ' || r.text) @@ plainto_tsquery('simple',$7) OR strpos(lower(r.title || ' ' || r.text),lower($7))>0)
    AND ($8::text<>'following' OR EXISTS(SELECT 1 FROM visible_follows f WHERE f.follower_uid=$1 AND f.followed_uid=r.firebase_uid))
    AND ($8::text<>'active' OR (r.created_at>now()-interval '7 days' AND EXISTS(SELECT 1 FROM post_comments c JOIN profiles cp ON cp.firebase_uid=c.firebase_uid WHERE c.post_id=r.id AND ${postCommentVisible})))
+   AND ($8::text<>'unanswered' OR NOT EXISTS(SELECT 1 FROM post_comments c JOIN profiles cp ON cp.firebase_uid=c.firebase_uid WHERE c.post_id=r.id AND ${postCommentVisible}))
    AND ($9::text IS NULL OR r.kind=$9)
    AND ($10::uuid IS NULL OR r.club_id=$10) AND ($11::uuid IS NULL OR r.schedule_id=$11)
    AND ($4::uuid IS NOT NULL OR $10::uuid IS NOT NULL OR r.club_id IS NULL)

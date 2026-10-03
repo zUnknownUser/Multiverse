@@ -1,3 +1,32 @@
+# Atualização — comunidade presente na Home (03/10/2026)
+
+- Direção autorizada: interação dos usuários como motor do app; catálogo como apoio.
+  Expansão em massa pausada. Sem novo catálogo, migração, redesenho ou troca de abas.
+- Home mantém a entrada de Comunidade e usa os cards existentes para até três posts
+  recentes reais; publicação direta pelo compositor atual, sem exigir uma obra.
+  Prévia omite imagens; uma página limitada sob demanda, sem polling adicional.
+  Estado por AppStore/conta; refresh manual e após fechar o compositor.
+- Home e comunidade abrem “Sem respostas”: `feed=unanswered`, preservando universo,
+  obra, busca e contexto de clube/teoria/duelo. Usa zero comentários **visíveis** para
+  aquele usuário; bloqueios, denúncias e moderação continuam sendo aplicados.
+- Sino abre o destino antes de confirmar leitura. Falha na confirmação mantém o
+  aviso não lido, mas não impede navegação. Continua abrindo o post/review, sem
+  rolagem automática até um comentário específico em páginas posteriores.
+- Interface PT-BR/EN; conteúdos dos usuários mantêm o idioma original. Spoilers
+  permanecem ocultos na prévia. Nenhum post/engajamento artificial foi criado.
+- Validação: 220 testes iOS; 98 unitários API + 134 HTTP/PostgreSQL (um novo teste
+  corrigiu a própria fixture de denúncia do autor e passou na reexecução dos 20
+  cenários de comunidade); build/tipos/lint e 1116 traduções na versão preparada.
+  Render UIKit conferido em larguras de 320 e 390 pontos; ações não quebram texto.
+- Alterações locais anteriores em MockRepository e extrações/formatação do catálogo
+  de tradução foram preservadas fora do commit. O catálogo local anterior contém
+  `%@/2000` sem traduções; o catálogo preparado para entrega passa a verificação.
+- QA do usuário: Home → conversa; publicar escolhendo Marvel/DC sem obra; responder
+  em uma segunda conta; verificar saída de “Sem respostas” e abrir pelo sino.
+  Push com app fechado continua pendente de Apple Developer/APNs.
+
+---
+
 # Atualização — expansão Marvel/DC (03/10/2026)
 
 - Usuário pediu ampliar DC e trazer o máximo de conteúdo útil, preservando o visual.

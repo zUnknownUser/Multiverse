@@ -129,6 +129,23 @@ import Testing
         #expect(await loaded.report(comment: nil, author: "alice", reason: .spam, block: true))
         #expect(loaded.post == nil && loaded.comments.isEmpty)
     }
+    @Test func unansweredFeedRejectsAnsweredPostsWithoutLosingRegularDiscovery() async throws {
+        let api = CommunityStub(), timeline = CommunityTimeline()
+        await timeline.load(api: api, filter: .init(feed: "unanswered"))
+        #expect(timeline.posts.count == 1 && timeline.posts.first?.itemID == nil)
+        _ = try await api.postReply(post: api.id, id: UUID().uuidString.lowercased(), text: "Reply", spoiler: false)
+        let unanswered = CommunityTimeline()
+        await unanswered.load(api: api, filter: .init(feed: "unanswered"))
+        #expect(unanswered.posts.isEmpty && unanswered.error != nil)
+        await unanswered.load(api: api, filter: .init())
+        #expect(unanswered.posts.count == 1 && unanswered.error == nil)
+    }
+    @Test func homeCommunityDoesNotSharePostsBetweenAccounts() async {
+        let first = AppStore(communityAPI: CommunityStub()), second = AppStore(communityAPI: CommunityStub())
+        if let api = first.communityAPI { await first.homeCommunity.load(api: api, filter: .init()) }
+        #expect(first.homeCommunity.posts.count == 1)
+        #expect(second.homeCommunity.posts.isEmpty)
+    }
     @Test func timelineRejectsAnotherUniverseAndNeverFallsBackToSamples() async {
         let api = CommunityStub(), timeline = CommunityTimeline()
         await timeline.load(api: api, universe: "dc", item: nil)

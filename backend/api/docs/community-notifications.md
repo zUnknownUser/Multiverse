@@ -10,23 +10,23 @@ pelo universo ou pela obra; a obra é vinculada quando a composição parte dela
 
 Todas as rotas usam `/api/v1` e Firebase ID token, com onboarding concluído.
 
-| Método/rota                                    | Comportamento                                                                                     |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| GET `/posts?universe=wow&item=w-wotlk&after=…` | Descoberta global ou filtrada; 30 por página, cursor estável                                      |
-| GET `/posts/:id`                               | Post visível e autor                                                                              |
-| PUT `/posts/:id`                               | UUID v4 do cliente, `{universeID,itemID,title,text,spoiler}`; `itemID` deve existir ou ser `null` |
-| DELETE `/posts/:id`                            | Exclusão lógica apenas pelo autor; retries não revivem o post                                     |
-| GET `/posts/:id/comments?after=…`              | Comentários visíveis, autores, permissão e cursor                                                 |
-| PUT `/posts/:id/comments/:commentID`           | Texto e spoiler; mesma identidade em retries                                                      |
-| PUT `/posts/:id/reaction`                      | `{reaction: null ou POW!/ZAP!/KRAK!/HEH, liked: boolean}`                                         |
-| PUT `/posts/:id/comments/:commentID/reaction`  | Mesma regra, reação ao comentário                                                                 |
-| PUT `/posts/:id/report`                        | Motivo válido e `alsoBlock`                                                                       |
-| PUT `/posts/:id/comments/:commentID/report`    | Denúncia do comentário e bloqueio opcional                                                        |
-| GET `/me/notifications?after=…`                | Atividade, autores, cursor e contagem exata de não lidas visíveis                                 |
-| PUT `/me/notifications/read`                   | `{ids:[UUID,…]}`, até 100; altera apenas notificações da própria conta                            |
-| GET/PUT `/me/notification-preferences`         | Preferências `activity`, `push`; resposta inclui `pushAvailable`                                  |
-| PUT `/me/push-devices/:id`                     | `{token}`, UUID de registro por sessão/instalação; desativado sem `PUSH_ENABLED=true`             |
-| DELETE `/me/push-devices/:id`                  | Remove apenas registro pertencente ao usuário autenticado                                         |
+| Método/rota                                          | Comportamento                                                                                     |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| GET `/posts?universe=marvel&item=m-civilwar&after=…` | Descoberta global ou filtrada; 30 por página, cursor estável                                      |
+| GET `/posts/:id`                                     | Post visível e autor                                                                              |
+| PUT `/posts/:id`                                     | UUID v4 do cliente, `{universeID,itemID,title,text,spoiler}`; `itemID` deve existir ou ser `null` |
+| DELETE `/posts/:id`                                  | Exclusão lógica apenas pelo autor; retries não revivem o post                                     |
+| GET `/posts/:id/comments?after=…`                    | Comentários visíveis, autores, permissão e cursor                                                 |
+| PUT `/posts/:id/comments/:commentID`                 | Texto e spoiler; mesma identidade em retries                                                      |
+| PUT `/posts/:id/reaction`                            | `{reaction: null ou POW!/ZAP!/KRAK!/HEH, liked: boolean}`                                         |
+| PUT `/posts/:id/comments/:commentID/reaction`        | Mesma regra, reação ao comentário                                                                 |
+| PUT `/posts/:id/report`                              | Motivo válido e `alsoBlock`                                                                       |
+| PUT `/posts/:id/comments/:commentID/report`          | Denúncia do comentário e bloqueio opcional                                                        |
+| GET `/me/notifications?after=…`                      | Atividade, autores, cursor e contagem exata de não lidas visíveis                                 |
+| PUT `/me/notifications/read`                         | `{ids:[UUID,…]}`, até 100; altera apenas notificações da própria conta                            |
+| GET/PUT `/me/notification-preferences`               | Preferências `activity`, `push`; resposta inclui `pushAvailable`                                  |
+| PUT `/me/push-devices/:id`                           | `{token}`, UUID de registro por sessão/instalação; desativado sem `PUSH_ENABLED=true`             |
+| DELETE `/me/push-devices/:id`                        | Remove apenas registro pertencente ao usuário autenticado                                         |
 
 O DTO compartilhado de comentários mantém o campo de transporte `reviewID`, que,
 nas rotas `/posts`, contém o ID do post. Isso não cria vínculo com a tabela de reviews.
@@ -58,8 +58,10 @@ reconstruídos retroativamente. Seguir durante o onboarding não gera alertas.
 A consulta revalida a visibilidade do alvo e do ator; bloquear, denunciar, moderar,
 retirar a reação ou perder acesso ao conteúdo retira o evento da lista/contador.
 Entrar na central não marca tudo como lido: toque em uma linha ou use “marcar estas”.
-A ação envia IDs explícitos, preservando eventos que chegam depois. O botão marca
-até 100 notificações carregadas por vez. Paginação e atualização manual disponíveis.
+A ação envia IDs explícitos, preservando eventos que chegam depois. O botão confirma as notificações carregadas em lotes de até 100 IDs.
+O toque abre o destino antes de aguardar essa confirmação: se ela falhar, a
+navegação continua e o aviso permanece não lido. Posts/reviews abrem a conversa,
+sem rolagem automática para comentários de páginas posteriores. Paginação e atualização manual disponíveis.
 O sino atualiza ao abrir/voltar ao app e a cada 30 segundos em primeiro plano;
 não há WebSocket/realtime nesta etapa. Cada conta tem store próprio e API vinculada
 ao UID, inclusive após refresh do token. A abertura do conteúdo verifica novamente

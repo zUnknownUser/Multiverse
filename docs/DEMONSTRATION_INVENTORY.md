@@ -21,6 +21,11 @@ sendo apresentação/cálculo local; não são novos serviços de mídia ou medi
 
 ## O que já usa backend real
 
+- **Conversas na Home:** até três publicações recentes reais, publicação sem vínculo
+  obrigatório com obra e descoberta de posts sem comentários visíveis. Sem ranking
+  personalizado, posts artificiais ou presença online simulada. Os fluxos atuais de
+  comunidade/clubes/salas continuam usando os mesmos endpoints e componentes.
+
 - Login Google/e-mail, verificação/recuperação, perfil/@usuário, onboarding e exclusão:
   Firebase Authentication + API/PostgreSQL; fluxo de e-mail via funções/Resend.
 - Catálogo de universos/obras e descrições PT/EN, busca sobre o acervo carregado,

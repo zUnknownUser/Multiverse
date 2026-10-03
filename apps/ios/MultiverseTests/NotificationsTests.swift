@@ -25,6 +25,20 @@ import Testing
 @Suite(.serialized) @MainActor struct NotificationsTests {
     let user = User(id: "alice", name: "Alice", handle: "@alice", avatarColor: "#F4A814", bio: "", followers: nil, badgeUniverse: "")
     func entry() -> ActivityNotification { .init(id: UUID().uuidString.lowercased(), kind: "follow", targetType: "person", targetID: "alice", commentID: nil, createdAt: .now, readAt: nil, user: "alice") }
+    @Test func openingPostIsImmediateEvenWhenReadReceiptFails() async {
+        let api = NotificationsStub()
+        let post = UUID().uuidString.lowercased()
+        let entry = ActivityNotification(id: UUID().uuidString.lowercased(), kind: "comment", targetType: "post", targetID: post, commentID: nil, createdAt: .now, readAt: nil, user: user.id)
+        api.page = .init(notifications: [entry], users: [user], unreadCount: 1, nextCursor: nil)
+        let app = AppStore(notificationsAPI: api)
+        await app.notifications?.refresh()
+        api.fail = true
+        await app.openNotification(entry)
+        #expect(app.homePath.last == .post(post))
+        #expect(app.notifications?.unreadCount == 1)
+        #expect(app.notifications?.entries.first?.readAt == nil)
+        #expect(api.readIDs == [entry.id])
+    }
     @Test func badgeComesFromServerAndReadFailureKeepsUnread() async {
         let api = NotificationsStub(), first = entry()
         api.page = .init(notifications: [first], users: [user], unreadCount: 7, nextCursor: nil)

@@ -19076,6 +19076,91 @@
           }
         }
       }
+    },
+    "SEM RESPOSTAS": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SEM RESPOSTAS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "UNANSWERED"
+          }
+        }
+      }
+    },
+    "COMEÇAR CONVERSA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "COMEÇAR CONVERSA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "START A CONVERSATION"
+          }
+        }
+      }
+    },
+    "Qual assunto de Marvel ou DC você quer conversar hoje?": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qual assunto de Marvel ou DC você quer conversar hoje?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What would you like to discuss about Marvel or DC today?"
+          }
+        }
+      }
+    },
+    "Uma conversa sobre este universo. Não precisa escolher uma obra.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma conversa sobre este universo. Não precisa escolher uma obra."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A conversation about this universe. No need to choose a title."
+          }
+        }
+      }
+    },
+    "Nenhuma conversa sem respostas por aqui. Explore as outras publicações ou comece a sua.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhuma conversa sem respostas por aqui. Explore as outras publicações ou comece a sua."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No unanswered conversations here. Explore other posts or start your own."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

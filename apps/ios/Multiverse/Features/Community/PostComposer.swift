@@ -136,6 +136,9 @@ struct PostComposer: View {
             Label(store.item(item)?.title ?? item, systemImage: "book.closed")
                 .font(MVFont.body(12)).padding(.horizontal, 12).padding(.vertical, 12)
                 .background(MV.C.desk, in: RoundedRectangle(cornerRadius: MV.R.md))
+        } else if kind == "discussion" {
+            Text(L10n.text("Uma conversa sobre este universo. Não precisa escolher uma obra."))
+                .font(MVFont.body(12)).foregroundStyle(MV.C.muted)
         }
     }
 

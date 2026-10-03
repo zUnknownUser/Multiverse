@@ -87,6 +87,7 @@ final class AppStore {
     let directMessages: DirectMessagesStore?
     let library: LibraryStore?
     var showsDemoFeatures: Bool { !usesAccountAPI }
+    let homeCommunity = CommunityTimeline()
     let communityAPI: (any CommunityAPI)?
     var spacesAPI: (any SpacesAPI)? { communityAPI as? any SpacesAPI }
     let notifications: NotificationStore?
@@ -1524,6 +1525,18 @@ final class AppStore {
     /// Abre a central; somente ações confirmadas de leitura alteram o contador.
     func openNotifications() {
         push(.notifications)
+    }
+
+    /// Navigate first: a read receipt failure must not block access or clear the badge.
+    func openNotification(_ entry: ActivityNotification) async {
+        switch entry.targetType {
+        case "message": push(.conversation(entry.user))
+        case "review": push(.review(entry.targetID))
+        case "post": push(.post(entry.targetID))
+        case "person": openUserProfile(entry.targetID)
+        default: return
+        }
+        _ = await notifications?.markRead([entry.id])
     }
 
     func openMyProfile() {
