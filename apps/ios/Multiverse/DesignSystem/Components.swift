@@ -52,7 +52,7 @@ struct Halftone: View {
     }
 }
 
-// MARK: - Capa placeholder (cor chapada + retícula + tipo em mono + título)
+// MARK: - Capa real, com arte gráfica como fallback
 
 struct PosterView: View {
     let item: Item
@@ -84,6 +84,7 @@ struct PosterView: View {
             .padding(8)
         }
         .frame(width: width, height: height)
+        .overlay { CatalogCoverOverlay(cover: item.cover, width: width, height: height) }
         .comicCard(bg: p.bg, radius: radius, shadow: shadow)
     }
 }

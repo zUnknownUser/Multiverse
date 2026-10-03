@@ -46,6 +46,7 @@ struct Item: Codable, Identifiable, Hashable, Sendable {
     var reviewCount: Int? = nil
     var ratingHistogram: [Int]? = nil
     var series: ItemSeries? = nil
+    var cover: CatalogCover? = nil
 }
 
 struct ItemSeries: Codable, Hashable, Sendable {
@@ -387,5 +388,29 @@ struct RecursosData: Codable, Sendable {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return try! decoder.decode(RecursosData.self, from: Data(contentsOf: url))
+    }
+}
+
+struct CatalogCover: Codable, Hashable, Sendable {
+    let provider: String
+    let url: String
+    let sourceURL: String
+
+    var imageURL: URL? {
+        let pattern: String
+        switch provider {
+        case "tmdb": pattern = #"^https://image\.tmdb\.org/t/p/w500/[a-zA-Z0-9]+\.(jpg|png)$"#
+        case "metron": pattern = #"^https://static\.metron\.cloud/media/issue/[a-zA-Z0-9_/-]+\.(jpg|jpeg|png|webp)$"#
+        default: return nil
+        }
+        guard url.count <= 1000, url.range(of: pattern, options: .regularExpression) != nil else { return nil }
+        return URL(string: url)
+    }
+
+    func sizedURL(pixels: Int) -> URL? {
+        guard let url = imageURL else { return nil }
+        guard provider == "tmdb" else { return url }
+        let size = pixels <= 185 ? 185 : (pixels <= 342 ? 342 : 500)
+        return URL(string: url.absoluteString.replacingOccurrences(of: "/w500/", with: "/w\(size)/"))
     }
 }

@@ -118,6 +118,8 @@ targets:
         buildPhase: resources
       - path: Multiverse/DesignSystem/Theme.swift
       - path: Multiverse/DesignSystem/Components.swift
+      - path: Multiverse/DesignSystem/CatalogCoverOverlay.swift
+      - path: Multiverse/Core/API/CatalogCover.swift
       - path: Multiverse/Core/Models.swift
       - path: Multiverse/Core/Logic.swift
       - path: Multiverse/Core/Localization

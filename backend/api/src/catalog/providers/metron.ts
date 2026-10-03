@@ -1,3 +1,4 @@
+import { providerCoverURL } from '../catalog-cover.js';
 import { setTimeout } from 'node:timers/promises';
 import {
   type CatalogCandidate,
@@ -48,6 +49,7 @@ export function parseMetronIssue(
   const title = `${plainText(series.name, 260)} #${plainText(data.number, 30)}`;
   const releaseDate = date(data.store_date);
   const coverDate = date(data.cover_date);
+  const posterURL = providerCoverURL('metron', data.image);
   return {
     provider: 'metron',
     externalId: `issue:${requestedID}`,
@@ -67,6 +69,7 @@ export function parseMetronIssue(
       year: (releaseDate || coverDate).slice(0, 4),
       releaseDate,
       coverDate,
+      ...(posterURL ? { posterURL } : {}),
       ...(positiveInt(data.page) && data.page <= 10_000
         ? { pageCount: data.page }
         : {}),

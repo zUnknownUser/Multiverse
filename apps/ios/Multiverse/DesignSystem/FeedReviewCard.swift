@@ -50,6 +50,7 @@ struct FeedReviewCard: View {
         let posterButton = Button { store.push(.item(item.id)) } label: {
             ZStack { poster.bg; Halftone() }
                 .frame(width: 58, height: 87)
+                    .overlay { CatalogCoverOverlay(cover: item.cover, width: 58, height: 87) }
                 .comicCard(bg: poster.bg, radius: MV.R.md, shadow: MV.Shadow.s)
         }
         .buttonStyle(.plain)

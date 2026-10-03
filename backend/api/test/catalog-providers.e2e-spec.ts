@@ -273,6 +273,7 @@ describe.skipIf(!databaseURL)(
               ? { title: m.title, release_date: `${m.year}-01-01` }
               : { name: m.title, first_air_date: `${m.year}-01-01` }),
             overview: 'English TMDB synopsis',
+            poster_path: '/abc123.jpg',
             translations: {
               translations: [
                 {
@@ -298,6 +299,11 @@ describe.skipIf(!databaseURL)(
         desc: 'Sinopse TMDB',
         avg: 0,
         canon: 'MCU',
+        cover: {
+          provider: 'tmdb',
+          url: 'https://image.tmdb.org/t/p/w500/abc123.jpg',
+          sourceURL: 'https://www.themoviedb.org/movie/299534',
+        },
       });
       expect((await get('en')).body.item.desc).toBe('English TMDB synopsis');
       expect((await get('en')).body.sources).toHaveLength(1);
@@ -413,6 +419,74 @@ describe.skipIf(!databaseURL)(
         (await db.query("SELECT id FROM catalog_items WHERE id='m-new-test'"))
           .rowCount,
       ).toBe(0);
+    });
+    it('exposes mapped covers consistently and hides unsafe artwork without hiding the work', async () => {
+      const candidates = metronBatch();
+      candidates[0].metadata.posterURL =
+        'https://static.metron.cloud/media/issue/civil-war-1.jpg';
+      await db.transaction((client) => publishMetron(client, candidates));
+      const itemID = candidates[0].suggestedItemId;
+      for (const locale of ['pt-BR', 'en']) {
+        const snapshot = (
+          await request(app.getHttpServer())
+            .get('/api/v1/catalog')
+            .set('Accept-Language', locale)
+            .expect(200)
+        ).body;
+        expect(
+          snapshot.items.find((item: { id: string }) => item.id === itemID)
+            .cover,
+        ).toMatchObject({
+          provider: 'metron',
+          url: candidates[0].metadata.posterURL,
+        });
+        expect(
+          snapshot.items.find((item: { id: string }) => item.id === 'm-civil')
+            .cover,
+        ).toBeNull();
+      }
+      await db.query(
+        "UPDATE catalog_sources SET metadata=jsonb_set(metadata,'{posterURL}',to_jsonb($1::text)) WHERE item_id=$2",
+        ['https://evil.test/cover.jpg', itemID],
+      );
+      const detail = (
+        await request(app.getHttpServer())
+          .get(`/api/v1/catalog/marvel/${itemID}`)
+          .expect(200)
+      ).body;
+      expect(detail.item.id).toBe(itemID);
+      expect(detail.item.cover).toBeNull();
+      const before = (
+        await db.query(
+          'SELECT metadata FROM catalog_sources WHERE item_id=$1',
+          [itemID],
+        )
+      ).rows[0].metadata;
+      const migration = await readFile(
+        new URL('../migrations/022_catalog_covers.sql', import.meta.url),
+        'utf8',
+      );
+      await db.query(migration);
+      await db.query(migration);
+      const after = (
+        await db.query(
+          'SELECT metadata FROM catalog_sources WHERE item_id=$1',
+          [itemID],
+        )
+      ).rows[0].metadata;
+      expect(after.posterURL).toBe(
+        'https://static.metron.cloud/media/issue/2019/07/14/civil-war-v1-1.jpg',
+      );
+      expect({ ...after, posterURL: null }).toEqual({
+        ...before,
+        posterURL: null,
+      });
+      const refreshed = (
+        await request(app.getHttpServer())
+          .get(`/api/v1/catalog/marvel/${itemID}`)
+          .expect(200)
+      ).body;
+      expect(refreshed.item.cover.url).toBe(after.posterURL);
     });
     it('publishes reviewed Metron issues in PT-BR and EN without replacing arcs or importing engagement', async () => {
       const candidates = metronBatch();

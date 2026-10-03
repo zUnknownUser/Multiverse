@@ -70,6 +70,7 @@ private struct ConnectionNode: View {
             VStack(spacing: 4) {
                 ZStack { p.bg; Halftone() }
                     .frame(width: size, height: size)
+                    .overlay { CatalogCoverOverlay(cover: item.cover, width: size, height: size) }
                     .clipShape(RoundedRectangle(cornerRadius: radius))
                     .overlay(RoundedRectangle(cornerRadius: radius).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                 Text(item.title)

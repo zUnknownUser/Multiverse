@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "pt-BR",
   "strings": {
+    "Capas via TMDB e Metron. As ilustrações pertencem aos respectivos titulares; a licença dos metadados não se aplica às capas.": {
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capas via TMDB e Metron. As ilustrações pertencem aos respectivos titulares; a licença dos metadados não se aplica às capas."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Covers via TMDB and Metron. Artwork belongs to its respective rights holders; the metadata license does not apply to covers."
+          }
+        }
+      }
+    },
     "A voz está indisponível agora. Tente novamente em instantes.": {
       "extractionState": "manual",
       "localizations": {

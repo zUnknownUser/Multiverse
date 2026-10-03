@@ -1,3 +1,4 @@
+import { catalogCoverField } from './catalog-cover.js';
 import { catalogSeriesJoin, catalogSeriesField } from './catalog-series.js';
 import { Inject, Injectable } from '@nestjs/common';
 import type { QueryResultRow } from 'pg';
@@ -48,7 +49,7 @@ const publishedItemRelations = `catalog_items i
 const itemFields = `i.id,i.universe_id AS uni,i.type,coalesce(t.title,p.title) AS title,
   coalesce(t.year,p.year) AS year,s.average AS avg,s.log_count AS "logCount",s.review_count AS "reviewCount",
   s.rating_histogram AS "ratingHistogram",
-  coalesce(t.canon,p.canon) AS canon,${catalogDescription('$1')} AS "desc",${catalogSeriesField}`;
+  coalesce(t.canon,p.canon) AS canon,${catalogDescription('$1')} AS "desc",${catalogSeriesField},${catalogCoverField}`;
 const normalizedTitle = `lower(regexp_replace(normalize(coalesce(t.title,p.title),NFD),'[\u0300-\u036f]','','g'))`;
 
 @Injectable()

@@ -57,6 +57,7 @@ struct ThreadView: View {
                 let p = Logic.posterColors(item: item, universe: uni)
                 ZStack { p.bg; Halftone() }
                     .frame(width: 44, height: 66)
+                    .overlay { CatalogCoverOverlay(cover: item.cover, width: 44, height: 66) }
                     .comicCard(bg: p.bg, radius: MV.R.sm, shadow: MV.Shadow.s)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(uni.name) · \(L10n.text(item.type))").font(MVFont.body(11, weight: 700)).foregroundStyle(MV.C.muted)

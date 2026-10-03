@@ -209,6 +209,8 @@ struct SettingsView: View {
                     .font(MVFont.body(12, weight: 600)).foregroundStyle(MV.C.ink)
                 Text(L10n.text("Dados de HQs: colaboradores da Metron. Títulos e sinopses em português adaptados pelo Multiverse."))
                     .font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
+                Text(L10n.text("Capas via TMDB e Metron. As ilustrações pertencem aos respectivos titulares; a licença dos metadados não se aplica às capas."))
+                    .font(MVFont.body(11)).foregroundStyle(MV.C.muted)
                 Link("CC BY-SA 4.0", destination: URL(string: "https://creativecommons.org/licenses/by-sa/4.0/")!)
                     .font(MVFont.body(12, weight: 600))
                 Divider().overlay(MV.C.divider)

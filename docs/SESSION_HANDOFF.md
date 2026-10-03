@@ -1,3 +1,20 @@
+# Atualização — capas reais sem redesenho (03/10/2026)
+
+- Pedido explícito: serviço completo de capas reais, preservando identidade visual.
+- Importação Metron → fonte vinculada → API (catálogo/diário/feed) → cartões iOS.
+  TMDB reutiliza posterURL. URLs HTTPS restritas; nenhum token no cliente.
+- Migration 022 publica URLs de 30 edições e três filmes/séries já mapeados; obras
+  sem vínculo conferido mantêm fallback. Não confundir edição com arco/encadernado.
+- Imagens dentro das mesmas molduras; tamanhos, sombras, cores e navegação intactos.
+  Cache HTTP/disco/memória, tarefas compartilhadas e thumbnail fora da main actor.
+- Créditos PT-BR/EN distinguem metadados de direitos das imagens. Uso comercial
+  ainda exige tratar condições/licenças dos provedores/titulares.
+- Validação: 217 iOS, 93 unitários API, 131 HTTP/PostgreSQL, 1111 entradas PT-BR/EN;
+  render de QA no simulador com imagens reais e componentes originais conferido.
+- [Contrato, cobertura e atualização](../backend/api/docs/catalog-covers.md).
+
+---
+
 # Atualização — auditoria e estabilidade (03/10/2026)
 
 - Corrigidos lotes de leitura de notificações, preferências e erros assíncronos

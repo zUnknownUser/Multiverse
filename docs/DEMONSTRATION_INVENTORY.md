@@ -32,6 +32,7 @@ sendo apresentação/cálculo local; não são novos serviços de mídia ou medi
   seguir/votar/desfazer por conta e contagens reais. Progresso usa obras distintas do
   diário, com próxima leitura; checks locais não concluem etapas.
   [Contrato, referências e limites](../backend/api/docs/reading-orders.md).
+- **Capas:** URLs reais das fontes já vinculadas, com imagens nos cartões existentes, cache e fallback. [Contrato e cobertura](../backend/api/docs/catalog-covers.md).
 - **Séries de HQs:** agrupamento real das edições publicadas, ordenação numérica e
   progresso por obras distintas do diário, sem duplicar releituras.
 - **Biblioteca privada:** desejos e favoritos por obra, criar/editar/excluir listas,
@@ -95,7 +96,7 @@ Fontes: [RootView](../apps/ios/Multiverse/App/RootView.swift),
 | Badges de universo | No perfil demonstrativo, o progresso é calculado localmente a partir do acervo/“visto”; badge é liberado pelo limiar de 50%. Não existe concessão/histórico de badge no servidor. Em personas demo, progresso pode ser calculado por seed. |
 | Widgets | Ponte App Group e isolamento/limpeza por sessão estão implementados. Snapshot legado é misto e deixou de ser publicado em sessões reais: progresso local/diário + ordem e duelo de amostra; delta do universo é fixo `3`. O widget não é prova de backend para duelo/ordens. |
 | Live Activity | Extensão/layout, atributos e solicitação/atualização local via ActivityKit existem. Não há operação remota de estreia/APNs ActivityKit; tela de estreia continua simulada. |
-| Capas/avatares | Capas usam composição gráfica/cores determinísticas e avatares usam iniciais; imagens em posts já têm upload real. Não há foto de perfil nem pipeline de pôsteres oficiais. Isso é apresentação implementada, mas não uma integração de mídia pronta. |
+| Capas/avatares | Capas reais via TMDB/Metron nos 33 vínculos conferidos (30 edições + três filmes/séries), com cache e fallback gráfico. Obras sem vínculo, incluindo DC/personagens nesta etapa, mantêm a arte anterior. Avatares continuam com iniciais; foto de perfil ainda não implementada. |
 
 Fontes principais: [MockRepository](../apps/ios/Multiverse/Core/Repository/MockRepository.swift),
 [StaticContent](../apps/ios/Multiverse/Core/StaticContent.swift),

@@ -41,6 +41,7 @@ function issue(id = 123) {
     number: '1',
     store_date: '2006-05-03',
     cover_date: '2006-07-01',
+    image: 'https://static.metron.cloud/media/issue/2006/civil-war-1.jpg',
     page: 32,
     desc: '<p>Issue synopsis</p>',
     average_rating: 5,
@@ -112,6 +113,7 @@ describe('Marvel provider scope and normalization', () => {
     expect(result.metadata).toMatchObject({
       releaseDate: '',
       coverDate: '2006-07-01',
+      posterURL: 'https://static.metron.cloud/media/issue/2006/civil-war-1.jpg',
       year: '2006',
       descriptions: { en: 'Issue synopsis', 'pt-BR': '' },
       creators: [{ id: 2, name: 'Writer name', roles: ['Writer'] }],

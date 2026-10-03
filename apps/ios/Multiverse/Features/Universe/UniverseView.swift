@@ -298,6 +298,7 @@ private struct CharactersTabContent: View {
                         let p = Logic.posterColors(item: item, universe: uni)
                         ZStack { p.bg; Halftone() }
                             .frame(width: 92, height: 92)
+                            .overlay { CatalogCoverOverlay(cover: item.cover, width: 92, height: 92) }
                             .clipShape(Circle())
                             .overlay(Circle().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                         Text(item.title).font(MVFont.bold(12)).foregroundStyle(MV.C.ink).lineLimit(1)
