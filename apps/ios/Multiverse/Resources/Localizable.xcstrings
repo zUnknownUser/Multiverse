@@ -19212,6 +19212,74 @@
           }
         }
       }
+    },
+    "Contador no ícone do app": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contador no ícone do app"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App icon badge"
+          }
+        }
+      }
+    },
+    "ATIVADO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATIVADO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ENABLED"
+          }
+        }
+      }
+    },
+    "ATIVAR": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ATIVAR"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ENABLE"
+          }
+        }
+      }
+    },
+    "Mostra as atividades não lidas do sino. Atualizado ao sincronizar o app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra as atividades não lidas do sino. Atualizado ao sincronizar o app."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows unread activity from the bell. Updated when the app syncs."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

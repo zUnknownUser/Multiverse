@@ -1,3 +1,19 @@
+# Atualização — badge e auditoria de layout (03/10/2026)
+
+Badge local implementado nos Ajustes de notificações, independente do push:
+mesmo contador do sino, confirmado pelo backend, limpo na saída/troca de conta.
+APNs agora recebe `aps.badge`, mas entrega remota permanece desativada enquanto
+não houver Apple Developer/APNs. Correções de cadastro, boas-vindas, tab bar,
+listas lazy, preparo de fotos fora da UI e retenção de autores concluídas.
+229 testes iOS; 98 unitários +135 HTTP/PostgreSQL; renderizações PT/EN revisadas.
+Evidências e limites físicos em CODE_AUDIT.md. Ajustes automáticos anteriores
+em Info.plist, xcstrings e whitespace MockRepository foram preservados locais.
+
+Próxima etapa explicitamente autorizada: Duelo do Dia real, retenção/social,
+ranking e recompensas simbólicas, mantendo identidade visual e performance.
+
+---
+
 # Atualização — seguir pessoas é opcional no onboarding (03/10/2026)
 
 - Pedido explícito: permitir entrar sem seguir ninguém. A etapa existente agora

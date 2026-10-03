@@ -20,6 +20,7 @@ struct ScreenScaffold<Content: View>: View {
                     content()
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .scrollIndicators(.hidden)
             BurstOverlay()
         }

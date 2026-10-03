@@ -53,7 +53,7 @@ struct CustomTabBar: View {
                 .minimumScaleFactor(0.9)
                 .allowsTightening(true)
                 .foregroundStyle(active ? MV.C.paper : MV.C.ink)
-                .frame(width: 70, height: 40)
+                .frame(maxWidth: 70, minHeight: 40, maxHeight: 40)
                 .background(active ? MV.C.ink : Color.clear)
                 .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
         }

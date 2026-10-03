@@ -162,6 +162,29 @@ struct SettingsView: View {
             Text(L10n.text("NOTIFICAÇÕES")).kicker(11).foregroundStyle(MV.C.muted)
             if let notifications = store.notifications {
                 VStack(alignment: .leading, spacing: 12) {
+                    Button {
+                        Task {
+                            do {
+                                if AppBadgeCoordinator.shared.enabled {
+                                    if let url = URL(string: UIApplication.openSettingsURLString) { await UIApplication.shared.open(url) }
+                                } else if try await AppBadgeCoordinator.shared.enable() {
+                                    await notifications.refresh()
+                                    await AppBadgeCoordinator.shared.sync(userID: store.meID, unreadCount: notifications.hasLoaded ? notifications.unreadCount : nil)
+                                } else if let url = URL(string: UIApplication.openSettingsURLString) {
+                                    await UIApplication.shared.open(url)
+                                }
+                            } catch { store.showToast(error.localizedDescription) }
+                        }
+                    } label: {
+                        HStack {
+                            Text(L10n.text("Contador no ícone do app"))
+                            Spacer()
+                            Text(AppBadgeCoordinator.shared.enabled ? L10n.text("ATIVADO") : L10n.text("ATIVAR"))
+                                .font(MVFont.bold(11))
+                        }.foregroundStyle(MV.C.ink)
+                    }.buttonStyle(.plain).disabled(AppBadgeCoordinator.shared.requesting)
+                    Text(L10n.text("Mostra as atividades não lidas do sino. Atualizado ao sincronizar o app."))
+                        .font(MVFont.body(12, weight: 500)).foregroundStyle(MV.C.muted)
                     if let preferences = notifications.preferences {
                         Toggle(L10n.text("Curtidas, respostas e novos seguidores"), isOn: Binding(
                             get: { preferences.activity },

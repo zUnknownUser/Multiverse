@@ -4,11 +4,7 @@ import SwiftUI
 struct ChooseUsernameView: View {
     @Environment(AuthStore.self) private var auth
 
-    private var suggestions: [String] {
-        let base = auth.draft.name.split(separator: " ").first.map { $0.lowercased() } ?? "lorista"
-        let seed = Logic.seed(auth.draft.name.isEmpty ? "lorista" : auth.draft.name)
-        return ["\(base).herois", "\(base)\(100 + Int(seed % 900))"]
-    }
+    private var suggestions: [String] { auth.draft.usernameSuggestions }
 
     var body: some View {
         @Bindable var auth = auth
@@ -35,6 +31,7 @@ struct ChooseUsernameView: View {
                 }
 
                 if !suggestions.isEmpty {
+                    ScrollView(.horizontal) {
                     HStack(spacing: 8) {
                         Text(L10n.text("Sugestões:")).font(MVFont.body(13, weight: 500)).foregroundStyle(MV.C.ink)
                         ForEach(suggestions, id: \.self) { s in
@@ -42,7 +39,7 @@ struct ChooseUsernameView: View {
                                 auth.draft.username = s
                             } label: {
                                 Text("@\(s)")
-                                    .font(MVFont.bold(12))
+                                    .font(MVFont.bold(12)).lineLimit(1).fixedSize()
                                     .padding(.horizontal, 10).padding(.vertical, 6)
                                     .foregroundStyle(MV.C.ink)
                                     .overlay(Capsule().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
@@ -50,11 +47,13 @@ struct ChooseUsernameView: View {
                             .buttonStyle(.plain)
                         }
                     }
+                    .padding(.vertical, 2)
+                    }.scrollIndicators(.hidden)
                 }
 
                 Spacer(minLength: 12)
 
-                PrimaryAuthButton(title: L10n.text("CONTINUAR"), enabled: auth.usernameAvailable == true && !auth.draft.name.isEmpty) {
+                PrimaryAuthButton(title: L10n.text("CONTINUAR"), enabled: auth.usernameAvailable == true && !auth.draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) {
                     auth.push(.avatarAndBio)
                 }
             }

@@ -6,6 +6,7 @@ import Observation
     private(set) var entries: [ActivityNotification] = []
     private(set) var users: [String: User] = [:]
     private(set) var unreadCount = 0
+    private(set) var hasLoaded = false
     private(set) var nextCursor: String?
     private(set) var preferences: NotificationPreferences?
     private(set) var error: String?
@@ -44,6 +45,7 @@ import Observation
             entries = refreshed
             users = refreshedUsers
             unreadCount = unread
+            hasLoaded = true
             nextCursor = cursor
         } catch is CancellationError {} catch { self.error = error.localizedDescription }
     }

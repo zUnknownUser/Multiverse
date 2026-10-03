@@ -961,6 +961,9 @@ describe.skipIf(!databaseURL)('Social feed and safety with PostgreSQL', () => {
     expect(sendPush).toHaveBeenCalledTimes(1);
     const payload = sendPush.mock.calls[0][0];
     expect(payload.data.notificationID).toBeDefined();
+    const activity = (await get('me/notifications', 'alice').expect(200)).body;
+    expect(payload.apns.payload.aps.badge).toBe(activity.unreadCount);
+    expect(payload.apns.payload.aps.badge).toBeGreaterThan(0);
     expect(JSON.stringify(payload)).not.toContain('Uma pergunta');
     await db.query(
       "UPDATE notifications SET push_after=now() WHERE push_state='pending'",

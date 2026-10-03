@@ -49,3 +49,39 @@ Veja [inventário de demonstrações](DEMONSTRATION_INVENTORY.md).
 
 Alterações locais preexistentes em `MockRepository.swift` e
 `Localizable.xcstrings` ficaram fora do commit desta auditoria.
+
+
+## Complemento — layout, fluidez e badge (03/10/2026)
+
+- Nome de cadastro: sugestões normalizadas para handles válidos de até 24 caracteres;
+  chips permanecem em uma linha rolável. Nomes longos não alargam o formulário.
+  Scroll das telas permite dispensar o teclado interativamente.
+- Boas-vindas mantém composição, cores e tamanhos; passa a rolar quando a altura
+  não comporta todo o conteúdo. Tab bar mantém a fonte e pode contrair em 320 pt.
+- Biblioteca/atividade usam pilhas lazy. Preparo de fotos (thumbnail/JPEG) agora
+  executa em actor separado, com cancelamento antes/depois e limites preservados.
+  Refresh da comunidade libera autores de páginas antigas e deduplica via Set.
+- Badge local usa atividades não lidas do servidor (mensagens já estão incluídas),
+  preserva o último total em falhas e limpa na troca/saída de conta. Escritas
+  serializadas impedem resultado final de uma conta anterior. Permissão somente
+  ao tocar Ajustes → Notificações → Contador no ícone do app; gestão posterior
+  nos Ajustes do iOS. Não depende de APNs/Personal Team pago.
+- Payload APNs preparado com o mesmo total visível do endpoint. Push permanece
+  desabilitado: atualizar por novos eventos com app fechado exige Apple/APNs.
+
+Validação: 229 testes iOS; 98 unitários API +135 HTTP/PostgreSQL. Teste temporário
+UIHostingController renderizou cadastro com nomes longos, boas-vindas, tab bar,
+Home/Busca, Biblioteca vazia/com 1.000 IDs, atividade e ajustes em PT-BR/EN;
+320/390 pt e Biblioteca em 1024×768. Inspeção visual de cadastro, tab bar,
+boas-vindas, ajustes e Biblioteca; estilos claro/noir preservados. Fixture de
+1.000 linhas levou ~0,51 s incluindo espera deliberada de 350 ms e exportação PNG;
+é diagnóstico no simulador, não benchmark de FPS/aparelho.
+
+Limites: o harness confirmou foco nativo, mas o teclado do simulador reportou
+frame fora da janela; não comprova a animação/posição do teclado no iPhone de
+Rosa. Ainda validar essa percepção em aparelho, entrega APNs após configuração,
+consumo de bateria/FPS em sessão prolongada e chamadas entre dois aparelhos.
+Não foi reproduzido um travamento de cadastro. Threads de posts ainda recarregam
+a primeira página de comentários após resposta; avatar por upload continua uma
+pendência funcional anterior. Aviso de orientações do iPad não foi mascarado
+com UIRequiresFullScreen. Não há promessa de ausência de todos os bugs.

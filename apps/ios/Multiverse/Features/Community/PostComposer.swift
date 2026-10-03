@@ -68,7 +68,7 @@ struct PostComposer: View {
                 var picked: [ComposerPhoto] = []
                 for selection in selections {
                     guard let data = try await selection.loadTransferable(type: Data.self) else { throw CommunityError.invalidImage }
-                    try Task.checkCancellation(); picked.append(try CommunityPhoto.prepare(data))
+                    try Task.checkCancellation(); picked.append(try await CommunityPhotoProcessor.shared.prepare(data))
                 }
                 photos += picked.prefix(max(0, 4 - retained.count - photos.count)); selections = []; readingPhotos = false
             } catch is CancellationError { readingPhotos = false } catch { self.error = error.localizedDescription; readingPhotos = false; selections = [] }

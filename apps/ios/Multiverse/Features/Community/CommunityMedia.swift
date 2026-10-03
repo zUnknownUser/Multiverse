@@ -73,7 +73,17 @@ struct MentionPicker: View {
         }
     }
 }
-struct ComposerPhoto: Identifiable { let id: String; let data: Data; let preview: UIImage }
+struct ComposerPhoto: Identifiable, Sendable { let id: String; let data: Data; let preview: UIImage }
+/// Serial background processing keeps decoding/re-encoding off the UI actor.
+actor CommunityPhotoProcessor {
+    static let shared = CommunityPhotoProcessor()
+    func prepare(_ data: Data) throws -> ComposerPhoto {
+        try Task.checkCancellation()
+        let photo = try CommunityPhoto.prepare(data)
+        try Task.checkCancellation()
+        return photo
+    }
+}
 enum CommunityPhoto {
     static func prepare(_ data: Data) throws -> ComposerPhoto {
         guard data.count <= 30_000_000, let source = CGImageSourceCreateWithData(data as CFData, nil),

@@ -77,6 +77,10 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
       ).rows;
       let retry = false;
       if (devices.length) {
+        const unread = await client.query(
+          `SELECT count(*)::int AS count FROM ${notificationRelations} WHERE ${notificationVisible} AND n.read_at IS NULL`,
+          [job.recipient_uid],
+        );
         let result: BatchResponse | undefined;
         try {
           result = await getMessaging(this.firebase.app()).sendEachForMulticast(
@@ -94,7 +98,9 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
                     Math.floor(Date.now() / 1000) + 3600,
                   ),
                 },
-                payload: { aps: { sound: 'default' } },
+                payload: {
+                  aps: { sound: 'default', badge: unread.rows[0].count },
+                },
               },
             },
           );

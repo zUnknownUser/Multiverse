@@ -99,6 +99,16 @@ struct NewAccountDraft: Equatable {
     var username = ""
     var avatarColor = "#F4A814"
     var bio = ""
+
+    var usernameSuggestions: [String] {
+        let first = name.split(whereSeparator: { $0.isWhitespace }).first.map(String.init) ?? "lorista"
+        let normalized = first.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+        let ascii = normalized.unicodeScalars.filter { (97...122).contains($0.value) || (48...57).contains($0.value) }
+        let base = String(String.UnicodeScalarView(ascii)).prefix(17)
+        let stem = base.isEmpty ? "lorista" : String(base)
+        let seed = Logic.seed(stem)
+        return ["\(stem).herois", "\(stem)\(100 + Int(seed % 900))"]
+    }
 }
 
 /// Força de senha (barra de 4 segmentos + rótulo), usada na criação de conta e na troca de senha.

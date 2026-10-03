@@ -45,7 +45,9 @@ enum CommunityError: LocalizedError {
             guard page.nextCursor == nil || page.nextCursor != after,
                   page.posts.allSatisfy({ (filter.feed != "unanswered" || $0.commentCount == 0) && (filter.universe == nil || $0.universeID == filter.universe) && (filter.item == nil || $0.itemID == filter.item) && (filter.kind == nil || $0.kind == filter.kind) && (filter.club == nil || $0.clubID == filter.club) && (filter.schedule == nil || $0.scheduleID == filter.schedule) && (filter.segment == nil || $0.segment == filter.segment) }) else { throw SocialError.invalid }
             let previous = more ? posts : []
-            posts = previous + page.posts.filter { post in !previous.contains(where: { $0.id == post.id }) }
+            let knownIDs = Set(previous.map(\.id))
+            posts = previous + page.posts.filter { !knownIDs.contains($0.id) }
+            if !more { users = [:] }
             for user in page.users { users[user.id] = user }; cursor = page.nextCursor
         } catch is CancellationError { }
         catch { if requestGeneration == generation { self.error = error.localizedDescription } }

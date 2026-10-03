@@ -6,9 +6,13 @@ struct WelcomeView: View {
     var body: some View {
         ZStack {
             MV.C.paper.ignoresSafeArea()
-            VStack(spacing: 0) {
-                collage.frame(height: 340)
-                content
+            GeometryReader { geometry in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        collage.frame(height: 340)
+                        content
+                    }.frame(minHeight: geometry.size.height)
+                }.scrollIndicators(.hidden)
             }
             BurstOverlay()
         }

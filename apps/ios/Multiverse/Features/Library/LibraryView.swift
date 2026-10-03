@@ -34,7 +34,7 @@ struct LibraryView: View {
     @State private var creating = false
     var body: some View {
         ScreenScaffold {
-            VStack(alignment: .leading, spacing: 18) {
+            LazyVStack(alignment: .leading, spacing: 18) {
                 Text(L10n.text("BIBLIOTECA")).font(MVFont.display(28, width: 118))
                 Text(L10n.text("Seus desejos, favoritos e listas. Só você pode ver."))
                     .font(MVFont.body(13, weight: 500)).foregroundStyle(MV.C.muted)

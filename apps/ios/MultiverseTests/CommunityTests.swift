@@ -146,6 +146,14 @@ import Testing
         #expect(first.homeCommunity.posts.count == 1)
         #expect(second.homeCommunity.posts.isEmpty)
     }
+    @Test func refreshingTimelineReleasesAuthorsFromPreviousPages() async {
+        let api = CommunityStub(), timeline = CommunityTimeline()
+        await timeline.load(api: api, filter: .init())
+        #expect(timeline.users.count == 1)
+        api.roomPage = .init(posts: [], users: [], nextCursor: nil)
+        await timeline.load(api: api, filter: .init())
+        #expect(timeline.posts.isEmpty && timeline.users.isEmpty)
+    }
     @Test func timelineRejectsAnotherUniverseAndNeverFallsBackToSamples() async {
         let api = CommunityStub(), timeline = CommunityTimeline()
         await timeline.load(api: api, universe: "dc", item: nil)

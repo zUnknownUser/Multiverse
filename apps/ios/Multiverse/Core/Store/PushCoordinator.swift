@@ -84,7 +84,6 @@ import FirebaseMessaging
         Messaging.messaging().isAutoInitEnabled = false
         UIApplication.shared.unregisterForRemoteNotifications()
         UNUserNotificationCenter.current().removeAllDeliveredNotifications()
-        try? await UNUserNotificationCenter.current().setBadgeCount(0)
         api = nil; userID = nil; registration = nil; openActivity = false
     }
 }

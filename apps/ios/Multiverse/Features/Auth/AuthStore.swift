@@ -347,6 +347,7 @@ final class AuthStore {
         do {
             try await repository.signOut()
             reset()
+            await AppBadgeCoordinator.shared.sync(userID: nil, unreadCount: nil)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -356,6 +357,7 @@ final class AuthStore {
         await PushCoordinator.shared.disconnect()
         try await repository.deleteAccount()
         reset()
+        await AppBadgeCoordinator.shared.sync(userID: nil, unreadCount: nil)
     }
 
     private func reset() {

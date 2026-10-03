@@ -5,7 +5,7 @@ struct NotificationsView: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
-            VStack(alignment: .leading, spacing: 18) {
+            LazyVStack(alignment: .leading, spacing: 18) {
                 Text(L10n.text("ATIVIDADE")).font(MVFont.display(28, width: 122))
                 Text(L10n.text("O que o pessoal fez com o que você postou.")).font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.muted)
                 if let notifications = store.notifications {

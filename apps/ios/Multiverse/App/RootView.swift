@@ -104,12 +104,27 @@ struct RootView: View {
                 if scenePhase == .active && store.isOnboarded { await store.notifications?.refresh() }
             }
         }
+        .task(id: badgeState) {
+            guard !auth.isBootstrapping else { return }
+            await AppBadgeCoordinator.shared.sync(userID: badgeState.userID, unreadCount: badgeState.count)
+        }
         .task { await auth.bootstrap() }
         .task { await proStore.loadProducts() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await proStore.refreshEntitlement(); if store.isOnboarded { await store.notifications?.refresh(); await store.library?.refresh() } } }
         }
 
+    }
+    private struct BadgeState: Equatable {
+        let bootstrapping: Bool
+        let userID: String?
+        let count: Int?
+        let active: Bool
+    }
+    private var badgeState: BadgeState {
+        let id = auth.session?.userID
+        let count = id == store.meID && store.notifications?.hasLoaded == true ? store.notifications?.unreadCount : nil
+        return BadgeState(bootstrapping: auth.isBootstrapping, userID: id, count: count, active: scenePhase == .active)
     }
     private func openClubInvitation() {
         guard let id = pendingClub, auth.session?.userID == store.meID, store.isOnboarded, !store.isLoading else { return }
