@@ -4,8 +4,8 @@ export async function recordNotification(
   client: PoolClient,
   recipient: string,
   actor: string,
-  kind: 'follow' | 'comment' | 'reaction' | 'mention' | 'reply',
-  type: 'person' | 'review' | 'post',
+  kind: 'follow' | 'comment' | 'reaction' | 'mention' | 'reply' | 'message',
+  type: 'person' | 'review' | 'post' | 'message',
   target: string,
   comment?: string,
 ) {

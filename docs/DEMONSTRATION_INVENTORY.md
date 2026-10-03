@@ -1,6 +1,6 @@
-# Inventário de dados reais e demonstrações — 02/10/2026
+# Inventário de dados reais e demonstrações — 03/10/2026
 
-Auditoria após Comunidade dinâmica (migration 016), Biblioteca e central de atividade. “Demonstração”
+Auditoria atualizada após mensagens privadas (migration 020), voz nas salas e escopo Marvel/DC. “Demonstração”
 significa dados de exemplo ou interação que não chega a outro usuário/servidor.
 Uma função local pode funcionar de verdade sem ser sincronizada. A distinção abaixo
 considera a sessão autenticada normal, não previews/testes com repositórios mockados.
@@ -47,13 +47,19 @@ sendo apresentação/cálculo local; não são novos serviços de mídia ou medi
 - **Salas reais:** uma por obra publicada; mensagens, respostas, reações, presença
   por visitas no último minuto e progresso sincronizado; trechos 0/50/100 com proteção
   no servidor. Atualização por eventos do banco enquanto a sala está aberta, com reconexão e aviso de novas mensagens.
+- **Voz nas salas:** LiveKit nativo, entrada explícita com microfone desligado; chat
+  independente, até 8 participantes e desconexão ao sair/background. Falta QA físico
+  de microfone/Bluetooth/interrupções em iPhones.
+- **Mensagens privadas:** conversas 1:1, pedidos/aceite/recusa, texto, cartas de obras,
+  spoiler, leitura/não lidas, paginação, bloqueios, denúncias e sino reais. Atualização
+  por eventos enquanto o app está ativo. [Contrato e limites](../backend/api/docs/private-messages.md).
 - **Teorias e duelos reais:** publicação, descoberta, votos únicos por conta e contagens
   persistidas. Teoria tem conclusão identificada como decisão do autor com explicação;
   duelo tem opções e prazo. Nada de votos-base, ranking ou precisão inventada.
 - **Central de atividade e sino**: eventos novos reais de follows/comentários/reações,
   estado de leitura persistido, paginação e preferências por conta. Atualização em
   primeiro plano a cada 30s, ao voltar e por gesto; não é uma conexão em tempo real.
-- Fila/revisão de denúncias de reviews, posts, comentários e clubes: CLI privada no banco,
+- Fila/revisão de denúncias de reviews, posts, comentários, clubes e mensagens: CLI privada no banco,
   decisões auditadas. Precisa de operação humana, sem painel web ou IA automática.
 
 Fontes: [RootView](../apps/ios/Multiverse/App/RootView.swift),
@@ -68,7 +74,7 @@ Fontes: [RootView](../apps/ios/Multiverse/App/RootView.swift),
 | Clubes (legado/demo) | Fixtures de `recursos-data.json`, cutucada sem entrega e cards antigos continuam apenas em previews. O módulo acessível pela Comunidade usa backend real; não inclui lembretes por push. |
 | Salas (legado/demo) | As telas antigas com trechos editoriais, pin de teoria fixa e contagens de exemplo permanecem isoladas. As salas acessíveis pela Comunidade/ficha da obra usam posts, presença e progresso reais. |
 | Estreia ao vivo | Evento/banner, contador, enquete relâmpago, votos e chat/stickers gerados por timers: simulação local. Não acompanha uma estreia real nem transmite mensagens. |
-| Mensagens privadas | Conversas, pedidos, texto, cartas de obras, desafios em DM e lidas: repositório em memória. Contas reais começam sem as conversas da persona demo; os botões de mensagem/desafio no perfil remoto avisam “em breve”. Outros fluxos de cartas/desafio que chamam o repositório também não entregam a ninguém. “online agora”/afinidade na conversa são fictícios. |
+| Mensagens privadas (legado/demo) | Desafios por DM, grupos, afinidade e status “online agora” das telas antigas continuam apenas no repositório de demonstração. Conversas, pedidos, texto, cartas e leitura agora são reais nas novas telas. |
 | Duelo do dia (legado/demo) | O card antigo, rotação de exemplos, votos-base e desafio por DM continuam ocultos. Duelo criado pela Comunidade tem votos e encerramento reais; não há seleção automática diária. |
 | Debate da semana | Assunto/opções, números de votos e “612 comentários” fixos. Voto local, sem debate multiusuário no backend. |
 | Teorias (legado/demo) | Precisão, pontos de lore, revisores fictícios e teorias de exemplo continuam isolados. Teorias acessíveis na Comunidade têm conteúdo/votos reais e conclusão do autor explicitamente identificada. |
@@ -119,6 +125,9 @@ não prometem persistência entre sessões/dispositivos.
   usuário, que ainda não tem Apple Developer. Faltam credencial APNs no Firebase,
   provisioning/build habilitado e validação de entrega em iPhone. Testes simulam FCM;
   não demonstram entrega real. [Passo a passo de ativação](../backend/api/docs/community-notifications.md).
+- **Mensagens privadas:** somente texto e cartas, sem mídia/áudio/grupos ou edição/
+  exclusão individual. Rascunho/retry não persistem ao encerrar o app. Pedidos recusados
+  não podem ser recuperados nesta versão. Push depende de APNs, como descrito acima.
 - **Biblioteca:** listas privadas, sem colaboração/compartilhamento público, curtidas,
   ordenação manual ou busca no servidor. O seletor pesquisa o catálogo carregado.
   Requer rede para gravar; retry mantém a identidade enquanto a sessão está aberta,
@@ -126,7 +135,7 @@ não prometem persistência entre sessões/dispositivos.
   As antigas listas editoriais e seus contadores de amostra não foram migrados.
 - **Catálogo:** acervo inicial publicado é real, mas pequeno e incompleto. Home mostra
   seleção do catálogo, não ranking por tendência. O backend retorna `live=0`, sem presença.
-  Star Wars/LoL/Tolkien em “em breve” não são catálogos completos prontos.
+  O produto está limitado a Marvel/DC; os demais universos foram removidos/arquivados.
 - **Marvel:** revisão/importação com Wikidata/TMDB existe; não significa catálogo completo
   nem atualização editorial automática. Metron agora publica 30 edições revisadas de quatro séries, com ficha PT-BR/EN; sem páginas de leitura, capas ou catálogo completo.
 - **Reviews de outras pessoas por obra/perfil:** o feed de seguidos e o detalhe funcionam;

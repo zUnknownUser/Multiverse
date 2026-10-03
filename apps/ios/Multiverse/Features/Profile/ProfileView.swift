@@ -139,7 +139,7 @@ struct ProfileView: View {
                             store.toggleFollow(userID)
                         }
                         .allowsHitTesting(store.people?.canFollow ?? true)
-                    if store.showsDemoFeatures {
+                    if store.showsDemoFeatures || store.directMessages != nil {
                     Text(L10n.text("MENSAGEM"))
                         .font(MVFont.bold(13))
                         .frame(maxWidth: .infinity).padding(.vertical, 12)
@@ -147,9 +147,10 @@ struct ProfileView: View {
                         .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.paper, lineWidth: MV.stroke))
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            if store.usesRemotePeople { store.showToast(L10n.text("Mensagens entre loristas estarão disponíveis em breve.")) }
-                            else { store.push(.conversation(userID)) }
+                            store.push(.conversation(userID))
                         }
+                    }
+                    if store.showsDemoFeatures {
                     Text(L10n.text("DESAFIAR"))
                         .font(MVFont.bold(13))
                         .frame(maxWidth: .infinity).padding(.vertical, 12)

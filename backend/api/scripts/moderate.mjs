@@ -16,7 +16,7 @@ const { values } = parseArgs({
 });
 if (!values.queue && !values.execute) {
   console.log(
-    'Read: node scripts/moderate.mjs --queue\nDecide: --execute --id UUID --type review|comment|post|post_comment|club --target UUID --action hide|dismiss|restore --operator NAME --reason TEXT\nRequires MODERATION_DATABASE_URL from an authorized private database connection. Reuse --id when retrying the same decision.',
+    'Read: node scripts/moderate.mjs --queue\nDecide: --execute --id UUID --type review|comment|post|post_comment|club|message --target UUID --action hide|dismiss|restore --operator NAME --reason TEXT\nRequires MODERATION_DATABASE_URL from an authorized private database connection. Reuse --id when retrying the same decision.',
   );
   process.exit(0);
 }

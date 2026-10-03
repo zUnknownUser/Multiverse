@@ -25,5 +25,10 @@ function discussion(domain: 'review' | 'post') {
 export const notificationVisible = `n.recipient_uid=$1 AND ap.deletion_requested_at IS NULL AND ao.completed=true
  AND ${unblocked('$1', 'n.actor_uid')} AND (
  (n.kind='follow' AND n.target_type='person' AND EXISTS(SELECT 1 FROM visible_follows f WHERE f.follower_uid=n.actor_uid AND f.followed_uid=$1))
- OR ${discussion('review')} OR ${discussion('post')})`;
+ OR ${discussion('review')} OR ${discussion('post')}
+ OR (n.kind='message' AND n.target_type='message' AND EXISTS(
+ SELECT 1 FROM dm_messages m JOIN dm_threads t ON t.id=m.thread_id
+ WHERE m.id::text=n.target_id AND m.sender_uid=n.actor_uid AND $1 IN(t.user_a,t.user_b)
+ AND t.state<>'declined' AND m.moderation_status='visible'
+ AND NOT EXISTS(SELECT 1 FROM dm_reports dr WHERE dr.message_id=m.id AND dr.reporter_uid=$1))))`;
 export const notificationRelations = `notifications n JOIN profiles ap ON ap.firebase_uid=n.actor_uid JOIN onboarding ao ON ao.firebase_uid=ap.firebase_uid`;

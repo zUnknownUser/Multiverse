@@ -43,6 +43,7 @@ struct NotificationsView: View {
     private func open(_ entry: ActivityNotification, in notifications: NotificationStore) async {
         guard await notifications.markRead([entry.id]) else { return }
         switch entry.targetType {
+        case "message": store.push(.conversation(entry.user))
         case "review": store.push(.review(entry.targetID))
         case "post": store.push(.post(entry.targetID))
         case "person": store.openUserProfile(entry.targetID)

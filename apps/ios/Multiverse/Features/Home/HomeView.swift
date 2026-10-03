@@ -87,7 +87,7 @@ struct HomeView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(store.unreadCount > 0 ? L10n.format("Avisos, %1$@ não lidos", String(describing: store.unreadCount)) : L10n.text("Avisos"))
 
-                if store.showsDemoFeatures {
+                if store.showsDemoFeatures || store.directMessages != nil {
                 Button { store.push(.messages) } label: {
                     ZStack(alignment: .topTrailing) {
                         Text("✉").font(.system(size: 18, weight: .bold))

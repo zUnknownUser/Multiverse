@@ -1,3 +1,27 @@
+# Atualização — mensagens privadas reais (03/10/2026)
+
+Pedido ativo concluído: mensagens privadas, preservando estilo/PT-BR/EN e prioridade
+em performance. Monetização permanece adiada pela decisão abaixo.
+
+- Migration 020, módulo `messages`, API autenticada para caixa/histórico/envio,
+  pedidos/aceite/recusa, leitura, denúncia e long poll. Conta excluída remove os DMs.
+- Uma mensagem inicial para quem não segue o remetente; após aceite, conversa normal.
+  Recusa não pode ser recuperada nesta versão. Bloqueio bidirecional e limites duráveis.
+- UUID por mensagem e payload preservado no retry, sequência/leitura monotônicas,
+  notificações sem corpo privado, fila administrativa só para conteúdo denunciado.
+- iOS: envelope Home, botão no perfil e destino no sino; busca real de pessoas,
+  texto/cartas/spoiler, estado de leitura, paginação e novos eventos sem forçar rolagem.
+  Sem presença/afinidade falsa. Poll só foreground; LiveKit permanece separado.
+- Validação: 81 unitários API, 120 HTTP/PostgreSQL, 196 iOS; 1095 entradas PT-BR/EN.
+  [Contrato e QA de duas contas](../backend/api/docs/private-messages.md).
+- Ainda fora desta entrega: fotos/áudio/grupos/editar-apagar mensagens e fila offline
+  durável. Desafios por DM continuam demo oculta. Push continua aguardando APNs.
+- Próximos passos: QA de DMs em duas contas e voz em iPhones; depois catálogo editorial
+  (ordens de leitura reais). Monetização só retomar sob novo pedido. Inventário completo
+  em [DEMONSTRATION_INVENTORY.md](DEMONSTRATION_INVENTORY.md).
+
+---
+
 # Decisão — monetização adiada (03/10/2026)
 
 Lucas pediu documentar RevenueCat e afiliados e deixar a implementação para análise

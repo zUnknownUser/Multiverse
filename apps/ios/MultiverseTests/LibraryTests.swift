@@ -83,7 +83,7 @@ import Testing
         #expect(b.snapshot == nil && b.wantedIDs.isEmpty && b.lists.isEmpty)
         let store = AppStore(accountAPI: AccountAPIClient(), libraryAPI: api)
         #expect(!store.showsDemoFeatures)
-        for route in [Route.messages, .club("demo"), .wrapped, .room("demo"), .theories, .pro] { store.push(route) }
+        for route in [Route.club("demo"), .wrapped, .room("demo"), .theories, .pro] { store.push(route) }
         #expect(store.homePath.isEmpty)
         store.push(.library); #expect(store.homePath == [.library])
         store.goToTab(.library); store.push(.item("m-civil")); #expect(store.libraryPath == [.item("m-civil")])

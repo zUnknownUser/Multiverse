@@ -47,7 +47,7 @@ enum Route: Hashable {
 extension Route {
     var isDemonstration: Bool {
         switch self {
-        case .order, .wrapped, .club, .clubDiscussion, .theories, .theoryDetail, .predictions, .correctionForm, .adjustShieldPoint, .messages, .conversation, .room, .exploreRooms, .livePremiere, .pro: true
+        case .order, .wrapped, .club, .clubDiscussion, .theories, .theoryDetail, .predictions, .correctionForm, .adjustShieldPoint, .room, .exploreRooms, .livePremiere, .pro: true
         default: false
         }
     }

@@ -83,6 +83,7 @@ final class AppStore {
     private let repository: MultiverseRepository
     private let catalogAPI: (any CatalogAPI)?
     private let activityAPI: (any ActivityAPI)?
+    let directMessages: DirectMessagesStore?
     let library: LibraryStore?
     var showsDemoFeatures: Bool { !usesAccountAPI }
     let communityAPI: (any CommunityAPI)?
@@ -238,7 +239,8 @@ final class AppStore {
 
     // MARK: - Init
 
-    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil, catalogAPI: (any CatalogAPI)? = nil, activityAPI: (any ActivityAPI)? = nil, peopleAPI: (any PeopleAPI)? = nil, socialAPI: (any SocialAPI)? = nil, communityAPI: (any CommunityAPI)? = nil, notificationsAPI: (any NotificationsAPI)? = nil, libraryAPI: (any LibraryAPI)? = nil) {
+    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil, catalogAPI: (any CatalogAPI)? = nil, activityAPI: (any ActivityAPI)? = nil, peopleAPI: (any PeopleAPI)? = nil, socialAPI: (any SocialAPI)? = nil, communityAPI: (any CommunityAPI)? = nil, notificationsAPI: (any NotificationsAPI)? = nil, libraryAPI: (any LibraryAPI)? = nil, directMessagesAPI: (any DirectMessagesAPI)? = nil) {
+        self.directMessages = directMessagesAPI.map { DirectMessagesStore(api: $0, ownerID: session?.userID ?? "duda") }
         self.library = libraryAPI.map { LibraryStore(api: $0) }
         self.communityAPI = communityAPI
         self.notifications = notificationsAPI.map { NotificationStore(api: $0) }
@@ -1792,7 +1794,7 @@ final class AppStore {
 
     var friendConversations: [Conversation] { conversations.filter { !$0.isRequest } }
     var requestConversations: [Conversation] { conversations.filter { $0.isRequest } }
-    var totalUnreadMessages: Int { conversations.reduce(0) { $0 + $1.unreadCount } }
+    var totalUnreadMessages: Int { directMessages?.unreadCount ?? conversations.reduce(0) { $0 + $1.unreadCount } }
 
     func messages(with userID: String) -> [Message] { messagesByConversation[userID] ?? [] }
 

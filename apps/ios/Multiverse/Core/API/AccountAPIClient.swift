@@ -152,6 +152,11 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, Com
             }
             let code = (try? JSONDecoder().decode(APIError.self, from: data))?.code
             switch code {
+            case "MESSAGE_UNAVAILABLE": throw DirectMessageError.unavailable
+            case "MESSAGE_REQUEST_PENDING": throw DirectMessageError.pending
+            case "MESSAGE_CONFLICT": throw DirectMessageError.conflict
+            case "MESSAGE_LIMIT": throw DirectMessageError.limit
+            case "INVALID_MESSAGE": throw SocialError.invalid
             case "VOICE_UNAVAILABLE": throw VoiceError.unavailable
             case "VOICE_FULL": throw VoiceError.full
             case "VOICE_BLOCKED": throw VoiceError.blocked

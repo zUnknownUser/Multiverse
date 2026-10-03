@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(AppStore.self) private var store
 
     /// A sheet reflete `logDraft` diretamente — qualquer tela pode abri-la chamando
@@ -31,6 +32,10 @@ struct MainTabView: View {
             CustomTabBar { store.openLogBlank() }
         }
         .overlay { ToastOverlay() }
+        .task(id: scenePhase) {
+            guard scenePhase == .active else { return }
+            await store.directMessages?.run()
+        }
         .sheet(isPresented: logSheetPresented) {
             LogSheetView()
         }
@@ -137,8 +142,12 @@ private struct RouteDestination: View {
         case .pro: ProPaywallView()
         case .proStats: ProStatsView()
         case .adjustShieldPoint: AdjustShieldPointView()
-        case .messages: MessagesHomeView()
-        case .conversation(let id): ConversationView(userID: id)
+        case .messages:
+            if let dm = store.directMessages { DirectInboxView(messages: dm) }
+            else if store.showsDemoFeatures { MessagesHomeView() }
+        case .conversation(let id):
+            if let dm = store.directMessages { DirectConversationView(thread: dm.thread(id), inbox: dm) }
+            else if store.showsDemoFeatures { ConversationView(userID: id) }
         case .room(let id): ItemRoomView(itemID: id)
         case .exploreRooms: ExploreRoomsView()
         case .livePremiere: LivePremiereView()

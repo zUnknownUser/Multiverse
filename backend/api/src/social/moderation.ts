@@ -17,13 +17,17 @@ export async function moderationQueue(client: PoolClient) {
     FROM post_comment_reports cr JOIN post_comments c ON c.id=cr.comment_id WHERE cr.status='pending' GROUP BY c.id
     UNION ALL
     SELECT 'club',cl.id,cl.name || E'\\n' || cl.description,false,cl.moderation_status,count(*)::int,array_agg(DISTINCT cr.reason),min(cr.created_at) FROM club_reports cr JOIN community_clubs cl ON cl.id=cr.club_id WHERE cr.status='pending' GROUP BY cl.id
+    UNION ALL
+    SELECT 'message',m.id,m.text,m.spoiler,m.moderation_status,count(*)::int,array_agg(DISTINCT dr.reason),min(dr.created_at)
+    FROM dm_reports dr JOIN dm_messages m ON m.id=dr.message_id WHERE dr.status='pending' GROUP BY m.id
     ) queue ORDER BY "oldestReport","targetType","targetID" LIMIT 50`);
   return result.rows;
 }
 
 export interface ModerationDecision {
   id: string;
-  targetType: 'review' | 'comment' | 'post' | 'post_comment' | 'club';
+  targetType:
+    'review' | 'comment' | 'post' | 'post_comment' | 'club' | 'message';
   targetID: string;
   action: 'hide' | 'dismiss' | 'restore';
   operator: string;
@@ -37,7 +41,7 @@ export async function moderate(client: PoolClient, input: ModerationDecision) {
   if (
     !uuid.test(input.id) ||
     !uuid.test(input.targetID) ||
-    !['review', 'comment', 'post', 'post_comment', 'club'].includes(
+    !['review', 'comment', 'post', 'post_comment', 'club', 'message'].includes(
       input.targetType,
     ) ||
     !['hide', 'dismiss', 'restore'].includes(input.action) ||
@@ -72,6 +76,7 @@ export async function moderate(client: PoolClient, input: ModerationDecision) {
     post: ['community_posts', 'post_reports', 'post_id'],
     post_comment: ['post_comments', 'post_comment_reports', 'comment_id'],
     club: ['community_clubs', 'club_reports', 'club_id'],
+    message: ['dm_messages', 'dm_reports', 'message_id'],
   }[input.targetType];
   const target = await client.query(
     `SELECT 1 FROM ${table} WHERE id=$1 FOR UPDATE`,
