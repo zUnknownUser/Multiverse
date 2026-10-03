@@ -76,4 +76,48 @@ describe('Room event subscriptions', () => {
     expect(getEventListeners(abort.signal, 'abort')).toHaveLength(0);
     await service.onModuleDestroy();
   });
+  it('does not retain new watchers or reconnect after shutdown', async () => {
+    const { service, roomListener } = setup();
+    await service.onModuleDestroy();
+    const abort = new AbortController();
+    const watch = await service.watch('room', abort.signal);
+    expect(getEventListeners(abort.signal, 'abort')).toHaveLength(0);
+    expect(roomListener).not.toHaveBeenCalled();
+    await watch.changed;
+    watch.dispose();
+  });
+  it('closes a pending connection before shutdown completes without installing watchers', async () => {
+    const { service, clients, roomListener } = setup();
+    const createClient = roomListener.getMockImplementation()!;
+    let release = () => {};
+    const connected = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    roomListener.mockImplementationOnce(async () => {
+      await connected;
+      return createClient();
+    });
+    const abort = new AbortController();
+    const pending = service.watch('room', abort.signal);
+    const stopping = service.onModuleDestroy();
+    release();
+    await stopping;
+    const watch = await pending;
+    expect(clients[0].end).toHaveBeenCalledTimes(1);
+    expect(clients[0].query).not.toHaveBeenCalled();
+    expect(getEventListeners(abort.signal, 'abort')).toHaveLength(0);
+    await watch.changed;
+  });
+  it('drains existing subscriptions and closes the listener only once', async () => {
+    const { service, clients } = setup();
+    const abort = new AbortController();
+    const watch = await service.watch('room', abort.signal);
+    clients[0].end.mockImplementation(async () => {
+      clients[0].emit('end');
+    });
+    await service.onModuleDestroy();
+    await watch.changed;
+    expect(clients[0].end).toHaveBeenCalledTimes(1);
+    expect(getEventListeners(abort.signal, 'abort')).toHaveLength(0);
+  });
 });

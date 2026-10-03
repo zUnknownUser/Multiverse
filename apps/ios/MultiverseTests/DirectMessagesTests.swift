@@ -13,12 +13,14 @@ import Testing
     var sendError: (any Error)?
     var historyError: (any Error)?
     var receipt = true
-    var historyHook: (() async -> DirectHistory)?
+    var historyHook: (() async throws -> DirectHistory)?
+    var readHook: (() async throws -> SavedReceipt)?
+    var inboxHook: ((String?) async throws -> DirectInbox)?
     var page = DirectInbox(conversations: [], unreadCount: 0, revision: "0", nextCursor: nil)
-    func directInbox(after: String?) async throws -> DirectInbox { page }
+    func directInbox(after: String?) async throws -> DirectInbox { if let inboxHook { return try await inboxHook(after) }; return page }
     func directHistory(peer: String, before: String?) async throws -> DirectHistory {
         if let historyError { throw historyError }
-        if let historyHook { return await historyHook() }
+        if let historyHook { return try await historyHook() }
         return snapshot()
     }
     func snapshot() -> DirectHistory { .init(user: user, state: state, incomingRequest: incoming, messages: messages, before: before, readThrough: "0") }
@@ -29,7 +31,7 @@ import Testing
         return .init(id: id, saved: receipt)
     }
     func decideDirect(peer: String, accepted: Bool) async throws -> SavedReceipt { if receipt { state = accepted ? "accepted" : "declined"; incoming = false }; return .init(saved: receipt) }
-    func readDirect(peer: String, through: String) async throws -> SavedReceipt { reads.append(through); return .init(saved: receipt) }
+    func readDirect(peer: String, through: String) async throws -> SavedReceipt { reads.append(through); if let readHook { return try await readHook() }; return .init(saved: receipt) }
     func reportDirect(peer: String, id: String, reason: String, alsoBlock: Bool) async throws -> SavedReceipt { .init(saved: receipt) }
     func directChanges(after: String?) async throws -> DirectChanges { throw CancellationError() }
 }
@@ -134,6 +136,55 @@ import Testing
         #expect(t.messages.count == 440 && t.messages.first?.sequence == "1" && t.before == nil)
         t.compactHistory()
         #expect(t.messages.count == 40 && t.messages.first?.sequence == "401" && t.before == "401")
+    }
+
+    @Test func newerVisibleMessageQueuesBehindAnInFlightReadEvenIfViewTaskIsReplaced() async {
+        let api = DirectStub(), t = thread(api); api.messages = [message(1), message(2)]; await t.refresh()
+        var continuation: CheckedContinuation<SavedReceipt, any Error>?
+        api.readHook = { try await withCheckedThrowingContinuation { continuation = $0 } }
+        let first = Task { await t.markVisible(through: "1") }
+        while continuation == nil { await Task.yield() }
+        first.cancel()
+        let second = Task { await t.markVisible(through: "2") }
+        await Task.yield()
+        api.readHook = nil; continuation?.resume(returning: .init(saved: true))
+        await first.value; await second.value
+        #expect(api.reads == ["1", "2"])
+        await t.markVisible(through: "2"); #expect(api.reads.count == 2)
+    }
+    @Test func outdatedUnavailableHistoryCannotEraseAConfirmedSend() async {
+        let api = DirectStub(), t = thread(api); await t.refresh(); t.draft = "Hi"
+        var continuation: CheckedContinuation<DirectHistory, any Error>?
+        api.historyHook = { try await withCheckedThrowingContinuation { continuation = $0 } }
+        let load = Task { await t.refresh() }
+        while continuation == nil { await Task.yield() }
+        #expect(await t.send()); api.historyHook = nil
+        continuation?.resume(throwing: DirectMessageError.unavailable); await load.value
+        #expect(!t.unavailable && t.messages.count == 1 && t.error == nil)
+    }
+
+    @Test func liveInboxRefreshPreservesLoadedPagesAndRemovesUnavailablePeers() async {
+        let api = DirectStub(), store = DirectMessagesStore(api: api, ownerID: "alice")
+        let rows = (0..<60).map { index in
+            DirectConversation(id: UUID().uuidString, user: User(id: "peer-\(index)", name: "Peer", handle: "@peer\(index)", avatarColor: "#F4A814", bio: "", followers: nil, badgeUniverse: ""), state: "accepted", incomingRequest: false, unreadCount: 0, updatedAt: .now, lastMessage: nil)
+        }
+        var removeLast = false
+        var failSecond = false
+        var calls: [String?] = []
+        api.inboxHook = { cursor in
+            calls.append(cursor)
+            if cursor != nil && failSecond { throw AuthError.networkUnavailable }
+            let page = cursor == nil ? Array(rows.prefix(30)) : Array(rows.suffix(removeLast ? 29 : 30))
+            return .init(conversations: page, unreadCount: 0, revision: "1", nextCursor: cursor == nil ? "older" : nil)
+        }
+        await store.refresh(); await store.refresh(more: true)
+        #expect(store.conversations.count == 60)
+        await store.refresh()
+        #expect(store.conversations.count == 60 && calls == [nil, "older", nil, "older"])
+        failSecond = true; await store.refresh()
+        #expect(store.conversations.count == 60 && store.error != nil)
+        failSecond = false; removeLast = true; await store.refresh()
+        #expect(store.conversations.count == 59 && !store.conversations.contains { $0.id == rows[30].id })
     }
 
 }

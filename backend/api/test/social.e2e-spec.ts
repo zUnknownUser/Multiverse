@@ -378,8 +378,12 @@ describe.skipIf(!databaseURL)('Social feed and safety with PostgreSQL', () => {
   });
   it('limits repeated reaction changes but still acknowledges exact retries', async () => {
     const reviewID = await publicReview();
-    for (let i = 0; i < 120; i++)
-      await react(reviewID, i % 2 ? 'ZAP!' : 'POW!').expect(200);
+    await react(reviewID, 'ZAP!').expect(200);
+    // Pin an exhausted active window: crossing a wall-clock minute during this
+    // HTTP test must not reset the quota fixture before checking the boundary.
+    await db.query(
+      "UPDATE social_reaction_limits SET requests=120,window_start=now()+interval '1 minute'",
+    );
     await react(reviewID, 'POW!').expect(429);
     await react(reviewID, 'ZAP!').expect(200);
     expect((await get('feed')).body.reviews[0].interaction.myReaction).toBe(

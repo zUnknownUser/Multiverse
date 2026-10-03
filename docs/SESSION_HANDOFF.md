@@ -1,3 +1,19 @@
+# Atualização — auditoria e estabilidade (03/10/2026)
+
+- Corrigidos lotes de leitura de notificações, preferências e erros assíncronos
+  atrasados, paginação durante refresh de inbox/alertas e recibos de leitura de DMs.
+- Ordens preservam sucesso confirmado diante de erro antigo. Eventos de salas/DMs
+  limpam conexões e watchers corretamente durante shutdown da API.
+- Limpeza localizada de três stores; sem alteração de views ou contratos públicos.
+- Validação: 213 iOS, 130 HTTP/PostgreSQL, 84 unitários API (83 no conjunto completo
+  mais uma regressão posterior validada no arquivo), 14 Firebase; 1110 entradas PT-BR/EN.
+  Formatação/lint/typecheck/build passaram; removida instabilidade temporal no teste
+  de limite de reações, sem mudar a regra de produção.
+- [Escopo, problemas, evidências e limites](CODE_AUDIT.md).
+- QA manual segue pendente com o usuário; monetização adiada e push aguardando APNs.
+
+---
+
 # Atualização — ordens de leitura reais (03/10/2026)
 
 Usuário autorizou implementar ordens de leitura e fará QA de mensagens/voz depois.

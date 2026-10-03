@@ -49,6 +49,9 @@ export class RoomEventsService implements OnModuleDestroy {
 
   async watch(item: string, signal: AbortSignal) {
     await this.connect();
+    // Shutdown may have completed while the listener was connecting. Never add
+    // a waiter/timer after the existing subscriptions have already been drained.
+    if (this.stopped) return { changed: Promise.resolve(), dispose: () => {} };
     let finish = () => {};
     const changed = new Promise<void>((resolve) => {
       const group = this.waiters.get(item) ?? new Set<() => void>();
@@ -70,6 +73,9 @@ export class RoomEventsService implements OnModuleDestroy {
   async onModuleDestroy() {
     this.stopped = true;
     for (const group of this.waiters.values()) for (const wake of group) wake();
-    await this.client?.end();
+    const client = this.client;
+    this.client = undefined;
+    await client?.end();
+    await this.connecting?.catch(() => {});
   }
 }

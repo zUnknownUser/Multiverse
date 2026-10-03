@@ -9,11 +9,11 @@ import Testing
     var failure:(any Error)?
     var readFailure=false
     var badReceipt=false
-    var readHook:(() async -> ReadingOrdersSnapshot)?
+    var readHook:(() async throws -> ReadingOrdersSnapshot)?
     func page() -> ReadingOrdersSnapshot { .init(version:version,locale:"en",orders:[order]) }
     func fetchReadingOrders() async throws -> ReadingOrdersSnapshot {
         if readFailure { throw AuthError.networkUnavailable }
-        if let readHook { return await readHook() }
+        if let readHook { return try await readHook() }
         return page()
     }
     func mutateReadingOrder(_ input:ReadingOrderMutation) async throws -> ReadingOrderReceipt {
@@ -98,6 +98,17 @@ import Testing
         #expect(remote.pending != nil && remote.error != nil && remote.orders[0].following == false)
         api.failure=nil;await remote.refresh();#expect(remote.error != nil)
         await remote.retry();#expect(remote.pending == nil && remote.orders[0].following == true)
+    }
+
+    @Test func outdatedReadFailureCannotReplaceSuccessfulMutationWithAnError() async {
+        let api = OrdersStub(), remote = ReadingOrdersStore(api: api); await remote.refresh()
+        var continuation: CheckedContinuation<ReadingOrdersSnapshot, any Error>?
+        api.readHook = { try await withCheckedThrowingContinuation { continuation = $0 } }
+        let load = Task { await remote.refresh() }
+        while continuation == nil { await Task.yield() }
+        await remote.toggle(api.order.id, action: "following")
+        continuation?.resume(throwing: AuthError.networkUnavailable); await load.value
+        #expect(remote.orders[0].following == true && remote.error == nil)
     }
 
 }

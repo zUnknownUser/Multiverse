@@ -196,7 +196,9 @@ describe.skipIf(!databaseURL)('Personal library with PostgreSQL', () => {
       mutate(operation('wanted', 0, { itemID: 'm-civil', enabled: true })),
       mutate(operation('favorite', 0, { itemID: 'm-civil', enabled: true })),
     ]);
-    expect(results.map((r) => r.status).sort()).toEqual([200, 409]);
+    expect(results.map((r) => r.status).sort((a, b) => a - b)).toEqual([
+      200, 409,
+    ]);
     expect(results.find((r) => r.status === 409)?.body.code).toBe(
       'LIBRARY_STALE',
     );

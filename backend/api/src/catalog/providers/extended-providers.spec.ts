@@ -272,7 +272,8 @@ describe('Provider transport and quotas', () => {
 describe('Reviewed Metron publication fetch', () => {
   it('fetches all 30 reviewed editions in order and paces across chunk boundaries', async () => {
     const fetcher = vi.fn<typeof fetch>().mockImplementation(async (url) => {
-      const id = Number(String(url).match(/issue\/(\d+)\//)?.[1]);
+      const address = url instanceof Request ? url.url : url.toString();
+      const id = Number(address.match(/issue\/(\d+)\//)?.[1]);
       const m = metronMarvelRegistry.find((m) => m.id === id)!;
       return Response.json({
         ...issue(id),
