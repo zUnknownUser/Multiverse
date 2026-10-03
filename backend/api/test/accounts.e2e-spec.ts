@@ -249,7 +249,11 @@ describe.skipIf(!databaseURL)('Account API with real PostgreSQL', () => {
       .get('/api/v1/me/onboarding/suggestions')
       .auth('first-lorekeeper', { type: 'bearer' })
       .expect(200);
-    expect(suggestions.body).toEqual({ users: [], minimumFollows: 0 });
+    expect(suggestions.body).toEqual({
+      users: [],
+      minimumFollows: 0,
+      followingOptional: true,
+    });
     await putProgress('first-lorekeeper', progress(0, true)).expect(200);
     await putProfile('new-lorekeeper').expect(200);
     const saved = await putProgress('new-lorekeeper', progress()).expect(200);
@@ -260,7 +264,6 @@ describe.skipIf(!databaseURL)('Account API with real PostgreSQL', () => {
       .expect(200);
     expect(restored.body.onboarding).toEqual(saved.body);
     await putProgress('new-lorekeeper', progress(0)).expect(409);
-    await putProgress('new-lorekeeper', progress(1, true)).expect(409);
     await putProgress(
       'new-lorekeeper',
       progress(1, true, ['mock-user']),
@@ -413,7 +416,7 @@ describe.skipIf(!databaseURL)('Account API with real PostgreSQL', () => {
     }
   });
 
-  it('requires only two available people, then caps the requirement at three', async () => {
+  it('preserves legacy suggestions while allowing fewer voluntary follows', async () => {
     await putProfile('third-person').expect(200);
     const two = await request(app.getHttpServer())
       .get('/api/v1/me/onboarding/suggestions')
@@ -433,11 +436,39 @@ describe.skipIf(!databaseURL)('Account API with real PostgreSQL', () => {
     await putProgress(
       'fourth-person',
       progress(0, true, ['first-lorekeeper', 'new-lorekeeper']),
-    ).expect(409);
-    await putProgress(
-      'fourth-person',
-      progress(0, true, ['first-lorekeeper', 'new-lorekeeper', 'third-person']),
     ).expect(200);
+    expect(three.body.followingOptional).toBe(true);
+  });
+
+  it('completes without following anyone even when suggestions exist and resumes completed', async () => {
+    const uid = 'skip-following';
+    try {
+      await putProfile(uid).expect(200);
+      const suggestions = await request(app.getHttpServer())
+        .get('/api/v1/me/onboarding/suggestions')
+        .auth(uid, { type: 'bearer' })
+        .expect(200);
+      expect(suggestions.body.users.length).toBeGreaterThan(0);
+      expect(suggestions.body.followingOptional).toBe(true);
+      const saved = await putProgress(uid, progress(0, true)).expect(200);
+      expect(saved.body.completed).toBe(true);
+      expect(saved.body.followedUserIDs).toEqual([]);
+      expect(
+        (
+          await database.query(
+            'SELECT count(*)::int AS count FROM follows WHERE follower_uid=$1',
+            [uid],
+          )
+        ).rows[0].count,
+      ).toBe(0);
+      const restored = await request(app.getHttpServer())
+        .get('/api/v1/me')
+        .auth(uid, { type: 'bearer' })
+        .expect(200);
+      expect(restored.body.onboarding).toEqual(saved.body);
+    } finally {
+      await database.query('DELETE FROM profiles WHERE firebase_uid=$1', [uid]);
+    }
   });
 
   it('keeps already selected eligible people visible when suggestions exceed the page limit', async () => {

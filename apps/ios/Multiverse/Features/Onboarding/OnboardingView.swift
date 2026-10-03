@@ -72,6 +72,7 @@ struct OnboardingView: View {
             return n > 0 ? L10n.text("Continuar") : L10n.text("Pular")
         case .step3:
             let n = store.onboardingSelectedFollowCount
+            if store.onboardingFollowingOptional && n == 0 { return L10n.text("Pular por enquanto") }
             return n >= store.minimumOnboardingFollows ? L10n.text("Montar meu feed") : L10n.format("Siga mais %1$@", String(describing: store.minimumOnboardingFollows - n))
         case .loading: return ""
         }

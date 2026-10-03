@@ -160,7 +160,9 @@ export class AccountsService {
     );
     return {
       users: result.rows.map(profile),
+      // Keep the legacy hint readable by older clients; new clients can skip.
       minimumFollows: Math.min(3, result.rows.length),
+      followingOptional: true,
     };
   }
   async saveOnboarding(uid: string, input: OnboardingDTO) {
@@ -230,23 +232,6 @@ export class AccountsService {
       );
       if (eligible.rowCount !== input.followedUserIDs.length)
         throw new ConflictException({ code: 'INVALID_FOLLOWS' });
-      const total = (
-        await client.query<{ count: string }>(
-          `SELECT count(*) FROM profiles p JOIN onboarding o USING(firebase_uid)
-        WHERE p.firebase_uid<>$1 AND p.deletion_requested_at IS NULL AND o.completed=true AND ${unblocked('$1', 'p.firebase_uid')}`,
-          [uid],
-        )
-      ).rows[0];
-      const minimum = Math.min(3, Number(total.count));
-      if (
-        !current.completed &&
-        input.completed &&
-        input.followedUserIDs.length < minimum
-      )
-        throw new ConflictException({
-          code: 'FOLLOWS_REQUIRED',
-          minimumFollows: minimum,
-        });
       const saved = await client.query<OnboardingRow>(
         `UPDATE onboarding SET universe_ids=$2,seen_item_ids=$3,followed_user_ids=$4,
         step=$5,completed=$6,version=version+1,updated_at=now() WHERE firebase_uid=$1 RETURNING *`,

@@ -95,7 +95,7 @@ revogação e conta desativada. E-mail precisa estar confirmado; anônimos são 
 | GET    | `/me`                                    | `{profile, onboarding}`; perfil ausente é `null`     |
 | GET    | `/me/username-availability?username=...` | `{available: boolean}`                               |
 | PUT    | `/me/profile`                            | Salva e retorna o perfil                             |
-| GET    | `/me/onboarding/suggestions`             | `{users, minimumFollows}`                            |
+| GET    | `/me/onboarding/suggestions`             | `{users, minimumFollows, followingOptional}`         |
 | PUT    | `/me/onboarding`                         | Salva e retorna o progresso com versão incrementada  |
 | DELETE | `/me`                                    | Remove conta Firebase e dados de conta no PostgreSQL |
 
@@ -130,11 +130,14 @@ usuário e contas em exclusão. O `GET /me` também filtra os follows restaurado
 essa elegibilidade, preservando a ordem e a versão do progresso. Assim, uma exclusão
 pendente no Firebase não obriga o app a reenviar uma seleção inválida repetidamente;
 a leitura não altera o banco, e a próxima gravação versionada reconcilia a seleção.
-Nesta etapa, elegibilidade significa conta que
-concluiu onboarding, não um selo de especialista. O mínimo é `min(3, disponíveis)`:
-zero pula a etapa no iOS, uma exige uma, duas exigem duas e três ou mais exigem
-três. Não são criados perfis fictícios para preencher a lista. Mudanças na comunidade
-entre a consulta e a conclusão retornam conflito; o app oferece recarregar.
+Nesta etapa, elegibilidade significa conta que concluiu onboarding, não um selo de
+especialista. **Seguir é opcional**: `followingOptional: true` permite concluir com
+zero, uma ou mais pessoas. O campo legado `minimumFollows = min(3, disponíveis)`
+permanece para que versões antigas continuem lendo sugestões; não é uma exigência
+para salvar no servidor. O iOS atual exibe “Pular por enquanto” quando não há
+seleções e “Montar meu feed” quando há. Zero candidatos ainda pula a etapa inteira.
+Não são criados perfis fictícios. Perfis selecionados inelegíveis continuam gerando
+conflito; escolher não seguir ninguém não depende de nova consulta de sugestões.
 Follows e progresso são salvos na mesma transação; conclusão não pode voltar a rascunho.
 As transações mantêm os perfis protegidos por travas compartilhadas e serializam a
 escrita na linha de progresso. Isso evita travas exclusivas cruzadas quando duas

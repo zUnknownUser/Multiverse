@@ -10,11 +10,11 @@ struct OnboardingStep3View: View {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(L10n.text("3 de 3")).kicker(11).foregroundStyle(MV.C.muted)
-                    Text(L10n.format("onboarding.followMinimum", store.minimumOnboardingFollows))
+                    Text(store.onboardingFollowingOptional ? L10n.text("ENCONTRE SEU PESSOAL") : L10n.format("onboarding.followMinimum", store.minimumOnboardingFollows))
                         .font(MVFont.display(26, width: 118))
                         .lineSpacing(-3)
                         .foregroundStyle(MV.C.ink)
-                    Text(store.usesAccountAPI ? L10n.text("Escolha quem você quer acompanhar no Multiverse.") : L10n.text("Seu feed é feito das reviews, votos e listas deles."))
+                    Text(store.onboardingFollowingOptional ? L10n.text("Seguir é opcional. Você pode escolher depois.") : store.usesAccountAPI ? L10n.text("Escolha quem você quer acompanhar no Multiverse.") : L10n.text("Seu feed é feito das reviews, votos e listas deles."))
                         .font(MVFont.body(14)).foregroundStyle(MV.C.muted)
                 }
 

@@ -1,3 +1,21 @@
+# Atualização — seguir pessoas é opcional no onboarding (03/10/2026)
+
+- Pedido explícito: permitir entrar sem seguir ninguém. A etapa existente agora
+  exibe “Pular por enquanto” com zero seleções, mantendo “Montar meu feed” com
+  escolhas voluntárias; universo/progresso preservados. Título/copy PT-BR/EN.
+- Backend removeu a exigência de quantidade mínima e publica `followingOptional`.
+  `minimumFollows` é mantido como campo legado para compatibilidade de leitura.
+  Elegibilidade, bloqueios, conflitos de versão e transação continuam valendo.
+- Pular não espera nova busca de pessoas. Só conclui após o servidor confirmar;
+  falhas mantêm a etapa acessível para retry. Nenhum follow artificial é criado.
+- 98 unitários +135 HTTP/PostgreSQL passaram. iOS completo com o trabalho de
+  auditoria em andamento: 224 testes, incluindo zero/um follow e falha com retry.
+- Objetivo ativo continua: auditoria de layout, comportamentos e performance.
+  Usuário relatou deslocamento/demora ao digitar nome; correções e diagnóstico
+  visual dessa parte ainda estão em andamento, separados desta entrega.
+
+---
+
 # Atualização — comunidade presente na Home (03/10/2026)
 
 - Direção autorizada: interação dos usuários como motor do app; catálogo como apoio.

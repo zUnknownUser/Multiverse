@@ -20,6 +20,7 @@ struct AccountEnvelope: Codable, Sendable { let profile: RemoteProfile?; let onb
 struct FollowSuggestions: Codable, Sendable {
     let users: [RemoteProfile]
     let minimumFollows: Int
+    var followingOptional: Bool? = nil
 
     func validate(for userID: String) throws {
         let ids = Set(users.map(\.userID))

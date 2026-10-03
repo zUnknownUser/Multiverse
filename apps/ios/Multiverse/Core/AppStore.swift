@@ -132,6 +132,7 @@ final class AppStore {
     private var remoteVersion = 0
     private var onboardingCandidates: [User] = []
     var minimumOnboardingFollows = 3
+    private(set) var onboardingFollowingOptional = false
     var usesAccountAPI: Bool { accountAPI != nil }
     @ObservationIgnored private var onboardingSaveQueue: Task<OnboardingState, Error>?
     @ObservationIgnored private var onboardingDebounce: Task<Void, Never>?
@@ -1377,7 +1378,8 @@ final class AppStore {
             User(id: $0.userID, name: $0.displayName, handle: "@" + $0.username,
                  avatarColor: $0.avatarColor, bio: $0.bio, followers: nil, badgeUniverse: "")
         }
-        minimumOnboardingFollows = suggestions.minimumFollows
+        onboardingFollowingOptional = suggestions.followingOptional == true
+        minimumOnboardingFollows = onboardingFollowingOptional ? 0 : suggestions.minimumFollows
         for user in onboardingCandidates {
             usersByID[user.id] = user
             users.removeAll { $0.id == user.id }
@@ -1450,7 +1452,7 @@ final class AppStore {
             _ = try? await onboardingSaveQueue?.value
             let step = onboardingPhase == .step1 ? 1 : (onboardingPhase == .step2 ? 2 : 3)
             do {
-                if !back && step >= 2 {
+                if !back && step >= 2 && !(step == 3 && onboardingFollowingOptional && follows.isEmpty) {
                     try await refreshOnboardingSuggestions()
                     if step == 3 && onboardingSelectedFollowCount < minimumOnboardingFollows {
                         onboardingError = nil

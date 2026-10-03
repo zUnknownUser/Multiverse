@@ -12,6 +12,7 @@ private final class AccountStub: AccountAPI {
     var suggestionCalls = 0
     var savedVersions: [Int] = []
     var peopleAfterNextSaveConflict: [RemoteProfile]?
+    var followingOptional: Bool? = nil
     var available = true
     var suspendAvailability = false
     var availabilityRequests: [CheckedContinuation<Bool, Error>] = []
@@ -36,7 +37,7 @@ private final class AccountStub: AccountAPI {
     func suggestions() async throws -> FollowSuggestions {
         suggestionCalls += 1
         if let suggestionFailure { throw suggestionFailure }
-        return FollowSuggestions(users: people, minimumFollows: min(3, people.count))
+        return FollowSuggestions(users: people, minimumFollows: min(3, people.count), followingOptional: followingOptional)
     }
     func saveOnboarding(_ state: OnboardingState) async throws -> OnboardingState {
         if let failure { throw failure }
@@ -68,6 +69,35 @@ final class IdentityStub: GoogleAuthenticationClient {
 struct AccountIntegrationTests {
     private func people(_ count: Int) -> [RemoteProfile] {
         (0..<count).map { RemoteProfile(userID: "person-\($0)", username: "person\($0)", displayName: "Person \($0)", avatarColor: "#F4A814", bio: "") }
+    }
+
+    @Test(arguments: [0, 1]) func optionalFollowingFinishesWithZeroOrOnePerson(selected: Int) async throws {
+        let uid = UUID().uuidString, api = AccountStub(uid: UUID().uuidString)
+        api.profile = RemoteProfile(userID: uid, username: "newuser", displayName: "New", avatarColor: "#F4A814", bio: "")
+        api.people = people(5); api.followingOptional = true
+        api.progress = OnboardingState(universeIDs: ["marvel"], step: 3)
+        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        await store.bootstrap()
+        if selected == 1 { store.toggleFollow("person-0", silent: true) }
+        #expect(store.canAdvanceOnboarding && store.minimumOnboardingFollows == 0)
+        if selected == 0 { api.suggestionFailure = .networkUnavailable }
+        store.advanceOnboarding(); try await waitForTransition(store)
+        #expect(store.isOnboarded && api.progress.completed)
+        #expect(api.progress.followedUserIDs.count == selected)
+        #expect(api.progress.universeIDs == ["marvel"])
+    }
+    @Test func skippingDoesNotCompleteOnFailedSaveAndCanRetry() async throws {
+        let uid = UUID().uuidString, api = AccountStub(uid: UUID().uuidString)
+        api.profile = RemoteProfile(userID: uid, username: "newuser", displayName: "New", avatarColor: "#F4A814", bio: "")
+        api.people = people(3); api.followingOptional = true
+        api.progress = OnboardingState(universeIDs: ["dc"], step: 3)
+        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        await store.bootstrap(); api.failure = .networkUnavailable
+        store.advanceOnboarding(); try await waitForTransition(store)
+        #expect(!store.isOnboarded && store.onboardingError != nil && store.canAdvanceOnboarding)
+        api.failure = nil
+        store.advanceOnboarding(); try await waitForTransition(store)
+        #expect(store.isOnboarded && api.progress.followedUserIDs.isEmpty)
     }
 
     @Test(arguments: [0, 1, 2, 3, 5]) func onboardingOnlyRequiresAvailablePeople(count: Int) async throws {

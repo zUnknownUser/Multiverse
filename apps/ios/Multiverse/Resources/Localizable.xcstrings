@@ -19161,6 +19161,57 @@
           }
         }
       }
+    },
+    "Pular por enquanto": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pular por enquanto"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip for now"
+          }
+        }
+      }
+    },
+    "ENCONTRE SEU PESSOAL": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ENCONTRE SEU PESSOAL"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FIND YOUR PEOPLE"
+          }
+        }
+      }
+    },
+    "Seguir é opcional. Você pode escolher depois.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguir é opcional. Você pode escolher depois."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Following is optional. You can choose later."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
