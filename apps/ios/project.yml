@@ -51,15 +51,13 @@ targets:
           - "**/*.md"
       - path: GoogleService-Info.plist
         buildPhase: resources
-    entitlements:
-      path: Multiverse/Resources/Multiverse.entitlements
-      properties:
-        com.apple.developer.devicecheck.appattest-environment: production
-        com.apple.developer.associated-domains:
-          - applinks:multiverse-7f87c.firebaseapp.com
-        com.apple.security.application-groups:
-          - group.com.nexussoft.multiverse
     settings:
+      configs:
+        Debug:
+          # Personal Team: paid capabilities belong only to Release signing.
+          CODE_SIGN_ENTITLEMENTS: Configuration/Debug.entitlements
+        Release:
+          CODE_SIGN_ENTITLEMENTS: Multiverse/Resources/Multiverse.entitlements
       base:
         MULTIVERSE_PUSH_ENABLED: NO
         PRODUCT_BUNDLE_IDENTIFIER: com.nexussoft.multiverse
@@ -127,12 +125,12 @@ targets:
         buildPhase: resources
       - path: Multiverse/Core/Store/WidgetBridge.swift
       - path: Multiverse/Core/Store/PremiereActivityAttributes.swift
-    entitlements:
-      path: MultiverseWidgets/MultiverseWidgets.entitlements
-      properties:
-        com.apple.security.application-groups:
-          - group.com.nexussoft.multiverse
     settings:
+      configs:
+        Debug:
+          CODE_SIGN_ENTITLEMENTS: Configuration/Debug.entitlements
+        Release:
+          CODE_SIGN_ENTITLEMENTS: MultiverseWidgets/MultiverseWidgets.entitlements
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.nexussoft.multiverse.widgets
         INFOPLIST_FILE: MultiverseWidgets/Info.plist

@@ -35,9 +35,20 @@ No Xcode:
 3. Rode no Simulator (⌘R) ou num dispositivo físico.
 
 O `project.yml` usa assinatura automática com a equipe `5RS2AA677K`, a mesma do Verbum.
-Os targets do app e dos widgets compartilham o App Group `group.com.nexussoft.multiverse`.
+O build **Debug** usa `Configuration/Debug.entitlements`, sem Associated Domains,
+App Attest ou App Groups, para permitir assinatura com **Personal Team** gratuito.
+Confira **Product → Scheme → Edit Scheme → Run → Build Configuration → Debug**.
+O build **Release** preserva as capacidades de produção e requer uma equipe com
+Apple Developer Program; app e widgets compartilham o App Group
+`group.com.nexussoft.multiverse` nessa configuração.
 Para gerar os perfis de desenvolvimento, conecte e desbloqueie um iPhone registrado nessa
 equipe e execute pelo Xcode. Certificados e provisioning profiles não ficam no repositório.
+
+Em Debug, links universais não abrem o app automaticamente e widgets não compartilham
+o App Group. Firebase já usa o provedor App Check de debug: para os serviços que
+exigem App Check, registre no console Firebase o token desse dispositivo mostrado
+no console do Xcode. Não desative a verificação no backend. Veja o
+[procedimento oficial](https://firebase.google.com/docs/app-check/ios/debug-provider).
 
 Os dados compartilhados com widgets são vinculados à sessão ativa. Logout e troca de
 conta limpam o snapshot e solicitam atualização ao WidgetKit; respostas atrasadas da
