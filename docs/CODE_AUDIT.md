@@ -85,3 +85,44 @@ Não foi reproduzido um travamento de cadastro. Threads de posts ainda recarrega
 a primeira página de comentários após resposta; avatar por upload continua uma
 pendência funcional anterior. Aviso de orientações do iPad não foi mascarado
 com UIRequiresFullScreen. Não há promessa de ausência de todos os bugs.
+
+
+## SOLID — responsabilidades e dependências (03/10/2026)
+
+Pedido: aplicar SOLID onde houver necessidade, preservando o produto existente.
+Revisados os pontos de composição iOS, stores, APIs, domínio dos avatares e os
+serviços/controllers de comunidade. Refatoração orientada por acoplamentos
+concretos, sem introduzir hierarquias ou interfaces sem consumidores.
+
+- **Responsabilidade única:** `AccountAPIClient` adapta endpoints; o novo
+  `AuthenticatedHTTPClient` cuida de sessão, token, retry único, cancelamento e
+  decodificação HTTP. `MultiverseAPIErrorMapper` mantém os erros de domínio fora
+  do transporte. No backend, `ClubsService`/`ClubsController` tratam clubes,
+  agenda, membros e moderação; `RoomsService`/`RoomsController` tratam presença
+  e assinaturas de mudanças. Clubes não recebem mais banco/eventos de salas.
+- **Inversão de dependência e extensão:** o adaptador recebe
+  `AuthenticatedRequesting`; o transporte aceita `APIErrorMapping`. É possível
+  trocar o executor ou a política de erro sem editar os endpoints. As proteções
+  de autenticação/cancelamento continuam pertencendo ao transporte.
+- **Segregação e substituição:** `ClubsAPI` e `RoomsAPI` são contratos separados.
+  Duelo, clubes, salas, voz e busca de pessoas são injetados explicitamente na
+  composição em `RootView`; eliminados os casts que exigiam que a implementação
+  de uma funcionalidade também implementasse outra, sem declarar esse requisito.
+  Os testes usam implementações restritas de salas e duelos, sem AccountAPI ou
+  CommunityAPI, e uma política de erro alternativa no transporte real.
+- **Domínio independente da apresentação:** IDs de avatar em
+  `Core/ProfileAvatarChoice.swift`; nomes localizados, UIImage/cache e recortes
+  continuam no DesignSystem. Assets e renderização não mudaram.
+
+Evidência: comparação do código antes/depois confirmou todos os corpos dos
+métodos de salas, consultas SQL, rotas públicas e branches de erro de domínio
+preservados (ignorando apenas espaço em branco). A suíte HTTP usa PostgreSQL e
+cobre clubes/agendas/moderação, presença/atualizações, voz, bloqueios e exclusão.
+A suíte iOS cobre sessão/troca de conta, retry, erros, stores e avatares; testes
+adicionais verificam substituição por contratos menores e cancelamento que não
+pode ser convertido em erro de domínio pela política injetada.
+
+Nenhuma migração, mudança visual, mudança de tradução ou nova funcionalidade.
+AppStore continua coordenando estado legado/demonstrações e navegação; esta
+entrega não afirma que todos os tipos do projeto precisam de uma interface nem
+que a arquitetura esteja definitivamente encerrada.

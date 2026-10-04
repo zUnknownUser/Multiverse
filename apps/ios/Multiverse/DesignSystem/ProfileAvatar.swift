@@ -1,9 +1,6 @@
 import SwiftUI
 
-/// Stable IDs are persisted; artwork ships offline with the app.
-enum ProfileAvatar: String, CaseIterable, Identifiable {
-    case vigilant, cosmic, robot
-    var id: String { rawValue }
+extension ProfileAvatar {
     var title: String {
         switch self {
         case .vigilant: L10n.text("Vigilante")

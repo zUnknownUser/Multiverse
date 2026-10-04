@@ -64,7 +64,7 @@ struct DirectInboxView: View {
                 }
             }.foregroundStyle(MV.C.ink).padding(MV.pad)
         }.task { await messages.refresh() }.refreshable { await messages.refresh() }
-        .sheet(isPresented: $newConversation) { DirectPeoplePicker(api: messages.api as? any PeopleAPI, owner: messages.ownerID) { store.push(.conversation($0)) } }
+        .sheet(isPresented: $newConversation) { DirectPeoplePicker(api: store.peopleAPI, owner: messages.ownerID) { store.push(.conversation($0)) } }
     }
     private func tab(_ text: String, value: Bool) -> some View {
         Button { requests = value } label: {

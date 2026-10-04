@@ -23,6 +23,13 @@ import Testing
     }
 }
 @Suite(.serialized) @MainActor struct DailyDuelsTests {
+    @Test func dailyDuelsCanBeInjectedWithoutAnAccountClient() async {
+        let api = DuelStub()
+        let store = AppStore(dailyDuelsAPI: api)
+        await store.dailyDuels?.refresh()
+        #expect(store.dailyDuels?.hub?.today?.id == api.id)
+        #expect(!store.usesAccountAPI)
+    }
     @Test func homeCachesSuccessfulReadsAndKeepsLastKnownDataOffline() async {
         let api = DuelStub(), store = DailyDuelsStore(api: api)
         await store.refresh(); await store.refresh()

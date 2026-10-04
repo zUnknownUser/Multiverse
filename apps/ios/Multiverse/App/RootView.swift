@@ -88,7 +88,11 @@ struct RootView: View {
                 notificationsAPI: api,
                 libraryAPI: api,
                 directMessagesAPI: api,
-                readingOrdersAPI: api
+                readingOrdersAPI: api,
+                dailyDuelsAPI: api,
+                clubsAPI: api,
+                roomsAPI: api,
+                voiceAPI: api
             )
             store = accountStore
             await accountStore.bootstrap()

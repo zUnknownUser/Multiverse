@@ -37,7 +37,7 @@ struct LiveClubsView: View {
         .sheet(isPresented: $creating, onDismiss: { Task { await load() } }) { ClubEditor(universe: universe) }
     }
     private func load(more: Bool = false) async {
-        guard let api = store.spacesAPI else { return }; let requestedQuery = query; busy = true; error = nil
+        guard let api = store.clubsAPI else { return }; let requestedQuery = query; busy = true; error = nil
         defer { if requestedQuery == query { busy = false } }
         do {
             let page = try await api.fetchClubs(query: requestedQuery, universe: universe, after: more ? cursor : nil)
@@ -150,7 +150,7 @@ struct LiveClubView: View {
         }.font(MVFont.bold(12))
     }
     private func load() async {
-        guard !busy, let api = store.spacesAPI else { return }; busy = true; error = nil
+        guard !busy, let api = store.clubsAPI else { return }; busy = true; error = nil
         do {
             let result = try await api.fetchClub(id); try Task.checkCancellation(); detail = result
             if !result.schedule.contains(where: { $0.id == selectedSchedule }) { selectedSchedule = result.schedule.first?.id ?? "" }
@@ -158,7 +158,7 @@ struct LiveClubView: View {
         } catch { self.error = error.localizedDescription; if case CommunityError.clubUnavailable = error { detail = nil; members = [] }; busy = false }
     }
     private func loadMembers(more: Bool = false) async {
-        guard detail?.club.joined == true, let api = store.spacesAPI else { members = []; return }
+        guard detail?.club.joined == true, let api = store.clubsAPI else { members = []; return }
         let requested = selectedSchedule
         do {
             let result = try await api.fetchClubMembers(club: id, schedule: requested.isEmpty ? nil : requested, after: more ? memberCursor : nil)
@@ -166,15 +166,15 @@ struct LiveClubView: View {
             let previous = more ? members : []; members = previous + result.members.filter { next in !previous.contains { $0.id == next.id } }; memberCursor = result.nextCursor
         } catch { self.error = error.localizedDescription }
     }
-    private func perform(_ action: (any SpacesAPI) async throws -> Void) async {
-        guard !busy, let api = store.spacesAPI else { return }; busy = true; error = nil
+    private func perform(_ action: (any ClubsAPI) async throws -> Void) async {
+        guard !busy, let api = store.clubsAPI else { return }; busy = true; error = nil
         do { try await action(api); busy = false; await load() } catch { self.error = error.localizedDescription; busy = false }
     }
     private func join(_ joined: Bool) async { await perform { api in let r = try await api.joinClub(id, joined: joined); guard r.saved, r.id == id else { throw SocialError.invalid } } }
     private func saveProgress(_ plan: ClubSchedule) async { let value = units; await perform { api in let r = try await api.saveClubProgress(club: id, schedule: plan.id, units: value); guard r.saved, r.id == plan.id else { throw SocialError.invalid } } }
     private func removeSchedule(_ plan: ClubSchedule) async { await perform { api in let r = try await api.deleteSchedule(club: id, id: plan.id); guard r.deleted, r.id == plan.id else { throw SocialError.invalid } } }
     private func remove() async {
-        guard !busy, let api = store.spacesAPI else { return }; busy = true
+        guard !busy, let api = store.clubsAPI else { return }; busy = true
         do { let r = try await api.deleteClub(id); guard r.deleted, r.id == id else { throw SocialError.invalid }; dismiss() }
         catch { self.error = error.localizedDescription }; busy = false
     }

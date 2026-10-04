@@ -87,7 +87,7 @@ struct DuelInviteView: View {
                 }.padding(MV.pad)
             }
             .sheet(isPresented: $choosing) {
-                DirectPeoplePicker(api: store.directMessages?.api as? any PeopleAPI, owner: store.meID, onPick: { recipient = $0 }, onPickUser: { recipientName = $0.handle })
+                DirectPeoplePicker(api: store.peopleAPI, owner: store.meID, onPick: { recipient = $0 }, onPickUser: { recipientName = $0.handle })
             }
         }.interactiveDismissDisabled(sending)
     }

@@ -90,7 +90,10 @@ final class AppStore {
     let homeCommunity = CommunityTimeline()
     let communityAPI: (any CommunityAPI)?
     let dailyDuels: DailyDuelsStore?
-    var spacesAPI: (any SpacesAPI)? { communityAPI as? any SpacesAPI }
+    let clubsAPI: (any ClubsAPI)?
+    let roomsAPI: (any RoomsAPI)?
+    let voiceAPI: (any VoiceAPI)?
+    let peopleAPI: (any PeopleAPI)?
     let notifications: NotificationStore?
     let social: SocialStore?
     let people: PeopleStore?
@@ -244,12 +247,34 @@ final class AppStore {
 
     // MARK: - Init
 
-    init(repository: MultiverseRepository? = nil, session: AuthSession? = nil, accountAPI: (any AccountAPI)? = nil, widgetWriter: (any WidgetSnapshotWriting)? = nil, catalogAPI: (any CatalogAPI)? = nil, activityAPI: (any ActivityAPI)? = nil, peopleAPI: (any PeopleAPI)? = nil, socialAPI: (any SocialAPI)? = nil, communityAPI: (any CommunityAPI)? = nil, notificationsAPI: (any NotificationsAPI)? = nil, libraryAPI: (any LibraryAPI)? = nil, directMessagesAPI: (any DirectMessagesAPI)? = nil, readingOrdersAPI: (any ReadingOrdersAPI)? = nil) {
+    init(
+        repository: MultiverseRepository? = nil,
+        session: AuthSession? = nil,
+        accountAPI: (any AccountAPI)? = nil,
+        widgetWriter: (any WidgetSnapshotWriting)? = nil,
+        catalogAPI: (any CatalogAPI)? = nil,
+        activityAPI: (any ActivityAPI)? = nil,
+        peopleAPI: (any PeopleAPI)? = nil,
+        socialAPI: (any SocialAPI)? = nil,
+        communityAPI: (any CommunityAPI)? = nil,
+        notificationsAPI: (any NotificationsAPI)? = nil,
+        libraryAPI: (any LibraryAPI)? = nil,
+        directMessagesAPI: (any DirectMessagesAPI)? = nil,
+        readingOrdersAPI: (any ReadingOrdersAPI)? = nil,
+        dailyDuelsAPI: (any DailyDuelsAPI)? = nil,
+        clubsAPI: (any ClubsAPI)? = nil,
+        roomsAPI: (any RoomsAPI)? = nil,
+        voiceAPI: (any VoiceAPI)? = nil
+    ) {
         self.readingOrderStore = readingOrdersAPI.map { ReadingOrdersStore(api: $0) }
         self.directMessages = directMessagesAPI.map { DirectMessagesStore(api: $0, ownerID: session?.userID ?? "duda") }
         self.library = libraryAPI.map { LibraryStore(api: $0) }
         self.communityAPI = communityAPI
-        self.dailyDuels = (accountAPI as? any DailyDuelsAPI).map { DailyDuelsStore(api: $0) }
+        self.dailyDuels = dailyDuelsAPI.map { DailyDuelsStore(api: $0) }
+        self.clubsAPI = clubsAPI
+        self.roomsAPI = roomsAPI
+        self.voiceAPI = voiceAPI
+        self.peopleAPI = peopleAPI
         self.notifications = notificationsAPI.map { NotificationStore(api: $0) }
         self.social = socialAPI.map { SocialStore(api: $0) }
         self.people = peopleAPI.map { PeopleStore(api: $0, ownerID: session?.userID ?? "duda") }
@@ -1561,7 +1586,8 @@ final class AppStore {
 
     /// Publish the avatar only after the authenticated server confirms it.
     func saveAvatar(_ avatarID: String?) async throws {
-        guard let accountAPI, let current = user(meID), avatarID == nil || ProfileAvatar(rawValue: avatarID!) != nil else { throw AuthError.invalidProfile }
+        guard let accountAPI, let current = user(meID) else { throw AuthError.invalidProfile }
+        if let avatarID, ProfileAvatar(rawValue: avatarID) == nil { throw AuthError.invalidProfile }
         let profile = try await accountAPI.saveProfile(name: current.name, username: String(current.handle.dropFirst()), avatarColor: current.avatarColor, bio: current.bio, avatarID: avatarID)
         guard profile.userID == meID, profile.avatarID == avatarID else { throw AuthError.invalidProfile }
         var updated = current

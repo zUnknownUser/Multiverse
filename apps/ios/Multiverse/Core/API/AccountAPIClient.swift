@@ -2,17 +2,12 @@ import Foundation
 
 @MainActor
 final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, CommunityAPI, NotificationsAPI, LibraryAPI {
-    private let baseURL: URL?
-    private let tokens: any APITokenProvider
-    private let transport: URLSession
-    private let expectedUserID: String?
+    private let http: any AuthenticatedRequesting
 
     init(baseURL: URL? = AccountAPIClient.configuredURL(), tokens: any APITokenProvider = FirebaseAPITokenProvider(), transport: URLSession = .shared, expectedUserID: String? = nil) {
-        self.baseURL = baseURL
-        self.tokens = tokens
-        self.transport = transport
-        self.expectedUserID = expectedUserID
+        self.http = AuthenticatedHTTPClient(baseURL: baseURL, tokens: tokens, transport: transport, expectedUserID: expectedUserID)
     }
+    init(http: any AuthenticatedRequesting) { self.http = http }
     static func configuredURL() -> URL? {
         var value = Bundle.main.object(forInfoDictionaryKey: "MultiverseAPIBaseURL") as? String ?? ""
         #if DEBUG
@@ -38,7 +33,6 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, Com
             try c.encode(avatarID, forKey: .avatarID)
         }
     }
-    private struct APIError: Decodable { let code: String? }
 
     func fetchFeed(after: String?) async throws -> SocialPage {
         try await request("feed", query: after.map { [URLQueryItem(name: "after", value: $0)] } ?? [])
@@ -118,120 +112,6 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, Com
         guard result.deleted else { throw AuthError.deletionPending }
     }
     func request<Response: Decodable>(_ path: String, method: String = "GET", body: Data? = nil, query: [URLQueryItem] = [], timeout: TimeInterval = 20) async throws -> Response {
-        guard let baseURL else { throw AuthError.apiNotConfigured }
-        guard let uid = tokens.userID, expectedUserID == nil || uid == expectedUserID else { throw AuthError.sessionExpired }
-        var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
-        if !query.isEmpty { components.queryItems = query }
-        for attempt in 0...1 {
-            var request = URLRequest(url: components.url!, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)
-            request.httpMethod = method
-            request.httpBody = body
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.setValue("Bearer " + (try await tokens.token(forceRefresh: attempt == 1)), forHTTPHeaderField: "Authorization")
-            guard tokens.userID == uid else { throw AuthError.sessionExpired }
-            request.setValue(L10n.language(), forHTTPHeaderField: "Accept-Language")
-            let data: Data
-            let response: URLResponse
-            do { (data, response) = try await transport.data(for: request) }
-            catch {
-                if Task.isCancelled || (error as? URLError)?.code == .cancelled { throw CancellationError() }
-                if (error as? URLError)?.code == .timedOut, path.hasPrefix("me/diary/") { throw ActivityError.timedOut }
-                throw AuthError.networkUnavailable
-            }
-            try Task.checkCancellation()
-            guard tokens.userID == uid else { throw AuthError.sessionExpired }
-            guard let http = response as? HTTPURLResponse else { throw AuthError.apiUnavailable }
-            if http.statusCode == 401 && attempt == 0 { continue }
-            if (200..<300).contains(http.statusCode) {
-                do {
-                    let decoder = JSONDecoder()
-                    decoder.dateDecodingStrategy = .custom { decoder in
-                        let value = try decoder.singleValueContainer().decode(String.self)
-                        let formatter = ISO8601DateFormatter()
-                        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-                        if let date = formatter.date(from: value) { return date }
-                        formatter.formatOptions = [.withInternetDateTime]
-                        guard let date = formatter.date(from: value) else { throw AuthError.apiUnavailable }
-                        return date
-                    }
-                    return try decoder.decode(Response.self, from: data)
-                }
-                catch { throw AuthError.apiUnavailable }
-            }
-            let code = (try? JSONDecoder().decode(APIError.self, from: data))?.code
-            switch code {
-            case "ORDER_UNAVAILABLE": throw ReadingOrdersError.unavailable
-            case "ORDER_STALE": throw ReadingOrdersError.stale
-            case "ORDER_CONFLICT": throw ReadingOrdersError.conflict
-            case "ORDER_LIMIT": throw ReadingOrdersError.limit
-            case "INVALID_ORDER_REQUEST": throw ReadingOrdersError.invalid
-            case "MESSAGE_UNAVAILABLE": throw DirectMessageError.unavailable
-            case "MESSAGE_REQUEST_PENDING": throw DirectMessageError.pending
-            case "MESSAGE_CONFLICT": throw DirectMessageError.conflict
-            case "MESSAGE_LIMIT": throw DirectMessageError.limit
-            case "INVALID_MESSAGE": throw SocialError.invalid
-            case "VOICE_UNAVAILABLE": throw VoiceError.unavailable
-            case "VOICE_FULL": throw VoiceError.full
-            case "VOICE_BLOCKED": throw VoiceError.blocked
-            case "VOICE_SESSION_ENDED": throw VoiceError.ended
-            case "VOICE_SESSION_CONFLICT": throw VoiceError.conflict
-
-            case "LIBRARY_STALE": throw LibraryError.stale
-            case "LIST_UNAVAILABLE": throw LibraryError.unavailable
-            case "LIBRARY_MUTATION_CONFLICT", "LIBRARY_LIST_CONFLICT": throw LibraryError.conflict
-            case "LIBRARY_LISTS_LIMIT": throw LibraryError.listLimit
-            case "LIST_ITEMS_LIMIT": throw LibraryError.itemLimit
-            case "LIBRARY_ITEMS_LIMIT": throw LibraryError.savedLimit
-            case "INVALID_LIBRARY_REQUEST": throw SocialError.invalid
-
-            case "COMMENTS_RESTRICTED": throw SocialError.commentsRestricted
-            case "COMMENT_UNAVAILABLE": throw SocialError.commentUnavailable
-            case "COMMENT_LIMIT": throw SocialError.commentLimit
-            case "COMMENT_CONFLICT": throw SocialError.commentConflict
-            case "REACTION_LIMIT": throw SocialError.reactionLimit
-            case "POST_STALE": throw CommunityError.stale
-            case "INVALID_IMAGE": throw CommunityError.invalidImage
-            case "ROOM_PROGRESS_REQUIRED": throw CommunityError.roomProgress
-            case "CLUB_FULL", "CLUB_LIMIT", "SCHEDULE_LIMIT", "IMAGE_LIMIT": throw CommunityError.capacity
-            case "SCHEDULE_DATE_USED": throw CommunityError.scheduleDate
-            case "MENTION_LIMIT": throw CommunityError.mentionLimit
-            case "INVALID_DUEL": throw CommunityError.invalidDuel
-            case "VOTE_CLOSED": throw CommunityError.closed
-            case "CLUB_MEMBERSHIP_REQUIRED": throw CommunityError.membership
-            case "CLUB_UNAVAILABLE": throw CommunityError.clubUnavailable
-            case "CLUB_OWNER_CANNOT_LEAVE": throw CommunityError.ownerLeave
-            case "POST_UNAVAILABLE": throw CommunityError.unavailable
-            case "POST_CONFLICT": throw CommunityError.conflict
-            case "INVALID_POST_CATALOG": throw CatalogError.changed
-            case "REVIEW_UNAVAILABLE": throw SocialError.unavailable
-            case "INVALID_SOCIAL_REQUEST", "INVALID_REPORT", "INVALID_BLOCK", "INVALID_FEED_CURSOR": throw SocialError.invalid
-            case "REPORT_LIMIT": throw SocialError.reportLimit
-            case "PUBLICATION_LIMIT": throw SocialError.publicationLimit
-            case "PERSON_UNAVAILABLE": throw PeopleError.unavailable
-            case "INVALID_PEOPLE_QUERY": throw PeopleError.invalidSearch
-            case "INVALID_FOLLOW", "CANNOT_FOLLOW_SELF", "INVALID_PERSON": throw PeopleError.followFailed
-            case "ONBOARDING_REQUIRED": throw PeopleError.onboardingRequired
-            case "USERNAME_TAKEN": throw AuthError.usernameTaken
-            case "CATALOG_CHANGED": throw CatalogError.changed
-            case "INVALID_LOG": throw ActivityError.invalidLog
-            case "INVALID_LOG_DATE": throw ActivityError.invalidDate
-            case "ITEM_UNAVAILABLE": throw ActivityError.itemUnavailable
-            case "EMAIL_NOT_VERIFIED": throw AuthError.emailNotVerified
-            case "RECENT_LOGIN_REQUIRED": throw AuthError.recentLoginRequired
-            case "STALE_ONBOARDING", "ONBOARDING_COMPLETED": throw AuthError.onboardingConflict
-            case "FOLLOWS_REQUIRED", "INVALID_FOLLOWS": throw AuthError.suggestionsChanged
-            case "DELETION_PENDING", "ACCOUNT_DELETING": throw AuthError.deletionPending
-            default:
-                if http.statusCode == 401 { throw AuthError.sessionExpired }
-                if http.statusCode == 429 { throw AuthError.tooManyRequests }
-                if path.hasPrefix("me/diary/") {
-                    if http.statusCode == 413 { throw ActivityError.tooLong }
-                    if http.statusCode == 400 { throw ActivityError.invalidLog }
-                }
-                if http.statusCode == 400 { throw AuthError.invalidProfile }
-                throw AuthError.apiUnavailable
-            }
-        }
-        throw AuthError.sessionExpired
+        try await http.request(path, method: method, body: body, query: query, timeout: timeout)
     }
 }

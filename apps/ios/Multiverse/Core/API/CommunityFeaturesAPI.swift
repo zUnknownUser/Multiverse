@@ -42,7 +42,7 @@ struct RoomVisit: Decodable, Sendable { let itemID: String; let online: Int; let
 struct ClubInput: Encodable, Sendable { let name: String; let description: String; let universeID: String; let version: Int? }
 struct ScheduleInput: Encodable, Sendable { let itemID: String; let startsOn: String; let totalUnits: Int; let unitLabel: String }
 
-@MainActor protocol SpacesAPI: Sendable {
+@MainActor protocol ClubsAPI: Sendable {
     func fetchClubs(query: String, universe: String?, after: String?) async throws -> LiveClubsPage
     func fetchClub(_ id: String) async throws -> LiveClubDetail
     func saveClub(id: String, input: ClubInput) async throws -> PostReceipt
@@ -53,6 +53,8 @@ struct ScheduleInput: Encodable, Sendable { let itemID: String; let startsOn: St
     func deleteSchedule(club: String, id: String) async throws -> PostDeletion
     func saveClubProgress(club: String, schedule: String, units: Int) async throws -> PostReceipt
     func fetchClubMembers(club: String, schedule: String?, after: String?) async throws -> ClubMembersPage
+}
+@MainActor protocol RoomsAPI: Sendable {
     func fetchRooms(query: String, universe: String?, after: String?) async throws -> LiveRoomsPage
     func visitRoom(_ item: String, progress: Int?) async throws -> RoomVisit
     func roomChanges(_ item: String, after: String?) async throws -> RoomChanges
@@ -73,7 +75,7 @@ extension CommunityAPI {
     func resolveTheory(_ id: String, status: String, note: String, version: Int) async throws -> PostReceipt { throw CommunityError.unavailable }
     func mentionPeople(query: String) async throws -> [User] { throw CommunityError.unavailable }
 }
-extension AccountAPIClient: SpacesAPI {
+extension AccountAPIClient: ClubsAPI, RoomsAPI {
     func fetchPosts(filter: CommunityFilter, after: String?) async throws -> CommunityPage {
         let entries: [(String, String?)] = [("universe", filter.universe), ("item", filter.item), ("q", filter.search), ("feed", filter.feed), ("kind", filter.kind), ("club", filter.club), ("schedule", filter.schedule), ("after", after), ("segment", filter.segment.map(String.init))]
         return try await request("posts", query: entries.compactMap { key, value in value.map { URLQueryItem(name: key, value: $0) } })

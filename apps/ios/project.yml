@@ -120,6 +120,7 @@ targets:
       - path: Multiverse/DesignSystem/Theme.swift
       - path: Multiverse/DesignSystem/Components.swift
       - path: Multiverse/DesignSystem/ProfileAvatar.swift
+      - path: Multiverse/Core/ProfileAvatarChoice.swift
       - path: Multiverse/DesignSystem/CatalogCoverOverlay.swift
       - path: Multiverse/Core/API/CatalogCover.swift
       - path: Multiverse/Core/Models.swift

@@ -28,7 +28,7 @@ struct ClubEditor: View {
         .onAppear { if selectedUniverse.isEmpty { selectedUniverse = editing?.universeID ?? universe ?? store.universes.first?.id ?? ""; if let editing { id = editing.id; name = editing.name; description = editing.description } } }
     }
     private func save() async {
-        guard let api = store.spacesAPI else { return }; busy = true; error = nil; defer { busy = false }
+        guard let api = store.clubsAPI else { return }; busy = true; error = nil; defer { busy = false }
         let input = pending ?? ClubInput(name: name, description: description, universeID: selectedUniverse, version: editing?.version); pending = input
         do {
             let receipt = try await api.saveClub(id: id, input: input)
@@ -68,7 +68,7 @@ struct ScheduleEditor: View {
         }.interactiveDismissDisabled(busy || pending != nil)
     }
     private func save() async {
-        guard let api = store.spacesAPI else { return }; busy = true; error = nil; defer { busy = false }
+        guard let api = store.clubsAPI else { return }; busy = true; error = nil; defer { busy = false }
         let formatter = DateFormatter(); formatter.locale = Locale(identifier: "en_US_POSIX"); formatter.calendar = Calendar(identifier: .gregorian); formatter.dateFormat = "yyyy-MM-dd"
         let input = pending ?? ScheduleInput(itemID: item, startsOn: formatter.string(from: startsOn), totalUnits: units, unitLabel: unitLabel); pending = input
         do { let r = try await api.saveSchedule(club: club.id, id: id, input: input); guard r.saved, r.id == id else { throw SocialError.invalid }; pending = nil; dismiss() }
@@ -90,7 +90,7 @@ struct ClubReportForm: View {
                 Toggle(L10n.text("Bloquear também o organizador"), isOn: $block)
                 if let error { AuthErrorBanner(message: error) }
                 Button(L10n.text("ENVIAR DENÚNCIA")) { Task {
-                    guard let api = store.spacesAPI else { return }; busy = true; defer { busy = false }
+                    guard let api = store.clubsAPI else { return }; busy = true; defer { busy = false }
                     do { let r = try await api.reportClub(id, reason: reason.apiValue, block: block); guard r.saved, r.id == id else { throw SocialError.invalid }; dismiss(); completed() }
                     catch { self.error = error.localizedDescription }
                 } }.disabled(busy)

@@ -61,6 +61,25 @@ private final class TokenStub: APITokenProvider {
 @Suite(.serialized)
 @MainActor
 struct AccountHTTPTests {
+    @Test func transportAcceptsAnErrorPolicyWithoutChangingEndpointAdapters() async {
+        struct Policy: APIErrorMapping {
+            func responseError(code: String?, status: Int, path: String) -> any Error { LibraryError.stale }
+            func networkError(_ error: any Error, path: String) -> any Error { ActivityError.timedOut }
+        }
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [AccountURLProtocol.self]
+        let session = URLSession(configuration: config)
+        defer { session.invalidateAndCancel() }
+        let http = AuthenticatedHTTPClient(baseURL: URL(string: "https://api.example.test/api/v1"), tokens: TokenStub(), transport: session, errors: Policy())
+        let api = AccountAPIClient(http: http)
+        AccountURLProtocol.fixture.reset([(503, "{}")])
+        await #expect(throws: LibraryError.stale) { try await api.fetchAccount() }
+        AccountURLProtocol.fixture.reset([(-1009, "{}")])
+        await #expect(throws: ActivityError.timedOut) { try await api.fetchAccount() }
+        AccountURLProtocol.fixture.reset([(-999, "{}")])
+        await #expect(throws: CancellationError.self) { try await api.fetchAccount() }
+    }
+
     @Test func libraryWritesCarryVersionAndReceiptIdentityWithoutOtherActionFields() async throws {
         let id = UUID().uuidString.lowercased()
         let json = "{\"mutationID\":\"\(id)\",\"appliedVersion\":1,\"state\":{\"version\":1,\"wantedIDs\":[\"m-civil\"],\"favoriteIDs\":[],\"lists\":[]}}"

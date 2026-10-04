@@ -1,3 +1,11 @@
+## 2026-10-03 — SOLID aplicado às responsabilidades e dependências
+
+- Transporte autenticado separado do adaptador de endpoints e da política de erros, com contratos injetáveis. Token refresh único, identidade da conta e cancelamento preservados.
+- Clubes e salas separados no backend (services/controllers) e nos protocolos iOS; mesmas rotas, SQL e regras. RootView injeta explicitamente duelos, clubes, salas, voz e pessoas; consumidores não fazem mais downcast de uma API para outra.
+- IDs de avatar movidos para Core; rendering/cache/localização continuam no DesignSystem. UI e assets sem mudanças.
+- Validação: 242 testes iOS em 30 suites; 98 unitários + 139 HTTP/PostgreSQL no backend; format/lint/typecheck/build aprovados.
+- Detalhes e evidências em `docs/CODE_AUDIT.md`, seção SOLID. Não há migration nova.
+
 ## 2026-10-03 — Avatares originais do Multiverse
 
 - Coleção de três avatares fornecida pelo usuário, movida para `AvatarCollection.imageset`; arte original preservada. Recortes quadrados são decodificados uma vez e reutilizados, sem download ou geração em tempo de execução.

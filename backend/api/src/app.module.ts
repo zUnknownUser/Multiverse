@@ -8,8 +8,10 @@ import { VoiceController } from './voice/voice.controller.js';
 import { VoiceService } from './voice/voice.service.js';
 import { VoiceMediaService } from './voice/voice-media.service.js';
 import { RoomEventsService } from './community/room-events.service.js';
-import { SpacesController } from './community/spaces.controller.js';
-import { SpacesService } from './community/spaces.service.js';
+import { ClubsController } from './community/clubs.controller.js';
+import { RoomsController } from './community/rooms.controller.js';
+import { ClubsService } from './community/clubs.service.js';
+import { RoomsService } from './community/rooms.service.js';
 import { ImagesService } from './community/images.service.js';
 import { LibraryService } from './library/library.service.js';
 import { LibraryController } from './library/library.controller.js';
@@ -50,7 +52,8 @@ import { InteractionsController } from './social/interactions.controller.js';
     ReadingOrdersController,
     MessagesController,
     VoiceController,
-    SpacesController,
+    ClubsController,
+    RoomsController,
     LibraryController,
     NotificationsController,
     CommunityController,
@@ -69,7 +72,8 @@ import { InteractionsController } from './social/interactions.controller.js';
     VoiceService,
     VoiceMediaService,
     RoomEventsService,
-    SpacesService,
+    ClubsService,
+    RoomsService,
     ImagesService,
     LibraryService,
     PushService,

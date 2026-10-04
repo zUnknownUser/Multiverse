@@ -38,7 +38,7 @@ struct LiveRoomsView: View {
         }.refreshable { await load() }
     }
     private func load(more: Bool = false) async {
-        guard let api = store.spacesAPI else { return }; let requestedQuery = query; busy = true; error = nil
+        guard let api = store.roomsAPI else { return }; let requestedQuery = query; busy = true; error = nil
         defer { if requestedQuery == query { busy = false } }
         do {
             let page = try await api.fetchRooms(query: requestedQuery, universe: universe, after: more ? cursor : nil)
@@ -153,7 +153,7 @@ struct LiveRoomView: View {
         .onDisappear { Task { await voice.leave() } }
         .onChange(of: scenePhase) { _, phase in if phase == .background { Task { await voice.leave() } } }
         .sheet(isPresented: $showingVoice) {
-            VoiceRoomSheet(voice: voice, api: store.communityAPI as? any VoiceAPI, item: itemID, title: store.item(itemID)?.title ?? "", segment: segment)
+            VoiceRoomSheet(voice: voice, api: store.voiceAPI, item: itemID, title: store.item(itemID)?.title ?? "", segment: segment)
         }
         .task(id: segment) {
             await voice.leave()
@@ -260,7 +260,7 @@ struct LiveRoomView: View {
         .overlay(alignment: .top) { Rectangle().fill(MV.C.ink).frame(height: MV.stroke) }
     }
     private func watchRoom() async {
-        guard let api = store.spacesAPI else { return }
+        guard let api = store.roomsAPI else { return }
         var revision: String?
         var retry = 1
         while !Task.isCancelled {
@@ -284,7 +284,7 @@ struct LiveRoomView: View {
         }
     }
     @discardableResult private func visit(_ value: Int?) async -> Bool {
-        guard let api = store.spacesAPI else { return false }
+        guard let api = store.roomsAPI else { return false }
         do {
             let result = try await api.visitRoom(itemID, progress: value)
             try Task.checkCancellation(); guard result.itemID == itemID else { throw SocialError.invalid }

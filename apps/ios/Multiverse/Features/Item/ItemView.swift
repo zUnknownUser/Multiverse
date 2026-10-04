@@ -161,7 +161,7 @@ struct ItemView: View {
                     StarsText(rating: mine.rating, color: uni.color, size: 14)
                 }
             }
-            if store.spacesAPI != nil {
+            if store.roomsAPI != nil {
                 Button { store.push(.liveRoom(item.id)) } label: {
                     Label(L10n.text("ENTRAR NA SALA"), systemImage: "bubble.left.and.bubble.right").font(MVFont.bold(12)).foregroundStyle(MV.C.ink)
                 }.buttonStyle(.plain)

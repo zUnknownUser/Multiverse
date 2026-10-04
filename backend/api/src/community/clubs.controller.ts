@@ -1,4 +1,4 @@
-import type { Response } from 'express';
+import { spaceQuery } from './space-query.js';
 import {
   BadRequestException,
   Body,
@@ -11,7 +11,6 @@ import {
   Put,
   Query,
   Req,
-  Res,
 } from '@nestjs/common';
 import {
   IsBoolean,
@@ -25,7 +24,7 @@ import {
 } from 'class-validator';
 import type { AuthenticatedRequest } from '../auth/firebase-auth.guard.js';
 import { bodyPipe, ReportDTO } from '../social/interactions.controller.js';
-import { SpacesService } from './spaces.service.js';
+import { ClubsService } from './clubs.service.js';
 class ClubDTO {
   @IsString() @Length(1, 80) @Matches(/\S/u) name!: string;
   @IsString() @Length(1, 1000) @Matches(/\S/u) description!: string;
@@ -44,28 +43,17 @@ class ScheduleDTO {
 class ProgressDTO {
   @IsInt() @Min(0) @Max(10000) units!: number;
 }
-class VisitDTO {
-  @IsOptional() @IsInt() @Min(0) @Max(100) progress?: number;
-}
 const uuid = new ParseUUIDPipe({ version: '4' });
 const uuidRE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-function query(q: Record<string, unknown>, keys: string[]) {
-  if (
-    Object.keys(q).some((k) => !keys.includes(k)) ||
-    Object.values(q).some((v) => typeof v !== 'string' || v.length > 120)
-  )
-    throw new BadRequestException({ code: 'INVALID_SOCIAL_REQUEST' });
-  return q as Record<string, string>;
-}
 @Controller('community')
-export class SpacesController {
-  constructor(@Inject(SpacesService) private readonly service: SpacesService) {}
+export class ClubsController {
+  constructor(@Inject(ClubsService) private readonly service: ClubsService) {}
   @Get('clubs') list(
     @Req() r: AuthenticatedRequest,
     @Query() raw: Record<string, unknown>,
   ) {
-    const q = query(raw, ['q', 'after', 'universe']);
+    const q = spaceQuery(raw, ['q', 'after', 'universe']);
     if (q.after && !uuidRE.test(q.after))
       throw new BadRequestException({ code: 'INVALID_SOCIAL_REQUEST' });
     return this.service.list(r.identity.uid, q.q ?? '', q.after, q.universe);
@@ -101,7 +89,7 @@ export class SpacesController {
     @Param('id', uuid) id: string,
     @Query() raw: Record<string, unknown>,
   ) {
-    const q = query(raw, ['schedule', 'after']);
+    const q = spaceQuery(raw, ['schedule', 'after']);
     if (q.schedule && !uuidRE.test(q.schedule))
       throw new BadRequestException({ code: 'INVALID_SOCIAL_REQUEST' });
     return this.service.members(r.identity.uid, id, q.schedule, q.after);
@@ -141,45 +129,5 @@ export class SpacesController {
     @Body(bodyPipe(ReportDTO)) b: ReportDTO,
   ) {
     return this.service.report(r.identity.uid, id, b.reason, b.alsoBlock);
-  }
-  @Get('rooms') rooms(
-    @Req() r: AuthenticatedRequest,
-    @Query() raw: Record<string, unknown>,
-  ) {
-    const q = query(raw, ['q', 'after', 'universe']);
-    return this.service.rooms(r.identity.uid, q.q ?? '', q.after, q.universe);
-  }
-  @Get('rooms/:item/changes') async changes(
-    @Req() r: AuthenticatedRequest,
-    @Res({ passthrough: true }) response: Response,
-    @Param('item') item: string,
-    @Query() raw: Record<string, unknown>,
-  ) {
-    const q = query(raw, ['after']);
-    if (
-      !/^[\w-]{1,120}$/.test(item) ||
-      (q.after !== undefined && !/^(0|[1-9][0-9]{0,19})$/.test(q.after))
-    )
-      throw new BadRequestException({ code: 'INVALID_SOCIAL_REQUEST' });
-    const abort = new AbortController();
-    const close = () => abort.abort();
-    response.once('close', close);
-    try {
-      return await this.service.changes(
-        r.identity.uid,
-        item,
-        q.after,
-        abort.signal,
-      );
-    } finally {
-      response.removeListener('close', close);
-    }
-  }
-  @Put('rooms/:item/visit') visit(
-    @Req() r: AuthenticatedRequest,
-    @Param('item') item: string,
-    @Body(bodyPipe(VisitDTO)) b: VisitDTO,
-  ) {
-    return this.service.visit(r.identity.uid, item, b.progress);
   }
 }
