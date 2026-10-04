@@ -33,6 +33,7 @@ function user(row: Record<string, unknown>) {
     name: row.display_name,
     handle: '@' + row.username,
     avatarColor: row.avatar_color,
+    avatarID: row.avatar_id,
     bio: row.bio,
     followers: null,
     badgeUniverse: '',

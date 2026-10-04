@@ -225,7 +225,7 @@ final class AuthStore {
         isLoading = true
         defer { isLoading = false }
         do {
-            session = try await repository.completeSignUp(name: draft.name, username: draft.username, avatarColor: draft.avatarColor, bio: draft.bio)
+            session = try await repository.completeSignUp(name: draft.name, username: draft.username, avatarColor: draft.avatarColor, bio: draft.bio, avatarID: draft.avatarID)
         } catch {
             if error as? AuthError == .usernameTaken {
                 usernameAvailable = false

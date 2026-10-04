@@ -17,6 +17,7 @@ type ProfileRow = QueryResultRow & {
   username: string;
   display_name: string;
   avatar_color: string;
+  avatar_id: string | null;
   bio: string;
   created_at: Date;
   updated_at: Date;
@@ -44,6 +45,7 @@ function profile(row: ProfileRow) {
     username: row.username,
     displayName: row.display_name,
     avatarColor: row.avatar_color,
+    avatarID: row.avatar_id,
     bio: row.bio,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -123,9 +125,9 @@ export class AccountsService {
     try {
       return await this.lifecycle.withActiveAccount(uid, async (client) => {
         const result = await client.query<ProfileRow>(
-          `INSERT INTO profiles(firebase_uid,username,display_name,avatar_color,bio)
-        VALUES($1,$2,$3,$4,$5) ON CONFLICT(firebase_uid) DO UPDATE SET username=EXCLUDED.username,
-        display_name=EXCLUDED.display_name,avatar_color=EXCLUDED.avatar_color,bio=EXCLUDED.bio,updated_at=now()
+          `INSERT INTO profiles(firebase_uid,username,display_name,avatar_color,bio,avatar_id)
+        VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(firebase_uid) DO UPDATE SET username=EXCLUDED.username,
+        display_name=EXCLUDED.display_name,avatar_color=EXCLUDED.avatar_color,bio=EXCLUDED.bio,avatar_id=CASE WHEN $7 THEN EXCLUDED.avatar_id ELSE profiles.avatar_id END,updated_at=now()
         WHERE profiles.deletion_requested_at IS NULL RETURNING *`,
           [
             uid,
@@ -133,6 +135,8 @@ export class AccountsService {
             input.displayName,
             input.avatarColor,
             input.bio,
+            input.avatarID ?? null,
+            input.avatarID !== undefined,
           ],
         );
         if (!result.rows[0])

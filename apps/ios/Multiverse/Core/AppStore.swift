@@ -448,7 +448,11 @@ final class AppStore {
     }
 
     func item(_ id: String) -> Item? { itemsByID[id] ?? social?.items[id] }
-    func user(_ id: String) -> User? { people?.profiles[id]?.user ?? social?.users[id] ?? usersByID[id] }
+    func user(_ id: String) -> User? {
+        var result = people?.profiles[id]?.user ?? social?.users[id] ?? usersByID[id]
+        if id == meID, let own = usersByID[id] { result?.avatarID = own.avatarID }
+        return result
+    }
     func universe(_ id: String) -> Universe? { universesByID[id] ?? social?.universes[id] }
     func universe(of item: Item) -> Universe { universe(item.uni)! }
 
@@ -1352,7 +1356,7 @@ final class AppStore {
             : try await accountAPI.suggestions()
         try applyOnboardingSuggestions(suggestions)
         let me = User(id: profile.userID, name: profile.displayName, handle: "@" + profile.username,
-                      avatarColor: profile.avatarColor, bio: profile.bio, followers: nil, badgeUniverse: "")
+                      avatarColor: profile.avatarColor, bio: profile.bio, followers: nil, badgeUniverse: "", avatarID: profile.avatarID)
         usersByID[meID] = me
         users.removeAll { $0.id == meID }; users.append(me)
         let progress = account.onboarding
@@ -1378,7 +1382,7 @@ final class AppStore {
         try suggestions.validate(for: meID)
         onboardingCandidates = suggestions.users.map {
             User(id: $0.userID, name: $0.displayName, handle: "@" + $0.username,
-                 avatarColor: $0.avatarColor, bio: $0.bio, followers: nil, badgeUniverse: "")
+                 avatarColor: $0.avatarColor, bio: $0.bio, followers: nil, badgeUniverse: "", avatarID: $0.avatarID)
         }
         onboardingFollowingOptional = suggestions.followingOptional == true
         minimumOnboardingFollows = onboardingFollowingOptional ? 0 : suggestions.minimumFollows
@@ -1555,11 +1559,21 @@ final class AppStore {
 
     // MARK: - Perfil (edição vinda do fluxo de criação de conta)
 
-    /// Aplica nome/usuário/avatar/bio escolhidos na criação de conta ao usuário logado.
+    /// Publish the avatar only after the authenticated server confirms it.
+    func saveAvatar(_ avatarID: String?) async throws {
+        guard let accountAPI, let current = user(meID), avatarID == nil || ProfileAvatar(rawValue: avatarID!) != nil else { throw AuthError.invalidProfile }
+        let profile = try await accountAPI.saveProfile(name: current.name, username: String(current.handle.dropFirst()), avatarColor: current.avatarColor, bio: current.bio, avatarID: avatarID)
+        guard profile.userID == meID, profile.avatarID == avatarID else { throw AuthError.invalidProfile }
+        var updated = current
+        updated.avatarID = profile.avatarID
+        usersByID[meID] = updated
+        users.removeAll { $0.id == meID }; users.append(updated)
+    }
+
     func applyProfileEdits(name: String, handle: String, avatarColor: String, bio: String) {
         guard let idx = users.firstIndex(where: { $0.id == meID }) else { return }
         let current = users[idx]
-        let updated = User(id: current.id, name: name, handle: handle, avatarColor: avatarColor, bio: bio, followers: current.followers, badgeUniverse: current.badgeUniverse)
+        let updated = User(id: current.id, name: name, handle: handle, avatarColor: avatarColor, bio: bio, followers: current.followers, badgeUniverse: current.badgeUniverse, avatarID: current.avatarID)
         users[idx] = updated
         usersByID[meID] = updated
     }

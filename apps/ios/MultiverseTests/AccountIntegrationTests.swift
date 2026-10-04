@@ -30,8 +30,9 @@ private final class AccountStub: AccountAPI {
         if let failure { throw failure }
         return available
     }
-    func saveProfile(name: String, username: String, avatarColor: String, bio: String) async throws -> RemoteProfile {
+    func saveProfile(name: String, username: String, avatarColor: String, bio: String, avatarID: String? = nil) async throws -> RemoteProfile {
         if let failure { throw failure }
+        profile?.avatarID = avatarID
         return profile!
     }
     func suggestions() async throws -> FollowSuggestions {
@@ -69,6 +70,26 @@ final class IdentityStub: GoogleAuthenticationClient {
 struct AccountIntegrationTests {
     private func people(_ count: Int) -> [RemoteProfile] {
         (0..<count).map { RemoteProfile(userID: "person-\($0)", username: "person\($0)", displayName: "Person \($0)", avatarColor: "#F4A814", bio: "") }
+    }
+
+    @Test func avatarSaveWaitsForServerAndSurvivesReload() async throws {
+        let uid = UUID().uuidString, api = AccountStub(uid: UUID().uuidString)
+        api.profile = RemoteProfile(userID: uid, username: "avataruser", displayName: "Avatar User", avatarColor: "#F4A814", bio: "")
+        api.progress.completed = true
+        let session = AuthSession(userID: uid, email: "test@example.com", handle: "@avataruser")
+        let store = AppStore(session: session, accountAPI: api)
+        await store.bootstrap()
+        try await store.saveAvatar("cosmic")
+        #expect(store.user(uid)?.avatarID == "cosmic")
+        api.failure = .networkUnavailable
+        await #expect(throws: AuthError.networkUnavailable) { try await store.saveAvatar("robot") }
+        #expect(store.user(uid)?.avatarID == "cosmic")
+        api.failure = nil
+        let restored = AppStore(session: session, accountAPI: api)
+        await restored.bootstrap()
+        #expect(restored.user(uid)?.avatarID == "cosmic")
+        try await restored.saveAvatar(nil)
+        #expect(restored.user(uid)?.avatarID == nil && api.profile?.avatarID == nil)
     }
 
     @Test(arguments: [0, 1]) func optionalFollowingFinishesWithZeroOrOnePerson(selected: Int) async throws {

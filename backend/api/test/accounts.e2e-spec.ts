@@ -226,6 +226,30 @@ describe.skipIf(!databaseURL)('Account API with real PostgreSQL', () => {
     await putProfile('owner', 'x').expect(400);
     await putProfile('owner', 'admin').expect(409);
   });
+  it('persists curated avatars, preserves them for old clients, validates IDs and allows initials', async () => {
+    const uid = 'avatar-owner';
+    const save = (extra: object) =>
+      request(app.getHttpServer())
+        .put('/api/v1/me/profile')
+        .auth(uid, { type: 'bearer' })
+        .send({ ...input('avatar_owner'), ...extra });
+    for (const avatarID of ['vigilant', 'cosmic', 'robot']) {
+      const response = await save({ avatarID }).expect(200);
+      expect(response.body.avatarID).toBe(avatarID);
+    }
+    await save({}).expect(200);
+    const own = await request(app.getHttpServer())
+      .get('/api/v1/me')
+      .auth(uid, { type: 'bearer' })
+      .expect(200);
+    expect(own.body.profile.avatarID).toBe('robot');
+    await save({ avatarID: 'untrusted/path' }).expect(400);
+    const cleared = await save({ avatarID: null }).expect(200);
+    expect(cleared.body.avatarID).toBeNull();
+    const other = await putProfile('avatar-other').expect(200);
+    expect(other.body.avatarID).toBeNull();
+  });
+
   it('atomically reserves a username across simultaneous users', async () => {
     const results = await Promise.all([
       putProfile('race-a', 'same.name'),

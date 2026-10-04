@@ -5,6 +5,7 @@ struct RemoteProfile: Codable, Sendable, Equatable {
     let username: String
     let displayName: String
     let avatarColor: String
+    var avatarID: String? = nil
     let bio: String
 }
 

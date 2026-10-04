@@ -34,7 +34,7 @@ actor MockRepository: MultiverseRepository {
     init(sample: SampleData = .load(), startFollowing: Bool, session: AuthSession? = nil) {
         let signedInUser = session.map {
             User(id: $0.userID, name: $0.displayName ?? L10n.text("Lorista"), handle: $0.handle,
-                 avatarColor: $0.avatarColor ?? "#F4A814", bio: $0.bio ?? "", followers: 0, badgeUniverse: "")
+                 avatarColor: $0.avatarColor ?? "#F4A814", bio: $0.bio ?? "", followers: 0, badgeUniverse: "", avatarID: $0.avatarID)
         }
         catalog = Catalog(
             universes: sample.universes, items: sample.items, users: sample.users + (signedInUser.map { [$0] } ?? []),

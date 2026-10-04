@@ -9,6 +9,7 @@ struct AuthSession: Sendable, Equatable, Codable {
     var bio: String? = nil
     var needsProfile = false
     var onboarding: OnboardingState? = nil
+    var avatarID: String? = nil
 }
 
 enum AuthError: LocalizedError, Equatable {
@@ -98,6 +99,7 @@ struct NewAccountDraft: Equatable {
     var name = ""
     var username = ""
     var avatarColor = "#F4A814"
+    var avatarID: String? = nil
     var bio = ""
 
     var usernameSuggestions: [String] {

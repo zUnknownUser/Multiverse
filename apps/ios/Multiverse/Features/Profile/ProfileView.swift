@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProfileView: View {
     let userID: String
+    @State private var editingAvatar = false
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
@@ -44,6 +45,7 @@ struct ProfileView: View {
                 .padding(.bottom, 24)
             }
         }
+        .sheet(isPresented: $editingAvatar) { ProfileAvatarEditor(selection: store.user(store.meID)?.avatarID) }
         .task(id: userID + "|" + String(store.people?.discoveryEpoch ?? 0)) { await refreshPeople() }
         .refreshable {
             if userID == store.meID { await store.refreshActivity() }
@@ -60,7 +62,10 @@ struct ProfileView: View {
     private func hero(data: AppStore.ProfileData) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 12) {
-                AvatarView(user: data.user, size: 64, border: 3)
+                if data.isMe && store.usesAccountAPI {
+                    Button { editingAvatar = true } label: { AvatarView(user: data.user, size: 64, border: 3) }
+                        .buttonStyle(.plain).accessibilityLabel(L10n.text("Escolher avatar"))
+                } else { AvatarView(user: data.user, size: 64, border: 3) }
                 VStack(alignment: .leading, spacing: 3) {
                     Text(data.user.name.uppercased())
                         .font(MVFont.archivo(22, weight: 900, width: 110))

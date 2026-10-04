@@ -58,6 +58,7 @@ struct DailyDuelDetail: Decodable, Sendable {
 }
 struct DuelLeader: Decodable, Identifiable, Sendable {
     let id: String; let name: String; let handle: String; let avatarColor: String
+    var avatarID: String? = nil
     let rank: Int; let points: Int
 }
 struct DuelLeaderboard: Decodable, Sendable {

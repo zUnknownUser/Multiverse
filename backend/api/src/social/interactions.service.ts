@@ -145,7 +145,7 @@ export class InteractionsService {
         `SELECT c.id,c.firebase_uid AS "user",c.text,c.spoiler,c.created_at AS "createdAt",
         ${this.domain === 'post' ? `CASE WHEN EXISTS(SELECT 1 FROM post_comments pc JOIN profiles pp ON pp.firebase_uid=pc.firebase_uid WHERE pc.id=c.parent_id AND ${postParentVisible}) THEN c.parent_id ELSE NULL END AS "parentID",(c.parent_id IS NOT NULL) AS "isReply",${mentionsField(true)},` : ''}
         to_char(c.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "cursorTime",
-        cp.display_name AS name,cp.username,cp.avatar_color AS "avatarColor"
+        cp.display_name AS name,cp.username,cp.avatar_color AS "avatarColor",cp.avatar_id AS "avatarID"
         FROM ${this.tables.comments} c JOIN profiles cp ON cp.firebase_uid=c.firebase_uid JOIN ${this.tables.parents} r ON r.id=c.${this.tables.key}
         WHERE c.${this.tables.key}=$2 AND ${this.tables.commentVisible}
         AND ($3::timestamptz IS NULL OR (c.created_at,c.id)>($3::timestamptz,$4::uuid))
@@ -187,6 +187,7 @@ export class InteractionsService {
                 name: row.name,
                 handle: '@' + row.username,
                 avatarColor: row.avatarColor,
+                avatarID: row.avatarID,
                 bio: '',
                 followers: null,
                 badgeUniverse: '',

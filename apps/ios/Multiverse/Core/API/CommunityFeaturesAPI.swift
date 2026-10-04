@@ -28,7 +28,8 @@ struct LiveClubsPage: Decodable, Sendable { let clubs: [LiveClub]; let nextCurso
 struct LiveClubDetail: Decodable, Sendable { let club: LiveClub; let schedule: [ClubSchedule] }
 struct ClubMember: Decodable, Identifiable, Sendable {
     let id: String; let name: String; let handle: String; let avatarColor: String; let units: Int
-    var user: User { .init(id: id, name: name, handle: handle, avatarColor: avatarColor, bio: "", followers: nil, badgeUniverse: "") }
+    var avatarID: String? = nil
+    var user: User { .init(id: id, name: name, handle: handle, avatarColor: avatarColor, bio: "", followers: nil, badgeUniverse: "", avatarID: avatarID) }
 }
 struct ClubMembersPage: Decodable, Sendable { let members: [ClubMember]; let nextCursor: String? }
 struct LiveRoom: Decodable, Identifiable, Sendable {

@@ -107,11 +107,11 @@ actor MockAuthRepository: AuthRepository {
         return username.count >= 3 && !taken.contains(username.lowercased())
     }
 
-    func completeSignUp(name: String, username: String, avatarColor: String, bio: String) async throws -> AuthSession {
+    func completeSignUp(name: String, username: String, avatarColor: String, bio: String, avatarID: String? = nil) async throws -> AuthSession {
         await delay()
         guard isCodeVerified else { throw AuthError.invalidCode }
         storedPassword = pendingPassword
-        let session = AuthSession(userID: Self.demoUserID, email: pendingEmail, handle: "@\(username)")
+        let session = AuthSession(userID: Self.demoUserID, email: pendingEmail, handle: "@\(username)", displayName: name, avatarColor: avatarColor, bio: bio, avatarID: avatarID)
         persist(session)
         return session
     }

@@ -3,6 +3,8 @@ import {
   ArrayMaxSize,
   ArrayUnique,
   IsArray,
+  IsIn,
+  IsOptional,
   IsBoolean,
   IsInt,
   IsString,
@@ -27,6 +29,7 @@ export class ProfileDTO {
   displayName!: string;
   @IsString() @Matches(/^#[0-9A-Fa-f]{6}$/) avatarColor!: string;
   @IsString() @Length(0, 160) bio!: string;
+  @IsOptional() @IsIn(['vigilant', 'cosmic', 'robot']) avatarID?: string | null;
 }
 export class UsernameDTO {
   @Transform(({ value }: { value: unknown }) =>

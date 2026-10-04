@@ -1,3 +1,12 @@
+## 2026-10-03 — Avatares originais do Multiverse
+
+- Coleção de três avatares fornecida pelo usuário, movida para `AvatarCollection.imageset`; arte original preservada. Recortes quadrados são decodificados uma vez e reutilizados, sem download ou geração em tempo de execução.
+- Escolha no cadastro e edição tocando no avatar do próprio perfil. Iniciais continuam disponíveis; a cor se aplica ao avatar de iniciais. Layout, bordas e tokens existentes preservados; nomes e ações em PT-BR/EN.
+- `profiles.avatar_id` (migração 025), IDs permitidos `vigilant`, `cosmic`, `robot`. Cadastro e edição persistem no backend; clientes antigos que omitem o campo não removem a escolha; null restaura iniciais.
+- Identificador incluído em perfis públicos, sugestões, posts, comentários, notificações, mensagens e membros/rankings. Componentes compartilhados e busca renderizam a coleção; IDs desconhecidos voltam às iniciais.
+- Avatar só muda após confirmação do servidor; falha mantém a seleção anterior. Sem upload de foto pessoal nesta entrega.
+- Validação: backend format/lint/typecheck/build, 98 testes unitários + 139 HTTP com PostgreSQL; suíte iOS e testes focados em compatibilidade/cache/persistência. Render visual conferido em 32/52/140 pt e seletor com largura 320 pt. Validação física pelo usuário ainda pendente.
+
 # Atualização — Duelo do Dia real (03/10/2026)
 
 Pedido: fechar badge/auditoria e depois tirar o Duelo do Dia do mock, com retenção,

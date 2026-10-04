@@ -153,17 +153,17 @@ final class FirebaseAuthRepository: AuthRepository {
         if let accountAPI { return try await accountAPI.usernameAvailable(username) }
         return true
     }
-    func completeSignUp(name: String, username: String, avatarColor: String, bio: String) async throws -> AuthSession {
+    func completeSignUp(name: String, username: String, avatarColor: String, bio: String, avatarID: String? = nil) async throws -> AuthSession {
         let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { throw AuthError.profileIncomplete }
         if let accountAPI {
             guard let session = client.currentSession() else { throw AuthError.sessionExpired }
-            let profile = try await accountAPI.saveProfile(name: name, username: username, avatarColor: avatarColor, bio: bio)
+            let profile = try await accountAPI.saveProfile(name: name, username: username, avatarColor: avatarColor, bio: bio, avatarID: avatarID)
             guard profile.userID == session.userID else { throw AuthError.sessionExpired }
             return sessionWithProfile(session, profile: profile, onboarding: nil)
         }
         let session = try await emailClient.completeProfile(name: name)
-        let profile = LocalAuthProfile(handle: username.isEmpty ? "" : "@" + username, avatarColor: avatarColor, bio: bio)
+        let profile = LocalAuthProfile(handle: username.isEmpty ? "" : "@" + username, avatarColor: avatarColor, bio: bio, avatarID: avatarID)
         if let data = try? JSONEncoder().encode(profile) {
             defaults.set(data, forKey: "mv-local-profile-\(session.userID)")
         }
@@ -212,7 +212,7 @@ final class FirebaseAuthRepository: AuthRepository {
     private func sessionWithProfile(_ session: AuthSession, profile: RemoteProfile, onboarding: OnboardingState?) -> AuthSession {
         AuthSession(userID: session.userID, email: session.email, handle: "@" + profile.username,
                     displayName: profile.displayName, avatarColor: profile.avatarColor, bio: profile.bio,
-                    onboarding: onboarding)
+                    onboarding: onboarding, avatarID: profile.avatarID)
     }
     private static func normalizedEmail(_ value: String) throws -> String {
         let email = value.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -225,12 +225,13 @@ final class FirebaseAuthRepository: AuthRepository {
         let handle: String
         let avatarColor: String
         let bio: String
+        var avatarID: String? = nil
     }
     private func decorated(_ session: AuthSession) -> AuthSession {
         guard let data = defaults.data(forKey: "mv-local-profile-\(session.userID)"),
               let profile = try? JSONDecoder().decode(LocalAuthProfile.self, from: data) else { return session }
         return AuthSession(userID: session.userID, email: session.email, handle: profile.handle,
-                           displayName: session.displayName, avatarColor: profile.avatarColor, bio: profile.bio)
+                           displayName: session.displayName, avatarColor: profile.avatarColor, bio: profile.bio, avatarID: profile.avatarID)
     }
 
     func fetchAccountSettings() async -> AccountSettings {

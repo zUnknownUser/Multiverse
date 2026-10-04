@@ -19,7 +19,7 @@ export class NotificationsService {
       await this.social.member(client, uid);
       const result = await client.query(
         `SELECT n.id,n.kind,n.target_type AS "targetType",n.target_id AS "targetID",n.comment_id AS "commentID",n.created_at AS "createdAt",n.read_at AS "readAt",
-  n.actor_uid AS "user",ap.display_name AS name,ap.username,ap.avatar_color AS "avatarColor",
+  n.actor_uid AS "user",ap.display_name AS name,ap.username,ap.avatar_color AS "avatarColor",ap.avatar_id AS "avatarID",
   to_char(n.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "cursorTime"
   FROM ${notificationRelations} WHERE ${notificationVisible}
   AND ($2::timestamptz IS NULL OR (n.created_at,n.id)<($2::timestamptz,$3::uuid)) ORDER BY n.created_at DESC,n.id DESC LIMIT 31`,
@@ -51,6 +51,7 @@ export class NotificationsService {
                 name: r.name,
                 handle: '@' + r.username,
                 avatarColor: r.avatarColor,
+                avatarID: r.avatarID,
                 bio: '',
                 followers: null,
                 badgeUniverse: '',

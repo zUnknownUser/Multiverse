@@ -129,7 +129,9 @@ private struct SearchResultRowView: View {
             HStack(spacing: 12) {
                 ZStack {
                     row.posterBG
-                    if !row.initials.isEmpty {
+                    if case .user(let id) = row.route, let user = store.user(id) {
+                        AvatarView(user: user, size: 44)
+                    } else if !row.initials.isEmpty {
                         Text(row.initials).font(MVFont.black(14)).foregroundStyle(row.posterFG)
                     }
                 }

@@ -97,14 +97,8 @@ struct AvatarView: View {
     var border: CGFloat = MV.stroke
 
     var body: some View {
-        Circle().fill(Color(hex: user.avatarColor))
+        ProfileAvatarFace(name: user.name, color: user.avatarColor, avatarID: user.avatarID, size: size)
             .overlay(Circle().strokeBorder(MV.C.ink, lineWidth: border))
-            .overlay(
-                Text(Logic.initials(user.name))
-                    .font(MVFont.black(size * 0.36))
-                    .foregroundStyle(Logic.inkOn(hex: user.avatarColor))
-            )
-            .frame(width: size, height: size)
     }
 }
 

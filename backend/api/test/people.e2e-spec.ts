@@ -113,6 +113,7 @@ describe.skipIf(!databaseURL)('People and follows with PostgreSQL', () => {
     expect(Object.keys(first.users[0]).sort()).toEqual(
       [
         'avatarColor',
+        'avatarID',
         'bio',
         'displayName',
         'followerCount',

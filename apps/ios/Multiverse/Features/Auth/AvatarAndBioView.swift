@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Passo 4 de 4: cor do avatar + bio. Pular vai direto pra `finishSignUp()`.
+/// Passo 4 de 4: avatar da coleção ou iniciais + bio.
 struct AvatarAndBioView: View {
     @Environment(AuthStore.self) private var auth
     private let avatarColors = ["#F4A814", "#E4412F", "#2E5BE8", "#16130F"]
@@ -20,26 +20,11 @@ struct AvatarAndBioView: View {
                 Text(L10n.text("SUA CARA NO FEED")).font(MVFont.display(30, width: 120)).foregroundStyle(MV.C.ink)
 
                 VStack(spacing: 8) {
-                    ZStack(alignment: .bottomTrailing) {
-                        ZStack {
-                            Color(hex: auth.draft.avatarColor)
-                            Halftone(color: Logic.inkOn(hex: auth.draft.avatarColor).opacity(0.18))
-                            Text(initials)
-                                .font(MVFont.black(44))
-                                .foregroundStyle(Logic.inkOn(hex: auth.draft.avatarColor))
-                        }
-                        .frame(width: 140, height: 140)
-                        .clipShape(Circle())
+                    ProfileAvatarFace(name: auth.draft.name, color: auth.draft.avatarColor, avatarID: auth.draft.avatarID, size: 140)
                         .overlay(Circle().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-
-                        ZStack {
-                            Circle().fill(MV.C.ink)
-                            Text("+").font(MVFont.black(20)).foregroundStyle(MV.C.paper)
-                        }
-                        .frame(width: 36, height: 36)
-                        .overlay(Circle().strokeBorder(MV.C.paper, lineWidth: 2))
-                    }
-                    Text(L10n.text("Toque pra enviar uma foto")).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
+                    Text(L10n.text("Escolher avatar")).font(MVFont.bold(13)).foregroundStyle(MV.C.ink)
+                    ProfileAvatarChoices(selection: $auth.draft.avatarID, name: auth.draft.name, color: auth.draft.avatarColor)
+                        .padding(.top, 10)
                 }
                 .frame(maxWidth: .infinity)
 
@@ -54,7 +39,7 @@ struct AvatarAndBioView: View {
                                 .overlay(Circle().strokeBorder(MV.C.ink, lineWidth: selected ? 3 : MV.stroke))
                                 .overlay(Circle().strokeBorder(MV.C.ink, lineWidth: 1.5).padding(-5).opacity(selected ? 1 : 0))
                                 .contentShape(Circle())
-                                .onTapGesture { auth.draft.avatarColor = hex }
+                                .onTapGesture { auth.draft.avatarColor = hex; auth.draft.avatarID = nil }
                         }
                     }
                 }
@@ -92,8 +77,4 @@ struct AvatarAndBioView: View {
         }
     }
 
-    private var initials: String {
-        let name = auth.draft.name
-        return name.isEmpty ? "?" : Logic.initials(name)
-    }
 }

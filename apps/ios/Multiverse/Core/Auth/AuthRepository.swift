@@ -16,7 +16,7 @@ protocol AuthRepository: Sendable {
     func resendVerificationCode() async throws
     func verifyCode(_ code: String) async throws
     func checkUsernameAvailable(_ username: String) async throws -> Bool
-    func completeSignUp(name: String, username: String, avatarColor: String, bio: String) async throws -> AuthSession
+    func completeSignUp(name: String, username: String, avatarColor: String, bio: String, avatarID: String?) async throws -> AuthSession
 
     func requestPasswordReset(email: String) async throws
     /// Only an authenticated account whose email still needs confirmation.
@@ -38,4 +38,10 @@ protocol AuthRepository: Sendable {
 extension AuthRepository {
     func pendingSignUpEmail() async -> String? { nil }
     func prepareEmailAction(_ url: URL) async throws -> EmailActionResult { throw AuthError.invalidActionLink }
+}
+
+extension AuthRepository {
+    func completeSignUp(name: String, username: String, avatarColor: String, bio: String) async throws -> AuthSession {
+        try await completeSignUp(name: name, username: username, avatarColor: avatarColor, bio: bio, avatarID: nil)
+    }
 }

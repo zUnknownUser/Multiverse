@@ -29,7 +29,15 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, Com
     }
     private struct Availability: Decodable { let available: Bool }
     private struct Deletion: Decodable { let deleted: Bool }
-    private struct ProfileInput: Encodable { let displayName: String; let username: String; let avatarColor: String; let bio: String }
+    private struct ProfileInput: Encodable { let displayName: String; let username: String; let avatarColor: String; let bio: String; let avatarID: String?
+        enum CodingKeys: String, CodingKey { case displayName, username, avatarColor, bio, avatarID }
+        func encode(to encoder: Encoder) throws {
+            var c = encoder.container(keyedBy: CodingKeys.self)
+            try c.encode(displayName, forKey: .displayName); try c.encode(username, forKey: .username)
+            try c.encode(avatarColor, forKey: .avatarColor); try c.encode(bio, forKey: .bio)
+            try c.encode(avatarID, forKey: .avatarID)
+        }
+    }
     private struct APIError: Decodable { let code: String? }
 
     func fetchFeed(after: String?) async throws -> SocialPage {
@@ -98,8 +106,8 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, Com
         let response: Availability = try await request("me/username-availability", query: [URLQueryItem(name: "username", value: username)])
         return response.available
     }
-    func saveProfile(name: String, username: String, avatarColor: String, bio: String) async throws -> RemoteProfile {
-        try await request("me/profile", method: "PUT", body: JSONEncoder().encode(ProfileInput(displayName: name, username: username, avatarColor: avatarColor, bio: bio)))
+    func saveProfile(name: String, username: String, avatarColor: String, bio: String, avatarID: String? = nil) async throws -> RemoteProfile {
+        try await request("me/profile", method: "PUT", body: JSONEncoder().encode(ProfileInput(displayName: name, username: username, avatarColor: avatarColor, bio: bio, avatarID: avatarID)))
     }
     func suggestions() async throws -> FollowSuggestions { try await request("me/onboarding/suggestions") }
     func saveOnboarding(_ state: OnboardingState) async throws -> OnboardingState {

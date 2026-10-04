@@ -61,6 +61,7 @@ struct User: Codable, Identifiable, Hashable, Sendable {
     let id: String, name: String, handle: String, avatarColor: String, bio: String
     let followers: Int?
     let badgeUniverse: String
+    var avatarID: String? = nil
 }
 
 struct TimelineEntry: Codable, Hashable, Sendable { let era: String, itemId: String, note: String }

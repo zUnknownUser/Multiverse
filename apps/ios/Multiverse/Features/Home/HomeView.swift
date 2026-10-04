@@ -114,13 +114,7 @@ struct HomeView: View {
                 }
                 Button { store.openMyProfile() } label: {
                     let me = store.user(store.meID)!
-                    ZStack {
-                        Color(hex: me.avatarColor)
-                        Text(Logic.initials(me.name)).font(MVFont.black(14)).foregroundStyle(Logic.inkOn(hex: me.avatarColor))
-                    }
-                    .frame(width: 40, height: 40)
-                    .clipShape(Circle())
-                    .overlay(Circle().strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+                    AvatarView(user: me, size: 40)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(L10n.text("Seu perfil"))
