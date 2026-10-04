@@ -208,3 +208,20 @@ Veja o [resumo de retomada](../../docs/SESSION_HANDOFF.md).
 Referências: [NestJS](https://docs.nestjs.com/),
 [Firebase: verificar ID tokens](https://firebase.google.com/docs/auth/admin/verify-id-tokens),
 [node-postgres: transações](https://node-postgres.com/features/transactions).
+
+### Duelo do Dia
+
+Migration `024_daily_duels.sql` vincula rodadas editoriais aos posts existentes.
+`GET /community/daily-duels` retorna rodada atual/anterior, horário do servidor e
+progresso; `GET /community/daily-duels/:uuid` abre convite/resultado; `GET
+/community/daily-duels/leaderboard` retorna mês, top 30 e posição própria.
+Autenticação e onboarding são obrigatórios; respostas são `no-store`.
+`Accept-Language` escolhe conteúdo editorial PT-BR/EN, inclusive `/posts` e busca.
+Voto usa o endpoint existente `/posts/:uuid/vote` e sua idempotência/deadline.
+Pontuação deriva dos votos únicos dentro da janela: 10 por rodada, mês UTC;
+comentários/convites não pontuam. Ranking exclui deletados/moderados e oculta
+bloqueados após calcular posições. Títulos são cumulativos de participação.
+As 14 perguntas em `src/duels/daily-duel-content.ts` rodam por dia UTC; o conteúdo
+é congelado no banco ao criar a rodada. Editar o arquivo afeta apenas dias novos.
+O primeiro acesso cria o post e o perfil editorial explícito sob lock; não gera
+votos, participantes, mensagens ou alertas falsos. Detalhes em SESSION_HANDOFF.

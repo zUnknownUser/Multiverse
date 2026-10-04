@@ -9,6 +9,7 @@ struct CommunityPost: Codable, Identifiable, Sendable {
     var images: [PostImage]? = nil; var mentions: [PostMention]? = nil; var votes: PostVotes? = nil
     var optionA: String? = nil; var optionB: String? = nil; var closesAt: Date? = nil
     var resolution: String? = nil; var resolutionNote: String? = nil
+    var dailyDay: String? = nil
 }
 struct CommunityPage: Codable, Sendable {
     let posts: [CommunityPost]; let users: [User]; let nextCursor: String?

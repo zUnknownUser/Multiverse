@@ -50,7 +50,7 @@ export class MessagesService {
     throw new NotFoundException({ code: 'MESSAGE_UNAVAILABLE' });
   }
   private async peer(c: PoolClient, uid: string, peer: string) {
-    if (uid === peer) this.unavailable();
+    if (uid === peer || peer === 'multiverse-editorial') this.unavailable();
     const r = await c.query(
       `SELECT p.* FROM profiles p JOIN onboarding o USING(firebase_uid) WHERE p.firebase_uid=$2 AND p.deletion_requested_at IS NULL AND o.completed AND ${unblocked('$1', 'p.firebase_uid')}`,
       [uid, peer],

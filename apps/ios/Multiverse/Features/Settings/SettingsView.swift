@@ -169,6 +169,7 @@ struct SettingsView: View {
                                     if let url = URL(string: UIApplication.openSettingsURLString) { await UIApplication.shared.open(url) }
                                 } else if try await AppBadgeCoordinator.shared.enable() {
                                     await notifications.refresh()
+                                    guard auth.session?.userID == store.meID else { return }
                                     await AppBadgeCoordinator.shared.sync(userID: store.meID, unreadCount: notifications.hasLoaded ? notifications.unreadCount : nil)
                                 } else if let url = URL(string: UIApplication.openSettingsURLString) {
                                     await UIApplication.shared.open(url)

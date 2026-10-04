@@ -1,3 +1,64 @@
+# Atualização — Duelo do Dia real (03/10/2026)
+
+Pedido: fechar badge/auditoria e depois tirar o Duelo do Dia do mock, com retenção,
+interação, ranking e recompensas simbólicas. Badge/auditoria publicados em
+`02ce7f8`; backend desse commit confirmado SUCCESS no Railway.
+
+## Entrega do duelo
+
+- Card real no espaço previsto da Home; cards editoriais na comunidade também
+  abrem a arena. Mantidos abas, tokens, fontes, bordas e estilos claro/Noir.
+- Uma rodada global por data UTC, encerrada à meia-noite UTC (hora restante na
+  interface). Criação transacional sob lock ao primeiro acesso autenticado do
+  dia; sem cron ocioso nem dependência de serviço externo. Migration 024.
+- Reutiliza posts, votos, comentários/respostas, menções e moderação existentes.
+  Primeiro voto diário vale 10 pontos. Repetições, troca de lado, comentários e
+  convites não multiplicam pontos. O servidor decide prazo e pontuação.
+- Ranking mensal real, top 30 e linha da própria posição mesmo fora do corte;
+  pontuações empatadas têm a mesma posição. Rank é calculado antes de ocultar
+  bloqueados, evitando ganhar posição ao bloquear concorrentes. Contas removidas
+  não aparecem. Os totais visíveis de votos seguem a política da comunidade.
+- Sequência de dias e títulos cumulativos em 1/7/30/100 participações (Estreante,
+  Defensor, Veterano, Lenda da Arena). São status cosméticos na arena, não dinheiro,
+  assinaturas, prêmios físicos ou vantagens sobre votos alheios. Reset mensal não
+  apaga o total acumulado; remoção/moderação de conteúdo invalida sua participação.
+- Resultado da rodada anterior na Home, porcentagens após votar/encerrar, convite
+  por DM com URI interna validada. Remetente escolhe a pessoa e confirma envio;
+  retry usa mesmo UUID; pedidos/bloqueios/limites de DM continuam valendo.
+  Clientes antigos leem o convite como texto; novos mostram botão de entrada.
+- Atalho para o usuário criar seu próprio duelo na comunidade. Esses duelos livres
+  não geram pontos diários. Debate e conteúdo original continuam sendo dos usuários.
+- 14 perguntas editoriais originais PT-BR/EN, em rodízio. Perfil explicitamente
+  editorial, sem votos/seguidores inventados; fora das sugestões de pessoas e sem
+  DM para uma caixa sem atendente. Traduções também na thread e busca; posts de
+  usuários nunca são traduzidos automaticamente.
+- Home reutiliza cache de 60s, invalida após voto/expiração, só agenda um wake no
+  prazo enquanto visível. Sem polling novo em background. Resposta antiga de
+  refresh não sobrescreve voto confirmado. Falha mantém dados/retry explícitos.
+
+## Validação / limites
+
+- 236 testes iOS completos; regressões de cache, offline, voto/retry/recibo inválido,
+  resposta atrasada, modelo inválido e deep links. Inspeção de renderizações nativas
+  em PT/EN, 320/390pt e claro/Noir: card, arena sem voto/com voto/encerrada, ranking
+  e convite. Harness de screenshots é temporário, não entra no produto.
+- API: 98 unitários e 138 HTTP/PostgreSQL, inclusive concorrência, troca de lado,
+  comentário sem recompensa extra, convite/recebimento/retry por DM, deadline, bloqueios, moderação, idiomas/busca,
+  onboarding, virada do dia e reset mensal. Sem tráfego para provedores pagos.
+- Ainda precisa validação humana em dois celulares/contas: convite → pedido/aceite
+  → entrada → voto → comentário e badge no aparelho. Testes não provam FPS/bateria.
+- O retorno por resultado é dentro do app; não há nova notificação automática de
+  encerramento nesta versão. Push remoto continua dependendo de Apple/APNs.
+- Curadoria é inicial/rotativa; ampliar e renovar perguntas é trabalho editorial
+  contínuo. Não há painel de programação nem promoção automática de posts ao
+  destaque diário. Link público com preview/instalação, temporadas históricas,
+  títulos expostos em perfis/comentários e indicação premiada ficam para evolução.
+- Antes de otimizar por suposição, medir participantes únicos/rodada, retorno no
+  dia seguinte e em 7 dias, proporção voto→comentário, convites aceitos e denúncias.
+  SQL de votos/comentários/DM já registra eventos; não foi instalado novo tracker.
+
+---
+
 # Atualização — badge e auditoria de layout (03/10/2026)
 
 Badge local implementado nos Ajustes de notificações, independente do push:

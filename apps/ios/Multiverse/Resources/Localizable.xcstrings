@@ -19280,6 +19280,652 @@
           }
         }
       }
+    },
+    "LENDA DA ARENA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LENDA DA ARENA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ARENA LEGEND"
+          }
+        }
+      }
+    },
+    "VETERANO DA ARENA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VETERANO DA ARENA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ARENA VETERAN"
+          }
+        }
+      }
+    },
+    "DEFENSOR DA ARENA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DEFENSOR DA ARENA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ARENA DEFENDER"
+          }
+        }
+      }
+    },
+    "ESTREANTE DA ARENA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ESTREANTE DA ARENA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ARENA ROOKIE"
+          }
+        }
+      }
+    },
+    "SUA JORNADA COMEÇA AQUI": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SUA JORNADA COMEÇA AQUI"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YOUR JOURNEY STARTS HERE"
+          }
+        }
+      }
+    },
+    "Seu lado. Seu argumento. Sua arena.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seu lado. Seu argumento. Sua arena."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your side. Your case. Your arena."
+          }
+        }
+      }
+    },
+    "Você já marcou presença. O debate continua.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você já marcou presença. O debate continua."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have made your mark. The debate continues."
+          }
+        }
+      }
+    },
+    "ESCOLHER MEU LADO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ESCOLHER MEU LADO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PICK MY SIDE"
+          }
+        }
+      }
+    },
+    "VOLTAR À ARENA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VOLTAR À ARENA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BACK TO THE ARENA"
+          }
+        }
+      }
+    },
+    "VER RESULTADO ANTERIOR": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VER RESULTADO ANTERIOR"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PREVIOUS RESULT"
+          }
+        }
+      }
+    },
+    "RANKING DO MÊS": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RANKING DO MÊS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MONTHLY LEADERBOARD"
+          }
+        }
+      }
+    },
+    "Cada rodada vale 10 pontos, uma única vez. Ao votar, você participa do ranking público mensal. Comentários, convites e troca de lado não dão pontos extras.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada rodada vale 10 pontos, uma única vez. Ao votar, você participa do ranking público mensal. Comentários, convites e troca de lado não dão pontos extras."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each round earns 10 points once. Voting enters you into the public monthly leaderboard. Comments, invitations and switching sides earn no extra points."
+          }
+        }
+      }
+    },
+    "CURADORIA MULTIVERSE": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CURADORIA MULTIVERSE"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MULTIVERSE EDITORIAL"
+          }
+        }
+      }
+    },
+    "Seu primeiro voto nesta rodada vale 10 pontos e inclui seu perfil no ranking mensal.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seu primeiro voto nesta rodada vale 10 pontos e inclui seu perfil no ranking mensal."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your first vote this round earns 10 points and includes your profile in the monthly leaderboard."
+          }
+        }
+      }
+    },
+    "PRESENÇA CONFIRMADA · +10 PONTOS": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRESENÇA CONFIRMADA · +10 PONTOS"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YOU ARE IN · +10 POINTS"
+          }
+        }
+      }
+    },
+    "%1$@ votos · %2$@ comentários": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ votos · %2$@ comentários"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ votes · %2$@ comments"
+          }
+        }
+      }
+    },
+    "DEFENDER MEU LADO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DEFENDER MEU LADO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MAKE MY CASE"
+          }
+        }
+      }
+    },
+    "CHAMAR UM AMIGO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CHAMAR UM AMIGO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "INVITE A FRIEND"
+          }
+        }
+      }
+    },
+    "%1$@ pontos no mês · sequência de %2$@ dias": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ pontos no mês · sequência de %2$@ dias"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ points this month · %2$@ day streak"
+          }
+        }
+      }
+    },
+    "%1$@ de %2$@ rodadas para o próximo título": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ de %2$@ rodadas para o próximo título"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ rounds toward your next title"
+          }
+        }
+      }
+    },
+    "Seus títulos ficam. O ranking recomeça a cada mês.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seus títulos ficam. O ranking recomeça a cada mês."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your titles stay. The leaderboard resets every month."
+          }
+        }
+      }
+    },
+    "Esta rodada terminou sem votos.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta rodada terminou sem votos."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This round ended without any votes."
+          }
+        }
+      }
+    },
+    "EMPATE NA ARENA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EMPATE NA ARENA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A TIE IN THE ARENA"
+          }
+        }
+      }
+    },
+    "ESCOLHA DA COMUNIDADE: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ESCOLHA DA COMUNIDADE: %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "COMMUNITY PICK: %@"
+          }
+        }
+      }
+    },
+    "Presença vale mais que popularidade. Empates compartilham a mesma posição.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presença vale mais que popularidade. Empates compartilham a mesma posição."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Participation matters more than popularity. Tied scores share the same place."
+          }
+        }
+      }
+    },
+    "A arena está começando. Participe da rodada de hoje para entrar no ranking.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A arena está começando. Participe da rodada de hoje para entrar no ranking."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The arena is just getting started. Join today’s round to enter the leaderboard."
+          }
+        }
+      }
+    },
+    "Até 30 participantes em destaque. Sua posição aparece mesmo fora da lista.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Até 30 participantes em destaque. Sua posição aparece mesmo fora da lista."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to 30 featured participants. Your position appears even if you are outside the list."
+          }
+        }
+      }
+    },
+    "SUA POSIÇÃO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SUA POSIÇÃO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YOUR POSITION"
+          }
+        }
+      }
+    },
+    "%@ pontos": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ pontos"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ points"
+          }
+        }
+      }
+    },
+    "Qual é o seu lado? %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qual é o seu lado? %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which side are you on? %@"
+          }
+        }
+      }
+    },
+    "O convite chega por mensagem privada. Quem não segue você recebe um pedido de conversa.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O convite chega por mensagem privada. Quem não segue você recebe um pedido de conversa."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The invitation arrives as a private message. People who do not follow you receive a conversation request."
+          }
+        }
+      }
+    },
+    "PESSOA SELECIONADA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PESSOA SELECIONADA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PERSON SELECTED"
+          }
+        }
+      }
+    },
+    "ESCOLHER PESSOA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ESCOLHER PESSOA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CHOOSE A PERSON"
+          }
+        }
+      }
+    },
+    "ENVIAR CONVITE": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ENVIAR CONVITE"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SEND INVITATION"
+          }
+        }
+      }
+    },
+    "CONVITE ENVIADO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONVITE ENVIADO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "INVITATION SENT"
+          }
+        }
+      }
+    },
+    "ENTRAR NO DUELO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ENTRAR NO DUELO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JOIN THE DUEL"
+          }
+        }
+      }
+    },
+    "CRIAR MEU DUELO NA COMUNIDADE": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRIAR MEU DUELO NA COMUNIDADE"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CREATE MY COMMUNITY DUEL"
+          }
+        }
+      }
+    },
+    "Encerra em %@ min": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encerra em %@ min"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closes in %@ min"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

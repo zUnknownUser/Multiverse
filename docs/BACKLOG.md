@@ -104,7 +104,7 @@ por etapas, sem misturar responsabilidades com catálogo ou integrações extern
 Antes de abrir publicação e interação: denúncia, bloqueio, limites contra spam,
 regras de spoilers/conteúdo adulto e resposta clara ao autor. IA pode ajudar na
 triagem, com revisão e possibilidade de contestação; não representa garantia de
-moderação correta. Reposts e ranking continuam fora do escopo.
+moderação correta. Reposts continuam fora do escopo. O ranking específico do Duelo do Dia foi autorizado e implementado depois (ver SESSION_HANDOFF).
 Posts de texto ligados a universos/obras e central de atividade foram implementados em 02/10. Push está preparado e desligado até Apple Developer/APNs. Reposts e triagem por IA ainda não foram implementados. Denúncias, bloqueios e limites iniciais já têm persistência;
 as denúncias aguardam revisão manual, sem prazo automático prometido.
 

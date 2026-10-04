@@ -107,11 +107,11 @@ struct CommunityPostCard: View {
     var compact = false
     @Environment(AppStore.self) private var store
     var body: some View {
-        Button { store.push(.post(post.id)) } label: {
+        Button { store.push(post.dailyDay != nil && store.dailyDuels != nil ? .dailyDuel(post.id) : .post(post.id)) } label: {
             VStack(alignment: .leading, spacing: 10) {
                 if let user { HStack { AvatarView(user: user, size: 28); Text(user.name).font(MVFont.bold(13)); Spacer(); Text(post.createdAt, style: .relative).font(MVFont.body(10, weight: 500)) } }
                 if post.kind == "theory" { Text(L10n.text("TEORIA")).kicker() }
-                if post.kind == "duel" { Text(L10n.text("DUELO")).kicker() }
+                if post.kind == "duel" { Text(post.dailyDay == nil ? L10n.text("DUELO") : L10n.text("DUELO DO DIA")).kicker() }
                 if post.spoiler { Text(L10n.text("PUBLICAÇÃO COM SPOILER")).kicker().foregroundStyle(MV.C.muted) }
                 else {
                     Text(post.title).font(MVFont.section(18)).lineLimit(compact ? 2 : nil)

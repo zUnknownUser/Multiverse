@@ -1,3 +1,5 @@
+import { DailyDuelsController } from './duels/daily-duels.controller.js';
+import { DailyDuelsService } from './duels/daily-duels.service.js';
 import { ReadingOrdersController } from './reading-orders/reading-orders.controller.js';
 import { ReadingOrdersService } from './reading-orders/reading-orders.service.js';
 import { MessagesController } from './messages/messages.controller.js';
@@ -44,6 +46,7 @@ import { InteractionsController } from './social/interactions.controller.js';
 
 @Module({
   controllers: [
+    DailyDuelsController,
     ReadingOrdersController,
     MessagesController,
     VoiceController,
@@ -60,6 +63,7 @@ import { InteractionsController } from './social/interactions.controller.js';
     MarvelController,
   ],
   providers: [
+    DailyDuelsService,
     ReadingOrdersService,
     MessagesService,
     VoiceService,

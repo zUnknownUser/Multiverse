@@ -14,6 +14,7 @@ struct HomeView: View {
                 HomeCommunitySection()
                 if store.showsDemoFeatures && !store.clubs.isEmpty { MyClubsCard().padding(.horizontal, MV.pad) }
                 if !store.homeDiscoveryItems.isEmpty { trendingSection }
+                if store.dailyDuels != nil { DailyDuelCard().padding(.horizontal, MV.pad) }
                 if store.showsDemoFeatures {
                 DuelCard()
                     .padding(.horizontal, MV.pad)
@@ -46,6 +47,7 @@ struct HomeView: View {
             Task { await store.social?.loadFeed() }
         }
         .refreshable {
+            await store.dailyDuels?.refresh(force: true)
             if let api = store.communityAPI { await store.homeCommunity.load(api: api, filter: .init()) }
             await store.notifications?.refresh()
             await store.refreshActivity()

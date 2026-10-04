@@ -22,6 +22,7 @@ enum Route: Hashable {
     /// Avisos deixou de ser aba — agora é o sino no topo da Home, empilhado como rota.
     case community(universe: String?, item: String?)
     case post(String)
+    case dailyDuel(String)
     case communityFeed(CommunityFilter)
     case liveClubs(String?)
     case liveClub(String)

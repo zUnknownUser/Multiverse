@@ -8,6 +8,7 @@ struct RootView: View {
     @State private var burst = BurstCenter()
     @State private var proStore = ProStore()
     @State private var pendingClub: String?
+    @State private var pendingDuel: String?
 
     var body: some View {
         Group {
@@ -51,6 +52,9 @@ struct RootView: View {
             Text(auth.errorMessage ?? auth.infoMessage ?? store.accountLoadError ?? store.onboardingError ?? "")
         }
         .onOpenURL { url in
+            if let id = DuelInvitation.id(in: url.absoluteString) {
+                pendingDuel = id; openDuelInvitation(); return
+            }
             if url.scheme == "multiverse", url.host == "club", url.user == nil, url.password == nil, url.query == nil,
                let id = url.pathComponents.last, UUID(uuidString: id) != nil {
                 pendingClub = id.lowercased(); openClubInvitation(); return
@@ -94,9 +98,10 @@ struct RootView: View {
                 await PushCoordinator.shared.resume(api: api, userID: session.userID)
                 openPushActivity()
                 openClubInvitation()
+                openDuelInvitation()
             }
         }
-        .onChange(of: store.isOnboarded) { _, _ in openClubInvitation() }
+        .onChange(of: store.isOnboarded) { _, _ in openClubInvitation(); openDuelInvitation() }
         .onChange(of: PushCoordinator.shared.openActivity) { _, _ in openPushActivity() }
         .task(id: store.meID) {
             while !Task.isCancelled {
@@ -125,6 +130,10 @@ struct RootView: View {
         let id = auth.session?.userID
         let count = id == store.meID && store.notifications?.hasLoaded == true ? store.notifications?.unreadCount : nil
         return BadgeState(bootstrapping: auth.isBootstrapping, userID: id, count: count, active: scenePhase == .active)
+    }
+    private func openDuelInvitation() {
+        guard let id = pendingDuel, auth.session?.userID == store.meID, store.isOnboarded, !store.isLoading else { return }
+        pendingDuel = nil; store.push(.dailyDuel(id))
     }
     private func openClubInvitation() {
         guard let id = pendingClub, auth.session?.userID == store.meID, store.isOnboarded, !store.isLoading else { return }

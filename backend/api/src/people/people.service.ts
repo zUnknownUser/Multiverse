@@ -68,7 +68,7 @@ export class PeopleService {
         .toLowerCase();
       const result = await client.query(
         `SELECT ${fields} FROM ${eligible}
-        WHERE p.firebase_uid<>$1 AND p.deletion_requested_at IS NULL AND ${unblocked('$1', 'p.firebase_uid')}
+        WHERE p.firebase_uid<>$1 AND p.firebase_uid<>'multiverse-editorial' AND p.deletion_requested_at IS NULL AND ${unblocked('$1', 'p.firebase_uid')}
         AND strpos(lower(regexp_replace(normalize(p.display_name || ' ' || p.username,NFD),'[\u0300-\u036f]','','g')),$2)>0
         AND ($3::text IS NULL OR p.username COLLATE "C">$3 COLLATE "C")
         AND (NOT $4::boolean OR NOT EXISTS(SELECT 1 FROM visible_follows f WHERE f.follower_uid=$1 AND f.followed_uid=p.firebase_uid))

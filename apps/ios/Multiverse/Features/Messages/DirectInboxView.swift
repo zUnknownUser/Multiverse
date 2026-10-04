@@ -81,10 +81,11 @@ struct DirectInboxView: View {
     }
 }
 
-private struct DirectPeoplePicker: View {
+struct DirectPeoplePicker: View {
     let api: (any PeopleAPI)?
     let owner: String
     let onPick: (String) -> Void
+    var onPickUser: ((User) -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
     @State private var users: [User] = []
@@ -98,7 +99,7 @@ private struct DirectPeoplePicker: View {
                     if let error { PeopleStatusNotice(message: error) { await search() } }
                     if loading { ProgressView() }
                     ForEach(users) { user in
-                        Button { onPick(user.id); dismiss() } label: {
+                        Button { onPickUser?(user); onPick(user.id); dismiss() } label: {
                             HStack(spacing: 12) {
                                 AvatarView(user: user, size: 40)
                                 VStack(alignment: .leading) { Text(user.name).font(MVFont.bold(14)); Text(user.handle).font(MVFont.body(12)).foregroundStyle(MV.C.muted) }
@@ -125,7 +126,7 @@ private struct DirectPeoplePicker: View {
         do {
             let page = try await api.searchPeople(query: requested, after: more ? previousCursor : nil)
             try Task.checkCancellation(); try page.validate(ownerID: owner); guard requested == query else { return }
-            let next = page.users.map(\.user).filter { $0.id != owner }
+            let next = page.users.map(\.user).filter { $0.id != owner && $0.id != "multiverse-editorial" }
             let old = more ? users : []; users = old + next.filter { u in !old.contains { $0.id == u.id } }; cursor = page.nextCursor
         } catch is CancellationError { } catch { if requested == query { self.error = error.localizedDescription } }
     }

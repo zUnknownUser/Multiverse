@@ -46,6 +46,7 @@ export class CommunityService {
       kind?: string;
       club?: string;
       schedule?: string;
+      language?: string;
     },
   ) {
     return this.lifecycle.withActiveAccount(uid, async (client) => {
@@ -53,13 +54,15 @@ export class CommunityService {
       const result = await client.query(
         `SELECT r.id,r.firebase_uid AS "user",r.universe_id AS "universeID",r.item_id AS "itemID",r.title,r.text,r.spoiler,r.created_at AS "createdAt",r.kind,r.segment,r.club_id AS "clubID",r.schedule_id AS "scheduleID",r.version,r.edited_at AS "editedAt",r.option_a AS "optionA",r.option_b AS "optionB",r.closes_at AS "closesAt",r.resolution,r.resolution_note AS "resolutionNote",${imageField},${voteField},${mentionsField()},
    p.display_name AS name,p.username,p.avatar_color AS "avatarColor",
+   (SELECT (d.translations->$13) || jsonb_build_object('day',d.day::text) FROM daily_duels d WHERE d.post_id=r.id) AS editorial,
    to_char(r.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "cursorTime",
    (SELECT count(*)::int FROM post_comments c JOIN profiles cp ON cp.firebase_uid=c.firebase_uid WHERE c.post_id=r.id AND ${postCommentVisible}) AS "commentCount"
    FROM ${postRelations} WHERE ${postVisible}
    AND ($2::text IS NULL OR r.universe_id=$2) AND ($3::text IS NULL OR r.item_id=$3)
    AND ($4::uuid IS NULL OR r.id=$4)
    AND ($5::timestamptz IS NULL OR (r.created_at,r.id)<($5::timestamptz,$6::uuid))
-   AND ($7::text='' OR to_tsvector('simple',r.title || ' ' || r.text) @@ plainto_tsquery('simple',$7) OR strpos(lower(r.title || ' ' || r.text),lower($7))>0)
+   AND ($7::text='' OR to_tsvector('simple',r.title || ' ' || r.text) @@ plainto_tsquery('simple',$7) OR strpos(lower(r.title || ' ' || r.text),lower($7))>0
+   OR EXISTS(SELECT 1 FROM daily_duels dd WHERE dd.post_id=r.id AND strpos(lower((dd.translations->$13->>'title') || ' ' || (dd.translations->$13->>'text')),lower($7))>0))
    AND ($8::text<>'following' OR EXISTS(SELECT 1 FROM visible_follows f WHERE f.follower_uid=$1 AND f.followed_uid=r.firebase_uid))
    AND ($8::text<>'active' OR (r.created_at>now()-interval '7 days' AND EXISTS(SELECT 1 FROM post_comments c JOIN profiles cp ON cp.firebase_uid=c.firebase_uid WHERE c.post_id=r.id AND ${postCommentVisible})))
    AND ($8::text<>'unanswered' OR NOT EXISTS(SELECT 1 FROM post_comments c JOIN profiles cp ON cp.firebase_uid=c.firebase_uid WHERE c.post_id=r.id AND ${postCommentVisible}))
@@ -82,6 +85,7 @@ export class CommunityService {
           filter.club ?? null,
           filter.schedule ?? null,
           filter.segment ?? null,
+          filter.language ?? 'pt-BR',
         ],
       );
       if (filter.id && !result.rowCount)
@@ -100,11 +104,12 @@ export class CommunityService {
           user: r.user,
           universeID: r.universeID,
           itemID: r.itemID,
-          title: r.title,
-          text: r.text,
+          title: r.editorial?.title ?? r.title,
+          text: r.editorial?.text ?? r.text,
           spoiler: r.spoiler,
           createdAt: r.createdAt,
           kind: r.kind,
+          dailyDay: r.editorial?.day,
           segment: r.segment,
           clubID: r.clubID,
           scheduleID: r.scheduleID,
@@ -113,8 +118,8 @@ export class CommunityService {
           images: r.images,
           mentions: r.mentions,
           votes: r.votes,
-          optionA: r.optionA,
-          optionB: r.optionB,
+          optionA: r.editorial?.optionA ?? r.optionA,
+          optionB: r.editorial?.optionB ?? r.optionB,
           closesAt: r.closesAt,
           resolution: r.resolution,
           resolutionNote: r.resolutionNote,

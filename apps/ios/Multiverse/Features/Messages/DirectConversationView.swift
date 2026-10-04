@@ -197,7 +197,12 @@ private struct DirectMessageBubble: View {
                             }.buttonStyle(.plain)
                         } else { Text(L10n.text("Esta obra não está mais disponível.")).font(MVFont.body(13)) }
                     }
-                    if !message.text.isEmpty { Text(message.text).font(MVFont.body(14, weight: 500)).textSelection(.enabled) }
+                    if let duelID = DuelInvitation.id(in: message.text) {
+                        Button { store.push(.dailyDuel(duelID)) } label: {
+                            Label(L10n.text("ENTRAR NO DUELO"), systemImage: "bolt.fill").font(MVFont.bold(13))
+                        }.buttonStyle(.plain)
+                    }
+                    if !message.text.isEmpty { Text(DuelInvitation.displayText(in: message.text)).font(MVFont.body(14, weight: 500)).textSelection(.enabled) }
                 }
                 HStack(spacing: 6) {
                     Text(message.createdAt, format: .dateTime.day().month().hour().minute())

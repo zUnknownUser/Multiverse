@@ -97,6 +97,161 @@ describe.skipIf(!databaseURL)('Live community features with PostgreSQL', () => {
     }
   });
 
+  it('creates one bilingual daily round and awards points only once across concurrent votes, side changes and comments', async () => {
+    await member('owner');
+    await member('alice');
+    const [a, b] = await Promise.all([
+      get('community/daily-duels').expect(200),
+      get('community/daily-duels', 'alice')
+        .set('Accept-Language', 'en')
+        .expect(200),
+    ]);
+    const id = a.body.today.id;
+    expect(id).toBe(b.body.today.id);
+    expect(a.body.today.title).not.toBe(b.body.today.title);
+    expect(a.body.today.votes.counts).toEqual([0, 0]);
+    expect(
+      (
+        await get('posts?q=' + encodeURIComponent(b.body.today.title))
+          .set('Accept-Language', 'en')
+          .expect(200)
+      ).body.posts[0].id,
+    ).toBe(id);
+    expect(
+      (await get('me/onboarding/suggestions').expect(200)).body.users.some(
+        (u: { userID: string }) => u.userID === 'multiverse-editorial',
+      ),
+    ).toBe(false);
+
+    expect(a.body.progress).toEqual({ rounds: 0, monthlyPoints: 0, streak: 0 });
+    expect((await db.query('SELECT * FROM daily_duels')).rowCount).toBe(1);
+    await Promise.all([
+      put(`posts/${id}/vote`, { choice: 0 }).expect(200),
+      put(`posts/${id}/vote`, { choice: 0 }).expect(200),
+    ]);
+    await put(`posts/${id}/vote`, { choice: 1 }).expect(200);
+    const state = (await get('community/daily-duels').expect(200)).body;
+    expect(state.progress).toEqual({ rounds: 1, monthlyPoints: 10, streak: 1 });
+    expect(state.today.votes.counts).toEqual([0, 1]);
+    expect(
+      (await get(`posts/${id}`).set('Accept-Language', 'en').expect(200)).body
+        .posts[0].title,
+    ).toBe(b.body.today.title);
+    await put(`posts/${id}/comments/${randomUUID()}`, {
+      text: 'Meu argumento sobre essa escolha.',
+      spoiler: false,
+    }).expect(200);
+    expect(
+      (await get('community/daily-duels').expect(200)).body.progress
+        .monthlyPoints,
+    ).toBe(10);
+    const leaders = (await get('community/daily-duels/leaderboard').expect(200))
+      .body;
+    expect(leaders.me.points).toBe(10);
+    expect(leaders.me.rank).toBe(1);
+    expect(leaders.leaders).toHaveLength(1);
+    const inviteID = randomUUID();
+    const invitation = {
+      kind: 'text',
+      text: 'Escolha seu lado!\nmultiverse://duel/' + id,
+      spoiler: false,
+    };
+    await put(`me/messages/alice/messages/${inviteID}`, invitation).expect(200);
+    await put(`me/messages/alice/messages/${inviteID}`, invitation).expect(200);
+    const received = (await get('me/messages/owner', 'alice').expect(200)).body;
+    expect(received.messages).toHaveLength(1);
+    expect(received.messages[0].text).toBe(invitation.text);
+    expect(
+      (await get(`community/daily-duels/${id}`, 'alice').expect(200)).body.round
+        .id,
+    ).toBe(id);
+    await put(`posts/${id}/vote`, { choice: 0 }, 'alice').expect(200);
+    const tied = (await get('community/daily-duels/leaderboard').expect(200))
+      .body.leaders;
+    expect(tied).toHaveLength(2);
+    expect(
+      tied.every(
+        (p: { rank: number; points: number }) =>
+          p.rank === 1 && p.points === 10,
+      ),
+    ).toBe(true);
+  });
+  it('enforces onboarding, the deadline, moderation and blocks for daily duels', async () => {
+    await member('owner');
+    await member('alice');
+    await member('newbie', false);
+    await get('community/daily-duels', 'newbie').expect(409);
+    const id = (await get('community/daily-duels').expect(200)).body.today.id;
+    await put(`posts/${id}/vote`, { choice: 0 }, 'alice').expect(200);
+    await put('me/blocks/alice', { blocked: true }).expect(200);
+    expect(
+      (await get('community/daily-duels/leaderboard').expect(200)).body.leaders,
+    ).toHaveLength(0);
+    expect(
+      (await get('community/daily-duels').expect(200)).body.today.votes.counts,
+    ).toEqual([0, 0]);
+    await db.query(
+      "UPDATE community_posts SET closes_at=now()-interval '1 second' WHERE id=$1",
+      [id],
+    );
+    await put(`posts/${id}/vote`, { choice: 1 }).expect(409);
+    expect(
+      (await get('community/daily-duels').expect(200)).body.progress.rounds,
+    ).toBe(0);
+    await db.query(
+      "UPDATE community_posts SET moderation_status='hidden' WHERE id=$1",
+      [id],
+    );
+    await get(`community/daily-duels/${id}`).expect(404);
+    expect(
+      (await get('community/daily-duels').expect(200)).body.today,
+    ).toBeNull();
+  });
+  it('rolls into a new day, retains previous results and resets monthly points without losing lifetime rewards', async () => {
+    await member('owner');
+    const id = (await get('community/daily-duels').expect(200)).body.today.id;
+    await put(`posts/${id}/vote`, { choice: 0 }).expect(200);
+    await db.query(
+      "UPDATE daily_duels SET day=((now() AT TIME ZONE 'UTC')::date-1),opens_at=(((now() AT TIME ZONE 'UTC')::date-1)::timestamp AT TIME ZONE 'UTC') WHERE post_id=$1",
+      [id],
+    );
+    await db.query(
+      "UPDATE community_posts SET closes_at=((now() AT TIME ZONE 'UTC')::date::timestamp AT TIME ZONE 'UTC') WHERE id=$1",
+      [id],
+    );
+    await db.query(
+      "UPDATE community_votes SET created_at=(SELECT opens_at+interval '1 hour' FROM daily_duels WHERE post_id=$1) WHERE post_id=$1",
+      [id],
+    );
+    const current = (await get('community/daily-duels').expect(200)).body;
+    expect(current.today.id).not.toBe(id);
+    expect(current.previous.id).toBe(id);
+    expect(current.progress.streak).toBe(1);
+    await put(`posts/${current.today.id}/vote`, { choice: 1 }).expect(200);
+    expect(
+      (await get('community/daily-duels').expect(200)).body.progress.streak,
+    ).toBe(2);
+    await db.query(
+      "UPDATE daily_duels SET day=(date_trunc('month',now() AT TIME ZONE 'UTC')::date-10),opens_at=((date_trunc('month',now() AT TIME ZONE 'UTC')::date-10)::timestamp AT TIME ZONE 'UTC') WHERE post_id=$1",
+      [id],
+    );
+    await db.query(
+      "UPDATE community_posts SET closes_at=(SELECT opens_at+interval '1 day' FROM daily_duels WHERE post_id=$1) WHERE id=$1",
+      [id],
+    );
+    await db.query(
+      "UPDATE community_votes SET created_at=(SELECT opens_at+interval '1 hour' FROM daily_duels WHERE post_id=$1) WHERE post_id=$1",
+      [id],
+    );
+    const final = (await get('community/daily-duels').expect(200)).body;
+    expect(final.progress.rounds).toBe(2);
+    expect(final.progress.monthlyPoints).toBe(10);
+    expect(final.progress.streak).toBe(1);
+    expect(
+      (await get('community/daily-duels/leaderboard').expect(200)).body.me
+        .points,
+    ).toBe(10);
+  });
   const put = (path: string, body: object, uid = 'owner') =>
     request(app.getHttpServer())
       .put('/api/v1/' + path)

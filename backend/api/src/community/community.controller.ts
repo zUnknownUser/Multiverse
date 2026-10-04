@@ -1,3 +1,4 @@
+import { catalogLanguage } from '../catalog/catalog.service.js';
 import {
   BadRequestException,
   Body,
@@ -10,6 +11,7 @@ import {
   Put,
   Patch,
   Header,
+  Headers,
   Query,
   Req,
 } from '@nestjs/common';
@@ -106,6 +108,7 @@ export class CommunityController {
   @Get() list(
     @Req() req: AuthenticatedRequest,
     @Query() q: Record<string, unknown>,
+    @Headers('accept-language') language?: string,
   ) {
     if (
       Object.keys(q).some(
@@ -153,6 +156,7 @@ export class CommunityController {
     )
       throw new BadRequestException({ code: 'INVALID_SOCIAL_REQUEST' });
     return this.service.list(req.identity.uid, {
+      language: catalogLanguage(language),
       segment: q.segment === undefined ? undefined : Number(q.segment),
       search: q.q as string | undefined,
       feed: q.feed as string | undefined,
@@ -168,7 +172,10 @@ export class CommunityController {
     @Req() req: AuthenticatedRequest,
     @Param('id', uuid) id: string,
   ) {
-    return this.service.list(req.identity.uid, { id });
+    return this.service.list(req.identity.uid, {
+      id,
+      language: catalogLanguage(req.headers['accept-language']),
+    });
   }
   @Put(':id') publish(
     @Req() req: AuthenticatedRequest,

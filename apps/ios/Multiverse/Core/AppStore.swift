@@ -89,6 +89,7 @@ final class AppStore {
     var showsDemoFeatures: Bool { !usesAccountAPI }
     let homeCommunity = CommunityTimeline()
     let communityAPI: (any CommunityAPI)?
+    let dailyDuels: DailyDuelsStore?
     var spacesAPI: (any SpacesAPI)? { communityAPI as? any SpacesAPI }
     let notifications: NotificationStore?
     let social: SocialStore?
@@ -248,6 +249,7 @@ final class AppStore {
         self.directMessages = directMessagesAPI.map { DirectMessagesStore(api: $0, ownerID: session?.userID ?? "duda") }
         self.library = libraryAPI.map { LibraryStore(api: $0) }
         self.communityAPI = communityAPI
+        self.dailyDuels = (accountAPI as? any DailyDuelsAPI).map { DailyDuelsStore(api: $0) }
         self.notifications = notificationsAPI.map { NotificationStore(api: $0) }
         self.social = socialAPI.map { SocialStore(api: $0) }
         self.people = peopleAPI.map { PeopleStore(api: $0, ownerID: session?.userID ?? "duda") }
