@@ -45,7 +45,7 @@ struct ProfileView: View {
                 .padding(.bottom, 24)
             }
         }
-        .sheet(isPresented: $editingAvatar) { ProfileAvatarEditor(selection: store.user(store.meID)?.avatarID) }
+        .sheet(isPresented: $editingAvatar) { if let user = store.user(store.meID) { ProfileEditorView(user: user) } }
         .task(id: userID + "|" + String(store.people?.discoveryEpoch ?? 0)) { await refreshPeople() }
         .refreshable {
             if userID == store.meID { await store.refreshActivity() }
@@ -54,7 +54,7 @@ struct ProfileView: View {
     }
 
     private func refreshPeople() async {
-        if userID == store.meID { await store.people?.loadHome(); await store.library?.refresh() }
+        if userID == store.meID { await store.people?.loadHome(); await store.library?.refresh(); await store.dailyDuels?.refresh() }
         else { await store.people?.loadProfile(userID) }
     }
 
@@ -62,9 +62,9 @@ struct ProfileView: View {
     private func hero(data: AppStore.ProfileData) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 12) {
-                if data.isMe && store.usesAccountAPI {
+                if data.isMe && store.profileEditingAPI != nil {
                     Button { editingAvatar = true } label: { AvatarView(user: data.user, size: 64, border: 3) }
-                        .buttonStyle(.plain).accessibilityLabel(L10n.text("Escolher avatar"))
+                        .buttonStyle(.plain).accessibilityLabel(L10n.text("Editar perfil"))
                 } else { AvatarView(user: data.user, size: 64, border: 3) }
                 VStack(alignment: .leading, spacing: 3) {
                     Text(data.user.name.uppercased())
@@ -73,6 +73,11 @@ struct ProfileView: View {
                     Text("\(data.user.handle) · \(data.user.bio)")
                         .font(MVFont.body(12, weight: 600))
                         .foregroundStyle(MV.C.paper.opacity(0.8))
+                    let rounds = data.isMe ? (store.dailyDuels?.hub?.progress.rounds ?? 0) : (store.people?.profiles[userID]?.duelRounds ?? 0)
+                    if rounds > 0 {
+                        Text(DuelProgress(rounds: rounds, monthlyPoints: 0, streak: 0).title)
+                            .font(MVFont.bold(10)).foregroundStyle(MV.C.accent).lineLimit(2)
+                    }
                 }
                 Spacer()
                 if data.isMe {

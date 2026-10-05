@@ -65,6 +65,7 @@ struct RootView: View {
             if let url = activity.webpageURL { Task { await auth.handleEmailLink(url) } }
         }
         .environment(store)
+        .environment(\.avatarPhotos, store.avatarPhotos)
         .environment(auth)
         .environment(burst)
         .environment(proStore)
@@ -92,7 +93,8 @@ struct RootView: View {
                 dailyDuelsAPI: api,
                 clubsAPI: api,
                 roomsAPI: api,
-                voiceAPI: api
+                voiceAPI: api,
+                profileEditingAPI: api
             )
             store = accountStore
             await accountStore.bootstrap()

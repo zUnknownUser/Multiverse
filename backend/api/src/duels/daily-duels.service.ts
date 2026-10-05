@@ -162,7 +162,7 @@ export class DailyDuelsService {
         AND r.deleted_at IS NULL AND r.moderation_status='visible' AND p.deletion_requested_at IS NULL
         GROUP BY v.firebase_uid
       ), ranked AS (SELECT *,dense_rank() OVER(ORDER BY points DESC)::int AS rank FROM scores), people AS (
-        SELECT rank,points,p.firebase_uid AS id,p.display_name AS name,'@'||p.username AS handle,p.avatar_color AS "avatarColor",p.avatar_id AS "avatarID"
+        SELECT rank,points,p.firebase_uid AS id,p.display_name AS name,'@'||p.username AS handle,p.avatar_color AS "avatarColor",p.avatar_id AS "avatarID",p.avatar_photo_id AS "avatarPhotoID"
         FROM ranked JOIN profiles p USING(firebase_uid) WHERE ${unblocked('$1', 'p.firebase_uid')})
       SELECT coalesce((SELECT json_agg(t) FROM (SELECT * FROM people ORDER BY rank,id LIMIT 30) t),'[]') AS leaders,
         (SELECT row_to_json(t) FROM (SELECT * FROM people WHERE id=$1) t) AS me,

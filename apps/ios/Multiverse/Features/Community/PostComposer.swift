@@ -18,7 +18,7 @@ struct PostComposer: View {
     @State private var error: String?
     @State private var mentioning = false
     @State private var selections: [PhotosPickerItem] = []
-    @State private var photos: [ComposerPhoto] = []
+    @State private var photos: [PreparedPhoto] = []
     @State private var retained: [PostImage] = []
     @State private var postID = UUID().uuidString.lowercased()
     @State private var pending: (input: PostInput, edit: PostEdit?)?
@@ -65,10 +65,10 @@ struct PostComposer: View {
         .task(id: selections) {
             guard !selections.isEmpty else { return }; readingPhotos = true; error = nil
             do {
-                var picked: [ComposerPhoto] = []
+                var picked: [PreparedPhoto] = []
                 for selection in selections {
                     guard let data = try await selection.loadTransferable(type: Data.self) else { throw CommunityError.invalidImage }
-                    try Task.checkCancellation(); picked.append(try await CommunityPhotoProcessor.shared.prepare(data))
+                    try Task.checkCancellation(); picked.append(try await PhotoProcessor.shared.prepare(data))
                 }
                 photos += picked.prefix(max(0, 4 - retained.count - photos.count)); selections = []; readingPhotos = false
             } catch is CancellationError { readingPhotos = false } catch { self.error = error.localizedDescription; readingPhotos = false; selections = [] }

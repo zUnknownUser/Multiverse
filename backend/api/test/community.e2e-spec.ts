@@ -134,6 +134,9 @@ describe.skipIf(!databaseURL)('Live community features with PostgreSQL', () => {
     expect(state.progress).toEqual({ rounds: 1, monthlyPoints: 10, streak: 1 });
     expect(state.today.votes.counts).toEqual([0, 1]);
     expect(
+      (await get('people/owner', 'alice').expect(200)).body.person.duelRounds,
+    ).toBe(1);
+    expect(
       (await get(`posts/${id}`).set('Accept-Language', 'en').expect(200)).body
         .posts[0].title,
     ).toBe(b.body.today.title);

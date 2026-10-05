@@ -34,6 +34,7 @@ function user(row: Record<string, unknown>) {
     handle: '@' + row.username,
     avatarColor: row.avatar_color,
     avatarID: row.avatar_id,
+    avatarPhotoID: row.avatar_photo_id,
     bio: row.bio,
     followers: null,
     badgeUniverse: '',

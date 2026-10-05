@@ -18,6 +18,7 @@ type ProfileRow = QueryResultRow & {
   display_name: string;
   avatar_color: string;
   avatar_id: string | null;
+  avatar_photo_id: string | null;
   bio: string;
   created_at: Date;
   updated_at: Date;
@@ -46,6 +47,7 @@ function profile(row: ProfileRow) {
     displayName: row.display_name,
     avatarColor: row.avatar_color,
     avatarID: row.avatar_id,
+    avatarPhotoID: row.avatar_photo_id,
     bio: row.bio,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -127,7 +129,7 @@ export class AccountsService {
         const result = await client.query<ProfileRow>(
           `INSERT INTO profiles(firebase_uid,username,display_name,avatar_color,bio,avatar_id)
         VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(firebase_uid) DO UPDATE SET username=EXCLUDED.username,
-        display_name=EXCLUDED.display_name,avatar_color=EXCLUDED.avatar_color,bio=EXCLUDED.bio,avatar_id=CASE WHEN $7 THEN EXCLUDED.avatar_id ELSE profiles.avatar_id END,updated_at=now()
+        display_name=EXCLUDED.display_name,avatar_color=EXCLUDED.avatar_color,bio=EXCLUDED.bio,avatar_id=CASE WHEN $7 THEN EXCLUDED.avatar_id ELSE profiles.avatar_id END,avatar_photo_id=CASE WHEN $7 THEN NULL ELSE profiles.avatar_photo_id END,updated_at=now()
         WHERE profiles.deletion_requested_at IS NULL RETURNING *`,
           [
             uid,
@@ -141,6 +143,11 @@ export class AccountsService {
         );
         if (!result.rows[0])
           throw new ForbiddenException({ code: 'ACCOUNT_DELETING' });
+        if (input.avatarID !== undefined)
+          await client.query(
+            'DELETE FROM profile_photos WHERE firebase_uid=$1',
+            [uid],
+          );
         return profile(result.rows[0]);
       });
     } catch (error) {

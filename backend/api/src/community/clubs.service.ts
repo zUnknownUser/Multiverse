@@ -332,7 +332,7 @@ export class ClubsService {
         throw new BadRequestException({ code: 'INVALID_PROGRESS' });
       const rows = (
         await client.query(
-          `SELECT p.firebase_uid AS id,p.display_name AS name,'@'||p.username AS handle,p.avatar_color AS "avatarColor",p.avatar_id AS "avatarID",coalesce(pr.units,0) AS units
+          `SELECT p.firebase_uid AS id,p.display_name AS name,'@'||p.username AS handle,p.avatar_color AS "avatarColor",p.avatar_id AS "avatarID",p.avatar_photo_id AS "avatarPhotoID",coalesce(pr.units,0) AS units
        FROM club_members m JOIN profiles p ON p.firebase_uid=m.firebase_uid LEFT JOIN club_progress pr ON pr.firebase_uid=m.firebase_uid AND pr.schedule_id=$3
        WHERE m.club_id=$2 AND p.deletion_requested_at IS NULL AND ${unblocked('$1', 'm.firebase_uid')} AND ($4::text IS NULL OR p.firebase_uid COLLATE "C">$4 COLLATE "C") ORDER BY p.firebase_uid COLLATE "C" LIMIT 31`,
           [uid, club, schedule ?? null, after ?? null],

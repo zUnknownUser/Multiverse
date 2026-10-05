@@ -114,6 +114,8 @@ describe.skipIf(!databaseURL)('People and follows with PostgreSQL', () => {
       [
         'avatarColor',
         'avatarID',
+        'avatarPhotoID',
+        'duelRounds',
         'bio',
         'displayName',
         'followerCount',

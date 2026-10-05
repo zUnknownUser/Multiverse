@@ -14,12 +14,14 @@ struct PersonSummary: Codable, Identifiable, Sendable, Equatable {
     let displayName: String
     let avatarColor: String
     var avatarID: String? = nil
+    var avatarPhotoID: String? = nil
     let bio: String
     let logCount: Int
     let followerCount: Int
     let followingCount: Int
+    var duelRounds: Int? = nil
     var id: String { userID }
-    var user: User { User(id: userID, name: displayName, handle: "@" + username, avatarColor: avatarColor, bio: bio, followers: followerCount, badgeUniverse: "", avatarID: avatarID) }
+    var user: User { User(id: userID, name: displayName, handle: "@" + username, avatarColor: avatarColor, bio: bio, followers: followerCount, badgeUniverse: "", avatarID: avatarID, avatarPhotoID: avatarPhotoID) }
     var isValid: Bool { !userID.isEmpty && !displayName.isEmpty && logCount >= 0 && followerCount >= 0 && followingCount >= 0 }
 }
 

@@ -3,7 +3,7 @@ import Testing
 @testable import Multiverse
 
 @MainActor
-private final class AccountStub: AccountAPI {
+private final class AccountStub: AccountAPI, ProfileEditingAPI {
     var profile: RemoteProfile?
     var progress = OnboardingState()
     var people: [RemoteProfile] = []
@@ -35,6 +35,12 @@ private final class AccountStub: AccountAPI {
         profile?.avatarID = avatarID
         return profile!
     }
+    func editProfile(_ input: ProfileEditInput) async throws -> RemoteProfile {
+        if let failure { throw failure }
+        profile = RemoteProfile(userID: profile!.userID, username: profile!.username, displayName: input.displayName, avatarColor: input.avatarColor, avatarID: input.avatarID, avatarPhotoID: input.photoAction == "remove" ? nil : profile?.avatarPhotoID, bio: input.bio)
+        return profile!
+    }
+    func profilePhoto(_ id: String) async throws -> Data { throw AuthError.networkUnavailable }
     func suggestions() async throws -> FollowSuggestions {
         suggestionCalls += 1
         if let suggestionFailure { throw suggestionFailure }
@@ -70,6 +76,25 @@ final class IdentityStub: GoogleAuthenticationClient {
 struct AccountIntegrationTests {
     private func people(_ count: Int) -> [RemoteProfile] {
         (0..<count).map { RemoteProfile(userID: "person-\($0)", username: "person\($0)", displayName: "Person \($0)", avatarColor: "#F4A814", bio: "") }
+    }
+
+    @Test func profileEditsPersistAndFailuresKeepConfirmedDetails() async throws {
+        let uid = UUID().uuidString, api = AccountStub(uid: UUID().uuidString)
+        api.profile = RemoteProfile(userID: uid, username: "profileuser", displayName: "Before", avatarColor: "#F4A814", bio: "Before")
+        api.progress.completed = true
+        let session = AuthSession(userID: uid, email: "test@example.com", handle: "@profileuser")
+        let store = AppStore(session: session, accountAPI: api, profileEditingAPI: api)
+        await store.bootstrap()
+        let input = ProfileEditInput(displayName: "After", bio: "New bio", avatarColor: "#2E5BE8", avatarID: "robot", photoAction: "remove", photo: nil)
+        api.failure = .networkUnavailable
+        await #expect(throws: AuthError.networkUnavailable) { try await store.editProfile(input) }
+        #expect(store.user(uid)?.name == "Before" && store.user(uid)?.bio == "Before")
+        api.failure = nil
+        try await store.editProfile(input)
+        #expect(store.user(uid)?.name == "After" && store.user(uid)?.bio == "New bio" && store.user(uid)?.avatarID == "robot")
+        let restored = AppStore(session: session, accountAPI: api, profileEditingAPI: api)
+        await restored.bootstrap()
+        #expect(restored.user(uid)?.name == "After" && restored.user(uid)?.handle == "@profileuser")
     }
 
     @Test func avatarSaveWaitsForServerAndSurvivesReload() async throws {

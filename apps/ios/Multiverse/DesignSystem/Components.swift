@@ -98,6 +98,8 @@ struct AvatarView: View {
 
     var body: some View {
         ProfileAvatarFace(name: user.name, color: user.avatarColor, avatarID: user.avatarID, size: size)
+            .overlay { AvatarPhotoOverlay(id: user.avatarPhotoID) }
+            .clipShape(Circle())
             .overlay(Circle().strokeBorder(MV.C.ink, lineWidth: border))
     }
 }

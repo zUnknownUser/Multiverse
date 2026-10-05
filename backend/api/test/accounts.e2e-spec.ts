@@ -1,3 +1,4 @@
+import sharp from 'sharp';
 import { randomInt, randomUUID } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import { Test } from '@nestjs/testing';
@@ -248,6 +249,122 @@ describe.skipIf(!databaseURL)('Account API with real PostgreSQL', () => {
     expect(cleared.body.avatarID).toBeNull();
     const other = await putProfile('avatar-other').expect(200);
     expect(other.body.avatarID).toBeNull();
+  });
+
+  it('edits profile details atomically and serves bounded private photos until removal or deletion', async () => {
+    const uid = 'photo-owner';
+    await putProfile(uid).expect(200);
+    await putProgress(uid, progress(0, true)).expect(200);
+    await putProfile('photo-reader').expect(200);
+    await putProgress('photo-reader', progress(0, true)).expect(200);
+    const photo = (
+      await sharp({
+        create: { width: 800, height: 600, channels: 3, background: '#e4412f' },
+      })
+        .png()
+        .toBuffer()
+    ).toString('base64');
+    const input = {
+      displayName: 'Updated Name',
+      bio: 'Updated bio',
+      avatarColor: '#2E5BE8',
+      avatarID: null,
+      photoAction: 'replace',
+      photo,
+    };
+    const save = (body: object) =>
+      request(app.getHttpServer())
+        .put('/api/v1/me/profile/details')
+        .auth(uid, { type: 'bearer' })
+        .send(body);
+    const fetch = (id: string, viewer = 'photo-reader') =>
+      request(app.getHttpServer())
+        .get('/api/v1/people/photos/' + id)
+        .auth(viewer, { type: 'bearer' });
+    const saved = (await save(input).expect(200)).body;
+    expect(saved).toMatchObject({
+      userID: uid,
+      displayName: 'Updated Name',
+      bio: 'Updated bio',
+      username: 'photo_owner',
+      avatarID: null,
+    });
+    expect(saved.avatarPhotoID).toMatch(/^[a-f0-9-]{36}$/);
+    const image = (await fetch(saved.avatarPhotoID).expect(200)).body;
+    const bytes = Buffer.from(image.base64, 'base64');
+    const meta = await sharp(bytes).metadata();
+    expect(meta.width).toBe(512);
+    expect(meta.height).toBe(512);
+    expect(bytes.length).toBeLessThanOrEqual(262144);
+    expect(meta.exif).toBeUndefined();
+    const person = await request(app.getHttpServer())
+      .get('/api/v1/people/' + uid)
+      .auth('photo-reader', { type: 'bearer' })
+      .expect(200);
+    expect(person.body.person.avatarPhotoID).toBe(saved.avatarPhotoID);
+    await save({ ...input, displayName: 'Bad', photo: 'invalid!' }).expect(400);
+    const unchanged = await request(app.getHttpServer())
+      .get('/api/v1/me')
+      .auth(uid, { type: 'bearer' })
+      .expect(200);
+    expect(unchanged.body.profile.displayName).toBe('Updated Name');
+    await save({
+      ...input,
+      photo: undefined,
+      photoAction: 'keep',
+      bio: 'Second bio',
+    }).expect(200);
+    await fetch(saved.avatarPhotoID).expect(200);
+    await database.query(
+      'INSERT INTO user_blocks(blocker_uid,blocked_uid) VALUES($1,$2)',
+      [uid, 'photo-reader'],
+    );
+    await fetch(saved.avatarPhotoID).expect(404);
+    await fetch(saved.avatarPhotoID, uid).expect(200);
+    await database.query('DELETE FROM user_blocks WHERE blocker_uid=$1', [uid]);
+    const avatar = (
+      await save({
+        ...input,
+        photo: undefined,
+        photoAction: 'remove',
+        avatarID: 'robot',
+      }).expect(200)
+    ).body;
+    expect(avatar.avatarPhotoID).toBeNull();
+    expect(avatar.avatarID).toBe('robot');
+    await fetch(saved.avatarPhotoID).expect(404);
+    const replaced = (await save(input).expect(200)).body;
+    const legacy = await putProfile(uid).expect(200);
+    expect(legacy.body.avatarPhotoID).toBe(replaced.avatarPhotoID);
+    await request(app.getHttpServer())
+      .put('/api/v1/me/profile')
+      .auth(uid, { type: 'bearer' })
+      .send({
+        username: 'photo_owner',
+        displayName: 'Legacy',
+        bio: '',
+        avatarColor: '#F4A814',
+        avatarID: 'robot',
+      })
+      .expect(200);
+    await fetch(replaced.avatarPhotoID).expect(404);
+    const final = (await save(input).expect(200)).body;
+    await request(app.getHttpServer())
+      .delete('/api/v1/me')
+      .auth(uid, { type: 'bearer' })
+      .expect(200);
+    await fetch(final.avatarPhotoID).expect(404);
+    expect(
+      (
+        await database.query(
+          'SELECT 1 FROM profile_photos WHERE firebase_uid=$1',
+          [uid],
+        )
+      ).rowCount,
+    ).toBe(0);
+    await database.query('DELETE FROM profiles WHERE firebase_uid=$1', [
+      'photo-reader',
+    ]);
   });
 
   it('atomically reserves a username across simultaneous users', async () => {

@@ -73,23 +73,3 @@ struct MentionPicker: View {
         }
     }
 }
-struct ComposerPhoto: Identifiable, Sendable { let id: String; let data: Data; let preview: UIImage }
-/// Serial background processing keeps decoding/re-encoding off the UI actor.
-actor CommunityPhotoProcessor {
-    static let shared = CommunityPhotoProcessor()
-    func prepare(_ data: Data) throws -> ComposerPhoto {
-        try Task.checkCancellation()
-        let photo = try CommunityPhoto.prepare(data)
-        try Task.checkCancellation()
-        return photo
-    }
-}
-enum CommunityPhoto {
-    static func prepare(_ data: Data) throws -> ComposerPhoto {
-        guard data.count <= 30_000_000, let source = CGImageSourceCreateWithData(data as CFData, nil),
-              let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, [kCGImageSourceCreateThumbnailFromImageAlways: true, kCGImageSourceThumbnailMaxPixelSize: 1600, kCGImageSourceCreateThumbnailWithTransform: true] as CFDictionary) else { throw CommunityError.invalidImage }
-        let picture = UIImage(cgImage: thumbnail)
-        guard let jpeg = picture.jpegData(compressionQuality: 0.8), jpeg.count <= 2_000_000 else { throw CommunityError.invalidImage }
-        return ComposerPhoto(id: UUID().uuidString.lowercased(), data: jpeg, preview: picture)
-    }
-}

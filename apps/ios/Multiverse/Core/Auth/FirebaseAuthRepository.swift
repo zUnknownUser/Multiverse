@@ -212,7 +212,7 @@ final class FirebaseAuthRepository: AuthRepository {
     private func sessionWithProfile(_ session: AuthSession, profile: RemoteProfile, onboarding: OnboardingState?) -> AuthSession {
         AuthSession(userID: session.userID, email: session.email, handle: "@" + profile.username,
                     displayName: profile.displayName, avatarColor: profile.avatarColor, bio: profile.bio,
-                    onboarding: onboarding, avatarID: profile.avatarID)
+                    onboarding: onboarding, avatarID: profile.avatarID, avatarPhotoID: profile.avatarPhotoID)
     }
     private static func normalizedEmail(_ value: String) throws -> String {
         let email = value.trimmingCharacters(in: .whitespacesAndNewlines)

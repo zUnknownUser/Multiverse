@@ -53,7 +53,7 @@ export class CommunityService {
       await this.social.member(client, uid);
       const result = await client.query(
         `SELECT r.id,r.firebase_uid AS "user",r.universe_id AS "universeID",r.item_id AS "itemID",r.title,r.text,r.spoiler,r.created_at AS "createdAt",r.kind,r.segment,r.club_id AS "clubID",r.schedule_id AS "scheduleID",r.version,r.edited_at AS "editedAt",r.option_a AS "optionA",r.option_b AS "optionB",r.closes_at AS "closesAt",r.resolution,r.resolution_note AS "resolutionNote",${imageField},${voteField},${mentionsField()},
-   p.display_name AS name,p.username,p.avatar_color AS "avatarColor",p.avatar_id AS "avatarID",
+   p.display_name AS name,p.username,p.avatar_color AS "avatarColor",p.avatar_id AS "avatarID",p.avatar_photo_id AS "avatarPhotoID",
    (SELECT (d.translations->$13) || jsonb_build_object('day',d.day::text) FROM daily_duels d WHERE d.post_id=r.id) AS editorial,
    to_char(r.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "cursorTime",
    (SELECT count(*)::int FROM post_comments c JOIN profiles cp ON cp.firebase_uid=c.firebase_uid WHERE c.post_id=r.id AND ${postCommentVisible}) AS "commentCount"
@@ -136,6 +136,7 @@ export class CommunityService {
                 handle: '@' + r.username,
                 avatarColor: r.avatarColor,
                 avatarID: r.avatarID,
+                avatarPhotoID: r.avatarPhotoID,
                 bio: '',
                 followers: null,
                 badgeUniverse: '',

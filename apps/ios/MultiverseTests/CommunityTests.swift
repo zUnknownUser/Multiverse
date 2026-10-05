@@ -186,10 +186,10 @@ import Testing
         #expect(api.replyParents == [parent, parent] && thread.comments.count == 1)
     }
     @Test func photoPreparationRejectsNonImagesAndBoundsDecodedPixels() throws {
-        #expect(throws: (any Error).self) { try CommunityPhoto.prepare(Data("not a picture".utf8)) }
+        #expect(throws: (any Error).self) { try PhotoPreparation.prepare(Data("not a picture".utf8)) }
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: 2400, height: 1200))
         let source = renderer.image { context in UIColor.red.setFill(); context.fill(CGRect(x: 0, y: 0, width: 2400, height: 1200)) }
-        let photo = try CommunityPhoto.prepare(#require(source.pngData()))
+        let photo = try PhotoPreparation.prepare(#require(source.pngData()))
         #expect(photo.preview.size.width <= 1600 && photo.preview.size.height <= 1600)
         #expect(photo.data.count <= 2_000_000 && UUID(uuidString: photo.id) != nil)
     }

@@ -94,6 +94,8 @@ final class AppStore {
     let roomsAPI: (any RoomsAPI)?
     let voiceAPI: (any VoiceAPI)?
     let peopleAPI: (any PeopleAPI)?
+    let profileEditingAPI: (any ProfileEditingAPI)?
+    let avatarPhotos: AvatarPhotoImages?
     let notifications: NotificationStore?
     let social: SocialStore?
     let people: PeopleStore?
@@ -264,7 +266,8 @@ final class AppStore {
         dailyDuelsAPI: (any DailyDuelsAPI)? = nil,
         clubsAPI: (any ClubsAPI)? = nil,
         roomsAPI: (any RoomsAPI)? = nil,
-        voiceAPI: (any VoiceAPI)? = nil
+        voiceAPI: (any VoiceAPI)? = nil,
+        profileEditingAPI: (any ProfileEditingAPI)? = nil
     ) {
         self.readingOrderStore = readingOrdersAPI.map { ReadingOrdersStore(api: $0) }
         self.directMessages = directMessagesAPI.map { DirectMessagesStore(api: $0, ownerID: session?.userID ?? "duda") }
@@ -275,6 +278,8 @@ final class AppStore {
         self.roomsAPI = roomsAPI
         self.voiceAPI = voiceAPI
         self.peopleAPI = peopleAPI
+        self.profileEditingAPI = profileEditingAPI
+        self.avatarPhotos = profileEditingAPI.map { api in AvatarPhotoImages { try await api.profilePhoto($0) } }
         self.notifications = notificationsAPI.map { NotificationStore(api: $0) }
         self.social = socialAPI.map { SocialStore(api: $0) }
         self.people = peopleAPI.map { PeopleStore(api: $0, ownerID: session?.userID ?? "duda") }
@@ -475,7 +480,7 @@ final class AppStore {
     func item(_ id: String) -> Item? { itemsByID[id] ?? social?.items[id] }
     func user(_ id: String) -> User? {
         var result = people?.profiles[id]?.user ?? social?.users[id] ?? usersByID[id]
-        if id == meID, let own = usersByID[id] { result?.avatarID = own.avatarID }
+        if id == meID, let own = usersByID[id] { result = own }
         return result
     }
     func universe(_ id: String) -> Universe? { universesByID[id] ?? social?.universes[id] }
@@ -1381,7 +1386,7 @@ final class AppStore {
             : try await accountAPI.suggestions()
         try applyOnboardingSuggestions(suggestions)
         let me = User(id: profile.userID, name: profile.displayName, handle: "@" + profile.username,
-                      avatarColor: profile.avatarColor, bio: profile.bio, followers: nil, badgeUniverse: "", avatarID: profile.avatarID)
+                      avatarColor: profile.avatarColor, bio: profile.bio, followers: nil, badgeUniverse: "", avatarID: profile.avatarID, avatarPhotoID: profile.avatarPhotoID)
         usersByID[meID] = me
         users.removeAll { $0.id == meID }; users.append(me)
         let progress = account.onboarding
@@ -1407,7 +1412,7 @@ final class AppStore {
         try suggestions.validate(for: meID)
         onboardingCandidates = suggestions.users.map {
             User(id: $0.userID, name: $0.displayName, handle: "@" + $0.username,
-                 avatarColor: $0.avatarColor, bio: $0.bio, followers: nil, badgeUniverse: "", avatarID: $0.avatarID)
+                 avatarColor: $0.avatarColor, bio: $0.bio, followers: nil, badgeUniverse: "", avatarID: $0.avatarID, avatarPhotoID: $0.avatarPhotoID)
         }
         onboardingFollowingOptional = suggestions.followingOptional == true
         minimumOnboardingFollows = onboardingFollowingOptional ? 0 : suggestions.minimumFollows
@@ -1584,6 +1589,16 @@ final class AppStore {
 
     // MARK: - Perfil (edição vinda do fluxo de criação de conta)
 
+    func editProfile(_ input: ProfileEditInput) async throws {
+        guard let profileEditingAPI else { throw AuthError.apiUnavailable }
+        let profile = try await profileEditingAPI.editProfile(input)
+        guard profile.userID == meID, !profile.displayName.isEmpty else { throw AuthError.invalidProfile }
+        let current = user(meID)
+        let updated = User(id: meID, name: profile.displayName, handle: "@" + profile.username, avatarColor: profile.avatarColor, bio: profile.bio, followers: current?.followers, badgeUniverse: current?.badgeUniverse ?? "", avatarID: profile.avatarID, avatarPhotoID: profile.avatarPhotoID)
+        usersByID[meID] = updated
+        users.removeAll { $0.id == meID }; users.append(updated)
+    }
+
     /// Publish the avatar only after the authenticated server confirms it.
     func saveAvatar(_ avatarID: String?) async throws {
         guard let accountAPI, let current = user(meID) else { throw AuthError.invalidProfile }
@@ -1592,6 +1607,7 @@ final class AppStore {
         guard profile.userID == meID, profile.avatarID == avatarID else { throw AuthError.invalidProfile }
         var updated = current
         updated.avatarID = profile.avatarID
+        updated.avatarPhotoID = profile.avatarPhotoID
         usersByID[meID] = updated
         users.removeAll { $0.id == meID }; users.append(updated)
     }
@@ -1599,7 +1615,7 @@ final class AppStore {
     func applyProfileEdits(name: String, handle: String, avatarColor: String, bio: String) {
         guard let idx = users.firstIndex(where: { $0.id == meID }) else { return }
         let current = users[idx]
-        let updated = User(id: current.id, name: name, handle: handle, avatarColor: avatarColor, bio: bio, followers: current.followers, badgeUniverse: current.badgeUniverse, avatarID: current.avatarID)
+        let updated = User(id: current.id, name: name, handle: handle, avatarColor: avatarColor, bio: bio, followers: current.followers, badgeUniverse: current.badgeUniverse, avatarID: current.avatarID, avatarPhotoID: current.avatarPhotoID)
         users[idx] = updated
         usersByID[meID] = updated
     }

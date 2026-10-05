@@ -1,3 +1,13 @@
+## 2026-10-05 — Perfil: edição, foto pessoal e títulos reais
+
+- Toque no avatar do próprio perfil abre edição completa de nome (80), bio (160), iniciais/cor, três avatares originais e foto pessoal. @usuário permanece identificado e não é alterado por essa operação. Mesmos tokens e layout da página de perfil; editor rolável em PT-BR/EN, claro/Noir.
+- `PUT /me/profile/details` salva dados e imagem atomicamente. Migração 026: foto JPEG 512×512, até 256 KB, uma imagem por perfil, substituição/remocão/exclusão eliminam a anterior. Sharp valida formato, limita pixels e remove metadados. IDs de foto expostos nas representações públicas, bytes apenas pelo endpoint autenticado `GET /people/photos/:id`, respeitando bloqueios, onboarding e exclusão.
+- Fotos têm cache limitado em memória por sessão e deduplicação de downloads concorrentes. Nenhum SDK/serviço externo novo. Preparo de imagens compartilhado por posts e perfil, fora da thread de UI (`Core/Media/PhotoProcessor.swift`).
+- Dados locais só mudam após confirmação; erro conserva o formulário e o perfil anterior. O endpoint legado preserva foto quando avatarID é omitido e remove a foto quando uma escolha de avatar/iniciais é explicitada.
+- Título no perfil próprio e público: Estreante/Defensor/Veterano/Lenda segundo participação válida nos duelos. Não há contagem inventada nem alteração nas recompensas. Títulos em comentários, molduras e edição de @usuário não foram acrescentados.
+- Validação backend: format/lint/typecheck/build + 98 unitários e 140 HTTP/PostgreSQL (foto, exclusão, bloqueio, formato, edição atômica, títulos reais). iOS: 245 testes em 31 suites, incluindo regressões de cache por conta, carregamento da foto ao montar a view e edição com falha/reabertura. Render nativo de 320 pt conferido em PT/claro e EN/Noir; picker em iPhone físico fica para validação do usuário.
+- Alterações locais antigas de Info.plist, metadados do catálogo e whitespace de MockRepository continuam preservadas.
+
 ## 2026-10-03 — SOLID aplicado às responsabilidades e dependências
 
 - Transporte autenticado separado do adaptador de endpoints e da política de erros, com contratos injetáveis. Token refresh único, identidade da conta e cancelamento preservados.

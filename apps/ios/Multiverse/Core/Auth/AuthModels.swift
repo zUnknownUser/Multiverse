@@ -10,6 +10,7 @@ struct AuthSession: Sendable, Equatable, Codable {
     var needsProfile = false
     var onboarding: OnboardingState? = nil
     var avatarID: String? = nil
+    var avatarPhotoID: String? = nil
 }
 
 enum AuthError: LocalizedError, Equatable {

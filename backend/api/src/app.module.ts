@@ -20,6 +20,8 @@ import { NotificationsService } from './notifications/notifications.service.js';
 import { NotificationsController } from './notifications/notifications.controller.js';
 import { CommunityService } from './community/community.service.js';
 import { CommunityController } from './community/community.controller.js';
+import { ProfileEditorController } from './accounts/profile-editor.controller.js';
+import { ProfileEditorService } from './accounts/profile-editor.service.js';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { FirebaseAuthGuard } from './auth/firebase-auth.guard.js';
@@ -48,6 +50,7 @@ import { InteractionsController } from './social/interactions.controller.js';
 
 @Module({
   controllers: [
+    ProfileEditorController,
     DailyDuelsController,
     ReadingOrdersController,
     MessagesController,
@@ -66,6 +69,7 @@ import { InteractionsController } from './social/interactions.controller.js';
     MarvelController,
   ],
   providers: [
+    ProfileEditorService,
     DailyDuelsService,
     ReadingOrdersService,
     MessagesService,

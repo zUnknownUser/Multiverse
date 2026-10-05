@@ -11,7 +11,9 @@ import { recordNotification } from '../notifications/notification-events.js';
 import { unblocked } from '../social/social-policy.js';
 
 const eligible = `profiles p JOIN onboarding o ON o.firebase_uid=p.firebase_uid AND o.completed=true`;
-const fields = `p.firebase_uid AS "userID",p.username,p.display_name AS "displayName",p.avatar_color AS "avatarColor",p.avatar_id AS "avatarID",p.bio,
+const fields = `p.firebase_uid AS "userID",p.username,p.display_name AS "displayName",p.avatar_color AS "avatarColor",p.avatar_id AS "avatarID",p.avatar_photo_id AS "avatarPhotoID",p.bio,
+  (SELECT count(*)::int FROM daily_duels dd JOIN community_votes dv ON dv.post_id=dd.post_id JOIN community_posts dp ON dp.id=dd.post_id
+   WHERE dv.firebase_uid=p.firebase_uid AND dp.deleted_at IS NULL AND dp.moderation_status='visible' AND dv.created_at>=dd.opens_at AND dv.created_at<dp.closes_at) AS "duelRounds",
   (SELECT count(*)::int FROM diary_entries d WHERE d.firebase_uid=p.firebase_uid) AS "logCount",
   (SELECT count(*)::int FROM visible_follows f JOIN profiles a ON a.firebase_uid=f.follower_uid
    WHERE f.followed_uid=p.firebase_uid AND a.deletion_requested_at IS NULL) AS "followerCount",

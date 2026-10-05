@@ -116,7 +116,7 @@ export class SocialService {
       const authors = [...new Set(rows.map((r) => r.user))];
       const users = await client.query(
         `SELECT firebase_uid AS id,display_name AS name,'@'||username AS handle,
-    avatar_color AS "avatarColor",avatar_id AS "avatarID",bio,NULL AS followers,'' AS "badgeUniverse" FROM profiles WHERE firebase_uid=ANY($1::text[])`,
+    avatar_color AS "avatarColor",avatar_id AS "avatarID",avatar_photo_id AS "avatarPhotoID",bio,NULL AS followers,'' AS "badgeUniverse" FROM profiles WHERE firebase_uid=ANY($1::text[])`,
         [authors],
       );
       const items = await client.query(
