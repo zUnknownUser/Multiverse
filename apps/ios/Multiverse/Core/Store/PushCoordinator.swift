@@ -69,12 +69,14 @@ import FirebaseMessaging
             } catch { if epoch == generation { self.error = error.localizedDescription } }
         }
     }
-    func disconnect() async {
+    func disconnect(cleanupAPI: (any NotificationsAPI)? = nil) async {
         guard Self.isConfigured else { return }
         generation += 1
         await registrationTask?.value
         registrationTask = nil
-        if let api, let registration { _ = try? await api.removePushDevice(id: registration) }
+        // Authentication invalidates feature clients before cleanup. A fresh, UID-bound
+        // client may remove this device while the SDK identity is still available.
+        if let api = cleanupAPI ?? api, let registration { _ = try? await api.removePushDevice(id: registration) }
         // If offline, retain owner/id so a later account cannot silently claim the old token.
         do {
             try await Messaging.messaging().deleteToken()

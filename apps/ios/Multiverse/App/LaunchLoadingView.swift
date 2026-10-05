@@ -63,3 +63,27 @@ struct DataLoadStatusView: View {
         }
     }
 }
+
+/// Pending is a server-accepted request, not confirmation that deletion finished.
+struct AccountDeletionPendingView: View {
+    let returnToLogin: () -> Void
+    var body: some View {
+        ZStack {
+            MV.C.paper.ignoresSafeArea()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("MULTIVERSE").font(MVFont.display(30, width: 125)).tracking(-0.4)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(L10n.text("Exclusão em andamento")).font(MVFont.display(26, width: 115))
+                        Text(L10n.text("Sua solicitação foi recebida. Estamos processando a exclusão da conta. Você pode fechar o app enquanto isso."))
+                            .font(MVFont.body(14)).foregroundStyle(MV.C.muted)
+                    }
+                    PrimaryAuthButton(title: L10n.text("VOLTAR AO LOGIN"), action: returnToLogin)
+                }
+                .foregroundStyle(MV.C.ink)
+                .padding(.horizontal, MV.pad)
+                .padding(.vertical, 48)
+            }
+        }
+    }
+}

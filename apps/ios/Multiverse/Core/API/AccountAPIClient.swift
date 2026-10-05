@@ -4,8 +4,8 @@ import Foundation
 final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, CommunityAPI, NotificationsAPI, LibraryAPI {
     private let http: any AuthenticatedRequesting
 
-    init(baseURL: URL? = AccountAPIClient.configuredURL(), tokens: any APITokenProvider = FirebaseAPITokenProvider(), transport: URLSession = .shared, expectedUserID: String? = nil) {
-        self.http = AuthenticatedHTTPClient(baseURL: baseURL, tokens: tokens, transport: transport, expectedUserID: expectedUserID)
+    init(baseURL: URL? = AccountAPIClient.configuredURL(), tokens: any APITokenProvider = FirebaseAPITokenProvider(), transport: URLSession = .shared, expectedUserID: String? = nil, lifecycle: SessionLifecycle? = nil) {
+        self.http = AuthenticatedHTTPClient(baseURL: baseURL, tokens: tokens, transport: transport, expectedUserID: expectedUserID, lifecycle: lifecycle)
     }
     init(http: any AuthenticatedRequesting) { self.http = http }
     static func configuredURL() -> URL? {

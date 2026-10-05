@@ -20594,6 +20594,57 @@
           }
         }
       }
+    },
+    "Exclusão em andamento": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclusão em andamento"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account deletion in progress"
+          }
+        }
+      }
+    },
+    "Sua solicitação foi recebida. Estamos processando a exclusão da conta. Você pode fechar o app enquanto isso.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sua solicitação foi recebida. Estamos processando a exclusão da conta. Você pode fechar o app enquanto isso."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your request has been received. We are processing your account deletion. You can close the app in the meantime."
+          }
+        }
+      }
+    },
+    "VOLTAR AO LOGIN": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VOLTAR AO LOGIN"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BACK TO SIGN IN"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

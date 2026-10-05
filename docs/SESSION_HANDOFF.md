@@ -1,3 +1,13 @@
+## 2026-10-05 — Ciclo de sessão: respostas antigas e estados globais
+
+- Correções dos itens 1 e 2 da auditoria de lifecycle: geração de sessão compartilhada entre AuthStore e transporte; resultados de bootstrap/login/cadastro/recuperação antigos não restauram identidade, navegação nem erros após logout. Clientes de funcionalidades ficam vinculados à geração, inclusive ao entrar novamente no mesmo UID.
+- Logout invalida a geração antes de suspender. Operações capazes de autenticar no Firebase são drenadas antes do signOut do SDK; recuperação de senha sem login não atrasa a saída. Bootstrap de autenticação é single-flight.
+- 401 definitivo após um refresh, token revogado/usuário desativado e perda/troca inesperada da identidade Firebase encerram a sessão globalmente. Rede, limite, conflito, e-mail não verificado e indisponibilidade do provedor não são tratados como logout.
+- ACCOUNT_DELETING/DELETION_PENDING e exclusão sem confirmação positiva exibem estado explícito de processamento, persistido entre aberturas. Voltar ao login apenas reconhece a mensagem; não cancela a solicitação no servidor nem afirma conclusão. Falha de exclusão por login recente mantém a conta.
+- Root descarta stores vinculadas à sessão encerrada, evita alertas/reconexões de respostas antigas e usa os componentes visuais existentes. Limpeza de push recebe um cliente específico vinculado ao UID, pois os clientes das funcionalidades já foram invalidados.
+- Validação: 262 testes iOS em 32 suítes aprovados (17 regressões novas); após revisão final, 67 testes focados de autenticação/HTTP aprovados. Render temporário nativo da tela de exclusão em 320 pt, claro/Noir, conferido e removido. Textos PT-BR/EN. Sem alterações de backend ou instalação no iPhone físico.
+- Criadas `marketing/imagens` e `marketing/videos`. Arte fornecida pelo usuário movida de `apps/ios/Multiverse_ histórias que se encontram.png` para `marketing/imagens/multiverse-historias-que-se-encontram.png`, sem alteração do conteúdo. Ajustes locais anteriores de MockRepository/Info.plist/metadados do catálogo e JPEG não rastreado preservados.
+
 ## 2026-10-05 — Duelo do Dia: fila editorial renovável
 
 - Migração 027 substitui o rodízio fixo de 14 perguntas por candidatos no PostgreSQL, com 40 discussões inéditas iniciais (20 Marvel/20 DC), PT-BR/EN e cinco categorias. Perguntas consumidas uma vez; histórico existente entra na detecção de duplicatas. Esgotamento não repete conteúdo: apresenta preparação e acesso à comunidade.

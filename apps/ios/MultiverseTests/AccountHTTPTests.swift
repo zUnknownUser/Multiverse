@@ -6,6 +6,17 @@ private final class HTTPResponses: @unchecked Sendable {
     let lock = NSLock()
     private var responses: [(Int, String)] = []
     private var captured: [URLRequest] = []
+    private var paused = false
+    private var deliveries: [@Sendable () -> Void] = []
+    func pause() { lock.withLock { paused = true } }
+    func deliver(_ body: @escaping @Sendable () -> Void) {
+        let queued = lock.withLock { if paused { deliveries.append(body); return true }; return false }
+        if !queued { body() }
+    }
+    func resume() {
+        let work = lock.withLock { paused = false; let work = deliveries; deliveries = []; return work }
+        work.forEach { $0() }
+    }
     func reset(_ values: [(Int, String)]) { lock.withLock { responses = values; captured = [] } }
     func next(_ request: URLRequest) -> (Int, String) {
         lock.withLock {
@@ -34,6 +45,7 @@ private final class AccountURLProtocol: URLProtocol, @unchecked Sendable {
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
         let (status, json) = Self.fixture.next(request)
+        Self.fixture.deliver { [self] in
         if status < 0 {
             client?.urlProtocol(self, didFailWithError: URLError(URLError.Code(rawValue: status)))
             return
@@ -42,6 +54,7 @@ private final class AccountURLProtocol: URLProtocol, @unchecked Sendable {
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: Data(json.utf8))
         client?.urlProtocolDidFinishLoading(self)
+        }
     }
     override func stopLoading() {}
 }
@@ -51,8 +64,12 @@ private final class TokenStub: APITokenProvider {
     var userID: String? = "owner"
     var refreshes: [Bool] = []
     var switchAccount = false
+    var failure: AuthError?
+    var onToken: (() -> Void)?
     func token(forceRefresh: Bool) async throws -> String {
         refreshes.append(forceRefresh)
+        onToken?()
+        if let failure { throw failure }
         if switchAccount { userID = "other-account" }
         return forceRefresh ? "refreshed-token" : "original-token"
     }
@@ -235,11 +252,11 @@ struct AccountHTTPTests {
         let body = try #require(JSONSerialization.jsonObject(with: requestData) as? [String: Any])
         #expect(body.isEmpty)
     }
-    private func client(_ token: TokenStub) -> (AccountAPIClient, URLSession) {
+    private func client(_ token: TokenStub, lifecycle: SessionLifecycle? = nil, expectedUserID: String? = nil) -> (AccountAPIClient, URLSession) {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [AccountURLProtocol.self]
         let session = URLSession(configuration: config)
-        return (AccountAPIClient(baseURL: URL(string: "https://api.example.test/api/v1")!, tokens: token, transport: session), session)
+        return (AccountAPIClient(baseURL: URL(string: "https://api.example.test/api/v1")!, tokens: token, transport: session, expectedUserID: expectedUserID, lifecycle: lifecycle), session)
     }
 
     @Test func diaryRequestUsesStableIDAndDecodesPostgresTimestamp() async throws {
@@ -348,4 +365,94 @@ struct AccountHTTPTests {
         AccountURLProtocol.fixture.reset([(-999, "{}")])
         await #expect(throws: CancellationError.self) { try await api.fetchActivity() }
     }
+    @Test func terminalResponsesReachSessionOwnerButRecoverableErrorsDoNot() async {
+        let lifecycle = SessionLifecycle()
+        var failures: [AuthError] = []
+        lifecycle.onFailure = { failures.append($0) }
+        let (api, transport) = client(TokenStub(), lifecycle: lifecycle, expectedUserID: "owner")
+        defer { transport.invalidateAndCancel() }
+        for (responses, expected) in [
+            ([(401, "{}"), (401, "{}")], AuthError.sessionExpired),
+            ([(403, "{\"code\":\"ACCOUNT_DELETING\"}")], .deletionPending),
+            ([(503, "{\"code\":\"DELETION_PENDING\"}")], .deletionPending)
+        ] {
+            failures = []; AccountURLProtocol.fixture.reset(responses)
+            await #expect(throws: expected) { try await api.fetchAccount() }
+            #expect(failures == [expected])
+        }
+        for (status, json) in [(503, "{\"code\":\"AUTH_UNAVAILABLE\"}"), (403, "{\"code\":\"EMAIL_NOT_VERIFIED\"}"), (429, "{}"), (-1009, "{}"), (-999, "{}"), (409, "{}") ] {
+            failures = []; AccountURLProtocol.fixture.reset([(status, json)])
+            _ = try? await api.fetchAccount()
+            #expect(failures.isEmpty)
+        }
+        failures = []; AccountURLProtocol.fixture.reset([(401, "{}"), (200, "{}")])
+        _ = try? await api.fetchAccount()
+        #expect(failures.isEmpty && AccountURLProtocol.fixture.requests.count == 2)
+    }
+
+    @Test func tokenRevocationReachesSessionOwnerWithoutSendingRequest() async {
+        let lifecycle = SessionLifecycle(), token = TokenStub()
+        token.failure = .sessionExpired
+        var failure: AuthError?
+        lifecycle.onFailure = { failure = $0 }
+        AccountURLProtocol.fixture.reset([])
+        let (api, transport) = client(token, lifecycle: lifecycle, expectedUserID: "owner")
+        defer { transport.invalidateAndCancel() }
+        await #expect(throws: AuthError.sessionExpired) { try await api.fetchAccount() }
+        #expect(failure == .sessionExpired && AccountURLProtocol.fixture.requests.isEmpty)
+    }
+
+    @Test func sameUserOldClientCannotWriteAfterSessionGenerationChanges() async {
+        let lifecycle = SessionLifecycle()
+        var failure: AuthError?
+        lifecycle.onFailure = { failure = $0 }
+        let (api, transport) = client(TokenStub(), lifecycle: lifecycle, expectedUserID: "owner")
+        defer { transport.invalidateAndCancel() }
+        lifecycle.invalidate()
+        AccountURLProtocol.fixture.reset([])
+        await #expect(throws: CancellationError.self) { try await api.saveOnboarding(OnboardingState()) }
+        #expect(failure == nil && AccountURLProtocol.fixture.requests.isEmpty)
+    }
+
+    @Test func generationChangeDuringTokenLoadDiscardsTerminalError() async {
+        let lifecycle = SessionLifecycle(), token = TokenStub()
+        var failure: AuthError?
+        lifecycle.onFailure = { failure = $0 }
+        token.onToken = { lifecycle.invalidate() }; token.failure = .sessionExpired
+        let (api, transport) = client(token, lifecycle: lifecycle, expectedUserID: "owner")
+        defer { transport.invalidateAndCancel() }
+        AccountURLProtocol.fixture.reset([])
+        await #expect(throws: CancellationError.self) { try await api.fetchAccount() }
+        #expect(failure == nil && AccountURLProtocol.fixture.requests.isEmpty)
+    }
+
+    @Test func delayedHTTPFailureFromOldSessionCannotLogoutNewSession() async {
+        let lifecycle = SessionLifecycle()
+        var failures: [AuthError] = []
+        lifecycle.onFailure = { failures.append($0) }
+        let (api, transport) = client(TokenStub(), lifecycle: lifecycle, expectedUserID: "owner")
+        defer { transport.invalidateAndCancel(); AccountURLProtocol.fixture.resume() }
+        AccountURLProtocol.fixture.reset([(403, "{\"code\":\"ACCOUNT_DELETING\"}")])
+        AccountURLProtocol.fixture.pause()
+        let request = Task {
+            await #expect(throws: CancellationError.self) { try await api.fetchAccount() }
+        }
+        while AccountURLProtocol.fixture.requests.isEmpty { await Task.yield() }
+        lifecycle.invalidate()
+        AccountURLProtocol.fixture.resume()
+        await request.value
+        #expect(failures.isEmpty && AccountURLProtocol.fixture.requests.count == 1)
+    }
+
+    @Test func authenticationClientUsesFreshGenerationOnEachRequest() async throws {
+        let lifecycle = SessionLifecycle()
+        let (api, transport) = client(TokenStub(), lifecycle: lifecycle)
+        defer { transport.invalidateAndCancel() }
+        AccountURLProtocol.fixture.reset([(200, "{\"available\":true}"), (200, "{\"available\":true}")])
+        #expect(try await api.usernameAvailable("first"))
+        lifecycle.invalidate()
+        #expect(try await api.usernameAvailable("second"))
+        #expect(AccountURLProtocol.fixture.requests.count == 2)
+    }
+
 }

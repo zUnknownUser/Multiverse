@@ -15,6 +15,24 @@ enum AuthRoute: Hashable {
 final class AuthStore {
     private let repository: AuthRepository
     private let resendCooldowns: EmailResendCooldown
+    let lifecycle: SessionLifecycle
+    private let defaults: UserDefaults
+    private let identityObserver: (any AuthIdentityObserving)?
+    private static let deletionKey = "mv-account-deletion-pending"
+    private(set) var isEndingSession = false
+    private(set) var deletionPending = false
+    @ObservationIgnored private var bootstrapID: UUID?
+    @ObservationIgnored private var operationCount = 0
+    @ObservationIgnored private var operationWaiters: [CheckedContinuation<Void, Never>] = []
+    @ObservationIgnored private var cleanupTask: Task<Void, Never>?
+    private var sessionLifecycleID: UUID { lifecycle.generation }
+
+    struct Binding: Equatable {
+        let session: AuthSession?
+        let generation: UUID
+        let ending: Bool
+    }
+    var binding: Binding { Binding(session: session, generation: sessionLifecycleID, ending: isEndingSession) }
 
     var session: AuthSession? {
         didSet {
@@ -28,13 +46,12 @@ final class AuthStore {
     var bootstrapFailed = false
     var isBootstrapping = true
     private var pendingEmailLink: URL?
-    @ObservationIgnored private var sessionLifecycleID = UUID()
 
     /// Pilha de navegação do fluxo (a raiz, Boas-vindas, não entra aqui — ver `AuthFlowView`).
     var path: [AuthRoute] = []
     var isLoading = false {
         didSet {
-            guard !isLoading, pendingEmailLink != nil else { return }
+            guard !isEndingSession, !deletionPending, !isLoading, pendingEmailLink != nil else { return }
             Task { [weak self] in await self?.processPendingEmailLink() }
         }
     }
@@ -63,23 +80,81 @@ final class AuthStore {
     var newPassword = ""
     var newPasswordConfirm = ""
 
-    init(repository: AuthRepository = FirebaseAuthRepository(), resendCooldowns: EmailResendCooldown = EmailResendCooldown()) {
-        self.repository = repository
+    init(repository: AuthRepository? = nil, resendCooldowns: EmailResendCooldown = EmailResendCooldown(),
+         lifecycle: SessionLifecycle = SessionLifecycle(), defaults: UserDefaults = .standard,
+         identityObserver: (any AuthIdentityObserving)? = nil) {
+        self.lifecycle = lifecycle
+        self.defaults = defaults
+        self.repository = repository ?? FirebaseAuthRepository(accountAPI: AccountAPIClient(lifecycle: lifecycle))
         self.resendCooldowns = resendCooldowns
+        self.identityObserver = identityObserver ?? (repository == nil ? FirebaseIdentityObserver() : nil)
+        deletionPending = defaults.bool(forKey: Self.deletionKey)
+        lifecycle.onFailure = { [weak self] error in self?.endInvalidSession(error) }
+        self.identityObserver?.start { [weak self] uid in
+            guard let self, let session = self.session, !self.isEndingSession,
+                  self.operationCount == 0, session.userID != uid else { return }
+            self.endInvalidSession(.sessionExpired)
+        }
     }
 
     func bootstrap() async {
+        guard bootstrapID == nil, !isLoading, !isEndingSession else { return }
+        if deletionPending {
+            endInvalidSession(.deletionPending)
+            await cleanupTask?.value
+            return
+        }
+        let requestID = sessionLifecycleID
+        bootstrapID = requestID
         isBootstrapping = true
         bootstrapFailed = false
         errorMessage = nil
-        do { session = try await repository.currentSession() }
-        catch { bootstrapFailed = true; errorMessage = error.localizedDescription }
-        if session == nil, let pending = await repository.pendingSignUpEmail() {
-            draft.email = pending
-            path = [.createAccount, .verifyCode]
+        defer {
+            if bootstrapID == requestID { bootstrapID = nil }
+            if requestID == sessionLifecycleID { isBootstrapping = false }
         }
+        do {
+            let restored = try await repository.currentSession()
+            guard isCurrent(requestID) else { return }
+            session = restored
+            if restored == nil {
+                let pending = await repository.pendingSignUpEmail()
+                guard isCurrent(requestID) else { return }
+                if let pending { draft.email = pending; path = [.createAccount, .verifyCode] }
+            }
+        } catch {
+            guard accept(error, requestID: requestID) else { return }
+            bootstrapFailed = true
+            errorMessage = error.localizedDescription
+        }
+        guard isCurrent(requestID) else { return }
         isBootstrapping = false
         await processPendingEmailLink()
+    }
+
+    private func isCurrent(_ requestID: UUID) -> Bool {
+        requestID == sessionLifecycleID && !Task.isCancelled && !isEndingSession
+    }
+    private func accept(_ error: any Error, requestID: UUID) -> Bool {
+        guard isCurrent(requestID), !(error is CancellationError), error as? AuthError != .cancelled else { return false }
+        if let failure = error as? AuthError, [.sessionExpired, .accountDisabled, .deletionPending].contains(failure) {
+            endInvalidSession(failure)
+            return false
+        }
+        return true
+    }
+    private func beginOperation() { operationCount += 1 }
+    private func finishOperation(_ requestID: UUID) {
+        operationCount -= 1
+        if operationCount == 0 {
+            let waiters = operationWaiters; operationWaiters = []
+            waiters.forEach { $0.resume() }
+        }
+        if requestID == sessionLifecycleID { isLoading = false }
+    }
+    private func drainOperations() async {
+        guard operationCount > 0 else { return }
+        await withCheckedContinuation { operationWaiters.append($0) }
     }
 
     func push(_ route: AuthRoute) {
@@ -97,14 +172,20 @@ final class AuthStore {
     // MARK: - Entrar
 
     func signIn() async {
-        guard !isLoading else { return }
+        guard bootstrapID == nil, !isEndingSession, !deletionPending, !isLoading else { return }
         errorMessage = nil
         fieldError = nil
+        let requestID = sessionLifecycleID
         isLoading = true
-        defer { isLoading = false }
+        beginOperation()
+        defer { finishOperation(requestID) }
         do {
-            session = try await repository.signIn(identifier: signInIdentifier, password: signInPassword)
+            let restored = try await repository.signIn(identifier: signInIdentifier, password: signInPassword)
+            guard isCurrent(requestID) else { return }
+            session = restored
+            signInPassword = ""
         } catch {
+            guard accept(error, requestID: requestID) else { return }
             errorMessage = error.localizedDescription
             if error as? AuthError == .emailNotVerified || error as? AuthError == .profileIncomplete {
                 draft.email = signInIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -114,8 +195,9 @@ final class AuthStore {
                     let email = draft.email
                     do {
                         try await repository.resendVerificationCode()
+                        guard isCurrent(requestID) else { return }
                         resendCooldowns.recordSend(for: .verification, email: email)
-                    } catch { errorMessage = error.localizedDescription }
+                    } catch { if accept(error, requestID: requestID) { errorMessage = error.localizedDescription } }
                 }
             } else if error as? AuthError == .emailCredentialsInvalid {
                 fieldError = error.localizedDescription
@@ -127,15 +209,21 @@ final class AuthStore {
     func continueWithGoogle() async { await socialSignIn(repository.signInWithGoogle) }
 
     private func socialSignIn(_ perform: () async throws -> AuthSession) async {
-        guard !isLoading else { return }
+        guard bootstrapID == nil, !isEndingSession, !deletionPending, !isLoading else { return }
         errorMessage = nil
+        let requestID = sessionLifecycleID
         isLoading = true
-        defer { isLoading = false }
+        beginOperation()
+        defer { finishOperation(requestID) }
         do {
-            session = try await perform()
+            let restored = try await perform()
+            guard isCurrent(requestID) else { return }
+            session = restored
+            signInPassword = ""
         } catch AuthError.cancelled {
             // Closing the Google sheet is not a failed login.
         } catch {
+            guard accept(error, requestID: requestID) else { return }
             errorMessage = error.localizedDescription
         }
     }
@@ -143,27 +231,34 @@ final class AuthStore {
     // MARK: - Criar conta
 
     func submitSignUpEmail() async {
-        guard !isLoading else { return }
+        guard bootstrapID == nil, !isEndingSession, !deletionPending, !isLoading else { return }
         errorMessage = nil
         guard PasswordRequirements(draft.password).allMet else {
             errorMessage = L10n.text("Sua senha ainda não atende aos requisitos.")
             return
         }
+        let requestID = sessionLifecycleID
         isLoading = true
-        defer { isLoading = false }
+        beginOperation()
+        defer { finishOperation(requestID) }
         do {
             let email = draft.email.trimmingCharacters(in: .whitespacesAndNewlines)
             let password = draft.password
             let pending = await repository.pendingSignUpEmail()
+            guard isCurrent(requestID) else { return }
             if resendCooldowns.remaining(for: .verification, email: email) == 0 || pending?.lowercased() != email.lowercased() {
                 try await repository.startSignUp(email: email, password: password)
+                guard isCurrent(requestID) else { return }
                 resendCooldowns.recordSend(for: .verification, email: email)
             }
             draft.email = email
             draft.password = ""
             push(.verifyCode)
         } catch {
-            if let pending = await repository.pendingSignUpEmail() {
+            guard accept(error, requestID: requestID) else { return }
+            let pending = await repository.pendingSignUpEmail()
+            guard isCurrent(requestID) else { return }
+            if let pending {
                 draft.email = pending
                 draft.password = ""
                 path = [.createAccount, .verifyCode]
@@ -173,26 +268,32 @@ final class AuthStore {
     }
 
     func resendCode() async {
-        guard verificationResendCooldown == 0, !isLoading else { return }
+        guard !isEndingSession, !deletionPending, verificationResendCooldown == 0, !isLoading else { return }
         let email = draft.email
+        let requestID = sessionLifecycleID
         isLoading = true
         errorMessage = nil
-        defer { isLoading = false }
+        defer { if requestID == sessionLifecycleID { isLoading = false } }
         do {
             try await repository.resendVerificationCode()
+            guard isCurrent(requestID) else { return }
             resendCooldowns.recordSend(for: .verification, email: email)
-        } catch { errorMessage = error.localizedDescription }
+        } catch { if accept(error, requestID: requestID) { errorMessage = error.localizedDescription } }
     }
 
     func submitCode() async {
-        guard !isLoading, verificationCode.count == 6 else { return }
+        guard bootstrapID == nil, !isEndingSession, !deletionPending, !isLoading, verificationCode.count == 6 else { return }
         errorMessage = nil
+        let requestID = sessionLifecycleID
         isLoading = true
-        defer { isLoading = false }
+        beginOperation()
+        defer { finishOperation(requestID) }
         do {
             try await repository.verifyCode(verificationCode)
+            guard isCurrent(requestID) else { return }
             push(.chooseUsername)
         } catch {
+            guard accept(error, requestID: requestID) else { return }
             errorMessage = error.localizedDescription
             verificationCode = ""
         }
@@ -204,29 +305,37 @@ final class AuthStore {
     }
 
     func checkUsername() async {
-        guard !Task.isCancelled else { return }
+        guard !isEndingSession, !deletionPending, !Task.isCancelled else { return }
         invalidateUsernameCheck()
+        let generation = sessionLifecycleID
         let requestID = usernameRequestID
         let username = draft.username
         guard !username.isEmpty else { return }
         do {
             let available = try await repository.checkUsernameAvailable(username)
-            guard !Task.isCancelled, requestID == usernameRequestID, draft.username == username else { return }
+            guard isCurrent(generation), requestID == usernameRequestID, draft.username == username else { return }
             usernameAvailable = available
         } catch {
-            guard !Task.isCancelled, requestID == usernameRequestID, draft.username == username else { return }
+            guard accept(error, requestID: generation) else { return }
+            guard isCurrent(generation), requestID == usernameRequestID, draft.username == username else { return }
             errorMessage = error.localizedDescription
         }
     }
 
     func finishSignUp() async {
-        guard !isLoading else { return }
+        guard bootstrapID == nil, !isEndingSession, !deletionPending, !isLoading else { return }
         errorMessage = nil
+        let requestID = sessionLifecycleID
         isLoading = true
-        defer { isLoading = false }
+        beginOperation()
+        defer { finishOperation(requestID) }
         do {
-            session = try await repository.completeSignUp(name: draft.name, username: draft.username, avatarColor: draft.avatarColor, bio: draft.bio, avatarID: draft.avatarID)
+            let restored = try await repository.completeSignUp(name: draft.name, username: draft.username, avatarColor: draft.avatarColor, bio: draft.bio, avatarID: draft.avatarID)
+            guard isCurrent(requestID) else { return }
+            session = restored
+            signInPassword = ""
         } catch {
+            guard accept(error, requestID: requestID) else { return }
             if error as? AuthError == .usernameTaken {
                 usernameAvailable = false
                 path = [.chooseUsername]
@@ -238,7 +347,7 @@ final class AuthStore {
     // MARK: - Esqueci a senha
 
     func requestPasswordReset() async {
-        guard !isLoading else { return }
+        guard bootstrapID == nil, !isEndingSession, !deletionPending, !isLoading else { return }
         if passwordResetResendCooldown > 0 {
             if path.last != .linkSent { push(.linkSent) }
             return
@@ -247,15 +356,15 @@ final class AuthStore {
         let requestID = sessionLifecycleID
         errorMessage = nil
         isLoading = true
-        defer { isLoading = false }
+        defer { if requestID == sessionLifecycleID { isLoading = false } }
         do {
             try await repository.requestPasswordReset(email: email)
-            guard requestID == sessionLifecycleID else { return }
+            guard isCurrent(requestID) else { return }
             resetEmail = email
             resendCooldowns.recordSend(for: .passwordReset, email: email)
             if path.last != .linkSent { push(.linkSent) }
         } catch {
-            guard requestID == sessionLifecycleID else { return }
+            guard accept(error, requestID: requestID) else { return }
             errorMessage = error.localizedDescription
         }
     }
@@ -267,7 +376,7 @@ final class AuthStore {
     }
 
     private func processPendingEmailLink() async {
-        guard !isBootstrapping, !isLoading, let url = pendingEmailLink else { return }
+        guard !isEndingSession, !deletionPending, !isBootstrapping, !isLoading, let url = pendingEmailLink else { return }
         pendingEmailLink = nil
         let requestID = sessionLifecycleID
         guard session == nil else {
@@ -278,17 +387,17 @@ final class AuthStore {
         errorMessage = nil
         newPassword = ""
         newPasswordConfirm = ""
-        defer { isLoading = false }
+        defer { if requestID == sessionLifecycleID { isLoading = false } }
         do {
             let result = try await repository.prepareEmailAction(url)
-            guard requestID == sessionLifecycleID else { return }
+            guard isCurrent(requestID) else { return }
             switch result {
             case .resetPassword(let email):
                 resetEmail = email
                 path = [.signIn, .forgotPassword, .linkSent, .newPassword]
             }
         } catch {
-            guard requestID == sessionLifecycleID else { return }
+            guard accept(error, requestID: requestID) else { return }
             errorMessage = error.localizedDescription
         }
     }
@@ -301,7 +410,7 @@ final class AuthStore {
     }
 
     func submitNewPassword() async {
-        guard !isLoading else { return }
+        guard bootstrapID == nil, !isEndingSession, !deletionPending, !isLoading else { return }
         errorMessage = nil
         guard newPassword == newPasswordConfirm else {
             errorMessage = L10n.text("As senhas precisam ser iguais.")
@@ -314,20 +423,22 @@ final class AuthStore {
         let requestID = sessionLifecycleID
         let email = resetEmail
         isLoading = true
-        defer { isLoading = false }
+        defer { if requestID == sessionLifecycleID { isLoading = false } }
         do {
             let password = newPassword
             try await repository.resetPassword(password)
-            guard requestID == sessionLifecycleID else { return }
+            guard isCurrent(requestID) else { return }
             newPassword = ""
             newPasswordConfirm = ""
             do {
+                beginOperation()
+                defer { finishOperation(requestID) }
                 let restored = try await repository.signIn(identifier: email, password: password)
-                guard requestID == sessionLifecycleID else { return }
+                guard isCurrent(requestID) else { return }
                 session = restored
                 path = session?.needsProfile == true ? [.chooseUsername] : []
             } catch {
-                guard requestID == sessionLifecycleID else { return }
+                guard accept(error, requestID: requestID) else { return }
                 // The code is consumed: a failed subsequent login must not retry the reset.
                 signInIdentifier = email
                 signInPassword = ""
@@ -335,7 +446,7 @@ final class AuthStore {
                 infoMessage = L10n.text("Senha alterada. Entre com sua nova senha.")
             }
         } catch {
-            guard requestID == sessionLifecycleID else { return }
+            guard accept(error, requestID: requestID) else { return }
             errorMessage = error.localizedDescription
         }
     }
@@ -343,26 +454,85 @@ final class AuthStore {
     // MARK: - Conta (chamado a partir de Ajustes)
 
     func signOut() async {
-        await PushCoordinator.shared.disconnect()
+        guard !isEndingSession else { return }
+        isEndingSession = true
+        lifecycle.invalidate()
+        bootstrapID = nil
+        isBootstrapping = false
+        pendingEmailLink = nil
+        await drainOperations()
+        await PushCoordinator.shared.disconnect(cleanupAPI: session.map { AccountAPIClient(expectedUserID: $0.userID) })
         do {
             try await repository.signOut()
             reset()
             await AppBadgeCoordinator.shared.sync(userID: nil, unreadCount: nil)
         } catch {
+            // A failed explicit logout keeps the current session, with a new API binding.
             errorMessage = error.localizedDescription
         }
+        isLoading = false
+        isEndingSession = false
     }
 
     func deleteAccount() async throws {
-        await PushCoordinator.shared.disconnect()
-        try await repository.deleteAccount()
+        guard !isEndingSession else { return }
+        isEndingSession = true
+        lifecycle.invalidate()
+        await drainOperations()
+        await PushCoordinator.shared.disconnect(cleanupAPI: session.map { AccountAPIClient(expectedUserID: $0.userID) })
+        do {
+            try await repository.deleteAccount()
+            defaults.removeObject(forKey: Self.deletionKey)
+            deletionPending = false
+            reset()
+            await AppBadgeCoordinator.shared.sync(userID: nil, unreadCount: nil)
+            isEndingSession = false
+        } catch {
+            isEndingSession = false
+            if let failure = error as? AuthError, [.deletionPending, .sessionExpired, .accountDisabled].contains(failure) {
+                endInvalidSession(failure)
+                await cleanupTask?.value
+                return
+            }
+            throw error
+        }
+    }
+
+    /// Terminal failures remove private UI immediately, then drain provider work
+    /// before signing out so an old SDK callback cannot resurrect the identity.
+    private func endInvalidSession(_ error: AuthError) {
+        guard !isEndingSession else { return }
+        isEndingSession = true
+        let cleanupAPI = session.map { AccountAPIClient(expectedUserID: $0.userID) }
         reset()
-        await AppBadgeCoordinator.shared.sync(userID: nil, unreadCount: nil)
+        deletionPending = error == .deletionPending
+        if deletionPending { defaults.set(true, forKey: Self.deletionKey) }
+        else { path = [.signIn]; infoMessage = error.localizedDescription }
+        cleanupTask = Task { [weak self] in
+            guard let self else { return }
+            await self.drainOperations()
+            await PushCoordinator.shared.disconnect(cleanupAPI: cleanupAPI)
+            do { try await self.repository.signOut() }
+            catch { self.errorMessage = error.localizedDescription }
+            await AppBadgeCoordinator.shared.sync(userID: nil, unreadCount: nil)
+            self.isEndingSession = false
+        }
+    }
+
+    func acknowledgePendingDeletion() {
+        guard !isEndingSession else { return }
+        defaults.removeObject(forKey: Self.deletionKey)
+        deletionPending = false
+        returnToLogin()
     }
 
     private func reset() {
         pendingEmailLink = nil
-        sessionLifecycleID = UUID()
+        lifecycle.invalidate()
+        bootstrapID = nil
+        isBootstrapping = false
+        isLoading = false
+        fieldError = nil
         invalidateUsernameCheck()
         resendCooldowns.clear()
         resetEmail = ""

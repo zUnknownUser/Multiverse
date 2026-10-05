@@ -12,8 +12,10 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if auth.isBootstrapping {
+            if auth.isBootstrapping || auth.isEndingSession {
                 LaunchLoadingView()
+            } else if auth.deletionPending {
+                AccountDeletionPendingView { auth.acknowledgePendingDeletion() }
             } else if auth.session == nil || auth.session?.needsProfile == true || auth.path.last == .newPassword {
                 AuthFlowView()
             } else if store.isLoading || store.meID != auth.session?.userID {
@@ -35,21 +37,21 @@ struct RootView: View {
                 OnboardingView()
             }
         }
-        .alert(auth.errorMessage != nil || store.accountLoadError != nil || store.onboardingError != nil ? L10n.text("Não foi possível continuar") : "Multiverse", isPresented: Binding(
-            get: { auth.errorMessage != nil || auth.infoMessage != nil || store.accountLoadError != nil || store.onboardingError != nil },
+        .alert(auth.errorMessage != nil || accountError != nil ? L10n.text("Não foi possível continuar") : "Multiverse", isPresented: Binding(
+            get: { !auth.isEndingSession && (auth.errorMessage != nil || auth.infoMessage != nil || accountError != nil) },
             set: { if !$0 { auth.errorMessage = nil; auth.infoMessage = nil } }
         )) {
             if auth.bootstrapFailed {
                 Button(L10n.text("TENTAR DE NOVO")) { Task { await auth.bootstrap() } }
                 Button(L10n.text("SAIR"), role: .cancel) { Task { await auth.signOut() } }
-            } else if store.accountLoadError != nil || store.onboardingError != nil {
+            } else if accountError != nil {
                 Button(L10n.text("TENTAR DE NOVO")) { Task { await store.reloadAccount() } }
                 Button(L10n.text("SAIR"), role: .cancel) { Task { await auth.signOut() } }
             } else {
                 Button("OK") { auth.errorMessage = nil; auth.infoMessage = nil }
             }
         } message: {
-            Text(auth.errorMessage ?? auth.infoMessage ?? store.accountLoadError ?? store.onboardingError ?? "")
+            Text(auth.errorMessage ?? auth.infoMessage ?? accountError ?? "")
         }
         .onOpenURL { url in
             if let id = DuelInvitation.id(in: url.absoluteString) {
@@ -70,13 +72,14 @@ struct RootView: View {
         .environment(burst)
         .environment(proStore)
         .preferredColorScheme(store.themePreference.colorScheme)
-        .task(id: auth.session) {
-            guard let session = auth.session, !session.needsProfile else {
+        .task(id: auth.binding) {
+            let binding = auth.binding
+            guard !binding.ending, let session = binding.session, !session.needsProfile else {
                 WidgetBridge.clear()
                 store = AppStore()
                 return
             }
-            let api = AccountAPIClient(expectedUserID: session.userID)
+            let api = AccountAPIClient(expectedUserID: session.userID, lifecycle: auth.lifecycle)
             let accountStore = AppStore(
                 session: session,
                 accountAPI: api,
@@ -99,10 +102,14 @@ struct RootView: View {
             )
             store = accountStore
             await accountStore.bootstrap()
+            guard !Task.isCancelled, binding == auth.binding else { return }
             if accountStore.isOnboarded {
                 await accountStore.library?.refresh()
+                guard !Task.isCancelled, binding == auth.binding else { return }
                 await accountStore.notifications?.refresh()
+                guard !Task.isCancelled, binding == auth.binding else { return }
                 await PushCoordinator.shared.resume(api: api, userID: session.userID)
+                guard !Task.isCancelled, binding == auth.binding else { return }
                 openPushActivity()
                 openClubInvitation()
                 openDuelInvitation()
@@ -126,6 +133,10 @@ struct RootView: View {
             if phase == .active { Task { await proStore.refreshEntitlement(); if store.isOnboarded { await store.notifications?.refresh(); await store.library?.refresh() } } }
         }
 
+    }
+    private var accountError: String? {
+        guard !auth.isEndingSession, let uid = auth.session?.userID, uid == store.meID else { return nil }
+        return store.accountLoadError ?? store.onboardingError
     }
     private struct BadgeState: Equatable {
         let bootstrapping: Bool

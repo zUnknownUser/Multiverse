@@ -12,8 +12,12 @@ import Foundation
     private let tokens: any APITokenProvider
     private let transport: URLSession
     private let expectedUserID: String?
+    private let lifecycle: SessionLifecycle?
+    private let boundGeneration: UUID?
 
-    init(baseURL: URL?, tokens: any APITokenProvider = FirebaseAPITokenProvider(), transport: URLSession = .shared, expectedUserID: String? = nil, errors: any APIErrorMapping = MultiverseAPIErrorMapper()) {
+    init(baseURL: URL?, tokens: any APITokenProvider = FirebaseAPITokenProvider(), transport: URLSession = .shared, expectedUserID: String? = nil, errors: any APIErrorMapping = MultiverseAPIErrorMapper(), lifecycle: SessionLifecycle? = nil) {
+        self.lifecycle = lifecycle
+        self.boundGeneration = expectedUserID == nil ? nil : lifecycle?.generation
         self.errors = errors
         self.baseURL = baseURL
         self.tokens = tokens
@@ -21,6 +25,19 @@ import Foundation
         self.expectedUserID = expectedUserID
     }
     func request<Response: Decodable>(_ path: String, method: String = "GET", body: Data? = nil, query: [URLQueryItem] = [], timeout: TimeInterval = 20) async throws -> Response {
+        let generation = boundGeneration ?? lifecycle?.generation
+        do {
+            if let generation { try lifecycle?.check(generation) }
+            return try await perform(path, method: method, body: body, query: query, timeout: timeout, generation: generation)
+        } catch {
+            if let generation {
+                try lifecycle?.check(generation)
+                lifecycle?.report(error, generation: generation)
+            }
+            throw error
+        }
+    }
+    private func perform<Response: Decodable>(_ path: String, method: String, body: Data?, query: [URLQueryItem], timeout: TimeInterval, generation: UUID?) async throws -> Response {
         guard let baseURL else { throw AuthError.apiNotConfigured }
         guard let uid = tokens.userID, expectedUserID == nil || uid == expectedUserID else { throw AuthError.sessionExpired }
         var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
@@ -31,6 +48,7 @@ import Foundation
             request.httpBody = body
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.setValue("Bearer " + (try await tokens.token(forceRefresh: attempt == 1)), forHTTPHeaderField: "Authorization")
+            if let generation { try lifecycle?.check(generation) }
             guard tokens.userID == uid else { throw AuthError.sessionExpired }
             request.setValue(L10n.language(), forHTTPHeaderField: "Accept-Language")
             let data: Data
@@ -41,6 +59,7 @@ import Foundation
                 throw errors.networkError(error, path: path)
             }
             try Task.checkCancellation()
+            if let generation { try lifecycle?.check(generation) }
             guard tokens.userID == uid else { throw AuthError.sessionExpired }
             guard let http = response as? HTTPURLResponse else { throw AuthError.apiUnavailable }
             if http.statusCode == 401 && attempt == 0 { continue }
