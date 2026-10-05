@@ -221,7 +221,9 @@ Voto usa o endpoint existente `/posts/:uuid/vote` e sua idempotência/deadline.
 Pontuação deriva dos votos únicos dentro da janela: 10 por rodada, mês UTC;
 comentários/convites não pontuam. Ranking exclui deletados/moderados e oculta
 bloqueados após calcular posições. Títulos são cumulativos de participação.
-As 14 perguntas em `src/duels/daily-duel-content.ts` rodam por dia UTC; o conteúdo
-é congelado no banco ao criar a rodada. Editar o arquivo afeta apenas dias novos.
+A migração 027 substitui o rodízio fixo por uma fila editorial no banco, com 40
+perguntas iniciais inéditas, agendamento e sugestões da comunidade revisadas em
+PT-BR/EN. Conteúdo é consumido uma vez, sem repetição automática. Operação privada,
+fluxos e limites: [curadoria dos duelos](docs/daily-duels.md).
 O primeiro acesso cria o post e o perfil editorial explícito sob lock; não gera
 votos, participantes, mensagens ou alertas falsos. Detalhes em SESSION_HANDOFF.

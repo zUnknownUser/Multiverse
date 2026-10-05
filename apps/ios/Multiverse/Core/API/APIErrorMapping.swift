@@ -13,6 +13,9 @@ struct MultiverseAPIErrorMapper: APIErrorMapping {
     }
     func responseError(code: String?, status: Int, path: String) -> any Error {
         switch code {
+        case "DUEL_NOT_ELIGIBLE": return DuelCurationError.ineligible
+        case "DUEL_SUBMISSION_LIMIT": return DuelCurationError.limit
+        case "CANDIDATE_UNAVAILABLE": return DuelCurationError.unavailable
         case "ORDER_UNAVAILABLE": return ReadingOrdersError.unavailable
         case "ORDER_STALE": return ReadingOrdersError.stale
         case "ORDER_CONFLICT": return ReadingOrdersError.conflict

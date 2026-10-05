@@ -13,6 +13,7 @@ struct DailyDuelView: View {
     @State private var debate = false
     @State private var reward = false
     @State private var creating = false
+    @State private var suggestions = false
     var body: some View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             VStack(alignment: .leading, spacing: 20) {
@@ -22,6 +23,9 @@ struct DailyDuelView: View {
                 if let detail, let duels = store.dailyDuels {
                     TimelineView(.periodic(from: .now, by: 60)) { _ in
                         roundContent(detail.round, duels: duels)
+                    }
+                    if store.duelCurationAPI != nil {
+                        Button(L10n.text("MINHAS SUGESTÕES")) { suggestions = true }.font(MVFont.bold(12))
                     }
                     progress(detail.progress)
                     Button { ranking = true } label: {
@@ -53,6 +57,7 @@ struct DailyDuelView: View {
         .sheet(isPresented: $creating) {
             PostComposer(universe: detail?.round.universeID, item: nil, kind: "duel")
         }
+        .sheet(isPresented: $suggestions) { DuelSuggestionsView() }
         .sheet(isPresented: $ranking) { DuelLeaderboardView() }
         .sheet(isPresented: $inviting) { if let round = detail?.round { DuelInviteView(round: round) } }
         .sheet(isPresented: $debate, onDismiss: { Task { await load() } }) { NavigationStack { PostView(id: id) } }
@@ -61,6 +66,11 @@ struct DailyDuelView: View {
         let closed = round.closesAt <= duels.serverNow
         return VStack(alignment: .leading, spacing: 16) {
             Text(L10n.text("CURADORIA MULTIVERSE")).kicker(10).foregroundStyle(MV.C.muted)
+            if let author = round.contributor {
+                Button { store.openUserProfile(author.id) } label: {
+                    Text(L10n.format("Ideia de %@", author.handle)).font(MVFont.bold(12)).foregroundStyle(MV.C.dc)
+                }.buttonStyle(.plain)
+            }
             Text(round.title).font(MVFont.black(23)).fixedSize(horizontal: false, vertical: true)
             Text(closed ? L10n.text("Votação encerrada") : L10n.format("Encerra em %@ min", String(max(1, Int(ceil(round.closesAt.timeIntervalSince(duels.serverNow) / 60))))))
                 .font(MVFont.bold(12)).foregroundStyle(MV.C.muted)

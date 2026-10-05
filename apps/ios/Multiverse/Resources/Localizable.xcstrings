@@ -20118,6 +20118,482 @@
           }
         }
       }
+    },
+    "NA FILA EDITORIAL": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NA FILA EDITORIAL"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IN THE EDITORIAL QUEUE"
+          }
+        }
+      }
+    },
+    "AGENDADO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AGENDADO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SCHEDULED"
+          }
+        }
+      }
+    },
+    "PUBLICADO NA ARENA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PUBLICADO NA ARENA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PUBLISHED IN THE ARENA"
+          }
+        }
+      }
+    },
+    "SUGESTÃO RETIRADA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SUGESTÃO RETIRADA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SUGGESTION WITHDRAWN"
+          }
+        }
+      }
+    },
+    "NÃO SELECIONADO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NÃO SELECIONADO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NOT SELECTED"
+          }
+        }
+      }
+    },
+    "A publicação foi alterada ou deixou de estar disponível. Crie um novo duelo para sugerir outra ideia.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A publicação foi alterada ou deixou de estar disponível. Crie um novo duelo para sugerir outra ideia."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The post changed or is no longer available. Create a new duel to suggest another idea."
+          }
+        }
+      }
+    },
+    "Essa pergunta já passou pela arena. Experimente uma nova ideia.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essa pergunta já passou pela arena. Experimente uma nova ideia."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This question has already been in the arena. Try a new idea."
+          }
+        }
+      }
+    },
+    "Essa sugestão não entrou na seleção editorial. Você pode propor outras ideias.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essa sugestão não entrou na seleção editorial. Você pode propor outras ideias."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This suggestion was not selected by the editorial team. You can suggest other ideas."
+          }
+        }
+      }
+    },
+    "RETIRAR SUGESTÃO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RETIRAR SUGESTÃO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WITHDRAW SUGGESTION"
+          }
+        }
+      }
+    },
+    "SUGERIR PARA O DUELO DO DIA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SUGERIR PARA O DUELO DO DIA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SUGGEST FOR THE DAILY DUEL"
+          }
+        }
+      }
+    },
+    "Para sugerir, publique um duelo sem spoilers e fora de clubes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para sugerir, publique um duelo sem spoilers e fora de clubes."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To submit a suggestion, publish a duel without spoilers and outside clubs."
+          }
+        }
+      }
+    },
+    "Sugerir este duelo?": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugerir este duelo?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggest this duel?"
+          }
+        }
+      }
+    },
+    "ENVIAR PARA REVISÃO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ENVIAR PARA REVISÃO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SUBMIT FOR REVIEW"
+          }
+        }
+      }
+    },
+    "A equipe revisará e adaptará sua ideia em português e inglês. Se escolhida, ela ganhará uma nova rodada com crédito no seu perfil público. Os votos deste post ficam aqui. Até 3 sugestões ativas e 3 envios por dia.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A equipe revisará e adaptará sua ideia em português e inglês. Se escolhida, ela ganhará uma nova rodada com crédito no seu perfil público. Os votos deste post ficam aqui. Até 3 sugestões ativas e 3 envios por dia."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The team will review and adapt your idea in Portuguese and English. If selected, it becomes a new round credited to your public profile. Votes on this post stay here. Up to 3 active suggestions and 3 submissions per day."
+          }
+        }
+      }
+    },
+    "Retirar esta sugestão da fila?": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirar esta sugestão da fila?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Withdraw this suggestion from the queue?"
+          }
+        }
+      }
+    },
+    "Rodada de %@ (UTC)": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rodada de %@ (UTC)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Round for %@ (UTC)"
+          }
+        }
+      }
+    },
+    "MINHAS SUGESTÕES": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MINHAS SUGESTÕES"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MY SUGGESTIONS"
+          }
+        }
+      }
+    },
+    "Sua ideia pode virar o Duelo do Dia. Crie um duelo na comunidade e, na publicação, toque em sugerir. A seleção passa por revisão em português e inglês.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sua ideia pode virar o Duelo do Dia. Crie um duelo na comunidade e, na publicação, toque em sugerir. A seleção passa por revisão em português e inglês."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your idea could become the Daily Duel. Create a community duel, then tap suggest on the post. Submissions are reviewed in Portuguese and English."
+          }
+        }
+      }
+    },
+    "A próxima conversa pode começar com você. Suas sugestões aparecerão aqui.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A próxima conversa pode começar com você. Suas sugestões aparecerão aqui."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The next conversation could start with you. Your suggestions will appear here."
+          }
+        }
+      }
+    },
+    "VER NA ARENA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VER NA ARENA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VIEW IN THE ARENA"
+          }
+        }
+      }
+    },
+    "VER PUBLICAÇÃO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VER PUBLICAÇÃO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VIEW POST"
+          }
+        }
+      }
+    },
+    "Mostrando as 100 sugestões mais recentes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrando as 100 sugestões mais recentes."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Showing your 100 most recent suggestions."
+          }
+        }
+      }
+    },
+    "Ideia de %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ideia de %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idea by %@"
+          }
+        }
+      }
+    },
+    "A próxima rodada está em preparação. Enquanto isso, sua ideia pode abrir um novo debate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A próxima rodada está em preparação. Enquanto isso, sua ideia pode abrir um novo debate."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The next round is being prepared. In the meantime, your idea could start a new debate."
+          }
+        }
+      }
+    },
+    "SUGIRA O PRÓXIMO DUELO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SUGIRA O PRÓXIMO DUELO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SUGGEST THE NEXT DUEL"
+          }
+        }
+      }
+    },
+    "Só é possível sugerir um duelo seu, disponível, sem spoilers e fora de clubes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Só é possível sugerir um duelo seu, disponível, sem spoilers e fora de clubes."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can only suggest an available duel of your own, without spoilers and outside clubs."
+          }
+        }
+      }
+    },
+    "Você pode manter até 3 sugestões ativas e enviar até 3 a cada 24 horas.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você pode manter até 3 sugestões ativas e enviar até 3 a cada 24 horas."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can have up to 3 active suggestions and submit up to 3 every 24 hours."
+          }
+        }
+      }
+    },
+    "Essa sugestão não está mais disponível para alteração. Atualize a lista.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essa sugestão não está mais disponível para alteração. Atualize a lista."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This suggestion can no longer be changed. Refresh the list."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

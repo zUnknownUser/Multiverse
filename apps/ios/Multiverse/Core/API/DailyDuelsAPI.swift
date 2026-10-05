@@ -12,6 +12,7 @@ struct DailyDuelRound: Decodable, Identifiable, Sendable {
     let optionB: String
     let votes: PostVotes
     let commentCount: Int
+    var contributor: DuelContributor? = nil
     var totalVotes: Int { votes.counts.reduce(0, +) }
     func validate() throws {
         guard UUID(uuidString: id) != nil, ["marvel", "dc"].contains(universeID), !title.isEmpty,
@@ -101,3 +102,5 @@ enum DuelInvitation {
         return id.lowercased()
     }
 }
+
+struct DuelContributor: Decodable, Sendable { let id: String; let name: String; let handle: String }

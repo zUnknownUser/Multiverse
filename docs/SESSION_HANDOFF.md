@@ -1,3 +1,14 @@
+## 2026-10-05 — Duelo do Dia: fila editorial renovável
+
+- Migração 027 substitui o rodízio fixo de 14 perguntas por candidatos no PostgreSQL, com 40 discussões inéditas iniciais (20 Marvel/20 DC), PT-BR/EN e cinco categorias. Perguntas consumidas uma vez; histórico existente entra na detecção de duplicatas. Esgotamento não repete conteúdo: apresenta preparação e acesso à comunidade.
+- Próxima rodada seleciona agendamento do dia, atrasados, comunidade aprovada e reserva sem data, nessa ordem; não antecipa datas futuras. Publicação transacional/global, uma por data UTC no primeiro acesso, sem polling novo. Rodada ativa, votos, ranking e convites anteriores intactos.
+- Autor sugere o próprio duelo público sem spoilers, vê suas últimas 100 sugestões/status/data e pode retirar antes da publicação. Limite de 3 ativas/3 novas por 24h; retry idempotente e concorrência protegida. Fonte editada, oculta ou excluída invalida a seleção antes da publicação. Rodada editorial inicia com zero votos.
+- Crédito público com link ao perfil; bloqueios/exclusão respeitados. Exclusão da conta elimina candidatura/snapshot/decisões associados, mantendo apenas rodada editorial independente e histórico de conteúdo publicado.
+- `DuelCurationAPI` injetada explicitamente; componentes seguem tokens existentes em PT-BR/EN, claro/Noir. Sem redesign de Home, perfil, tabs ou arena. Novo acesso na Home/arena e ação no próprio post.
+- Revisão/tradução são humanas pela CLI privada `scripts/curate-duels.mjs`, seguindo o padrão de moderação. Não há painel web, geração infinita por IA ou push de aprovação. [Manual completo](../backend/api/docs/daily-duels.md), incluindo JSON, dry-run, agendamento e reposição sem deploy.
+- Backend: 99 unitários + 146 testes HTTP/PostgreSQL aprovados; suíte focada de comunidade com 29 testes. iOS: suíte existente de 245 testes aprovada; renders nativos em 320 pt, PT-BR/EN claro/Noir conferidos. Não houve instalação no iPhone físico.
+- Alterações locais anteriores de MockRepository, Info.plist e metadados do catálogo preservadas, além do JPEG novo não rastreado do usuário.
+
 ## 2026-10-05 — Perfil: edição, foto pessoal e títulos reais
 
 - Toque no avatar do próprio perfil abre edição completa de nome (80), bio (160), iniciais/cor, três avatares originais e foto pessoal. @usuário permanece identificado e não é alterado por essa operação. Mesmos tokens e layout da página de perfil; editor rolável em PT-BR/EN, claro/Noir.

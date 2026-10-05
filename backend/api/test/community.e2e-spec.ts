@@ -1,3 +1,7 @@
+import {
+  curateDuel,
+  type CurationDecision,
+} from '../src/duels/duel-curation.js';
 import { VoiceMediaService } from '../src/voice/voice-media.service.js';
 import { VoiceService } from '../src/voice/voice.service.js';
 import sharp from 'sharp';
@@ -19,6 +23,7 @@ describe.skipIf(!databaseURL)('Live community features with PostgreSQL', () => {
   let app: INestApplication;
   let admin: pg.Pool;
   let db: DatabaseService;
+  let reserveIDs: string[] = [];
   const voiceMedia = {
     enabled: true,
     configured: true,
@@ -61,6 +66,9 @@ describe.skipIf(!databaseURL)('Live community features with PostgreSQL', () => {
       .filter((n) => n.endsWith('.sql'))
       .sort())
       await db.query(await readFile(new URL(name, folder), 'utf8'));
+    reserveIDs = (await db.query('SELECT id FROM duel_candidates')).rows.map(
+      (r) => r.id,
+    );
     const module = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(VoiceMediaService)
       .useValue(voiceMedia)
@@ -88,6 +96,15 @@ describe.skipIf(!databaseURL)('Live community features with PostgreSQL', () => {
     await db.query('DELETE FROM profiles');
     await db.query('DELETE FROM account_deletions');
     await db.query('DELETE FROM moderation_decisions');
+    await db.query('DELETE FROM duel_published_content');
+    await db.query('DELETE FROM duel_curation_decisions');
+    await db.query(
+      'DELETE FROM duel_candidates WHERE NOT(id=ANY($1::uuid[]))',
+      [reserveIDs],
+    );
+    await db.query(
+      "UPDATE duel_candidates SET status='approved',scheduled_on=NULL,reason_code=NULL",
+    );
   });
   afterAll(async () => {
     await app?.close();
@@ -273,6 +290,270 @@ describe.skipIf(!databaseURL)('Live community features with PostgreSQL', () => {
   };
   const comment = (post: string, id: string, body: object, uid = 'alice') =>
     put(`posts/${post}/comments/${id}`, body, uid);
+  const duelPost = async (uid = 'owner', extra: object = {}) => {
+    const id = randomUUID();
+    await put(
+      'posts/' + id,
+      {
+        ...input,
+        title: 'Que aventura você escolheria? ' + id.slice(0, 8),
+        kind: 'duel',
+        optionA: 'Investigação',
+        optionB: 'Exploração',
+        closesAt: new Date(Date.now() + 86400000).toISOString(),
+        ...extra,
+      },
+      uid,
+    ).expect(200);
+    return id;
+  };
+  const decision = (
+    candidateID: string,
+    action: CurationDecision['action'] = 'approve',
+  ): CurationDecision => ({
+    id: randomUUID(),
+    candidateID,
+    action,
+    operator: 'test-editor',
+    reason: 'Bilingual editorial review',
+    universe: 'marvel',
+    category: 'stories',
+    translations: {
+      'pt-BR': {
+        title: 'Que aventura vem agora? ' + candidateID.slice(0, 8),
+        text: 'Conte sua escolha.',
+        optionA: 'Investigar',
+        optionB: 'Explorar',
+      },
+      en: {
+        title: 'Which adventure comes next? ' + candidateID.slice(0, 8),
+        text: 'Tell us your choice.',
+        optionA: 'Investigate',
+        optionB: 'Explore',
+      },
+    },
+  });
+  it('accepts only the authors public spoiler-free duels, keeps submissions private and retries idempotently', async () => {
+    await member('owner');
+    await member('alice');
+    await member('newbie', false);
+    const post = await duelPost(),
+      path = 'community/duel-candidates/posts/' + post;
+    await put(path, {}, 'alice').expect(409);
+    await put(path, {}, 'newbie').expect(409);
+    const [a, b] = await Promise.all([
+      put(path, {}).expect(200),
+      put(path, {}).expect(200),
+    ]);
+    expect(a.body.candidate.id).toBe(b.body.candidate.id);
+    expect(a.body.candidate.status).toBe('pending');
+    expect((await get(path, 'alice').expect(200)).body.candidate).toBeNull();
+    expect(
+      (await get('community/duel-candidates/mine', 'alice').expect(200)).body
+        .items,
+    ).toEqual([]);
+    expect(
+      (await get('community/duel-candidates/mine').expect(200)).body.items,
+    ).toHaveLength(1);
+    const spoiler = await duelPost('owner', { spoiler: true });
+    await put('community/duel-candidates/posts/' + spoiler, {}).expect(409);
+    const plain = randomUUID();
+    await put('posts/' + plain, input).expect(200);
+    await put('community/duel-candidates/posts/' + plain, {}).expect(409);
+    const today = (await get('community/daily-duels').expect(200)).body.today;
+    expect(today.contributor).toBeNull(); // Pending submissions never enter publication.
+    await put('community/duel-candidates/posts/' + today.id, {}).expect(409);
+  });
+  it('applies the suggestion quota atomically and withdrawal cannot bypass the daily limit', async () => {
+    await member('owner');
+    const posts = [];
+    for (let i = 0; i < 4; i++) posts.push(await duelPost());
+    const results = await Promise.all(
+      posts.map((id) => put('community/duel-candidates/posts/' + id, {})),
+    );
+    expect(results.map((r) => r.status).sort((a, b) => a - b)).toEqual([
+      200, 200, 200, 429,
+    ]);
+    const accepted = posts[results.findIndex((r) => r.status === 200)];
+    await del('community/duel-candidates/posts/' + accepted).expect(200);
+    await del('community/duel-candidates/posts/' + accepted).expect(200);
+    expect(
+      (await put('community/duel-candidates/posts/' + accepted, {}).expect(200))
+        .body.candidate.status,
+    ).toBe('withdrawn');
+    await put(
+      'community/duel-candidates/posts/' +
+        posts[results.findIndex((r) => r.status === 429)],
+      {},
+    ).expect(429);
+  });
+  it('publishes reviewed community content once, credits the author and starts fresh votes', async () => {
+    await member('owner');
+    await member('alice');
+    const post = await duelPost();
+    await put('posts/' + post + '/vote', { choice: 0 }, 'alice').expect(200);
+    const candidate = (
+      await put('community/duel-candidates/posts/' + post, {}).expect(200)
+    ).body.candidate;
+    const d = decision(candidate.id);
+    await db.transaction((c) => curateDuel(c, d));
+    await db.transaction((c) => curateDuel(c, d));
+    await expect(
+      db.transaction((c) => curateDuel(c, { ...d, reason: 'changed' })),
+    ).rejects.toThrow();
+    const rounds = await Promise.all([
+      get('community/daily-duels').expect(200),
+      get('community/daily-duels', 'alice')
+        .set('Accept-Language', 'en')
+        .expect(200),
+    ]);
+    const round = rounds[0].body.today;
+    expect(round.id).not.toBe(post);
+    expect(round.id).toBe(rounds[1].body.today.id);
+    expect(round.title).toBe(d.translations!['pt-BR'].title);
+    expect(rounds[1].body.today.title).toBe(d.translations!.en.title);
+    expect(round.contributor.id).toBe('owner');
+    expect(round.votes.counts).toEqual([0, 0]);
+    expect(rounds[1].body.progress.rounds).toBe(0);
+    expect(
+      (await get('community/duel-candidates/mine').expect(200)).body.items[0]
+        .status,
+    ).toBe('published');
+    await del('community/duel-candidates/posts/' + post).expect(404);
+    await expect(
+      db.transaction((c) => curateDuel(c, { ...d, id: randomUUID() })),
+    ).rejects.toThrow();
+    await put('me/blocks/owner', { blocked: true }, 'alice').expect(200);
+    expect(
+      (await get('community/daily-duels', 'alice').expect(200)).body.today
+        .contributor,
+    ).toBeNull();
+    await db.query("DELETE FROM profiles WHERE firebase_uid='owner'");
+    expect(
+      (await get('community/daily-duels', 'alice').expect(200)).body.today
+        .contributor,
+    ).toBeNull();
+    expect(
+      (
+        await db.query('SELECT 1 FROM duel_candidates WHERE id=$1', [
+          candidate.id,
+        ])
+      ).rowCount,
+    ).toBe(0);
+    expect(
+      (await db.query('SELECT 1 FROM duel_published_content')).rowCount,
+    ).toBe(2);
+  });
+  it('never publishes an edited, deleted or moderated source after approval', async () => {
+    await member('owner');
+    for (const change of [
+      'version=version+1',
+      "moderation_status='hidden'",
+      'deleted_at=now()',
+    ]) {
+      const post = await duelPost();
+      const q = (
+        await put('community/duel-candidates/posts/' + post, {}).expect(200)
+      ).body.candidate;
+      await db.transaction((c) => curateDuel(c, decision(q.id)));
+      await db.query('UPDATE community_posts SET ' + change + ' WHERE id=$1', [
+        post,
+      ]);
+    }
+    const round = (await get('community/daily-duels').expect(200)).body.today;
+    expect(round.contributor).toBeNull();
+    const rows = (await get('community/duel-candidates/mine').expect(200)).body
+      .items;
+    expect(
+      rows.every(
+        (q: { status: string; reasonCode: string }) =>
+          q.status === 'rejected' && q.reasonCode === 'source_changed',
+      ),
+    ).toBe(true);
+  });
+  it('respects future schedules, rejects occupied dates and preserves the active round', async () => {
+    await member('owner');
+    const dates = (
+      await db.query(
+        "SELECT ((now() AT TIME ZONE 'UTC')::date)::text AS today, ((now() AT TIME ZONE 'UTC')::date+1)::text AS tomorrow",
+      )
+    ).rows[0];
+    const future = {
+      ...decision(randomUUID(), 'create'),
+      scheduledOn: dates.tomorrow,
+    };
+    await db.transaction((c) => curateDuel(c, future));
+    await expect(
+      db.transaction((c) =>
+        curateDuel(c, {
+          ...decision(randomUUID(), 'create'),
+          scheduledOn: dates.tomorrow,
+        }),
+      ),
+    ).rejects.toThrow();
+    const today = (await get('community/daily-duels').expect(200)).body.today;
+    expect(today.title).not.toBe(future.translations!['pt-BR'].title);
+    await expect(
+      db.transaction((c) =>
+        curateDuel(c, {
+          ...decision(randomUUID(), 'create'),
+          scheduledOn: dates.today,
+        }),
+      ),
+    ).rejects.toThrow();
+    const additional = decision(randomUUID(), 'create');
+    await db.transaction((c) => curateDuel(c, additional));
+    expect((await get('community/daily-duels').expect(200)).body.today.id).toBe(
+      today.id,
+    );
+    await db.query(
+      "UPDATE daily_duels SET day=day-1,opens_at=opens_at-interval '1 day'",
+    );
+    await db.query(
+      "UPDATE community_posts SET closes_at=closes_at-interval '1 day' WHERE id=$1",
+      [today.id],
+    );
+    await db.query('UPDATE duel_candidates SET scheduled_on=$1 WHERE id=$2', [
+      dates.today,
+      future.candidateID,
+    ]);
+    expect(
+      (await get('community/daily-duels').expect(200)).body.today.title,
+    ).toBe(future.translations!['pt-BR'].title);
+  });
+  it('rejects duplicates even with reversed choices and leaves an exhausted queue empty until replenished', async () => {
+    await member('owner');
+    const first = (await get('community/daily-duels').expect(200)).body.today;
+    const translations = (
+      await db.query('SELECT translations FROM daily_duels')
+    ).rows[0].translations;
+    const duplicate = decision(randomUUID(), 'create');
+    duplicate.translations = translations;
+    for (const t of Object.values(duplicate.translations!))
+      [t.optionA, t.optionB] = [t.optionB, t.optionA];
+    await expect(
+      db.transaction((c) => curateDuel(c, duplicate)),
+    ).rejects.toThrow();
+    await db.query(
+      "UPDATE duel_candidates SET status='rejected' WHERE status='approved'",
+    );
+    await db.query(
+      "UPDATE daily_duels SET day=day-1,opens_at=opens_at-interval '1 day'",
+    );
+    await db.query(
+      "UPDATE community_posts SET closes_at=closes_at-interval '1 day' WHERE id=$1",
+      [first.id],
+    );
+    const empty = (await get('community/daily-duels').expect(200)).body;
+    expect(empty.today).toBeNull();
+    expect(empty.previous.id).toBe(first.id);
+    const next = decision(randomUUID(), 'create');
+    await db.transaction((c) => curateDuel(c, next));
+    expect(
+      (await get('community/daily-duels').expect(200)).body.today.title,
+    ).toBe(next.translations!['pt-BR'].title);
+  });
+
   it('edits with version protection and idempotence while retaining reactions', async () => {
     await member('owner');
     await member('alice');

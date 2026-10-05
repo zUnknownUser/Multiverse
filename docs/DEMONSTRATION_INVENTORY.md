@@ -66,6 +66,12 @@ sendo apresentação/cálculo local; não são novos serviços de mídia ou medi
 - **Teorias e duelos reais:** publicação, descoberta, votos únicos por conta e contagens
   persistidas. Teoria tem conclusão identificada como decisão do autor com explicação;
   duelo tem opções e prazo. Nada de votos-base, ranking ou precisão inventada.
+- **Duelo do Dia:** rodada global, ranking mensal e títulos por participação reais.
+  Fila renovável no PostgreSQL substitui 14 perguntas em rodízio: 40 inéditas iniciais,
+  agendamento, sugestões privadas do autor, revisão PT-BR/EN, retirada e crédito público.
+  Sem repetição automática ao esgotar; precisa de reposição/revisão humana pela CLI privada.
+  Sem painel visual, tradução/geração automática ou push de seleção.
+  [Operação e limites](../backend/api/docs/daily-duels.md).
 - **Central de atividade e sino**: eventos novos reais de follows/comentários/reações,
   estado de leitura persistido, paginação e preferências por conta. Atualização em
   primeiro plano a cada 30s, ao voltar e por gesto; não é uma conexão em tempo real.

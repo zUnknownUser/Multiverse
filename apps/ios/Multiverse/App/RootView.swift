@@ -94,7 +94,8 @@ struct RootView: View {
                 clubsAPI: api,
                 roomsAPI: api,
                 voiceAPI: api,
-                profileEditingAPI: api
+                profileEditingAPI: api,
+                duelCurationAPI: api
             )
             store = accountStore
             await accountStore.bootstrap()

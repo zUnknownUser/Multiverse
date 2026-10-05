@@ -52,6 +52,7 @@ private struct PostThreadView: View {
                         if post.editedAt != nil { Text(L10n.text("Editado")).font(MVFont.body(11, weight: 500)).foregroundStyle(MV.C.muted) }
                         reactions(comment: nil)
                         if post.user == store.meID {
+                            if post.kind == "duel" && post.dailyDay == nil { DuelNominationControl(post: post) }
                             Button(L10n.text("EDITAR PUBLICAÇÃO")) { editing = true }.disabled(thread.busy)
                             if post.kind == "theory" { Button(L10n.text("ATUALIZAR CONCLUSÃO")) { resolving = true } }
                             Button(L10n.text("EXCLUIR PUBLICAÇÃO"), role: .destructive) { deleting = true }

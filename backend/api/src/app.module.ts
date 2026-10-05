@@ -1,3 +1,5 @@
+import { DuelCandidatesController } from './duels/duel-candidates.controller.js';
+import { DuelCandidatesService } from './duels/duel-candidates.service.js';
 import { DailyDuelsController } from './duels/daily-duels.controller.js';
 import { DailyDuelsService } from './duels/daily-duels.service.js';
 import { ReadingOrdersController } from './reading-orders/reading-orders.controller.js';
@@ -50,6 +52,7 @@ import { InteractionsController } from './social/interactions.controller.js';
 
 @Module({
   controllers: [
+    DuelCandidatesController,
     ProfileEditorController,
     DailyDuelsController,
     ReadingOrdersController,
@@ -69,6 +72,7 @@ import { InteractionsController } from './social/interactions.controller.js';
     MarvelController,
   ],
   providers: [
+    DuelCandidatesService,
     ProfileEditorService,
     DailyDuelsService,
     ReadingOrdersService,

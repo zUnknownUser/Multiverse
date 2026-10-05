@@ -4,6 +4,7 @@ import SwiftUI
 struct DailyDuelCard: View {
     @Environment(AppStore.self) private var store
     @Environment(\.scenePhase) private var scenePhase
+    @State private var suggestions = false
     var body: some View {
         if let duels = store.dailyDuels {
             VStack(alignment: .leading, spacing: 12) {
@@ -38,8 +39,23 @@ struct DailyDuelCard: View {
                         }.buttonStyle(.plain)
                     }
                 } else if duels.busy { ProgressView().frame(maxWidth: .infinity) }
+                else if duels.hub != nil && duels.error == nil {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(L10n.text("DUELO DO DIA")).kicker(11)
+                        Text(L10n.text("A próxima rodada está em preparação. Enquanto isso, sua ideia pode abrir um novo debate.")).font(MVFont.body(13))
+                        if let previous = duels.hub?.previous {
+                            Button(L10n.text("VER RESULTADO ANTERIOR")) { store.push(.dailyDuel(previous.id)) }.font(MVFont.bold(11))
+                        }
+                    }.padding(14).comicCard()
+                }
+                if store.duelCurationAPI != nil {
+                    Button { suggestions = true } label: {
+                        Label(L10n.text("SUGIRA O PRÓXIMO DUELO"), systemImage: "sparkles").font(MVFont.bold(11)).foregroundStyle(MV.C.muted)
+                    }.buttonStyle(.plain)
+                }
                 if let error = duels.error { PeopleStatusNotice(message: error) { await duels.refresh(force: true) } }
             }
+            .sheet(isPresented: $suggestions) { DuelSuggestionsView() }
             .task(id: scenePhase) {
                 guard scenePhase == .active else { return }
                 await duels.refresh()

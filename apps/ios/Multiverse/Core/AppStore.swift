@@ -94,6 +94,7 @@ final class AppStore {
     let roomsAPI: (any RoomsAPI)?
     let voiceAPI: (any VoiceAPI)?
     let peopleAPI: (any PeopleAPI)?
+    let duelCurationAPI: (any DuelCurationAPI)?
     let profileEditingAPI: (any ProfileEditingAPI)?
     let avatarPhotos: AvatarPhotoImages?
     let notifications: NotificationStore?
@@ -267,7 +268,8 @@ final class AppStore {
         clubsAPI: (any ClubsAPI)? = nil,
         roomsAPI: (any RoomsAPI)? = nil,
         voiceAPI: (any VoiceAPI)? = nil,
-        profileEditingAPI: (any ProfileEditingAPI)? = nil
+        profileEditingAPI: (any ProfileEditingAPI)? = nil,
+        duelCurationAPI: (any DuelCurationAPI)? = nil
     ) {
         self.readingOrderStore = readingOrdersAPI.map { ReadingOrdersStore(api: $0) }
         self.directMessages = directMessagesAPI.map { DirectMessagesStore(api: $0, ownerID: session?.userID ?? "duda") }
@@ -278,6 +280,7 @@ final class AppStore {
         self.roomsAPI = roomsAPI
         self.voiceAPI = voiceAPI
         self.peopleAPI = peopleAPI
+        self.duelCurationAPI = duelCurationAPI
         self.profileEditingAPI = profileEditingAPI
         self.avatarPhotos = profileEditingAPI.map { api in AvatarPhotoImages { try await api.profilePhoto($0) } }
         self.notifications = notificationsAPI.map { NotificationStore(api: $0) }

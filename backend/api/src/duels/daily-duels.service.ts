@@ -10,7 +10,8 @@ import {
 } from '../community/community-policy.js';
 import { voteField } from '../community/community-content.js';
 import { unblocked } from '../social/social-policy.js';
-import { dailyContent, EDITORIAL_UID } from './daily-duel-content.js';
+import { nextDuel } from './duel-curation.js';
+const EDITORIAL_UID = 'multiverse-editorial';
 
 @Injectable()
 export class DailyDuelsService {
@@ -35,8 +36,9 @@ export class DailyDuelsService {
       (await c.query('SELECT 1 FROM daily_duels WHERE day=$1', [day])).rowCount
     )
       return;
-    const content = dailyContent(day),
-      pt = content.translations['pt-BR'];
+    const content = await nextDuel(c, day);
+    if (!content) return;
+    const pt = content.translations['pt-BR'];
     await c.query(
       `INSERT INTO profiles(firebase_uid,username,display_name,avatar_color,bio,comment_permission)
       VALUES($1,CASE WHEN EXISTS(SELECT 1 FROM profiles WHERE username='multiverse.editorial') THEN 'mv.'||left(replace(gen_random_uuid()::text,'-',''),20) ELSE 'multiverse.editorial' END,'Multiverse · Editorial','#F4A814','Curadoria editorial · Editorial team','everyone') ON CONFLICT(firebase_uid) DO NOTHING`,
@@ -53,7 +55,7 @@ export class DailyDuelsService {
       [
         id,
         EDITORIAL_UID,
-        content.universe,
+        content.universe_id,
         pt.title,
         pt.text,
         pt.optionA,
@@ -62,8 +64,17 @@ export class DailyDuelsService {
       ],
     );
     await c.query(
-      `INSERT INTO daily_duels(day,post_id,translations,opens_at) VALUES($1,$2,$3,$1::date::timestamp AT TIME ZONE 'UTC')`,
-      [day, id, content.translations],
+      `INSERT INTO daily_duels(day,post_id,translations,opens_at,candidate_id) VALUES($1,$2,$3,$1::date::timestamp AT TIME ZONE 'UTC',$4)`,
+      [day, id, content.translations, content.id],
+    );
+    await c.query(
+      "UPDATE duel_candidates SET status='published',published_post_id=$2,updated_at=now() WHERE id=$1",
+      [content.id, id],
+    );
+    await c.query(
+      `INSERT INTO duel_published_content(fingerprint,published_on)
+      SELECT duel_fingerprint(value),$2 FROM jsonb_each($1::jsonb) ON CONFLICT DO NOTHING`,
+      [content.translations, day],
     );
   }
 
@@ -77,7 +88,11 @@ export class DailyDuelsService {
     const rows = (
       await c.query(
         `SELECT r.id, d.day::text, d.opens_at AS "opensAt",r.closes_at AS "closesAt",r.universe_id AS "universeID",
-      d.translations->$2 AS content, ${voteField},
+      d.translations->$2 AS content,
+      (SELECT json_build_object('id',cp.firebase_uid,'name',cp.display_name,'handle','@'||cp.username)
+        FROM duel_candidates q JOIN profiles cp ON cp.firebase_uid=q.submitter_uid
+        WHERE q.id=d.candidate_id AND cp.deletion_requested_at IS NULL AND ${unblocked('$1', 'cp.firebase_uid')}) AS contributor,
+      ${voteField},
       (SELECT count(*)::int FROM post_comments c JOIN profiles cp ON cp.firebase_uid=c.firebase_uid WHERE c.post_id=r.id AND ${postCommentVisible}) AS "commentCount"
       FROM ${postRelations} JOIN daily_duels d ON d.post_id=r.id WHERE ${postVisible}
       AND ($3::uuid IS NULL OR r.id=$3)
@@ -97,6 +112,7 @@ export class DailyDuelsService {
           ...r.content,
           votes: r.votes,
           commentCount: r.commentCount,
+          contributor: r.contributor,
         }
       : null;
   }
