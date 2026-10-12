@@ -56,6 +56,7 @@ enum CommunityError: LocalizedError {
 @MainActor @Observable final class CommunityThread {
     private(set) var post: CommunityPost?
     private(set) var comments: [RemoteComment] = []
+    private(set) var collapsed: Set<String> = []
     private(set) var users: [String: User] = [:]
     private(set) var interactions: [String: InteractionSummary] = [:]
     private(set) var canComment = false
@@ -64,38 +65,79 @@ enum CommunityError: LocalizedError {
     private(set) var error: String?
     let api: any CommunityAPI; let id: String
     init(api: any CommunityAPI, id: String) { self.api = api; self.id = id }
+    var conversation: CommentConversation { .init(comments: comments, collapsed: collapsed) }
+    func toggleConversation(_ id: String) {
+        guard comments.contains(where: { $0.id == id }) else { return }
+        if !collapsed.insert(id).inserted { collapsed.remove(id) }
+    }
     func load(more: Bool = false) async {
         guard !busy, !more || cursor != nil else { return }; busy = true; error = nil
         defer { busy = false }
         do {
+            var refreshedPost: CommunityPost?
+            var refreshedUsers: [User] = []
             if !more {
                 let page = try await api.fetchPost(id); try page.validate()
                 guard page.posts.count == 1, page.posts[0].id == id else { throw SocialError.invalid }
-                post = page.posts[0]; interactions[id] = post?.interaction
-                for user in page.users { users[user.id] = user }
+                refreshedPost = page.posts[0]; refreshedUsers = page.users
             }
             let after = more ? cursor : nil
             let page = try await api.fetchPostComments(id, after: after)
             try Task.checkCancellation(); try page.validate(review: id)
             guard page.nextCursor == nil || page.nextCursor != after else { throw SocialError.invalid }
             let previous = more ? comments : []
-            comments = previous + page.comments.filter { comment in !previous.contains(where: { $0.id == comment.id }) }
+            let known = Set(previous.map(\.id))
+            comments = ordered(previous + page.comments.filter { !known.contains($0.id) })
+            if let refreshedPost {
+                post = refreshedPost; users = [:]; interactions = [id: refreshedPost.interaction]
+                collapsed.formIntersection(Set(comments.map(\.id)))
+                for user in refreshedUsers { users[user.id] = user }
+            }
             for user in page.users { users[user.id] = user }
             for comment in page.comments { interactions[comment.id] = comment.interaction }
             canComment = page.canComment; cursor = page.nextCursor
         } catch is CancellationError { }
         catch {
             self.error = error.localizedDescription
-            if error is CommunityError { post = nil; comments = []; canComment = false }
+            if error is CommunityError { clear() }
         }
     }
     func reply(id commentID: String, text: String, spoiler: Bool, parent: String? = nil) async -> Bool {
         guard !busy, canComment else { return false }; busy = true; error = nil
+        defer { busy = false }
         do {
             let receipt = try await api.postReply(post: id, id: commentID, text: text, spoiler: spoiler, parent: parent)
-            guard receipt.saved, receipt.reviewID == id, receipt.commentID == commentID else { throw SocialError.invalid }
-            busy = false; await load(); return true
-        } catch { self.error = error.localizedDescription; busy = false; return false }
+            guard receipt.saved, receipt.reviewID == id, receipt.commentID == commentID,
+                  receipt.commentCount.map({ $0 >= 0 }) ?? true else { throw SocialError.invalid }
+            if let comment = receipt.comment, let user = receipt.user {
+                try CommentsPage(reviewID: id, canComment: canComment, comments: [comment], users: [user], nextCursor: nil).validate(review: id)
+                guard comment.id == commentID, comment.text == text, comment.spoiler == spoiler,
+                      comment.parentID == parent || (comment.parentID == nil && comment.isReply == true && parent != nil) else { throw SocialError.invalid }
+                let isNew = !comments.contains(where: { $0.id == commentID })
+                comments = ordered(comments.filter { $0.id != commentID } + [comment])
+                users[user.id] = user; interactions[commentID] = comment.interaction
+                let count = receipt.commentCount ?? ((post?.commentCount ?? 0) + (isNew ? 1 : 0))
+                post?.commentCount = count
+                collapsed.subtract(conversation.ancestors(of: commentID))
+            } else {
+                guard receipt.comment == nil, receipt.user == nil else { throw SocialError.invalid }
+                // A confirmed retry may refer to a subsequently hidden comment.
+                let wasLoaded = comments.contains { $0.id == commentID }
+                comments.removeAll { $0.id == commentID }; interactions[commentID] = nil
+                collapsed.remove(commentID)
+                let count = receipt.commentCount ?? max(0, (post?.commentCount ?? 0) - (wasLoaded ? 1 : 0))
+                post?.commentCount = count
+                error = L10n.text("Comentário enviado. Atualize a conversa para verificar sua disponibilidade.")
+            }
+            return true
+        } catch { self.error = error.localizedDescription; return false }
+    }
+    private func ordered(_ values: [RemoteComment]) -> [RemoteComment] {
+        values.sorted { $0.createdAt == $1.createdAt ? $0.id < $1.id : $0.createdAt < $1.createdAt }
+    }
+    private func clear() {
+        post = nil; comments = []; users = [:]; interactions = [:]
+        collapsed = []; canComment = false; cursor = nil
     }
     func vote(_ choice: Int) async {
         guard !busy else { return }; busy = true; error = nil
@@ -133,7 +175,7 @@ enum CommunityError: LocalizedError {
                 let r = try await api.reportPost(id, reason: reason.apiValue, alsoBlock: block)
                 guard r.reported, r.reviewID == id, r.blockedUserID == (block ? author : nil) else { throw SocialError.invalid }
             }
-            comments = []; post = nil; canComment = false
+            clear()
             busy = false
             if comment != nil && !block { await load() }
             return true
@@ -145,7 +187,7 @@ enum CommunityError: LocalizedError {
         do {
             let receipt = try await api.deletePost(id)
             guard receipt.deleted, receipt.id == id else { throw SocialError.invalid }
-            post = nil; comments = []; return true
+            clear(); return true
         } catch { self.error = error.localizedDescription; return false }
     }
 }

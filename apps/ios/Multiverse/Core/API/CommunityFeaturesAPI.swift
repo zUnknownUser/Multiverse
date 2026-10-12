@@ -61,6 +61,7 @@ struct ScheduleInput: Encodable, Sendable { let itemID: String; let startsOn: St
     func roomChanges(_ item: String, after: String?) async throws -> RoomChanges
 }
 extension CommunityAPI {
+    func fetchCommentContext(post: String, comment: String) async throws -> CommentContextPage { throw CommunityError.unavailable }
     func fetchPosts(filter: CommunityFilter, after: String?) async throws -> CommunityPage {
         guard filter.search.isEmpty, filter.feed == "recent", filter.kind == nil, filter.club == nil else { throw CommunityError.unavailable }
         return try await fetchPosts(universe: filter.universe, item: filter.item, after: after)

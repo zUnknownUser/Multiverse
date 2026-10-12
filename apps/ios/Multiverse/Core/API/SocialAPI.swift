@@ -44,7 +44,12 @@ struct CommentsPage: Codable, Sendable {
         for comment in comments { try comment.interaction.validate(target: comment.id) }
     }
 }
-struct CommentReceipt: Codable, Sendable { let reviewID: String; let commentID: String; let saved: Bool }
+struct CommentReceipt: Codable, Sendable {
+    let reviewID: String; let commentID: String; let saved: Bool
+    var comment: RemoteComment? = nil
+    var user: User? = nil
+    var commentCount: Int? = nil
+}
 struct CommentReportReceipt: Codable, Sendable { let reported: Bool; let reviewID: String; let commentID: String; let blockedUserID: String? }
 struct SocialBlock: Codable, Identifiable, Sendable {
     let id: String

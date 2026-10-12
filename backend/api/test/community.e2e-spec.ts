@@ -678,6 +678,191 @@ describe.skipIf(!databaseURL)('Live community features with PostgreSQL', () => {
         .parentID,
     ).toBeNull();
   });
+  it('returns bounded ancestor context across comment pages without unrelated siblings', async () => {
+    await member('owner');
+    await member('alice');
+    const post = randomUUID();
+    await put('posts/' + post, input).expect(200);
+    const ids: string[] = [];
+    for (let i = 0; i < 35; i++) {
+      const id = randomUUID();
+      ids.push(id);
+      await db.query(
+        "INSERT INTO post_comments(id,post_id,firebase_uid,text,created_at) VALUES($1,$2,'alice',$3,now()+$4*interval '1 second')",
+        [id, post, 'Comment ' + i, i],
+      );
+    }
+    const target = ids[34];
+    await db.query('UPDATE post_comments SET parent_id=$2 WHERE id=$1', [
+      target,
+      ids[0],
+    ]);
+    const page = (await get(`posts/${post}/comments`).expect(200)).body;
+    expect(page.comments).toHaveLength(30);
+    expect(page.comments.some((c: { id: string }) => c.id === target)).toBe(
+      false,
+    );
+    const context = (
+      await get(`posts/${post}/comments/${target}/context`).expect(200)
+    ).body;
+    expect(context).toMatchObject({
+      reviewID: post,
+      targetID: target,
+      canComment: true,
+      truncated: false,
+    });
+    expect(context.comments.map((c: { id: string }) => c.id)).toEqual([
+      ids[0],
+      target,
+    ]);
+    expect(context.users.map((u: { id: string }) => u.id)).toEqual(['alice']);
+    const second = (
+      await get(`posts/${post}/comments?after=${page.nextCursor}`).expect(200)
+    ).body;
+    expect(second.comments).toHaveLength(5);
+    expect(second.nextCursor).toBeNull();
+    // A deep path is capped even if the post contains many more comments.
+    for (let i = 1; i < ids.length; i++)
+      await db.query('UPDATE post_comments SET parent_id=$2 WHERE id=$1', [
+        ids[i],
+        ids[i - 1],
+      ]);
+    const bounded = (
+      await get(`posts/${post}/comments/${target}/context`).expect(200)
+    ).body;
+    expect(bounded.truncated).toBe(true);
+    expect(bounded.comments.map((c: { id: string }) => c.id)).toEqual(
+      ids.slice(5),
+    );
+  });
+  it('stops context at hidden ancestors and enforces target, post and comment permissions', async () => {
+    await member('owner');
+    await member('alice');
+    await member('bob');
+    const post = randomUUID(),
+      other = randomUUID(),
+      root = randomUUID(),
+      middle = randomUUID(),
+      target = randomUUID();
+    await put('posts/' + post, input).expect(200);
+    await put('posts/' + other, input).expect(200);
+    await comment(post, root, { text: 'Root', spoiler: true }, 'owner').expect(
+      200,
+    );
+    await comment(
+      post,
+      middle,
+      { text: 'Hidden middle', spoiler: false, parentID: root },
+      'alice',
+    ).expect(200);
+    await comment(
+      post,
+      target,
+      { text: 'Visible target', spoiler: false, parentID: middle },
+      'bob',
+    ).expect(200);
+    await get(`posts/${other}/comments/${target}/context`).expect(404);
+    await get(`posts/${post}/comments/not-a-uuid/context`).expect(400);
+    await put('me/blocks/alice', { blocked: true }).expect(200);
+    const blocked = (
+      await get(`posts/${post}/comments/${target}/context`).expect(200)
+    ).body;
+    expect(blocked.comments).toHaveLength(1);
+    expect(blocked.comments[0]).toMatchObject({
+      id: target,
+      parentID: null,
+      isReply: true,
+    });
+    expect(blocked.users.map((u: { id: string }) => u.id)).toEqual(['bob']);
+    expect(blocked.truncated).toBe(false);
+    await get(`posts/${post}/comments/${middle}/context`).expect(404);
+    await put('me/blocks/alice', { blocked: false }).expect(200);
+    await put(`posts/${post}/comments/${middle}/report`, {
+      reason: 'spam',
+      alsoBlock: false,
+    }).expect(200);
+    expect(
+      (await get(`posts/${post}/comments/${target}/context`).expect(200)).body
+        .comments,
+    ).toHaveLength(1);
+    await db.query(
+      "UPDATE post_comments SET moderation_status='hidden' WHERE id=$1",
+      [middle],
+    );
+    expect(
+      (await get(`posts/${post}/comments/${target}/context`, 'bob').expect(200))
+        .body.comments,
+    ).toHaveLength(1);
+    await db.query(
+      "UPDATE profiles SET comment_permission='nobody' WHERE firebase_uid='owner'",
+    );
+    expect(
+      (await get(`posts/${post}/comments/${target}/context`, 'bob').expect(200))
+        .body.canComment,
+    ).toBe(false);
+    await put('me/blocks/bob', { blocked: true }).expect(200);
+    await get(`posts/${post}/comments/${target}/context`, 'bob').expect(404);
+    await get(`posts/${post}/comments/${target}/context`).expect(404);
+  });
+  it('returns canonical saved comments for incremental insertion and never resurrects hidden retries', async () => {
+    await member('owner');
+    await member('alice');
+    const post = randomUUID(),
+      root = randomUUID(),
+      reply = randomUUID();
+    await put('posts/' + post, input).expect(200);
+    await comment(
+      post,
+      root,
+      { text: 'Question', spoiler: false },
+      'owner',
+    ).expect(200);
+    const body = { text: 'Answer @owner', spoiler: true, parentID: root };
+    const first = (await comment(post, reply, body).expect(200)).body;
+    expect(first).toMatchObject({
+      reviewID: post,
+      commentID: reply,
+      saved: true,
+      comment: {
+        id: reply,
+        user: 'alice',
+        text: body.text,
+        spoiler: true,
+        parentID: root,
+        isReply: true,
+        mentions: [{ id: 'owner', handle: '@owner' }],
+        interaction: { id: reply, likes: 0 },
+      },
+      user: { id: 'alice', handle: '@alice' },
+    });
+    expect(first.comment.createdAt).toBeTypeOf('string');
+    expect((await comment(post, reply, body).expect(200)).body).toEqual(first);
+    await put(`posts/${post}/comments/${reply}/reaction`, {
+      reaction: 'POW!',
+      liked: true,
+    }).expect(200);
+    const retry = (await comment(post, reply, body).expect(200)).body;
+    expect(retry.comment.interaction.likes).toBe(1);
+    expect(retry.comment.createdAt).toBe(first.comment.createdAt);
+    expect(
+      (await get(`posts/${post}/comments`).expect(200)).body.comments,
+    ).toHaveLength(2);
+    await db.query(
+      "UPDATE post_comments SET moderation_status='hidden' WHERE id=$1",
+      [reply],
+    );
+    expect((await comment(post, reply, body).expect(200)).body).toEqual({
+      reviewID: post,
+      commentID: reply,
+      saved: true,
+      comment: null,
+      user: null,
+    });
+    await get(`posts/${post}/comments/${reply}/context`, 'alice').expect(404);
+    await comment(post, reply, { ...body, text: 'Different retry' }).expect(
+      409,
+    );
+  });
   it('discovers unanswered discussions without a catalog item and removes them after a reply', async () => {
     await member('owner');
     await member('alice');

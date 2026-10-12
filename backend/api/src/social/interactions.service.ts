@@ -8,7 +8,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { PoolClient } from 'pg';
+import type { PoolClient, QueryResultRow } from 'pg';
 import { AccountLifecycleService } from '../accounts/account-lifecycle.service.js';
 import { SocialService, type FeedCursor } from './social.service.js';
 import {
@@ -138,14 +138,64 @@ export class InteractionsService {
       };
     });
   }
+  private get commentFields() {
+    return `c.id,c.firebase_uid AS "user",c.text,c.spoiler,c.created_at AS "createdAt",
+      ${this.domain === 'post' ? `CASE WHEN EXISTS(SELECT 1 FROM post_comments pc JOIN profiles pp ON pp.firebase_uid=pc.firebase_uid WHERE pc.id=c.parent_id AND pc.post_id=c.post_id AND ${postParentVisible}) THEN c.parent_id ELSE NULL END AS "parentID",(c.parent_id IS NOT NULL) AS "isReply",${mentionsField(true)},` : ''}
+      to_char(c.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "cursorTime",
+      cp.display_name AS name,cp.username,cp.avatar_color AS "avatarColor",cp.avatar_id AS "avatarID",cp.avatar_photo_id AS "avatarPhotoID"`;
+  }
+  private async commentPayload(
+    client: PoolClient,
+    uid: string,
+    rows: QueryResultRow[],
+  ) {
+    const summaries = await reactionSummaries(
+      client,
+      uid,
+      rows.map((row) => row.id),
+      this.domain,
+    );
+    return {
+      comments: rows.map((row) => ({
+        id: row.id,
+        user: row.user,
+        text: row.text,
+        spoiler: row.spoiler,
+        createdAt: row.createdAt,
+        ...(this.domain === 'post'
+          ? {
+              parentID: row.parentID,
+              isReply: row.isReply,
+              mentions: row.mentions,
+            }
+          : {}),
+        interaction: summaries.find((s) => s.id === row.id),
+      })),
+      users: [
+        ...new Map(
+          rows.map((row) => [
+            row.user,
+            {
+              id: row.user,
+              name: row.name,
+              handle: '@' + row.username,
+              avatarColor: row.avatarColor,
+              avatarID: row.avatarID,
+              avatarPhotoID: row.avatarPhotoID,
+              bio: '',
+              followers: null,
+              badgeUniverse: '',
+            },
+          ]),
+        ).values(),
+      ],
+    };
+  }
   async comments(uid: string, reviewID: string, cursor?: FeedCursor) {
     return this.lifecycle.withActiveAccount(uid, async (client) => {
       const review = await this.review(client, uid, reviewID);
       const result = await client.query(
-        `SELECT c.id,c.firebase_uid AS "user",c.text,c.spoiler,c.created_at AS "createdAt",
-        ${this.domain === 'post' ? `CASE WHEN EXISTS(SELECT 1 FROM post_comments pc JOIN profiles pp ON pp.firebase_uid=pc.firebase_uid WHERE pc.id=c.parent_id AND ${postParentVisible}) THEN c.parent_id ELSE NULL END AS "parentID",(c.parent_id IS NOT NULL) AS "isReply",${mentionsField(true)},` : ''}
-        to_char(c.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "cursorTime",
-        cp.display_name AS name,cp.username,cp.avatar_color AS "avatarColor",cp.avatar_id AS "avatarID",cp.avatar_photo_id AS "avatarPhotoID"
+        `SELECT ${this.commentFields}
         FROM ${this.tables.comments} c JOIN profiles cp ON cp.firebase_uid=c.firebase_uid JOIN ${this.tables.parents} r ON r.id=c.${this.tables.key}
         WHERE c.${this.tables.key}=$2 AND ${this.tables.commentVisible}
         AND ($3::timestamptz IS NULL OR (c.created_at,c.id)>($3::timestamptz,$4::uuid))
@@ -154,48 +204,10 @@ export class InteractionsService {
       );
       const rows = result.rows.slice(0, 30),
         last = rows.at(-1);
-      const summaries = await reactionSummaries(
-        client,
-        uid,
-        rows.map((row) => row.id),
-        this.domain,
-      );
       return {
         reviewID,
         canComment: await this.canComment(client, uid, review),
-        comments: rows.map((row) => ({
-          id: row.id,
-          user: row.user,
-          text: row.text,
-          spoiler: row.spoiler,
-          createdAt: row.createdAt,
-          ...(this.domain === 'post'
-            ? {
-                parentID: row.parentID,
-                isReply: row.isReply,
-                mentions: row.mentions,
-              }
-            : {}),
-          interaction: summaries.find((s) => s.id === row.id),
-        })),
-        users: [
-          ...new Map(
-            rows.map((row) => [
-              row.user,
-              {
-                id: row.user,
-                name: row.name,
-                handle: '@' + row.username,
-                avatarColor: row.avatarColor,
-                avatarID: row.avatarID,
-                avatarPhotoID: row.avatarPhotoID,
-                bio: '',
-                followers: null,
-                badgeUniverse: '',
-              },
-            ]),
-          ).values(),
-        ],
+        ...(await this.commentPayload(client, uid, rows)),
         nextCursor:
           result.rows.length > 30
             ? Buffer.from(
@@ -204,6 +216,60 @@ export class InteractionsService {
             : null,
       };
     });
+  }
+  async context(uid: string, reviewID: string, targetID: string) {
+    return this.lifecycle.withActiveAccount(uid, async (client) => {
+      const review = await this.review(client, uid, reviewID);
+      // Bound database work to one ancestry path, irrespective of the post's size.
+      // Check visibility at every step; never traverse through a hidden ancestor.
+      const result = await client.query(
+        `WITH RECURSIVE ancestors AS (
+          SELECT c.id,c.parent_id,1 AS depth,ARRAY[c.id] AS path
+          FROM post_comments c JOIN profiles cp ON cp.firebase_uid=c.firebase_uid JOIN community_posts r ON r.id=c.post_id
+          WHERE c.id=$3 AND c.post_id=$2 AND ${postCommentVisible}
+          UNION ALL
+          SELECT c.id,c.parent_id,a.depth+1,a.path||c.id
+          FROM ancestors a JOIN post_comments c ON c.id=a.parent_id AND c.post_id=$2
+          JOIN profiles cp ON cp.firebase_uid=c.firebase_uid JOIN community_posts r ON r.id=c.post_id
+          WHERE a.depth<30 AND NOT c.id=ANY(a.path) AND ${postCommentVisible}
+        )
+        SELECT ${this.commentFields}
+        FROM ancestors a JOIN post_comments c ON c.id=a.id
+        JOIN profiles cp ON cp.firebase_uid=c.firebase_uid JOIN community_posts r ON r.id=c.post_id
+        ORDER BY a.depth DESC`,
+        [uid, reviewID, targetID],
+      );
+      if (!result.rowCount)
+        throw new NotFoundException({ code: 'COMMENT_UNAVAILABLE' });
+      return {
+        reviewID,
+        targetID,
+        ...(await this.commentPayload(client, uid, result.rows)),
+        canComment: await this.canComment(client, uid, review),
+        truncated: result.rows.length === 30 && result.rows[0].parentID != null,
+      };
+    });
+  }
+  private async commentReceipt(
+    client: PoolClient,
+    uid: string,
+    reviewID: string,
+    id: string,
+  ) {
+    const receipt = { reviewID, commentID: id, saved: true };
+    if (this.domain !== 'post') return receipt;
+    const result = await client.query(
+      `SELECT ${this.commentFields}
+      FROM post_comments c JOIN profiles cp ON cp.firebase_uid=c.firebase_uid JOIN community_posts r ON r.id=c.post_id
+      WHERE c.id=$3 AND c.post_id=$2 AND ${postCommentVisible}`,
+      [uid, reviewID, id],
+    );
+    const payload = await this.commentPayload(client, uid, result.rows);
+    return {
+      ...receipt,
+      comment: payload.comments[0] ?? null,
+      user: payload.users[0] ?? null,
+    };
   }
   async post(
     uid: string,
@@ -230,7 +296,7 @@ export class InteractionsService {
         )
           throw new ConflictException({ code: 'COMMENT_CONFLICT' });
         // A retry acknowledges the saved comment, never republishes hidden content.
-        return { reviewID, commentID: id, saved: true };
+        return this.commentReceipt(client, uid, reviewID, id);
       }
       const parent =
         parentID && this.domain === 'post'
@@ -284,7 +350,7 @@ export class InteractionsService {
         reviewID,
         id,
       );
-      return { reviewID, commentID: id, saved: true };
+      return this.commentReceipt(client, uid, reviewID, id);
     });
   }
   async react(

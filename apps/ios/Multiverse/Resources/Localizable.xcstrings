@@ -20645,6 +20645,159 @@
           }
         }
       }
+    },
+    "Expandir conversa": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expandir conversa"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expand conversation"
+          }
+        }
+      }
+    },
+    "Recolher conversa": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recolher conversa"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapse conversation"
+          }
+        }
+      }
+    },
+    "CONVERSA RECOLHIDA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONVERSA RECOLHIDA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONVERSATION COLLAPSED"
+          }
+        }
+      }
+    },
+    "VER CONTEXTO": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VER CONTEXTO"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VIEW CONTEXT"
+          }
+        }
+      }
+    },
+    "CONTEXTO DA CONVERSA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONTEXTO DA CONVERSA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONVERSATION CONTEXT"
+          }
+        }
+      }
+    },
+    "VER CONTEXTO ANTERIOR": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VER CONTEXTO ANTERIOR"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VIEW EARLIER CONTEXT"
+          }
+        }
+      }
+    },
+    "Um comentário anterior não está disponível.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um comentário anterior não está disponível."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An earlier comment is unavailable."
+          }
+        }
+      }
+    },
+    "RESPOSTA SELECIONADA": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RESPOSTA SELECIONADA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SELECTED REPLY"
+          }
+        }
+      }
+    },
+    "Comentário enviado. Atualize a conversa para verificar sua disponibilidade.": {
+      "extractionState": "manual",
+      "localizations": {
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comentário enviado. Atualize a conversa para verificar sua disponibilidade."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment sent. Refresh the conversation to check its availability."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

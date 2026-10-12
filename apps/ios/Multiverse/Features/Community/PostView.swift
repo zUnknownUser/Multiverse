@@ -21,6 +21,7 @@ private struct PostThreadView: View {
     @State private var spoiler = false
     @State private var pending: (id: String, text: String, spoiler: Bool, parent: String?)?
     @State private var replyTo: RemoteComment?
+    @State private var contextTarget: RemoteComment?
     @State private var mentioning = false
     @State private var editing = false
     @State private var resolving = false
@@ -29,11 +30,12 @@ private struct PostThreadView: View {
     @FocusState private var replyFocused: Bool
     private struct ReportTarget: Identifiable { let id: String; let comment: String?; let author: String }
     var body: some View {
-        ScrollViewReader { proxy in
+        let conversation = thread.conversation
+        return ScrollViewReader { proxy in
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
-            VStack(alignment: .leading, spacing: 18) {
+            LazyVStack(alignment: .leading, spacing: 18) {
                 if let error = thread.error { AuthErrorBanner(message: error); Button(L10n.text("TENTAR DE NOVO")) { Task { await thread.load() } } }
-                if thread.busy { ProgressView() }
+                if thread.busy && thread.post == nil { ProgressView() }
                 if let post = thread.post {
                     VStack(alignment: .leading, spacing: 14) {
                         author(post.user)
@@ -61,23 +63,8 @@ private struct PostThreadView: View {
                         }
                     }.padding(14).comicCard()
                     Text(L10n.text("COMENTÁRIOS")).font(MVFont.section(18))
-                    ForEach(thread.comments) { comment in
-                        VStack(alignment: .leading, spacing: 10) {
-                            author(comment.user)
-                            if comment.isReply == true {
-                                if let parent = thread.comments.first(where: { $0.id == comment.parentID }), let person = thread.users[parent.user] {
-                                    Label(L10n.format("Em resposta a %1$@", person.handle), systemImage: "arrowshape.turn.up.left").font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
-                                } else { Text(L10n.text("Resposta a um comentário anterior.")).font(MVFont.body(11, weight: 500)).foregroundStyle(MV.C.muted) }
-                            }
-                            if comment.spoiler && !revealed.contains(comment.id) {
-                                Button(L10n.text("REVELAR SPOILER")) { revealed.insert(comment.id) }
-                            } else { MentionedText(text: comment.text, mentions: comment.mentions ?? []).font(MVFont.body(14, weight: 500)) }
-                            reactions(comment: comment.id)
-                            if thread.canComment { Button(L10n.text("RESPONDER")) { replyTo = comment }.disabled(thread.busy || pending != nil) }
-                            if comment.user != store.meID {
-                                Button(L10n.text("DENUNCIAR")) { reportTarget = .init(id: comment.id, comment: comment.id, author: comment.user) }.font(MVFont.body(11, weight: 700))
-                            }
-                        }.frame(maxWidth: .infinity, alignment: .leading).padding(14).comicCard().padding(.leading, comment.isReply == true ? 14 : 0)
+                    ForEach(conversation.visible) { comment in
+                        commentCard(comment, parent: comment.parentID.flatMap { conversation.byID[$0] }).id(comment.id)
                     }
                     if thread.cursor != nil { Button(L10n.text("CARREGAR MAIS")) { Task { await thread.load(more: true) } }.disabled(thread.busy) }
                     if thread.canComment {
@@ -88,6 +75,7 @@ private struct PostThreadView: View {
                                     Spacer(); Button(L10n.text("CANCELAR")) { self.replyTo = nil }.disabled(thread.busy || pending != nil)
                                 }
                             }
+                            if let replyTo { Button(L10n.text("VER CONTEXTO")) { contextTarget = replyTo }.font(MVFont.bold(11)) }
                             Button(L10n.text("MENCIONAR PESSOA")) { mentioning = true }.disabled(thread.busy || pending != nil)
                             TextField(L10n.text("Escreva um comentário"), text: $text, axis: .vertical).focused($replyFocused).lineLimit(3...8).disabled(thread.busy || pending != nil)
                             Toggle(L10n.text("Contém spoiler"), isOn: $spoiler).disabled(thread.busy || pending != nil)
@@ -100,6 +88,9 @@ private struct PostThreadView: View {
         }.task { await thread.load() }.refreshable { await thread.load() }
         .confirmationDialog(L10n.text("Excluir esta publicação?"), isPresented: $deleting, titleVisibility: .visible) {
             Button(L10n.text("EXCLUIR PUBLICAÇÃO"), role: .destructive) { Task { if await thread.delete() { dismiss() } } }
+        }
+        .sheet(item: $contextTarget) { target in
+            CommentContextView(api: thread.api, post: thread.id, target: target.id)
         }
         .sheet(isPresented: $mentioning) { MentionPicker { user in text += (text.isEmpty || text.hasSuffix(" ") ? "" : " ") + user.handle + " " } }
         .sheet(isPresented: $editing, onDismiss: { Task { await thread.load() } }) {
@@ -118,6 +109,41 @@ private struct PostThreadView: View {
             if newValue != nil { withAnimation { proxy.scrollTo("reply-composer", anchor: .bottom) }; replyFocused = true }
         }
         }
+    }
+    private func commentCard(_ comment: RemoteComment, parent: RemoteComment?) -> some View {
+        let collapsed = thread.collapsed.contains(comment.id)
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                author(comment.user)
+                Spacer(minLength: 8)
+                Button { thread.toggleConversation(comment.id) } label: {
+                    Image(systemName: collapsed ? "chevron.down" : "chevron.up")
+                        .font(MVFont.bold(12)).frame(width: 44, height: 44).contentShape(Rectangle())
+                }.buttonStyle(.plain)
+                    .accessibilityLabel(L10n.text(collapsed ? "Expandir conversa" : "Recolher conversa"))
+            }
+            if collapsed {
+                Button(L10n.text("CONVERSA RECOLHIDA")) { thread.toggleConversation(comment.id) }
+                    .font(MVFont.bold(11)).foregroundStyle(MV.C.muted)
+            } else {
+                if comment.isReply == true {
+                    Button { contextTarget = comment } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            if let parent, let person = thread.users[parent.user] {
+                                Label(L10n.format("Em resposta a %1$@", person.handle), systemImage: "arrowshape.turn.up.left")
+                            } else { Text(L10n.text("Resposta a um comentário anterior.")) }
+                            Text(L10n.text("VER CONTEXTO")).underline()
+                        }.font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
+                    }.buttonStyle(.plain)
+                }
+                CommentMessage(comment: comment, revealed: $revealed)
+                reactions(comment: comment.id)
+                if thread.canComment { Button(L10n.text("RESPONDER")) { replyTo = comment }.disabled(thread.busy || pending != nil) }
+                if comment.user != store.meID {
+                    Button(L10n.text("DENUNCIAR")) { reportTarget = .init(id: comment.id, comment: comment.id, author: comment.user) }.font(MVFont.body(11, weight: 700))
+                }
+            }
+        }.frame(maxWidth: .infinity, alignment: .leading).padding(14).comicCard().padding(.leading, comment.isReply == true ? 14 : 0)
     }
     @ViewBuilder private func author(_ id: String) -> some View {
         if let user = thread.users[id] {

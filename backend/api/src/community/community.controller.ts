@@ -253,6 +253,13 @@ export class CommunityController {
   ) {
     return this.interactions.comments(req.identity.uid, id, cursor(q));
   }
+  @Get(':id/comments/:commentID/context') context(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', uuid) id: string,
+    @Param('commentID', uuid) comment: string,
+  ) {
+    return this.interactions.context(req.identity.uid, id, comment);
+  }
   @Put(':id/comments/:commentID') comment(
     @Req() req: AuthenticatedRequest,
     @Param('id', uuid) id: string,

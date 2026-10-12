@@ -10,6 +10,9 @@ extension AccountAPIClient {
     func fetchPostComments(_ id: String, after: String?) async throws -> CommentsPage {
         try await request("posts/" + id + "/comments", query: after.map { [URLQueryItem(name: "after", value: $0)] } ?? [])
     }
+    func fetchCommentContext(post: String, comment: String) async throws -> CommentContextPage {
+        try await request("posts/\(post)/comments/\(comment)/context")
+    }
     func postReply(post: String, id: String, text: String, spoiler: Bool) async throws -> CommentReceipt {
         struct Input: Encodable { let text: String; let spoiler: Bool }
         return try await request("posts/" + post + "/comments/" + id, method: "PUT", body: JSONEncoder().encode(Input(text: text, spoiler: spoiler)))

@@ -3,7 +3,7 @@ import Foundation
 struct CommunityPost: Codable, Identifiable, Sendable {
     let id: String; let user: String; let universeID: String; let itemID: String?
     let title: String; let text: String; let spoiler: Bool; let createdAt: Date
-    let commentCount: Int; let interaction: InteractionSummary
+    var commentCount: Int; let interaction: InteractionSummary
     var segment: Int? = nil; var kind: String? = nil; var clubID: String? = nil; var scheduleID: String? = nil
     var version: Int? = nil; var editedAt: Date? = nil
     var images: [PostImage]? = nil; var mentions: [PostMention]? = nil; var votes: PostVotes? = nil
@@ -56,6 +56,7 @@ struct PostDeletion: Codable, Sendable { let id: String; let deleted: Bool }
     func publishPost(id: String, input: PostInput) async throws -> PostReceipt
     func deletePost(_ id: String) async throws -> PostDeletion
     func fetchPostComments(_ id: String, after: String?) async throws -> CommentsPage
+    func fetchCommentContext(post: String, comment: String) async throws -> CommentContextPage
     func postReply(post: String, id: String, text: String, spoiler: Bool) async throws -> CommentReceipt
     func reactToPost(_ id: String, comment: String?, reaction: String?, liked: Bool) async throws -> InteractionSummary
     func reportPost(_ id: String, reason: String, alsoBlock: Bool) async throws -> ReportReceipt

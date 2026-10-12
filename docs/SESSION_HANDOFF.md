@@ -1,3 +1,18 @@
+## 2026-10-12 — Conversas: recolhimento, contexto e envio incremental
+
+- Discussões da comunidade agora permitem recolher um comentário e seus descendentes. O estado é local à conversa, preservado na paginação; responder reabre apenas os ancestrais da resposta. Ordem cronológica e cards existentes mantidos, com renderização lazy.
+- “Ver contexto” abre uma sheet independente com a sequência de ancestrais, proteção de spoilers e carregamento anterior sob demanda. Cada requisição retorna no máximo 30 comentários; não percorre páginas inteiras do post. Voltar mantém as páginas e os comentários recolhidos na discussão.
+- Envio insere o comentário canônico confirmado pelo backend sem recarregar post/comentários ou reiniciar o cursor. Retry mantém UUID/pai, não duplica nem ressuscita conteúdo oculto; recibos inválidos não alteram a conversa. Paginação posterior deduplica a resposta já inserida.
+- Novo GET `posts/:id/comments/:commentID/context`; recibos de comentários de posts incluem `comment` e `user`. Compatível com clientes anteriores, sem migration. Visibilidade, bloqueios, denúncias e permissões aplicados no servidor; contratos em `backend/api/docs/live-community.md`.
+- Validação: 279 testes iOS em 33 suítes; backend completo com 99 unitários + 149 HTTP/PostgreSQL, format/lint/typecheck/build. Renderizações nativas temporárias em 320pt, PT-BR/EN, claro/Noir, conferidas e harness removido. Sem instalação no iPhone físico.
+
+### Referência e limites do REA
+
+- Referência: [Mlem](https://github.com/mlemgroup/mlem/tree/a16d20fddfcfce2dbbf009d155d52c42892ce283), commit `a16d20fddfcfce2dbbf009d155d52c42892ce283`. Compilação local unsigned de Debug para simulador, fat dylib reduzida à fatia ARM64; não é um binário baixado da App Store. Implementação própria no Multiverse, sem incorporar código do Mlem.
+- REA `inspect_macho`, provedor `native-macos`, Evidence `ev_57b90688e3fdf79e1a727574e68ae315597b1f2e8849f9e4cf237ec66b5e76a6`, SHA-256 `31a38a70d2f644786da257499c54dd7a2b465134780cc3c3052d9fada3624cbe`: símbolos observados para `CommentTreeNode.collapsed` (getter `0x3cfe74`), `CommentTreeTracker.getThread(preceding:limit:)` (`0xd6ea00`) e `insertCreatedComment(_:parent:)` (`0xd6e3a8`). Inventário de símbolos não comprova execução ou comportamento.
+- Comportamento conferido separadamente no código público: `Mlem/App/Models/CommentTreeNode.swift` e `Mlem/App/Views/Shared/ExpandedPost/CommentTreeTracker.swift` (inserção linha 152; contexto linha 169). Recolhimento por estado do nó, encadeamento por pai e inserção incremental serviram de referência; paginação/privacidade/estilo do Multiverse têm implementação própria.
+- Limitação: a ponte do Hopper excedeu 120s; sua janela indicava versão demo e “Python is Unavailable”. Nenhum pseudocódigo foi recuperado e nenhuma execução do Mlem foi observada. REA reteve o inventário completo apesar de exceder o limite de transporte; exportado localmente para `/tmp/multiverse-rea-mlem-evidence.json`. Processo do Hopper criado nesta investigação encerrado; REA ainda reportou `cleanup_incomplete` para o diretório temporário da ponte.
+
 ## 2026-10-12 — Carregamento recuperável e inicialização única
 
 - `AppStore.bootstrap()` e `reloadAccount()` usam um único controle de operação, adquirido antes de qualquer suspensão, inclusive da espera por salvamentos do onboarding. Chamadas concorrentes não iniciam buscas duplicadas; bootstrap já concluído não repete leituras.

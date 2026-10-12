@@ -36,6 +36,19 @@ Conteúdo escrito por usuários preserva o idioma original; interface/erros em P
 - Comentários aceitam `parentID` opcional, validado no mesmo post e visível ao autor
   da resposta. A lista continua paginada cronologicamente, com referência ao pai;
   o cliente identifica/recua respostas. Não é uma árvore ilimitada carregada de uma vez.
+- `GET /posts/:id/comments/:commentID/context`: devolve
+  `{reviewID,targetID,comments,users,canComment,truncated}`. `comments` traz somente
+  a sequência de ancestrais até o comentário solicitado, em ordem de pai para filho,
+  limitada a 30, independentemente das páginas já abertas. `truncated=true` indica
+  que há um pai visível anterior ao limite; seu `parentID` permite buscar o trecho
+  anterior. A consulta para em ancestrais indisponíveis e não revela seus IDs nem
+  autores; nesse caso, `isReply=true`, `parentID=null` e `truncated=false`.
+  UUIDs, acesso ao post, denúncias, bloqueios e moderação continuam obrigatórios.
+- `PUT /posts/:id/comments/:commentID`: além de `{reviewID,commentID,saved}`, retorna
+  `comment` e `user` canônicos para inserir a resposta confirmada sem recarregar as
+  páginas da conversa. Retry mantém o ID/data original e retorna as reações atuais;
+  comentário oculto confirma a gravação com `comment=null,user=null`, sem republicá-lo.
+  O contrato dos comentários de reviews permanece igual; nenhuma migration adicional.
 - `@username` resolve perfis existentes, com seletor de pessoas no app. Até 10 por
   texto; menções e respostas geram eventos `mention`/`reply` na central. Bloqueios,
   denúncias, moderação, exclusão e retirada da menção são revalidados ao ler o evento.
