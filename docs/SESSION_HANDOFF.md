@@ -1,3 +1,11 @@
+## 2026-10-12 — Carregamento recuperável e inicialização única
+
+- `AppStore.bootstrap()` e `reloadAccount()` usam um único controle de operação, adquirido antes de qualquer suspensão, inclusive da espera por salvamentos do onboarding. Chamadas concorrentes não iniciam buscas duplicadas; bootstrap já concluído não repete leituras.
+- `isLoading` é encerrado via `defer` em sucesso, falha e cancelamento. Primeira carga cancelada oferece a tela existente de tentar novamente; refresh cancelado mantém os dados confirmados. A tentativa seguinte recupera catálogo, conta e atividade, limpando os erros resolvidos.
+- Respostas iniciais do repositório são reunidas e verificadas antes da aplicação. Respostas de catálogo, perfil e sugestões recebidas após cancelamento são descartadas. Cancelamento da atividade é propagado ao carregamento principal e não publica widgets incompletos.
+- Testes de regressão cobrem bootstrap/retry concorrentes, cancelamento inicial e de refresh, provedor que retorna sucesso após cancelamento, perfil/atividade cancelados e recuperação de falhas. Layout, traduções, contratos do backend e persistência da biblioteca não foram alterados.
+- Validação: suíte completa iOS aprovada, 270 testes em 33 suítes no simulador iPhone 17 Pro/iOS 27. Sem instalação no aparelho físico. Alterações locais anteriores e a remoção local do vídeo de marketing permanecem fora deste commit.
+
 ## 2026-10-05 — Ciclo de sessão: respostas antigas e estados globais
 
 - Correções dos itens 1 e 2 da auditoria de lifecycle: geração de sessão compartilhada entre AuthStore e transporte; resultados de bootstrap/login/cadastro/recuperação antigos não restauram identidade, navegação nem erros após logout. Clientes de funcionalidades ficam vinculados à geração, inclusive ao entrar novamente no mesmo UID.

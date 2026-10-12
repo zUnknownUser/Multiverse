@@ -148,8 +148,11 @@ final class AppStore {
     private(set) var usersByID: [String: User] = [:]
     private(set) var universesByID: [String: Universe] = [:]
 
-    /// `true` até `bootstrap()` terminar de carregar o catálogo do repositório.
+    /// Presentation state is separate from ownership of an in-flight load.
     var isLoading = true
+    @ObservationIgnored private var isAccountLoadInFlight = false
+    @ObservationIgnored private var hasLoadedRepository = false
+    @ObservationIgnored private var hasBootstrapped = false
 
     // MARK: - Navegação
     var tab: AppTab = .home
@@ -298,126 +301,171 @@ final class AppStore {
         self.repository = repository ?? MockRepository(startFollowing: onboarded, session: session)
     }
 
-    /// Carrega tudo do repositório. Chamado uma vez, a partir de `.task` na `RootView`.
+    /// Bootstrap and retries share one owner, acquired before any suspension.
     func bootstrap() async {
-        guard isLoading else { return }
-        catalogIssue = nil
+        guard !hasBootstrapped else { return }
+        await loadAccount(reload: false)
+    }
+
+    private func loadAccount(reload: Bool) async {
+        guard !isAccountLoadInFlight else { return }
+        isAccountLoadInFlight = true
+        isLoading = true
+        defer {
+            isLoading = false
+            isAccountLoadInFlight = false
+        }
         do {
-            async let catalogResult = repository.loadCatalog()
-            async let remoteCatalogResult = catalogAPI?.fetchCatalog()
-            async let reviewsResult = repository.fetchReviews()
-            async let diaryResult = repository.fetchDiary()
-            async let followsResult = repository.fetchFollows()
-            async let itemTogglesResult = repository.fetchItemToggles()
-            async let reviewTogglesResult = repository.fetchReviewToggles()
-            async let reactionsResult = repository.fetchReactions()
-            async let pollVotesResult = repository.fetchPollVotes()
-            async let orderStateResult = repository.fetchOrderState()
-            async let likedListsResult = repository.fetchLikedLists()
-            async let shieldStateResult = repository.fetchShieldState()
-            async let clubsResult = repository.fetchClubs()
-            async let clubStateResult = repository.fetchClubState()
-            async let theoriesResult = repository.fetchTheories()
-            async let theoryLoreResult = repository.fetchTheoryLoreState()
-            async let predictionEventsResult = repository.fetchPredictionEvents()
-            async let predictionStateResult = repository.fetchPredictionState()
-            async let conversationsResult = repository.fetchConversations()
-            async let roomsResult = repository.fetchRooms()
-            async let roomProgressResult = repository.fetchRoomProgress()
-            async let liveEventResult = repository.fetchLiveEvent()
-
-            let catalog = try await catalogResult
-            let remoteCatalog = try await remoteCatalogResult
-            try remoteCatalog?.validate()
-            universes = catalog.universes
-            items = catalog.items
-            users = catalog.users
-            badgeNames = catalog.badgeNames
-            connections = catalog.connections
-            timelines = catalog.timelines
-            demoReadingOrders = catalog.readingOrders
-            lists = catalog.lists
-            genericReviewTexts = catalog.genericReviewTexts
-            canonStatus = catalog.canonStatus
-            canonStatusColors = catalog.canonStatusColors
-            duels = catalog.duels
-            me = catalog.me
-            itemsByID = Dictionary(uniqueKeysWithValues: catalog.items.map { ($0.id, $0) })
-            usersByID = Dictionary(uniqueKeysWithValues: catalog.users.map { ($0.id, $0) })
-            universesByID = Dictionary(uniqueKeysWithValues: catalog.universes.map { ($0.id, $0) })
-            if let remoteCatalog { applyCatalog(remoteCatalog) }
-
-            let sampleReviews = try await reviewsResult
-            let sampleDiary = try await diaryResult
-            reviews = activityAPI == nil ? sampleReviews : []
-            diary = activityAPI == nil ? sampleDiary : []
-            follows = try await followsResult
-
-            let itemToggles = try await itemTogglesResult
-            wantList = itemToggles.wanted
-            likedItems = itemToggles.liked
-            checks = itemToggles.seenOverrides
-
-            let reviewToggles = try await reviewTogglesResult
-            likedReviews = reviewToggles.liked
-            likedComments = reviewToggles.likedComments
-            revealedSpoilers = reviewToggles.revealedSpoilers
-            reactions = try await reactionsResult
-
-            let pollVotes = try await pollVotesResult
-            pollVote = pollVotes.weekly
-            essentialVotes = pollVotes.essential
-            canonVotes = pollVotes.canon
-            duelVotes = pollVotes.duel
-
-            let orderState = try await orderStateResult
-            orderVotes = orderState.upvoted
-            orderFollows = orderState.following
-
-            likedLists = try await likedListsResult
-
-            let shieldState = try await shieldStateResult
-            shieldPoints = shieldState.points
-            shieldAdvanceAutomatically = shieldState.advanceAutomatically
-
-            clubs = try await clubsResult
-            let clubState = try await clubStateResult
-            clubMemberUnits = clubState.memberUnits
-            heartedClubMessages = clubState.heartedMessages
-            powedClubMessages = clubState.powedMessages
-            if let firstClub = clubs.first {
-                clubMessages = try await repository.fetchClubMessages(clubID: firstClub.id)
+            try Task.checkCancellation()
+            if reload {
+                onboardingDebounce?.cancel()
+                _ = try? await onboardingSaveQueue?.value
+                try Task.checkCancellation()
             }
-
-            theories = try await theoriesResult
-            theoryVotes = pollVotes.theory
-            let loreState = try await theoryLoreResult
-            lorePoints = loreState.points
-            theoryAccuracyPercent = loreState.accuracyPercent
-
-            predictionEvents = try await predictionEventsResult
-            let predState = try await predictionStateResult
-            predictionPoints = predState.points
-            predictionAnswers = predState.answers
-
-            conversations = try await conversationsResult
-            rooms = try await roomsResult
-            roomProgress = try await roomProgressResult
-            liveEvent = try await liveEventResult
+            accountLoadError = nil
+            activityLoadError = nil
+            onboardingError = nil
+            if !hasLoadedRepository {
+                try await loadInitialRepository()
+                hasLoadedRepository = true
+            } else if let snapshot = try await catalogAPI?.fetchCatalog() {
+                try Task.checkCancellation()
+                try snapshot.validate()
+                applyCatalog(snapshot)
+            }
+            catalogIssue = nil
+            do { try await loadRemoteAccount() }
+            catch is CancellationError { throw CancellationError() }
+            catch { accountLoadError = error.localizedDescription }
+            if accountLoadError == nil { try await loadRemoteActivity() }
+            try Task.checkCancellation()
+            if accountLoadError == nil && activityLoadError == nil { hasBootstrapped = true }
+            isLoading = false
+            syncWidgetData()
         } catch is CancellationError {
-            return
+            // First launch must expose retry, never an empty onboarding screen.
+            // A cancelled refresh leaves an already loaded account usable.
+            if !hasBootstrapped { catalogIssue = .unavailable }
         } catch {
             catalogIssue = error as? CatalogError ?? .unavailable
-            isLoading = false
-            return
         }
-        if accountAPI != nil {
-            do { try await loadRemoteAccount() }
-            catch { accountLoadError = error.localizedDescription }
+    }
+
+    private func loadInitialRepository() async throws {
+        async let catalogResult = repository.loadCatalog()
+        async let remoteCatalogResult = catalogAPI?.fetchCatalog()
+        async let reviewsResult = repository.fetchReviews()
+        async let diaryResult = repository.fetchDiary()
+        async let followsResult = repository.fetchFollows()
+        async let itemTogglesResult = repository.fetchItemToggles()
+        async let reviewTogglesResult = repository.fetchReviewToggles()
+        async let reactionsResult = repository.fetchReactions()
+        async let pollVotesResult = repository.fetchPollVotes()
+        async let orderStateResult = repository.fetchOrderState()
+        async let likedListsResult = repository.fetchLikedLists()
+        async let shieldStateResult = repository.fetchShieldState()
+        async let clubsResult = repository.fetchClubs()
+        async let clubStateResult = repository.fetchClubState()
+        async let theoriesResult = repository.fetchTheories()
+        async let theoryLoreResult = repository.fetchTheoryLoreState()
+        async let predictionEventsResult = repository.fetchPredictionEvents()
+        async let predictionStateResult = repository.fetchPredictionState()
+        async let conversationsResult = repository.fetchConversations()
+        async let roomsResult = repository.fetchRooms()
+        async let roomProgressResult = repository.fetchRoomProgress()
+        async let liveEventResult = repository.fetchLiveEvent()
+
+        let catalog = try await catalogResult
+        let remoteCatalog = try await remoteCatalogResult
+        let sampleReviews = try await reviewsResult
+        let sampleDiary = try await diaryResult
+        let itemToggles = try await itemTogglesResult
+        let reviewToggles = try await reviewTogglesResult
+        let pollVotes = try await pollVotesResult
+        let orderState = try await orderStateResult
+        let shieldState = try await shieldStateResult
+        let clubState = try await clubStateResult
+        let loreState = try await theoryLoreResult
+        let predState = try await predictionStateResult
+        let initialFollows = try await followsResult
+        let initialReactions = try await reactionsResult
+        let initialLikedLists = try await likedListsResult
+        let initialClubs = try await clubsResult
+        let initialTheories = try await theoriesResult
+        let initialPredictionEvents = try await predictionEventsResult
+        let initialConversations = try await conversationsResult
+        let initialRooms = try await roomsResult
+        let initialRoomProgress = try await roomProgressResult
+        let initialLiveEvent = try await liveEventResult
+        var initialClubMessages = clubMessages
+        if let firstClub = initialClubs.first {
+            initialClubMessages = try await repository.fetchClubMessages(clubID: firstClub.id)
         }
-        if accountLoadError == nil { await loadRemoteActivity() }
-        isLoading = false
-        syncWidgetData()
+        try Task.checkCancellation()
+        try remoteCatalog?.validate()
+        universes = catalog.universes
+        items = catalog.items
+        users = catalog.users
+        badgeNames = catalog.badgeNames
+        connections = catalog.connections
+        timelines = catalog.timelines
+        demoReadingOrders = catalog.readingOrders
+        lists = catalog.lists
+        genericReviewTexts = catalog.genericReviewTexts
+        canonStatus = catalog.canonStatus
+        canonStatusColors = catalog.canonStatusColors
+        duels = catalog.duels
+        me = catalog.me
+        itemsByID = Dictionary(uniqueKeysWithValues: catalog.items.map { ($0.id, $0) })
+        usersByID = Dictionary(uniqueKeysWithValues: catalog.users.map { ($0.id, $0) })
+        universesByID = Dictionary(uniqueKeysWithValues: catalog.universes.map { ($0.id, $0) })
+        if let remoteCatalog { applyCatalog(remoteCatalog) }
+
+        reviews = activityAPI == nil ? sampleReviews : []
+        diary = activityAPI == nil ? sampleDiary : []
+        follows = initialFollows
+
+        wantList = itemToggles.wanted
+        likedItems = itemToggles.liked
+        checks = itemToggles.seenOverrides
+
+        likedReviews = reviewToggles.liked
+        likedComments = reviewToggles.likedComments
+        revealedSpoilers = reviewToggles.revealedSpoilers
+        reactions = initialReactions
+
+        pollVote = pollVotes.weekly
+        essentialVotes = pollVotes.essential
+        canonVotes = pollVotes.canon
+        duelVotes = pollVotes.duel
+
+        orderVotes = orderState.upvoted
+        orderFollows = orderState.following
+
+        likedLists = initialLikedLists
+
+        shieldPoints = shieldState.points
+        shieldAdvanceAutomatically = shieldState.advanceAutomatically
+
+        clubs = initialClubs
+        clubMemberUnits = clubState.memberUnits
+        heartedClubMessages = clubState.heartedMessages
+        powedClubMessages = clubState.powedMessages
+        clubMessages = initialClubMessages
+
+        theories = initialTheories
+        theoryVotes = pollVotes.theory
+        lorePoints = loreState.points
+        theoryAccuracyPercent = loreState.accuracyPercent
+
+        predictionEvents = initialPredictionEvents
+        predictionPoints = predState.points
+        predictionAnswers = predState.answers
+
+        conversations = initialConversations
+        rooms = initialRooms
+        roomProgress = initialRoomProgress
+        liveEvent = initialLiveEvent
     }
 
     // MARK: - Acesso a dados
@@ -430,7 +478,7 @@ final class AppStore {
         itemsByID = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })
     }
 
-    private func loadRemoteActivity() async {
+    private func loadRemoteActivity() async throws {
         guard let activityAPI else { return }
         activityLoadError = nil
         do {
@@ -438,7 +486,7 @@ final class AppStore {
             try Task.checkCancellation()
             try snapshot.validate(for: meID)
             applyActivity(snapshot)
-        } catch is CancellationError { return
+        } catch is CancellationError { throw CancellationError()
         } catch { activityLoadError = error.localizedDescription }
     }
 
@@ -1350,43 +1398,18 @@ final class AppStore {
     // MARK: - Account API onboarding
 
     func reloadAccount() async {
-        guard !isLoading else { return }
-        onboardingDebounce?.cancel()
-        _ = try? await onboardingSaveQueue?.value
-        accountLoadError = nil
-        activityLoadError = nil
-        onboardingError = nil
-        isLoading = true
-        if catalogLoadError != nil {
-            await bootstrap()
-            return
-        }
-        do {
-            if let snapshot = try await catalogAPI?.fetchCatalog() {
-                try snapshot.validate()
-                applyCatalog(snapshot)
-            }
-        } catch is CancellationError {
-            return
-        } catch {
-            catalogIssue = error as? CatalogError ?? .unavailable
-            isLoading = false
-            return
-        }
-        do { try await loadRemoteAccount() }
-        catch { accountLoadError = error.localizedDescription }
-        if accountLoadError == nil { await loadRemoteActivity() }
-        isLoading = false
-        syncWidgetData()
+        await loadAccount(reload: true)
     }
 
     private func loadRemoteAccount() async throws {
         guard let accountAPI else { return }
         let account = try await accountAPI.fetchAccount()
+        try Task.checkCancellation()
         guard let profile = account.profile, profile.userID == meID else { throw AuthError.profileIncomplete }
         let suggestions = account.onboarding.completed
             ? FollowSuggestions(users: [], minimumFollows: 0)
             : try await accountAPI.suggestions()
+        try Task.checkCancellation()
         try applyOnboardingSuggestions(suggestions)
         let me = User(id: profile.userID, name: profile.displayName, handle: "@" + profile.username,
                       avatarColor: profile.avatarColor, bio: profile.bio, followers: nil, badgeUniverse: "", avatarID: profile.avatarID, avatarPhotoID: profile.avatarPhotoID)
