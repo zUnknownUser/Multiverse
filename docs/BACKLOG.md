@@ -25,8 +25,9 @@ concluído localmente: base operacional de L10, com readiness PostgreSQL e coman
 privado de diagnóstico das pendências de exclusão/push/voz. 117 testes unitários,
 167 HTTP/PostgreSQL e 6 cenários da CLI aprovados. Monitoramento/alertas hospedados,
 backups/restauração e operação com provedores reais seguem pendentes.
-Implementação publicada no commit `da37cca`, branch de revisão
-`codex/preparacao-lancamento`, sem acionar autodeploy de master.
+Implementação publicada no commit `da37cca` e integrada em master após autorização
+explícita de Lucas em 21/10. Exclusão da branch de revisão também autorizada.
+APP_ENV de produção preparado; resultados de CI/autodeploy devem ser conferidos.
 Ver [contrato](../backend/api/docs/operations.md).
 Monetização permanece adiada.
 

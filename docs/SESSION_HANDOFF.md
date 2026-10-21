@@ -1,3 +1,19 @@
+## 2026-10-21 — Merge autorizado para master
+
+- Lucas solicitou explicitamente integrar `codex/preparacao-lancamento` em master
+  e excluir essa branch. Essa decisão substitui a orientação anterior de manter
+  os lotes somente na branch de revisão.
+- Integração por fast-forward dos commits `da37cca` e `9cb82f3`, sem conflitos.
+  As alterações locais preexistentes de MockRepository e a remoção do vídeo de
+  marketing foram preservadas fora dos commits.
+- Conferidos projeto/serviço/Firebase de produção. `APP_ENV=production` definido
+  no serviço API do Railway com `--skip-deploys`, antes do envio para master.
+  Predeploy existente executa `npm run db:migrate`; migrations 028/029 são aditivas.
+- Push em master aciona CI e autodeploy existentes. Confirmar os resultados
+  remotos separadamente: merge não é evidência de sucesso do deploy ou do CI.
+  Homologação integrada continua adiada e sem faturamento; nenhum novo plano ou
+  recurso pago foi habilitado. Remover a branch somente após confirmar o push.
+
 ## 2026-10-21 — Quinto lote: base operacional local (L10)
 
 - Lucas decidiu adiar a validação integrada da homologação e avançar no próximo

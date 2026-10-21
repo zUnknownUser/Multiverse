@@ -115,10 +115,12 @@ Contrato e instruções em [operação da API](../backend/api/docs/operations.md
 - [ ] Monitoramento/alertas hospedados, retenção de logs, backups/restauração e
   operação dos workers com provedores reais. L10 completo continua pendente.
 
-Lucas autorizou push ao fechar. Commit de implementação `da37cca` publicado na
-branch de revisão [codex/preparacao-lancamento](https://github.com/zUnknownUser/Multiverse/tree/codex/preparacao-lancamento),
-incluindo lotes locais anteriores desta conversa. Master preservada, sem acionar
-seu autodeploy de produção. Primeira execução remota de CI continua pendente.
+Commit de implementação [da37cca](https://github.com/zUnknownUser/Multiverse/commit/da37cca)
+publicado inicialmente em branch de revisão, incluindo os lotes anteriores.
+Em seguida, Lucas autorizou o merge para master e a exclusão da branch.
+Integração feita por fast-forward, com `APP_ENV=production` preparado no Railway
+sem deploy extra. O envio para master aciona CI/autodeploy; seus resultados devem
+ser conferidos separadamente. Homologação integrada continua adiada.
 
 ## Terceiro lote — implementação em 21/10/2026
 
