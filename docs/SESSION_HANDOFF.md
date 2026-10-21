@@ -21,8 +21,9 @@
   remoto, alteração de plano ou chamada a provedor externo para validar este lote.
   L10 continua parcial: alertas/monitoramento, backups/restauração e operação real
   dos workers pendentes. L06 continua com validação integrada adiada.
-- Lucas autorizou push ao concluir; preparado para `codex/preparacao-lancamento`,
-  incluindo os lotes anteriores desta conversa ainda locais. Master tem autodeploy;
+- Lucas autorizou push ao concluir; commit de implementação `da37cca` enviado para
+  `origin/codex/preparacao-lancamento`, incluindo os lotes anteriores desta conversa.
+  Master tem autodeploy;
   não fazer merge/push nela. Não abrir PR/disparar CI remoto automaticamente sem
   conferir o limite de custos. Mudanças preexistentes alheias ao lote (whitespace
   de MockRepository e vídeo de marketing removido) devem permanecer locais.

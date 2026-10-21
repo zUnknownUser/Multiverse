@@ -115,9 +115,10 @@ Contrato e instruções em [operação da API](../backend/api/docs/operations.md
 - [ ] Monitoramento/alertas hospedados, retenção de logs, backups/restauração e
   operação dos workers com provedores reais. L10 completo continua pendente.
 
-Lucas autorizou push ao fechar. Código preparado para branch de revisão
-`codex/preparacao-lancamento`, incluindo lotes locais anteriores desta conversa.
-Não usar master para esse envio: ela dispara autodeploy de produção.
+Lucas autorizou push ao fechar. Commit de implementação `da37cca` publicado na
+branch de revisão [codex/preparacao-lancamento](https://github.com/zUnknownUser/Multiverse/tree/codex/preparacao-lancamento),
+incluindo lotes locais anteriores desta conversa. Master preservada, sem acionar
+seu autodeploy de produção. Primeira execução remota de CI continua pendente.
 
 ## Terceiro lote — implementação em 21/10/2026
 

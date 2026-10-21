@@ -25,8 +25,9 @@ concluído localmente: base operacional de L10, com readiness PostgreSQL e coman
 privado de diagnóstico das pendências de exclusão/push/voz. 117 testes unitários,
 167 HTTP/PostgreSQL e 6 cenários da CLI aprovados. Monitoramento/alertas hospedados,
 backups/restauração e operação com provedores reais seguem pendentes.
-Push autorizado em branch de revisão `codex/preparacao-lancamento`, sem acionar
-autodeploy de master. Ver [contrato](../backend/api/docs/operations.md).
+Implementação publicada no commit `da37cca`, branch de revisão
+`codex/preparacao-lancamento`, sem acionar autodeploy de master.
+Ver [contrato](../backend/api/docs/operations.md).
 Monetização permanece adiada.
 
 ## Monetização — adiada por decisão do usuário (03/10/2026)
