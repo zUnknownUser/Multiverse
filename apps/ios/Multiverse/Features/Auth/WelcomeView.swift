@@ -80,9 +80,6 @@ struct WelcomeView: View {
                 .foregroundStyle(MV.C.ink)
 
             VStack(spacing: 12) {
-                socialButton(L10n.text("Continuar com Apple"), bg: MV.C.ink, fg: MV.C.paper, shadowColor: MV.C.marvel) {
-                    Task { await auth.continueWithApple() }
-                }
                 socialButton(L10n.text("Continuar com Google"), bg: MV.C.card, fg: MV.C.ink, shadowColor: MV.C.ink) {
                     Task { await auth.continueWithGoogle() }
                 }
@@ -105,11 +102,18 @@ struct WelcomeView: View {
 
             Spacer(minLength: 8)
 
-            Text(LocalizedStringKey(L10n.text("Ao continuar, você aceita os **Termos de Uso** e a **Política de Privacidade**.")))
-                .font(MVFont.body(11, weight: 500))
-                .foregroundStyle(MV.C.muted)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
+            VStack(spacing: 4) {
+                Text(L10n.text("Ao continuar, você aceita os Termos de Uso. Saiba como tratamos seus dados na Política de Privacidade."))
+                    .font(MVFont.body(11, weight: 500)).foregroundStyle(MV.C.muted)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                ForEach(LegalDocumentKind.allCases, id: \.self) { kind in
+                    Button { auth.push(.legal(kind)) } label: {
+                        Text(kind.title).font(MVFont.bold(12)).underline().foregroundStyle(MV.C.ink)
+                            .frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
+                    }.buttonStyle(.plain)
+                }
+            }
         }
         .padding(.horizontal, MV.pad)
         .padding(.top, 24)

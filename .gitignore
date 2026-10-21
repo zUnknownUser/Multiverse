@@ -32,3 +32,7 @@ Pods/
 
 # Descompactados só pra referência de design — o conteúdo já está em design/design_handoff_multiverse/
 *.zip
+
+# Local environment artifacts
+__pycache__/
+firebase-debug*.log

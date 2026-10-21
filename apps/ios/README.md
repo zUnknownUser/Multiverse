@@ -73,8 +73,10 @@ Não é necessário baixá-la manualmente. Origem e detalhes em
 Catálogo, perfil, onboarding, diário, pessoas e feed usam a API NestJS conforme a
 seção "Conectar à API" abaixo. Comentários e reações também usam persistência real;
 clubes, mensagens, salas e outros módulos ainda contêm dados de demonstração.
-Autenticação e Analytics
-usam o `GoogleService-Info.plist` cadastrado para `com.nexussoft.multiverse`.
+Debug usa o Firebase `multiverse-staging-7f87c` e o bundle
+`com.nexussoft.multiverse.staging`; Release usa produção. Analytics permanece
+desativado. Plists e callbacks são selecionados/validados por build, conforme
+[guia de ambientes](../../docs/ENVIRONMENTS.md).
 
 ## Arquitetura
 
@@ -142,13 +144,19 @@ remover tanto a identidade Firebase quanto o perfil e progresso no PostgreSQL.
 Siga o [guia da API](../../backend/api/README.md) para iniciar PostgreSQL, aplicar
 migrations, configurar Firebase Admin e executar NestJS.
 
-- Debug e Release usam `https://api-production-6e8d.up.railway.app/api/v1`.
-- Para desenvolvimento local no simulador, sobrescreva o endereço com
-  `http://localhost:3000/api/v1` no scheme Debug. A permissão ATS é restrita
-  a rede local; não há liberação geral de HTTP.
-- `MULTIVERSE_API_BASE_URL` em `project.yml` controla o endereço incluído no plist.
-  Em Debug também pode ser sobrescrito pela variável de ambiente do scheme.
-- Release exige endereço HTTPS. Após alterar `project.yml`, regenere com XcodeGen.
+- Debug instala **Multiverse HML**, com Firebase, bundle, links e App Group de staging.
+  `Configuration/Staging.xcconfig` está sem URL da API até o Railway ser provisionado.
+  O cliente retorna configuração indisponível, sem fallback para produção.
+- Release preserva o app e Firebase de produção em `Configuration/Production.xcconfig`.
+- A etapa de build valida os identificadores e copia só o plist Firebase selecionado.
+  `AppEnvironment` centraliza a identidade; views/stores não escolhem servidores.
+- Para uma API **de staging** executada no Mac, usar `http://127.0.0.1:3000/api/v1`
+  no scheme/build Debug. O Firebase e banco desse servidor precisam ser de staging.
+  A API local com Firebase demo serve a testes independentes e não autentica o app staging.
+- `MULTIVERSE_API_BASE_URL` vem do xcconfig. Debug permite override no scheme,
+  mas recusa o host de produção. Em xcconfig usar `https:/$()/host/api/v1`.
+- Release exige HTTPS no host de produção. Após alterar `project.yml`, regenerar
+  com XcodeGen. Ver [matriz e pendências externas](../../docs/ENVIRONMENTS.md).
 - Tokens Firebase são obtidos do SDK a cada chamada e renovados uma vez em caso
   de 401. Não são salvos pelo cliente HTTP nem incluídos nos logs.
 
@@ -175,23 +183,43 @@ configurado no scheme para testes manuais. Atualmente o direito pertence à cont
 App Store; a vinculação a uma conta Multiverse e a validação no backend ainda não
 estão implementadas.
 
+### Documentos, suporte e privacidade
+
+Boas-vindas e Ajustes abrem as mesmas telas em `Features/Legal`. O carregamento
+local e a configuração ficam em `Core/Legal`; não dependem da sessão nem da API.
+`Resources/{pt-BR,en}.lproj/LegalDocuments.json` contém os textos e
+`Resources/LegalConfiguration.json` contém versão, estado de revisão, responsável
+e e-mail. O contato confirmado por Lucas é `lucasamorim78c@gmail.com`;
+o responsável confirmado é `Elesys Studio LTDA`. Os textos continuam em revisão
+enquanto retenção e prestadores são homologados. O botão Apple fica oculto até assinatura/configuração/testes.
+
+`python3 apps/ios/scripts/export_legal.py` (na raiz do repo) gera seis páginas HTML
+em `apps/ios/build/legal`, a partir dos mesmos textos do app. Não publica nada.
+Use `--require-final` antes de publicar: recusa documento em revisão ou sem
+responsável/contato. A publicação em URLs HTTPS acessíveis sem login e a validação
+do atendimento seguem pendentes; ver [preparação para lançamento](../../docs/LAUNCH_READINESS.md).
+
+Os manifestos `PrivacyInfo.xcprivacy` próprios do app e widget declaram UserDefaults
+local/App Group e os dados funcionais do app. O manifesto não substitui a política
+nem o formulário App Privacy no App Store Connect. SDKs têm suas declarações
+próprias, que precisam entrar na revisão do relatório agregado do archive.
+
 ### Analytics
 
-Firebase Analytics inicializa com o app. Os eventos `login` e `sign_up` usam
-`method: google` ou `method: password`; `sign_up` só é emitido quando Firebase confirma
-a criação de uma conta.
-`logout` é emitido após sair com sucesso. Restaurar a sessão não conta como novo login.
-Os eventos não incluem nome, e-mail, tokens ou um User ID personalizado.
+A coleta está desativada nesta versão por
+`FIREBASE_ANALYTICS_COLLECTION_DEACTIVATED = true` no Info.plist. Essa chave prevalece
+sobre preferências de coleta persistidas por versões anteriores. O app deixou de
+habilitar a coleta na inicialização. As chamadas de eventos existentes não coletam
+Analytics enquanto essa configuração estiver ativa. Autenticação/App Check continuam.
 
-A coleta é habilitada explicitamente no app. No console Firebase, confirme a integração
-com Google Analytics em **Configurações do projeto → Integrações** (o plist fornecido
-originalmente contém `IS_ANALYTICS_ENABLED = false`). Para inspecionar eventos em
-DebugView, adicione `-FIRDebugEnabled` aos argumentos de execução do scheme no Xcode.
+Antes de reativar: definir finalidades, retenção, configuração dos provedores e
+preferências/consentimento aplicáveis; atualizar documentos e declarações e testar
+a migração de aparelhos que já executaram versões antigas. Não basta remover a
+chave ou ligar um toggle. O produto SPM continua `FirebaseAnalyticsCore`, sem AdSupport.
 
-Validação manual: entrar com Google, cancelar a tela de autorização, reabrir o app,
-sair, entrar com outra conta e conferir o usuário em Firebase Authentication. O login
-real exige a autorização do titular da conta; os testes automatizados usam um cliente
-injetado e não autenticam uma conta Google real.
+Validação manual de autenticação: entrar com Google, cancelar a autorização,
+reabrir o app, sair e trocar de conta. Os testes automatizados usam cliente injetado
+e não autenticam uma conta Google real.
 
 ### Próximas etapas do backend
 

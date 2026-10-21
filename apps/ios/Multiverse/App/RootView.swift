@@ -57,7 +57,7 @@ struct RootView: View {
             if let id = DuelInvitation.id(in: url.absoluteString) {
                 pendingDuel = id; openDuelInvitation(); return
             }
-            if url.scheme == "multiverse", url.host == "club", url.user == nil, url.password == nil, url.query == nil,
+            if url.scheme == AppEnvironment.current.urlScheme, url.host == "club", url.user == nil, url.password == nil, url.query == nil,
                let id = url.pathComponents.last, UUID(uuidString: id) != nil {
                 pendingClub = id.lowercased(); openClubInvitation(); return
             }

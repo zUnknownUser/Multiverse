@@ -1,5 +1,17 @@
 # Autenticação por e-mail
 
+**Ambientes (L06):** o default de `.firebaserc` agora é `staging`. Usar sempre
+`--project staging` ou `--project production` nos comandos. Google/e-mail já estão
+ativos em `multiverse-staging-7f87c`; Functions/Firestore/Resend/App Check de staging
+ainda dependem de provisionamento e faturamento. A descrição histórica abaixo de
+funções publicadas se refere exclusivamente à **produção**. Veja a
+[matriz e roteiro](../../docs/ENVIRONMENTS.md).
+
+O Hosting gera a associação do bundle correto em um predeploy pelo projeto alvo.
+O Hosting staging foi publicado e validado (HTTP 200, appID staging) em 21/10/2026;
+nenhuma função de staging foi publicada nem alterada em produção. O projeto de
+homologação permanece Spark. Apple Developer continua pendente.
+
 O app mantém o fluxo do protótipo: cadastro → código de seis dígitos → nome/apelido →
 avatar/bio. Recuperação: e-mail → link → tela Nova senha.
 
@@ -47,11 +59,11 @@ links pendentes. Nenhum token do link é gravado no armazenamento local.
 3. Configurar um domínio remetente no provedor de e-mail. A configuração preparada usa
    `RESEND_API_KEY` e `VERIFICATION_EMAIL_FROM` (por exemplo, `Multiverse <conta@seu-dominio>`).
 4. Em `backend/firebase/`, configurar os segredos pelo Secret Manager, nunca pelo app ou Git:
-   `firebase functions:secrets:set RESEND_API_KEY` e
-   `firebase functions:secrets:set VERIFICATION_CODE_SECRET`.
+   `firebase functions:secrets:set RESEND_API_KEY --project staging` e
+   `firebase functions:secrets:set VERIFICATION_CODE_SECRET --project staging`.
    O segundo deve ser um segredo aleatório forte, com pelo menos 32 bytes de entropia.
    `VERIFICATION_EMAIL_FROM` será solicitado no deploy ou pode ficar no arquivo local
-   ignorado `functions/.env.multiverse-7f87c`.
+   ignorado `functions/.env.multiverse-staging-7f87c` (usar o ID correspondente para produção).
 5. Registrar o app no **App Check** com App Attest. Em Debug/simulador, registrar no
    console o token do provedor de debug exibido pelo SDK no Xcode. Tratar esse token
    como segredo; não incluí-lo em commits ou capturas públicas. Release usa App Attest.
@@ -62,7 +74,7 @@ links pendentes. Nenhum token do link é gravado no armazenamento local.
 7. Conferir o domínio autorizado no Authentication e os modelos de e-mail de recuperação.
    Usar os links do Firebase Hosting atual, sem Firebase Dynamic Links.
 8. Depois de revisar a configuração, publicar as funções, regras e associação com
-   `firebase deploy --only functions:multiverse-auth,firestore:rules,hosting`.
+   `firebase deploy --project staging --only functions:multiverse-auth,firestore:rules,hosting`.
    As regras fornecidas negam acesso direto ao banco: integrar com outras regras caso
    o projeto passe a ter coleções acessíveis pelo app antes desse deploy.
 9. Configurar TTL no campo `purgeAt` da coleção `emailVerificationChallenges` para

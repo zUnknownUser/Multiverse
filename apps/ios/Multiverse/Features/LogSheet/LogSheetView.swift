@@ -67,7 +67,22 @@ private struct LogFormContent: View {
             let rating = store.logDraft?.rating ?? 0
 
             VStack(alignment: .leading, spacing: 18) {
+                if store.logDraft?.isEditing == true {
+                    HStack {
+                        Text(L10n.text("EDITAR REGISTRO")).font(MVFont.section(18)).foregroundStyle(MV.C.ink)
+                        Spacer()
+                        Button(L10n.text("Cancelar")) { store.closeLog() }
+                            .font(MVFont.bold(12)).foregroundStyle(MV.C.muted)
+                    }
+                }
                 header(item: item, uni: uni)
+                if store.logDraft?.isEditing == true {
+                    DatePicker(L10n.text("Data do registro"), selection: Binding(
+                        get: { store.logDraft?.loggedAt ?? .now },
+                        set: { store.logDraft?.loggedAt = $0 }
+                    ), in: ...Date.now, displayedComponents: .date)
+                        .font(MVFont.body(13, weight: 600)).tint(uni.color)
+                }
                 ratingPicker(uni: uni, rating: rating)
                 togglePills
                 reviewField
@@ -91,7 +106,10 @@ private struct LogFormContent: View {
         HStack(spacing: 12) {
             PosterView(item: item, universe: uni, width: 52, height: 78, titleSize: 8)
             VStack(alignment: .leading, spacing: 3) {
-                Text(L10n.format("%1$@ · Hoje, %2$@", String(describing: Logic.verb(item.type)), L10n.date(.now, template: "d MMM"))).font(MVFont.body(11, weight: 700)).foregroundStyle(MV.C.muted)
+                Text(store.logDraft?.isEditing == true
+                     ? L10n.date(store.logDraft?.loggedAt ?? .now, template: "d MMM yyyy")
+                     : L10n.format("%1$@ · Hoje, %2$@", String(describing: Logic.verb(item.type)), L10n.date(.now, template: "d MMM")))
+                    .font(MVFont.body(11, weight: 700)).foregroundStyle(MV.C.muted)
                 Text(item.title).font(MVFont.bold(17)).foregroundStyle(MV.C.ink)
                 Text("\(uni.name) · \(L10n.text(item.type))").font(MVFont.body(11, weight: 600)).foregroundStyle(MV.C.muted)
             }
@@ -124,11 +142,16 @@ private struct LogFormContent: View {
     }
 
     private var togglePills: some View {
-        HStack(spacing: 8) {
-            pill(L10n.text("♥ Curti"), isOn: store.logDraft?.liked ?? false) { toggle(\.liked) }
-            pill(L10n.text("↻ Revisitei"), isOn: store.logDraft?.rewatch ?? false) { toggle(\.rewatch) }
-            pill(L10n.text("⚠ Contém spoiler"), isOn: store.logDraft?.spoiler ?? false) { toggle(\.spoiler) }
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) { toggles }
+            VStack(alignment: .leading, spacing: 8) { toggles }
         }
+    }
+
+    @ViewBuilder private var toggles: some View {
+        pill(L10n.text("♥ Curti"), isOn: store.logDraft?.liked ?? false) { toggle(\.liked) }
+        pill(L10n.text("↻ Revisitei"), isOn: store.logDraft?.rewatch ?? false) { toggle(\.rewatch) }
+        pill(L10n.text("⚠ Contém spoiler"), isOn: store.logDraft?.spoiler ?? false) { toggle(\.spoiler) }
     }
 
     private func pill(_ title: String, isOn: Bool, action: @escaping () -> Void) -> some View {
@@ -172,17 +195,17 @@ private struct LogFormContent: View {
     }
 
     private func publishButton(item: Item, uni: Universe) -> some View {
-        Text(store.isSavingLog ? L10n.text("SALVANDO…") : L10n.text("PUBLICAR"))
-            .font(MVFont.bold(15))
-            .frame(maxWidth: .infinity).frame(height: 54)
-            .foregroundStyle(uni.inkColor)
-            .background(uni.color)
-            .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-            .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
-            .background(RoundedRectangle(cornerRadius: MV.R.md).fill(MV.C.shadow).offset(x: MV.Shadow.m, y: MV.Shadow.m))
-            .contentShape(Rectangle())
-            .onTapGesture {
-                store.saveLog()
-            }
+        Button { store.saveLog() } label: {
+            Text(store.isSavingLog ? L10n.text("SALVANDO…") : store.logDraft?.isEditing == true ? L10n.text("SALVAR ALTERAÇÕES") : L10n.text("PUBLICAR"))
+                .font(MVFont.bold(15))
+                .frame(maxWidth: .infinity).frame(height: 54)
+                .foregroundStyle(uni.inkColor)
+                .background(uni.color)
+                .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+                .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
+                .background(RoundedRectangle(cornerRadius: MV.R.md).fill(MV.C.shadow).offset(x: MV.Shadow.m, y: MV.Shadow.m))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }

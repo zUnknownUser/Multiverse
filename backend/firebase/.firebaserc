@@ -1,1 +1,7 @@
-{ "projects": { "default": "multiverse-7f87c" } }
+{
+  "projects": {
+    "default": "multiverse-staging-7f87c",
+    "staging": "multiverse-staging-7f87c",
+    "production": "multiverse-7f87c"
+  }
+}

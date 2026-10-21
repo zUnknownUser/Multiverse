@@ -13,6 +13,7 @@ struct MultiverseAPIErrorMapper: APIErrorMapping {
     }
     func responseError(code: String?, status: Int, path: String) -> any Error {
         switch code {
+        case "ENVIRONMENT_MISMATCH": return AuthError.apiNotConfigured
         case "DUEL_NOT_ELIGIBLE": return DuelCurationError.ineligible
         case "DUEL_SUBMISSION_LIMIT": return DuelCurationError.limit
         case "CANDIDATE_UNAVAILABLE": return DuelCurationError.unavailable
@@ -71,6 +72,9 @@ struct MultiverseAPIErrorMapper: APIErrorMapping {
         case "CATALOG_CHANGED": return CatalogError.changed
         case "INVALID_LOG": return ActivityError.invalidLog
         case "INVALID_LOG_DATE": return ActivityError.invalidDate
+        case "LOG_NOT_FOUND": return ActivityError.missingLog
+        case "LOG_DELETED": return ActivityError.deletedLog
+        case "LOG_ITEM_CONFLICT": return ActivityError.itemConflict
         case "ITEM_UNAVAILABLE": return ActivityError.itemUnavailable
         case "EMAIL_NOT_VERIFIED": return AuthError.emailNotVerified
         case "RECENT_LOGIN_REQUIRED": return AuthError.recentLoginRequired

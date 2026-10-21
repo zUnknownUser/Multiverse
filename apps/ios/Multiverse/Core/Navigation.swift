@@ -17,6 +17,7 @@ enum Route: Hashable {
     case diary
     case wrapped
     case settings
+    case legal(LegalDocumentKind)
     case blockedUsers
     case deleteAccount
     /// Avisos deixou de ser aba — agora é o sino no topo da Home, empilhado como rota.

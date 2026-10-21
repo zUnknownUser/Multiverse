@@ -13,14 +13,7 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, Com
         #if DEBUG
         value = ProcessInfo.processInfo.environment["MULTIVERSE_API_BASE_URL"] ?? value
         #endif
-        guard let url = URL(string: value), url.host != nil, url.user == nil, url.password == nil,
-              url.query == nil, url.fragment == nil else { return nil }
-        #if DEBUG
-        guard url.scheme == "https" || (url.scheme == "http" && ["localhost", "127.0.0.1", "::1"].contains(url.host!)) else { return nil }
-        #else
-        guard url.scheme == "https" else { return nil }
-        #endif
-        return url
+        return AppEnvironment.current.apiURL(value)
     }
     private struct Availability: Decodable { let available: Bool }
     private struct Deletion: Decodable { let deleted: Bool }
@@ -92,9 +85,18 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, Com
         return try await request("me/follows/" + id, method: "PUT", body: JSONEncoder().encode(Input(following: following)))
     }
     func saveLog(id: UUID, input: SaveLogInput) async throws -> ActivitySnapshot {
+        try await writeLog(id: id, input: input, method: "PUT")
+    }
+    func updateLog(id: UUID, input: SaveLogInput) async throws -> ActivitySnapshot {
+        try await writeLog(id: id, input: input, method: "PATCH")
+    }
+    private func writeLog(id: UUID, input: SaveLogInput, method: String) async throws -> ActivitySnapshot {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        return try await request("me/diary/" + id.uuidString.lowercased(), method: "PUT", body: encoder.encode(input))
+        return try await request("me/diary/" + id.uuidString.lowercased(), method: method, body: encoder.encode(input))
+    }
+    func deleteLog(id: UUID) async throws -> DeleteLogReceipt {
+        try await request("me/diary/" + id.uuidString.lowercased(), method: "DELETE")
     }
     func usernameAvailable(_ username: String) async throws -> Bool {
         let response: Availability = try await request("me/username-availability", query: [URLQueryItem(name: "username", value: username)])

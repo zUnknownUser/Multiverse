@@ -146,7 +146,7 @@ struct LiveClubView: View {
                 Button(club.joined ? L10n.text("SAIR DO CLUBE") : L10n.text("ENTRAR NO CLUBE")) { Task { await join(!club.joined) } }.disabled(busy)
             }
             Spacer()
-            ShareLink(item: "\(club.name) · Multiverse\nmultiverse://club/\(club.id)") { Label(L10n.text("CONVIDAR"), systemImage: "square.and.arrow.up") }
+            ShareLink(item: "\(club.name) · Multiverse\n\(AppEnvironment.current.urlScheme)://club/\(club.id)") { Label(L10n.text("CONVIDAR"), systemImage: "square.and.arrow.up") }
         }.font(MVFont.bold(12))
     }
     private func load() async {

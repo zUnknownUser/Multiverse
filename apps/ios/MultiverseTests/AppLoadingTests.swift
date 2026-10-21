@@ -44,6 +44,8 @@ import Testing
         if cancelled { throw CancellationError() }
         return .init(entries: [], reviews: [], items: [], universes: [], followerCount: 0)
     }
+    func updateLog(id: UUID, input: SaveLogInput) async throws -> ActivitySnapshot { throw AuthError.unavailable }
+    func deleteLog(id: UUID) async throws -> DeleteLogReceipt { throw AuthError.unavailable }
     func saveLog(id: UUID, input: SaveLogInput) async throws -> ActivitySnapshot { throw AuthError.unavailable }
 }
 

@@ -1,0 +1,10 @@
+// Public deployment settings. Secrets belong on the server.
+MULTIVERSE_ENVIRONMENT = production
+MULTIVERSE_BUNDLE_ID = com.nexussoft.multiverse
+MULTIVERSE_DISPLAY_NAME = Multiverse
+MULTIVERSE_URL_SCHEME = multiverse
+MULTIVERSE_FIREBASE_PROJECT_ID = multiverse-7f87c
+MULTIVERSE_FIREBASE_PLIST = GoogleService-Info.plist
+MULTIVERSE_GOOGLE_REVERSED_CLIENT_ID = com.googleusercontent.apps.542469411124-selga9fvq0rh52jbug247rk57jisoig1
+// Staging stays unconfigured until its real Railway URL exists; never fall back to production.
+MULTIVERSE_API_BASE_URL = https:/$()/api-production-6e8d.up.railway.app/api/v1

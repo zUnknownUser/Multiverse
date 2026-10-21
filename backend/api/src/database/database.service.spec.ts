@@ -70,3 +70,63 @@ describe('Database transactions', () => {
     expect(client.release).toHaveBeenCalledExactlyOnceWith(true);
   });
 });
+
+describe('Database readiness', () => {
+  const client = { query: vi.fn(), release: vi.fn() };
+  let database: DatabaseService;
+  beforeEach(() => {
+    vi.resetAllMocks();
+    pool.connect.mockResolvedValue(client);
+    database = new DatabaseService(
+      new ConfigService({
+        DATABASE_URL: 'postgresql://localhost/test',
+        APP_ENV: 'local',
+        FIREBASE_PROJECT_ID: 'demo-multiverse-local',
+      }),
+    );
+  });
+
+  it('accepts only the expected deployment identity', async () => {
+    client.query.mockResolvedValue({
+      rows: [
+        {
+          environment: 'local',
+          firebase_project_id: 'demo-multiverse-local',
+        },
+      ],
+    });
+    expect(await database.isReady()).toBe(true);
+    expect(client.release).toHaveBeenCalledExactlyOnceWith(false);
+    client.query.mockResolvedValue({
+      rows: [
+        {
+          environment: 'production',
+          firebase_project_id: 'multiverse-7f87c',
+        },
+      ],
+    });
+    expect(await database.isReady()).toBe(false);
+    client.query.mockResolvedValue({ rows: [] });
+    expect(await database.isReady()).toBe(false);
+  });
+
+  it('discards failed or timed-out clients and does not expose the failure', async () => {
+    client.query.mockRejectedValue(new Error('secret connection failure'));
+    expect(await database.isReady()).toBe(false);
+    expect(client.release).toHaveBeenCalledExactlyOnceWith(true);
+  });
+
+  it('handles an exhausted or unavailable pool', async () => {
+    pool.connect.mockRejectedValue(new Error('private connection string'));
+    expect(await database.isReady()).toBe(false);
+    expect(client.query).not.toHaveBeenCalled();
+    expect(client.release).not.toHaveBeenCalled();
+  });
+
+  it('reports missing configuration without creating a connection', async () => {
+    expect(await new DatabaseService(new ConfigService()).isReady()).toBe(
+      false,
+    );
+    expect(pool.connect).not.toHaveBeenCalled();
+  });
+});

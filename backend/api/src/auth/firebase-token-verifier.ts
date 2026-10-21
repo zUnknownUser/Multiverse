@@ -12,7 +12,7 @@ import { getAuth } from 'firebase-admin/auth';
 export class FirebaseTokenVerifier {
   constructor(@Inject(ConfigService) private readonly config: ConfigService) {}
   app() {
-    const name = 'multiverse-api';
+    const name = `multiverse-api-${this.config.get<string>('FIREBASE_PROJECT_ID')}`;
     const app =
       getApps().find((app) => app.name === name) ??
       initializeApp(

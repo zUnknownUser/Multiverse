@@ -1,16 +1,17 @@
+name: multiverse-local
 services:
   postgres:
     image: postgres:18-alpine
     environment:
       POSTGRES_USER: multiverse
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      POSTGRES_DB: multiverse
+      POSTGRES_DB: multiverse_local
     ports:
-      - '127.0.0.1:5432:5432'
+      - '127.0.0.1:55432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U multiverse -d multiverse']
+      test: ['CMD-SHELL', 'pg_isready -U multiverse -d multiverse_local']
       interval: 5s
       timeout: 3s
       retries: 10

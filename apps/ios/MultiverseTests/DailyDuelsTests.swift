@@ -67,8 +67,8 @@ import Testing
     }
     @Test func invitationRoutesAcceptOnlyAnExactAppURI() {
         let id = UUID().uuidString.lowercased()
-        #expect(DuelInvitation.id(in: "Invitation\nmultiverse://duel/" + id) == id)
-        for value in ["https://duel/"+id, "multiverse://duel/"+id+"?admin=true", "multiverse://x@duel/"+id, "multiverse://duel/not-a-uuid", "multiverse://duel/"+id+"/other"] { #expect(DuelInvitation.id(in: value) == nil) }
+        #expect(DuelInvitation.id(in: "Invitation\n\(AppEnvironment.current.urlScheme)://duel/" + id) == id)
+        for value in ["https://duel/"+id, "\(AppEnvironment.current.urlScheme)://duel/"+id+"?admin=true", "\(AppEnvironment.current.urlScheme)://x@duel/"+id, "\(AppEnvironment.current.urlScheme)://duel/not-a-uuid", "\(AppEnvironment.current.urlScheme)://duel/"+id+"/other"] { #expect(DuelInvitation.id(in: value) == nil) }
     }
     @Test func delayedHomeRefreshCannotOverwriteAConfirmedVote() async throws {
         let api = DuelStub(), store = DailyDuelsStore(api: api)

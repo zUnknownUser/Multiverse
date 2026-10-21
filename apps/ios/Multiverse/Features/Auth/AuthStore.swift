@@ -4,6 +4,7 @@ import Foundation
 /// `NavigationStack` (ver `AuthFlowView`), então não tem caso aqui.
 enum AuthRoute: Hashable {
     case signIn
+    case legal(LegalDocumentKind)
     case createAccount, verifyCode, chooseUsername, avatarAndBio
     case forgotPassword, linkSent, newPassword
 }

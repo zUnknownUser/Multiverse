@@ -11,6 +11,7 @@ struct AuthFlowView: View {
             WelcomeView()
                 .navigationDestination(for: AuthRoute.self) { route in
                     switch route {
+                    case .legal(let kind): LegalDocumentView(kind: kind)
                     case .signIn: SignInView()
                     case .createAccount: CreateAccountView()
                     case .verifyCode: VerifyCodeView()

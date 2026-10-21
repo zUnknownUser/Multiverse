@@ -2,10 +2,12 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   Inject,
   Param,
+  Patch,
   ParseUUIDPipe,
   Put,
   Req,
@@ -47,6 +49,43 @@ export class ActivityController {
       req.identity.uid,
       id,
       body,
+      catalogLanguage(language),
+    );
+  }
+
+  @Patch('diary/:id') update(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body(
+      new ValidationPipe({
+        expectedType: SaveLogDTO,
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        exceptionFactory: () =>
+          new BadRequestException({ code: 'INVALID_LOG' }),
+      }),
+    )
+    body: SaveLogDTO,
+    @Headers('accept-language') language?: string,
+  ) {
+    return this.activity.save(
+      req.identity.uid,
+      id,
+      body,
+      catalogLanguage(language),
+      true,
+    );
+  }
+
+  @Delete('diary/:id') remove(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Headers('accept-language') language?: string,
+  ) {
+    return this.activity.remove(
+      req.identity.uid,
+      id,
       catalogLanguage(language),
     );
   }

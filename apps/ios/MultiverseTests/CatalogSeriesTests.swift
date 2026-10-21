@@ -16,6 +16,8 @@ import Testing
         if failure { throw AuthError.networkUnavailable }
         return snapshot
     }
+    func updateLog(id: UUID, input: SaveLogInput) async throws -> ActivitySnapshot { throw AuthError.unavailable }
+    func deleteLog(id: UUID) async throws -> DeleteLogReceipt { throw AuthError.unavailable }
     func saveLog(id: UUID, input: SaveLogInput) async throws -> ActivitySnapshot { throw AuthError.apiUnavailable }
 }
 

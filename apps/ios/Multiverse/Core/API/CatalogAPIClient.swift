@@ -72,12 +72,14 @@ final class CatalogAPIClient: CatalogAPI {
     func fetchCatalog() async throws -> CatalogSnapshot {
         guard let baseURL else { throw AuthError.apiNotConfigured }
         var request = URLRequest(url: baseURL.appendingPathComponent("catalog"), cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 20)
+        request.setValue(AppEnvironment.current.rawValue, forHTTPHeaderField: "X-Multiverse-Environment")
         request.setValue(L10n.language(), forHTTPHeaderField: "Accept-Language")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         do {
             let (data, response) = try await transport.data(for: request)
             try Task.checkCancellation()
             guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { throw CatalogError.unavailable }
+            if let environment = http.value(forHTTPHeaderField: "X-Multiverse-Environment"), environment != AppEnvironment.current.rawValue { throw CatalogError.unavailable }
             let snapshot = try JSONDecoder().decode(CatalogSnapshot.self, from: data)
             try snapshot.validate()
             return snapshot

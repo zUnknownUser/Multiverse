@@ -22,12 +22,11 @@ packages:
 fileGroups:
   - Configuration
 
+configFiles:
+  Debug: Configuration/Staging.xcconfig
+  Release: Configuration/Production.xcconfig
+
 settings:
-  configs:
-    Debug:
-      MULTIVERSE_API_BASE_URL: "https://api-production-6e8d.up.railway.app/api/v1"
-    Release:
-      MULTIVERSE_API_BASE_URL: "https://api-production-6e8d.up.railway.app/api/v1"
   base:
     DEVELOPMENT_TEAM: 5RS2AA677K
     CODE_SIGN_STYLE: Automatic
@@ -52,8 +51,6 @@ targets:
       - path: Multiverse
         excludes:
           - "**/*.md"
-      - path: GoogleService-Info.plist
-        buildPhase: resources
     settings:
       configs:
         Debug:
@@ -63,7 +60,7 @@ targets:
           CODE_SIGN_ENTITLEMENTS: Multiverse/Resources/Multiverse.entitlements
       base:
         MULTIVERSE_PUSH_ENABLED: NO
-        PRODUCT_BUNDLE_IDENTIFIER: com.nexussoft.multiverse
+        PRODUCT_BUNDLE_IDENTIFIER: "$(MULTIVERSE_BUNDLE_ID)"
         INFOPLIST_FILE: Multiverse/Resources/Info.plist
         OTHER_LDFLAGS: ["$(inherited)", "-ObjC"]
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -88,6 +85,16 @@ targets:
         product: GoogleSignIn
       - target: MultiverseWidgets
         embed: true
+    postBuildScripts:
+      - name: Validate and copy Firebase environment
+        script: /usr/bin/python3 "$SRCROOT/scripts/configure_environment.py"
+        inputFiles:
+          - "$(SRCROOT)/scripts/configure_environment.py"
+          - "$(SRCROOT)/$(MULTIVERSE_FIREBASE_PLIST)"
+          - "$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)"
+        outputFiles:
+          - "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist"
+        basedOnDependencyAnalysis: false
     scheme:
       storeKitConfiguration: Configuration/Products.storekit
       testTargets:
@@ -129,6 +136,7 @@ targets:
       - path: Multiverse/Core/Localization
       - path: Multiverse/Resources/Localizable.xcstrings
         buildPhase: resources
+      - path: Multiverse/Core/Configuration/AppEnvironment.swift
       - path: Multiverse/Core/Store/WidgetBridge.swift
       - path: Multiverse/Core/Store/PremiereActivityAttributes.swift
     settings:
@@ -138,7 +146,7 @@ targets:
         Release:
           CODE_SIGN_ENTITLEMENTS: MultiverseWidgets/MultiverseWidgets.entitlements
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.nexussoft.multiverse.widgets
+        PRODUCT_BUNDLE_IDENTIFIER: "$(MULTIVERSE_BUNDLE_ID).widgets"
         INFOPLIST_FILE: MultiverseWidgets/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         TARGETED_DEVICE_FAMILY: "1,2"

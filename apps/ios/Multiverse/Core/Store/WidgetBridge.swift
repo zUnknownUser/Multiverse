@@ -10,7 +10,7 @@ protocol WidgetSnapshotWriting {
 
 /// Contrato compartilhado pelo app e pelos widgets através do App Group.
 enum WidgetBridge {
-    static let appGroupID = "group.com.nexussoft.multiverse"
+    static var appGroupID: String { AppEnvironment.current.appGroupID }
     private static let key = "widget-snapshot"
 
     struct Snapshot: Codable, Equatable, Sendable {

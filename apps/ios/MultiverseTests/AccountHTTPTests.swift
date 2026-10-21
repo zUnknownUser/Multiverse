@@ -279,6 +279,28 @@ struct AccountHTTPTests {
         await #expect(throws: ActivityError.itemUnavailable) { try await api.saveLog(id: id, input: input) }
     }
 
+    @Test func diaryEditingAndDeletionUseAuthenticatedOwnerRoutesAndStableIdentity() async throws {
+        let id = UUID()
+        let state = "{\"entries\":[],\"reviews\":[],\"items\":[],\"universes\":[],\"followerCount\":0}"
+        AccountURLProtocol.fixture.reset([(200, state), (200, "{\"id\":\"\(id)\",\"state\":\(state)}"),
+            (404, "{\"code\":\"LOG_NOT_FOUND\"}"), (409, "{\"code\":\"LOG_DELETED\"}"), (409, "{\"code\":\"LOG_ITEM_CONFLICT\"}")])
+        let (api, transport) = client(TokenStub()); defer { transport.invalidateAndCancel() }
+        let input = SaveLogInput(itemId: "m-civil", loggedAt: .now, rating: 3, liked: false, rewatch: true, spoiler: false, text: "Edited")
+        _ = try await api.updateLog(id: id, input: input)
+        #expect(try await api.deleteLog(id: id).id == id)
+        let requests = AccountURLProtocol.fixture.requests
+        #expect(requests.map(\.httpMethod) == ["PATCH", "DELETE"])
+        for request in requests {
+            #expect(request.url?.path == "/api/v1/me/diary/" + id.uuidString.lowercased())
+            #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer original-token")
+            #expect(request.value(forHTTPHeaderField: "Accept-Language") == L10n.language())
+        }
+        #expect(requests[1].httpBody == nil)
+        await #expect(throws: ActivityError.missingLog) { try await api.updateLog(id: id, input: input) }
+        await #expect(throws: ActivityError.deletedLog) { try await api.updateLog(id: id, input: input) }
+        await #expect(throws: ActivityError.itemConflict) { try await api.updateLog(id: id, input: input) }
+    }
+
     @Test func expiredTokenRefreshesOnceAndPreservesAuthenticatedRequest() async throws {
         AccountURLProtocol.fixture.reset([(401, "{}"), (200, "{\"available\":true}")])
         let token = TokenStub()
@@ -292,6 +314,17 @@ struct AccountHTTPTests {
         #expect(requests.first?.value(forHTTPHeaderField: "Authorization") == "Bearer original-token")
         #expect(requests.last?.value(forHTTPHeaderField: "Authorization") == "Bearer refreshed-token")
         #expect(requests.last?.value(forHTTPHeaderField: "Accept-Language") == L10n.language())
+        #expect(requests.allSatisfy { $0.value(forHTTPHeaderField: "X-Multiverse-Environment") == AppEnvironment.current.rawValue })
+    }
+
+    @Test func mismatchedEnvironmentDoesNotRetryOrRefresh() async {
+        AccountURLProtocol.fixture.reset([(409, "{\"code\":\"ENVIRONMENT_MISMATCH\"}")])
+        let token = TokenStub()
+        let (api, transport) = client(token)
+        defer { transport.invalidateAndCancel() }
+        await #expect(throws: AuthError.apiNotConfigured) { try await api.fetchAccount() }
+        #expect(AccountURLProtocol.fixture.requests.count == 1)
+        #expect(token.refreshes == [false])
     }
 
     @Test func rejectedRefreshEndsSessionWithoutInfiniteRetries() async {

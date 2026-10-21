@@ -27,7 +27,37 @@ describe('API bootstrap (e2e)', () => {
       .get('/api/v1/health')
       .expect(200)
       .expect('X-Content-Type-Options', 'nosniff')
-      .expect({ status: 'ok', service: 'multiverse-api' });
+      .expect('Cache-Control', 'no-store')
+      .expect('X-Multiverse-Environment', 'test')
+      .expect({ status: 'ok', service: 'multiverse-api', environment: 'test' });
+  });
+
+  it('keeps liveness available but readiness unavailable without a configured database', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/health/ready')
+      .expect(503)
+      .expect('Cache-Control', 'no-store')
+      .expect('X-Content-Type-Options', 'nosniff')
+      .expect('X-Multiverse-Environment', 'test')
+      .expect({
+        status: 'unavailable',
+        service: 'multiverse-api',
+        environment: 'test',
+      });
+    await request(app.getHttpServer()).get('/api/v1/health').expect(200);
+  });
+
+  it('rejects a client from another environment before authentication or writes', async () => {
+    await request(app.getHttpServer())
+      .put('/api/v1/me/diary/00000000-0000-4000-8000-000000000000')
+      .set('X-Multiverse-Environment', 'production')
+      .send({})
+      .expect(409)
+      .expect({ code: 'ENVIRONMENT_MISMATCH' });
+    await request(app.getHttpServer())
+      .get('/api/v1/health')
+      .set('X-Multiverse-Environment', 'test')
+      .expect(200);
   });
 
   it('returns 404 for unknown routes', async () => {

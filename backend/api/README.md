@@ -16,15 +16,19 @@ Use Node.js 24 LTS (24.15+) ou 26 e Docker:
 ```sh
 cd backend/api
 npm ci
-cp .env.example .env
+cp -n .env.example .env
 # Escolha POSTGRES_PASSWORD e ajuste a mesma senha em DATABASE_URL.
 docker compose up -d --wait
 npm run db:migrate
 npm run start:dev
 ```
 
-Configure também as credenciais Firebase Admin antes de usar as rotas de conta.
-A API usa Application Default Credentials: em ambiente Google, use a identidade
+O exemplo local usa `APP_ENV=local`, Firebase `demo-multiverse-local` e Auth
+emulator em `127.0.0.1:9099`, sem credenciais reais. Iniciar o emulador conforme
+[guia de ambientes](../../docs/ENVIRONMENTS.md). O banco local usa a porta 55432 e
+volume próprio; não reutilizar um banco de produção ou o volume legado.
+
+Em staging/produção, a API usa Application Default Credentials: em ambiente Google, use a identidade
 do serviço; no desenvolvimento, use ADC ou `GOOGLE_APPLICATION_CREDENTIALS`
 apontando para um arquivo de conta de serviço **fora do repositório**, com acesso
 ao Firebase Authentication do projeto. Nunca inclua essa credencial no app iOS.
@@ -42,11 +46,19 @@ O serviço está ligado ao GitHub `zUnknownUser/Multiverse`, branch `master`, ra
 O Dockerfile opcional compila com Node 24 e executa sem privilégios.
 `.railway/railway.ts` conserva a preparação inicial de configuração via CLI;
 não reaplique esse plano sem comparar com a configuração remota atual.
+O template local agora usa `/api/v1/health/ready` para conferir PostgreSQL no
+deploy futuro; o healthcheck remoto não foi alterado neste lote.
 `DATABASE_URL` referencia `${{Postgres.DATABASE_URL}}` pela rede privada.
 `FIREBASE_SERVICE_ACCOUNT_JSON` contém o JSON Admin somente nas variáveis do serviço;
 o projeto da credencial precisa coincidir com `FIREBASE_PROJECT_ID`.
 
-O fluxo atual é commit/push e acompanhamento do deploy GitHub no Railway.
+**Atenção ao lote L06:** o migrador agora exige `APP_ENV` e `FIREBASE_PROJECT_ID`
+explícitos. Antes de qualquer publicação em produção, configurar `APP_ENV=production`.
+A migration 029 identifica o banco; a API recusa inicialização em banco de outro
+ambiente. Homologação continua pendente no Railway após a indisponibilidade de
+21/10. Não usar push em master para experimentar staging.
+
+O fluxo de produção é commit/push e acompanhamento do deploy GitHub no Railway.
 Como alternativa operacional, a partir de `backend/api`:
 
 ```sh
@@ -60,22 +72,37 @@ com o conteúdo do arquivo local via stdin, sem imprimi-lo.
 
 ```sh
 curl http://localhost:3000/api/v1/health
+curl http://localhost:3000/api/v1/health/ready
 ```
 
-A resposta `{"status":"ok","service":"multiverse-api"}` é uma verificação de
-vida do processo; não atesta conectividade com PostgreSQL ou Firebase.
+A resposta local `{"status":"ok","service":"multiverse-api","environment":"local"}`
+identifica o processo. `/health/ready` retorna 200 com `status=ready` somente se o
+pool acessar PostgreSQL e confirmar a identidade do ambiente; indisponibilidade,
+timeout ou identidade divergente retornam 503 com `status=unavailable`.
+As duas rotas são públicas e usam `Cache-Control: no-store`. A prontidão tem cache
+interno de até 5 segundos e prazo de resposta de 2 segundos, sem chamar provedores
+externos. O header
+`X-Multiverse-Environment` aparece nas respostas. Divergência enviada por um
+cliente retorna 409 com `ENVIRONMENT_MISMATCH` antes das rotas.
+
+Diagnóstico privado: após `npm run build`, `npm run ops:report` lê somente
+contagens/idades das pendências de exclusão de conta, push e voz. Exige
+`OPERATIONS_DATABASE_URL`, `APP_ENV` e `FIREBASE_PROJECT_ID` explícitos, sem carregar
+`.env` nem reutilizar `DATABASE_URL`. Não retorna dados pessoais e não reprocessa
+trabalhos. Contrato, códigos de saída e limites em [operação](docs/operations.md).
 
 ## Ambiente
 
-| Variável                         | Uso                                                           |
-| -------------------------------- | ------------------------------------------------------------- |
-| `NODE_ENV`                       | `development` (padrão), `test` ou `production`                |
-| `PORT`                           | `3000` por padrão                                             |
-| `DATABASE_URL`                   | URL PostgreSQL usada pela API e pelo migrador                 |
-| `POSTGRES_PASSWORD`              | Senha do PostgreSQL local no Docker Compose                   |
-| `FIREBASE_PROJECT_ID`            | `multiverse-7f87c` no desenvolvimento; explícito em produção  |
-| `GOOGLE_APPLICATION_CREDENTIALS` | Caminho externo ao Git, quando não houver outra fonte de ADC  |
-| `TEST_DATABASE_URL`              | Banco descartável para executar os testes com PostgreSQL real |
+| Variável                         | Uso                                                                                  |
+| -------------------------------- | ------------------------------------------------------------------------------------ |
+| `APP_ENV`                        | `local`, `test`, `staging` ou `production`; ver [matriz](../../docs/ENVIRONMENTS.md) |
+| `NODE_ENV`                       | `development` (padrão), `test` ou `production`                                       |
+| `PORT`                           | `3000` por padrão                                                                    |
+| `DATABASE_URL`                   | URL PostgreSQL usada pela API e pelo migrador                                        |
+| `POSTGRES_PASSWORD`              | Senha do PostgreSQL local no Docker Compose                                          |
+| `FIREBASE_PROJECT_ID`            | `demo-multiverse-local` local; projetos distintos em staging/produção                |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Caminho externo ao Git, quando não houver outra fonte de ADC                         |
+| `TEST_DATABASE_URL`              | Banco descartável para executar os testes com PostgreSQL real                        |
 
 Variáveis do processo têm prioridade sobre `.env`. Os testes da aplicação ignoram
 `.env`. Em produção, URL do banco e ID do projeto são obrigatórios, e o emulador
@@ -174,18 +201,30 @@ O Compose expõe somente `127.0.0.1:5432` e preserva dados no volume `postgres_d
 ## Testes e comandos
 
 ```sh
-npm run check          # Formatação, lint, tipos, build, unitários e HTTP
+npm run check:local    # Verificação completa com PostgreSQL temporário (Docker)
+npm run test:local     # Unitários e HTTP com PostgreSQL temporário (Docker)
+npm run check          # Verificação completa; exige TEST_DATABASE_URL
 npm run start:dev      # Servidor com recarga
 npm run build
 npm run start:prod     # Defina NODE_ENV=production no ambiente
 npm run db:migrate
 ```
 
-Para incluir os testes de persistência, configure `TEST_DATABASE_URL` apontando
-para um PostgreSQL de testes antes de executar `npm run check`. A suíte cria um
-schema aleatório, executa a migration nele e apaga somente esse schema ao terminar.
-Sem essa variável, os testes de PostgreSQL são explicitamente ignorados. Use
-exclusivamente um banco de desenvolvimento/testes, com permissão de criar schemas.
+Os comandos `check:local` e `test:local` criam um PostgreSQL 18 descartável com
+porta aleatória em localhost e removem o container ao terminar. Não usam o banco
+do Compose nem uma URL de banco herdada. Docker precisa estar em execução.
+
+Para usar um banco de testes já preparado, configure `TEST_DATABASE_URL` antes de
+executar `npm run check` ou `npm run test:e2e`. Cada suíte cria um schema aleatório,
+aplica todas as migrations e apaga somente seu schema ao terminar. A execução é
+serial, com até 60 segundos por hook. Ausência da URL, URL inválida ou banco
+inacessível fazem a etapa falhar, em vez de ignorar suítes de persistência.
+Use exclusivamente banco de testes com permissão de criar schemas.
+
+`npm test` executa somente os unitários. O setup de testes remove a URL da aplicação
+e credenciais externas herdadas, força ambiente de teste e desliga push/voz.
+Consulte o [guia de testes e CI](../../docs/TESTING.md) para os comandos da raiz,
+versões dos runtimes e limites desta validação.
 
 Os testes HTTP usam o banco real e um verificador Firebase injetado: cobrem
 isolamento de contas, validação, concorrência de username/progresso, disponibilidade

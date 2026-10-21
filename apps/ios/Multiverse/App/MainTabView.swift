@@ -123,6 +123,7 @@ private struct RouteDestination: View {
         case .diary: DiaryView()
         case .wrapped: WrappedView()
         case .settings: SettingsView()
+        case .legal(let kind): LegalDocumentView(kind: kind)
         case .blockedUsers: BlockedUsersView()
         case .deleteAccount: DeleteAccountView()
         case .community(let universe, let item): CommunityView(universe: universe, item: item)

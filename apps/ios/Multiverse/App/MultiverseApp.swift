@@ -1,6 +1,5 @@
 import SwiftUI
 import FirebaseCore
-import FirebaseAnalytics
 import FirebaseAppCheck
 
 @main
@@ -12,8 +11,11 @@ struct MultiverseApp: App {
         #else
         AppCheck.setAppCheckProviderFactory(MultiverseAppCheckProviderFactory())
         #endif
-        FirebaseApp.configure()
-        Analytics.setAnalyticsCollectionEnabled(true)
+        guard let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
+              let options = FirebaseOptions(contentsOfFile: path),
+              options.projectID == AppEnvironment.current.firebaseProjectID,
+              options.bundleID == AppEnvironment.current.bundleID else { preconditionFailure("Firebase deployment configuration mismatch") }
+        FirebaseApp.configure(options: options)
     }
 
     var body: some Scene {

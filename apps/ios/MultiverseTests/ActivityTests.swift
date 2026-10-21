@@ -21,6 +21,21 @@ private final class ActivityStub: ActivityAPI {
         requests.append((id, input))
         return try await withCheckedThrowingContinuation { pending = $0 }
     }
+    var updateIDs: [UUID] = []
+    var deleteIDs: [UUID] = []
+    var pendingDelete: CheckedContinuation<DeleteLogReceipt, any Error>?
+    func updateLog(id: UUID, input: SaveLogInput) async throws -> ActivitySnapshot {
+        updateIDs.append(id)
+        return try await saveLog(id: id, input: input)
+    }
+    func deleteLog(id: UUID) async throws -> DeleteLogReceipt {
+        deleteIDs.append(id)
+        return try await withCheckedThrowingContinuation { pendingDelete = $0 }
+    }
+    func completeDelete(_ result: Result<DeleteLogReceipt, any Error>) {
+        pendingDelete?.resume(with: result)
+        pendingDelete = nil
+    }
     func complete(_ result: Result<ActivitySnapshot, any Error>) {
         pending?.resume(with: result)
         pending = nil
@@ -39,15 +54,15 @@ struct ActivityTests {
         let item = try #require(sample.items.first { $0.id == input.itemId })
         return ActivitySnapshot(entries: [DiaryEntry(id: id, itemId: input.itemId, loggedAt: input.loggedAt,
             rating: input.rating, liked: input.liked, rewatch: input.rewatch)],
-            reviews: [ActivityReview(id: UUID().uuidString, user: "duda", item: input.itemId, rating: input.rating,
-                text: input.text, spoiler: input.spoiler, createdAt: .now)],
+            reviews: input.rating == 0 && input.text.isEmpty ? [] : [ActivityReview(id: UUID().uuidString, user: "duda", item: input.itemId, rating: input.rating,
+                text: input.text, spoiler: input.spoiler, createdAt: .now, entryId: id)],
             items: [item], universes: sample.universes.filter { $0.id == item.uni }, followerCount: 2)
     }
     private func saved(_ id: UUID = UUID()) -> ActivitySnapshot {
         let sample = SampleData.load()
         let item = sample.items.first { $0.id == "m-civil" }!
         return ActivitySnapshot(entries: [DiaryEntry(id: id, itemId: item.id, loggedAt: Date(timeIntervalSince1970: 1_790_000_000), rating: 4)],
-            reviews: [ActivityReview(id: UUID().uuidString, user: "duda", item: item.id, rating: 4, text: "Minha review", spoiler: true, createdAt: .now)],
+            reviews: [ActivityReview(id: UUID().uuidString, user: "duda", item: item.id, rating: 4, text: "Minha review", spoiler: true, createdAt: .now, entryId: id)],
             items: [item], universes: sample.universes.filter { $0.id == item.uni }, followerCount: 2)
     }
     private func settle(_ condition: () -> Bool) async throws {
@@ -291,5 +306,181 @@ struct ActivityTests {
         api.complete(.success(try acknowledged(api)))
         try await settle { !store.isSavingLog }
         #expect(store.logDraft == nil)
+    }
+
+    @Test func editingTargetsTheExactRevisitAndRetriesWithoutCreatingAnotherEntry() async throws {
+        let api = ActivityStub(), first = UUID(), second = UUID()
+        let original = saved(first)
+        let revisit = DiaryEntry(id: second, itemId: "m-civil", loggedAt: .now, rating: 2, liked: true, rewatch: true)
+        let review = ActivityReview(id: UUID().uuidString, user: "duda", item: "m-civil", rating: 2,
+                                   text: "Second visit", spoiler: false, createdAt: .now, entryId: second)
+        api.snapshot = .init(entries: [revisit] + original.entries, reviews: [review] + original.reviews,
+                             items: original.items, universes: original.universes, followerCount: 2)
+        let store = AppStore(activityAPI: api)
+        await store.bootstrap()
+        store.editLog(id: first)
+        #expect(store.logDraft?.text == "Minha review" && store.logDraft?.spoiler == true)
+        store.closeLog()
+        #expect(api.requests.isEmpty) // Cancelling does not save.
+        store.editLog(id: second)
+        #expect(store.logDraft?.id == second && store.logDraft?.isEditing == true)
+        #expect(store.logDraft?.text == "Second visit" && store.logDraft?.liked == true)
+        #expect(store.logDraft?.rewatch == true && store.logDraft?.loggedAt == revisit.loggedAt)
+        store.setLogItem("m-ultimato")
+        #expect(store.logDraft?.itemID == "m-civil")
+        store.logDraft?.text = "Edited revisit"
+        store.logDraft?.rating = 3.5
+        store.logDraft?.loggedAt = original.entries[0].loggedAt
+        store.saveLog()
+        store.saveLog()
+        try await settle { api.pending != nil }
+        #expect(api.updateIDs == [second])
+        api.complete(.failure(ActivityError.timedOut))
+        try await settle { !store.isSavingLog }
+        #expect(store.diary.count == 2 && store.logDraft?.text == "Edited revisit")
+        store.saveLog()
+        try await settle { api.pending != nil }
+        #expect(api.updateIDs == [second, second] && api.requests[0].1 == api.requests[1].1)
+        let updated = try acknowledged(api)
+        api.snapshot = .init(entries: updated.entries + original.entries, reviews: updated.reviews + original.reviews,
+                             items: original.items, universes: original.universes, followerCount: 2)
+        api.complete(.success(api.snapshot))
+        try await settle { !store.isSavingLog }
+        #expect(store.logDraft == nil && store.diary.count == 2)
+        store.editLog(id: second)
+        #expect(store.logDraft?.text == "Edited revisit" && store.logDraft?.rating == 3.5)
+        store.closeLog()
+        store.openLog(for: "m-civil")
+        #expect(store.logDraft?.id != second && store.logDraft?.isEditing == false)
+    }
+
+    @Test func editingKeepsTheDraftWhenReviewConfirmationIsWrongOrTheEntryWasDeleted() async throws {
+        let api = ActivityStub()
+        api.snapshot = saved()
+        let id = api.snapshot.entries[0].id, store = AppStore(activityAPI: api)
+        await store.bootstrap()
+        store.editLog(id: id)
+        store.logDraft?.text = "New text"
+        store.saveLog()
+        try await settle { api.pending != nil }
+        api.complete(.success(api.snapshot)) // The entry matches but the review does not.
+        try await settle { !store.isSavingLog }
+        #expect(store.logSaveError != nil && store.logDraft?.text == "New text")
+        store.saveLog()
+        try await settle { api.pending != nil }
+        api.complete(.failure(ActivityError.deletedLog))
+        try await settle { !store.isSavingLog }
+        #expect(store.logDraft?.id == id && store.logDraft?.isEditing == true)
+        #expect(store.logSaveError == ActivityError.deletedLog.localizedDescription)
+    }
+
+    @Test func editingRatingOnlyEntryRestoresEmptyTextAndCanRemoveItsReview() async throws {
+        let api = ActivityStub(), id = UUID()
+        let initial = saved(id)
+        api.snapshot = .init(entries: initial.entries,
+                             reviews: [.init(id: UUID().uuidString, user: "duda", item: "m-civil", rating: 4, text: "", spoiler: false, createdAt: .now, entryId: id)],
+                             items: initial.items, universes: initial.universes, followerCount: 0)
+        let store = AppStore(activityAPI: api)
+        await store.bootstrap()
+        store.editLog(id: id)
+        #expect(store.logDraft?.text == "") // Never save the display-only “Rated this work.” text.
+        store.logDraft?.rating = 0
+        store.saveLog()
+        try await settle { api.pending != nil }
+        api.complete(.success(try acknowledged(api)))
+        try await settle { !store.isSavingLog }
+        #expect(store.diary.count == 1 && store.diary[0].rating == 0 && store.reviews.isEmpty)
+    }
+
+    private func deletedState(_ initial: ActivitySnapshot) -> ActivitySnapshot {
+        let item = initial.items[0]
+        let updated = Item(id: item.id, uni: item.uni, type: item.type, title: item.title, year: item.year,
+                           avg: 0, canon: item.canon, desc: item.desc, logCount: 0, reviewCount: 0, ratingHistogram: Array(repeating: 0, count: 10))
+        return .init(entries: [], reviews: [], items: [updated], universes: initial.universes, followerCount: 2)
+    }
+
+    @Test(arguments: [false, true]) func deletionReconcilesActivityWithoutErasingManualSeenState(manuallySeen: Bool) async throws {
+        let api = ActivityStub()
+        api.snapshot = saved()
+        let initial = api.snapshot, entry = initial.entries[0], store = AppStore(activityAPI: api)
+        await store.bootstrap()
+        store.checks[entry.itemId] = manuallySeen
+        #expect(store.isSeen(entry.itemId))
+        store.deleteLog(id: entry.id)
+        store.deleteLog(id: entry.id)
+        store.openLogBlank()
+        try await settle { api.pendingDelete != nil }
+        #expect(api.deleteIDs == [entry.id] && store.logDraft == nil && store.diary.count == 1)
+        api.completeDelete(.failure(AuthError.networkUnavailable))
+        try await settle { !store.isDeletingLog }
+        #expect(store.diaryDeleteError != nil && store.diary == initial.entries)
+        store.editLog(id: entry.id)
+        #expect(store.logDraft == nil)
+        store.deleteLog(id: entry.id)
+        try await settle { api.pendingDelete != nil }
+        api.snapshot = deletedState(initial)
+        api.completeDelete(.success(.init(id: entry.id, state: api.snapshot)))
+        try await settle { !store.isDeletingLog }
+        #expect(api.deleteIDs == [entry.id, entry.id])
+        #expect(store.diary.isEmpty && store.reviews.isEmpty && store.pendingDiaryDeletion == nil && store.diaryDeleteError == nil)
+        #expect(store.item(entry.itemId)?.avg == 0 && store.item(entry.itemId)?.logCount == 0)
+        #expect(store.isSeen(entry.itemId) == manuallySeen)
+        #expect(store.profileData(for: store.meID).stats.first?.count == "0")
+        #expect(store.profileData(for: store.meID).favorites.isEmpty)
+        let reopened = AppStore(activityAPI: api)
+        await reopened.bootstrap()
+        #expect(reopened.diary.isEmpty && reopened.reviews.isEmpty)
+    }
+
+    @Test func delayedRefreshCannotRestoreADeletedEntry() async throws {
+        let api = ActivityStub()
+        api.snapshot = saved()
+        let original = api.snapshot, store = AppStore(activityAPI: api)
+        await store.bootstrap()
+        api.holdReads = true
+        let refresh = Task { await store.refreshActivity() }
+        try await settle { api.pendingRead != nil }
+        store.deleteLog(id: original.entries[0].id)
+        try await settle { api.pendingDelete != nil }
+        api.completeDelete(.success(.init(id: original.entries[0].id, state: deletedState(original))))
+        try await settle { !store.isDeletingLog }
+        api.completeRead(original)
+        await refresh.value
+        #expect(store.diary.isEmpty && store.reviews.isEmpty)
+    }
+
+    @Test func refreshingAfterLostDeleteResponseRetriesTheConfirmedActionAndUpdatesStatistics() async throws {
+        let api = ActivityStub()
+        api.snapshot = saved()
+        let original = api.snapshot, entry = original.entries[0], store = AppStore(activityAPI: api)
+        await store.bootstrap()
+        store.deleteLog(id: entry.id)
+        try await settle { api.pendingDelete != nil }
+        api.completeDelete(.failure(ActivityError.timedOut))
+        try await settle { !store.isDeletingLog }
+        // A normal activity read would contain no items once the last log is gone.
+        api.snapshot = .init(entries: [], reviews: [], items: [], universes: [], followerCount: 2)
+        await store.refreshActivity()
+        try await settle { api.pendingDelete != nil }
+        #expect(api.readCount == 1 && api.deleteIDs == [entry.id, entry.id])
+        api.completeDelete(.success(.init(id: entry.id, state: deletedState(original))))
+        try await settle { !store.isDeletingLog }
+        #expect(store.diary.isEmpty && store.pendingDiaryDeletion == nil)
+        #expect(store.item(entry.itemId)?.logCount == 0 && store.item(entry.itemId)?.avg == 0)
+    }
+
+    @Test(arguments: ["wrong-id", "still-present", "missing-statistics"])
+    func invalidDeletionReceiptKeepsHistoryAndRetry(invalid: String) async throws {
+        let api = ActivityStub()
+        api.snapshot = saved()
+        let original = api.snapshot, entry = original.entries[0], store = AppStore(activityAPI: api)
+        await store.bootstrap()
+        store.deleteLog(id: entry.id)
+        try await settle { api.pendingDelete != nil }
+        let state: ActivitySnapshot = invalid == "still-present" ? original : invalid == "missing-statistics"
+            ? .init(entries: [], reviews: [], items: [], universes: [], followerCount: 0) : deletedState(original)
+        api.completeDelete(.success(.init(id: invalid == "wrong-id" ? UUID() : entry.id, state: state)))
+        try await settle { !store.isDeletingLog }
+        #expect(store.diary == original.entries && store.diaryDeleteError != nil && store.pendingDiaryDeletion?.id == entry.id)
     }
 }

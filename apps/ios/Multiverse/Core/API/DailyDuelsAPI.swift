@@ -88,7 +88,7 @@ extension AccountAPIClient: DailyDuelsAPI {
 enum DuelInvitation {
     static func url(id: String) -> URL? {
         guard UUID(uuidString: id) != nil else { return nil }
-        return URL(string: "multiverse://duel/" + id.lowercased())
+        return URL(string: AppEnvironment.current.urlScheme + "://duel/" + id.lowercased())
     }
     static func displayText(in text: String) -> String {
         guard id(in: text) != nil else { return text }
@@ -96,7 +96,7 @@ enum DuelInvitation {
     }
     static func id(in text: String) -> String? {
         guard let last = text.split(separator: "\n").last, let url = URL(string: String(last)),
-              url.scheme == "multiverse", url.host == "duel", url.user == nil, url.password == nil,
+              url.scheme == AppEnvironment.current.urlScheme, url.host == "duel", url.user == nil, url.password == nil,
               url.port == nil, url.query == nil, url.fragment == nil, url.pathComponents.count == 2,
               let id = url.pathComponents.last, UUID(uuidString: id) != nil else { return nil }
         return id.lowercased()

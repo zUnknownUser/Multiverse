@@ -14,7 +14,7 @@ describe('Environment configuration', () => {
         NODE_ENV: 'production',
         PORT: '8080',
         DATABASE_URL: 'postgresql://localhost/test',
-        FIREBASE_PROJECT_ID: 'demo-test',
+        FIREBASE_PROJECT_ID: 'multiverse-7f87c',
       }),
     ).toMatchObject({
       NODE_ENV: 'production',
@@ -37,7 +37,7 @@ describe('Environment configuration', () => {
       validateEnvironment({
         NODE_ENV: 'production',
         DATABASE_URL: 'postgresql://localhost/test',
-        FIREBASE_PROJECT_ID: 'demo-test',
+        FIREBASE_PROJECT_ID: 'multiverse-7f87c',
         FIREBASE_AUTH_EMULATOR_HOST: 'localhost:9099',
       }),
     ).toThrow('emulator');
@@ -73,5 +73,39 @@ describe('Environment configuration', () => {
     expect(() => validateEnvironment({ OPENAI_MODEL: '' })).toThrow(
       'OPENAI_MODEL',
     );
+  });
+});
+
+describe('Environment isolation', () => {
+  const staging = {
+    APP_ENV: 'staging',
+    NODE_ENV: 'production',
+    DATABASE_URL: 'postgresql://localhost/staging',
+    FIREBASE_PROJECT_ID: 'multiverse-staging-7f87c',
+  };
+  it('uses a demo Firebase project by default and accepts explicit staging', () => {
+    expect(validateEnvironment({})).toMatchObject({
+      APP_ENV: 'local',
+      FIREBASE_PROJECT_ID: 'demo-multiverse-local',
+    });
+    expect(validateEnvironment(staging).APP_ENV).toBe('staging');
+  });
+  it.each([
+    { ...staging, APP_ENV: 'unknown' },
+    { ...staging, NODE_ENV: 'development' },
+    { ...staging, FIREBASE_PROJECT_ID: 'multiverse-7f87c' },
+    { ...staging, RAILWAY_ENVIRONMENT_NAME: 'production' },
+    { ...staging, FIREBASE_AUTH_EMULATOR_HOST: 'localhost:9099' },
+    {
+      ...staging,
+      FIREBASE_SERVICE_ACCOUNT_JSON: JSON.stringify({
+        project_id: 'multiverse-7f87c',
+      }),
+    },
+    { APP_ENV: 'local', FIREBASE_PROJECT_ID: 'multiverse-7f87c' },
+    { APP_ENV: 'test', NODE_ENV: 'production' },
+    { APP_ENV: 'local', NODE_ENV: 'test' },
+  ])('rejects mixed deployment settings', (env) => {
+    expect(() => validateEnvironment(env)).toThrow();
   });
 });

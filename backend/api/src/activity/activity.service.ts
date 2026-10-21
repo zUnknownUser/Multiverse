@@ -42,15 +42,36 @@ export class ActivityService {
     });
   }
 
-  async save(uid: string, id: string, input: SaveLogDTO, locale: string) {
+  async save(
+    uid: string,
+    id: string,
+    input: SaveLogDTO,
+    locale: string,
+    existingOnly = false,
+  ) {
     if (new Date(input.loggedAt).getTime() > Date.now() + 300_000)
       throw new BadRequestException({ code: 'INVALID_LOG_DATE' });
     return this.lifecycle.withActiveAccount(uid, async (client) => {
       await this.assertProfile(client, uid);
+      const deleted = await client.query(
+        'SELECT 1 FROM diary_entry_deletions WHERE firebase_uid=$1 AND id=$2',
+        [uid, id],
+      );
+      if (deleted.rowCount)
+        throw new ConflictException({ code: 'LOG_DELETED' });
+      const existing = await client.query<{ item_id: string }>(
+        'SELECT item_id FROM diary_entries WHERE firebase_uid=$1 AND id=$2',
+        [uid, id],
+      );
+      if (existingOnly && !existing.rowCount)
+        throw new NotFoundException({ code: 'LOG_NOT_FOUND' });
+      if (existing.rowCount && existing.rows[0].item_id !== input.itemId)
+        throw new ConflictException({ code: 'LOG_ITEM_CONFLICT' });
       const item = await client.query(
         `SELECT i.id FROM catalog_items i JOIN catalog_universes u ON u.id=i.universe_id
-        WHERE i.id=$1 AND i.status='published' AND u.status='active' FOR SHARE OF i,u`,
-        [input.itemId],
+        WHERE i.id=$1 AND i.universe_id IN ('marvel','dc')
+        AND ((i.status='published' AND u.status='active') OR $2::boolean) FOR SHARE OF i,u`,
+        [input.itemId, !!existing.rowCount],
       );
       if (!item.rowCount)
         throw new ConflictException({ code: 'ITEM_UNAVAILABLE' });
@@ -92,6 +113,7 @@ export class ActivityService {
           [uid, id, input.text, input.spoiler],
         );
       } else {
+        await this.removeReviewNotifications(client, uid, id);
         await client.query(
           'DELETE FROM reviews WHERE firebase_uid=$1 AND entry_id=$2',
           [uid, id],
@@ -101,7 +123,51 @@ export class ActivityService {
     });
   }
 
-  private async snapshot(client: PoolClient, uid: string, locale: string) {
+  private async removeReviewNotifications(
+    client: PoolClient,
+    uid: string,
+    id: string,
+  ) {
+    await client.query(
+      `DELETE FROM notifications WHERE target_type='review' AND target_id IN
+       (SELECT id::text FROM reviews WHERE firebase_uid=$1 AND entry_id=$2)`,
+      [uid, id],
+    );
+  }
+
+  async remove(uid: string, id: string, locale: string) {
+    return this.lifecycle.withActiveAccount(uid, async (client) => {
+      await this.assertProfile(client, uid);
+      const entry = await client.query<{ item_id: string }>(
+        'SELECT item_id FROM diary_entries WHERE firebase_uid=$1 AND id=$2',
+        [uid, id],
+      );
+      const prior = await client.query<{ item_id: string }>(
+        'SELECT item_id FROM diary_entry_deletions WHERE firebase_uid=$1 AND id=$2',
+        [uid, id],
+      );
+      const itemID = entry.rows[0]?.item_id ?? prior.rows[0]?.item_id;
+      if (!itemID) throw new NotFoundException({ code: 'LOG_NOT_FOUND' });
+      await client.query(
+        `INSERT INTO diary_entry_deletions(firebase_uid,id,item_id) VALUES($1,$2,$3)
+         ON CONFLICT(firebase_uid,id) DO NOTHING`,
+        [uid, id, itemID],
+      );
+      await this.removeReviewNotifications(client, uid, id);
+      await client.query(
+        'DELETE FROM diary_entries WHERE firebase_uid=$1 AND id=$2',
+        [uid, id],
+      );
+      return { id, state: await this.snapshot(client, uid, locale, [itemID]) };
+    });
+  }
+
+  private async snapshot(
+    client: PoolClient,
+    uid: string,
+    locale: string,
+    affectedItemIDs: string[] = [],
+  ) {
     const entries = await client.query(
       `SELECT id,item_id AS "itemId",logged_at AS "loggedAt",rating,liked,rewatch
       FROM diary_entries WHERE firebase_uid=$1 AND item_id IN
@@ -109,7 +175,7 @@ export class ActivityService {
       [uid],
     );
     const reviews = await client.query(
-      `SELECT r.id,r.firebase_uid AS "user",d.item_id AS item,d.rating,r.text,r.spoiler,
+      `SELECT r.id,r.entry_id AS "entryId",r.firebase_uid AS "user",d.item_id AS item,d.rating,r.text,r.spoiler,
       r.created_at AS "createdAt" FROM reviews r JOIN diary_entries d ON d.firebase_uid=r.firebase_uid AND d.id=r.entry_id
       WHERE r.firebase_uid=$1 AND d.item_id IN
       (SELECT id FROM catalog_items WHERE universe_id IN ('marvel','dc')) ORDER BY r.created_at DESC,r.id`,
@@ -125,8 +191,9 @@ export class ActivityService {
       LEFT JOIN catalog_item_translations t ON t.item_id=i.id AND t.locale=$2
       ${descriptionSourceJoin} ${catalogSeriesJoin('$2')}
       JOIN catalog_item_statistics s ON s.item_id=i.id
-      WHERE i.universe_id IN ('marvel','dc') AND i.id IN (SELECT item_id FROM diary_entries WHERE firebase_uid=$1) ORDER BY i.sort_order,i.id`,
-      [uid, locale],
+      WHERE i.universe_id IN ('marvel','dc') AND (i.id IN (SELECT item_id FROM diary_entries WHERE firebase_uid=$1)
+      OR i.id=ANY($3::varchar[])) ORDER BY i.sort_order,i.id`,
+      [uid, locale, affectedItemIDs],
     );
     const universes = await client.query(
       `SELECT u.id,coalesce(t.name,p.name) AS name,u.color AS c,u.dark_color AS c2,
@@ -134,9 +201,10 @@ export class ActivityService {
       0 AS base,0 AS total,0 AS members,0 AS live FROM catalog_universes u
       JOIN catalog_universe_translations p ON p.universe_id=u.id AND p.locale='pt-BR'
       LEFT JOIN catalog_universe_translations t ON t.universe_id=u.id AND t.locale=$2
-      WHERE u.id IN ('marvel','dc') AND u.id IN (SELECT i.universe_id FROM catalog_items i JOIN diary_entries d ON d.item_id=i.id WHERE d.firebase_uid=$1)
+      WHERE u.id IN ('marvel','dc') AND u.id IN (SELECT i.universe_id FROM catalog_items i
+      WHERE i.id IN (SELECT item_id FROM diary_entries WHERE firebase_uid=$1) OR i.id=ANY($3::varchar[]))
       ORDER BY u.sort_order,u.id`,
-      [uid, locale],
+      [uid, locale, affectedItemIDs],
     );
     const followers = await client.query(
       `SELECT count(*)::int AS count FROM visible_follows f JOIN profiles p ON p.firebase_uid=f.follower_uid

@@ -18,10 +18,14 @@
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
+    "test:all": "npm test && npm run test:e2e",
+    "test:local": "bash scripts/with-test-db.sh test:all",
+    "check:local": "bash scripts/with-test-db.sh check",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run build && npm test && npm run test:e2e",
-    "db:migrate": "node scripts/migrate.mjs"
+    "db:migrate": "node scripts/migrate.mjs",
+    "ops:report": "node scripts/operations-report.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

@@ -1,3 +1,203 @@
+## 2026-10-21 — Quinto lote: base operacional local (L10)
+
+- Lucas decidiu adiar a validação integrada da homologação e avançar no próximo
+  lote sem novos gastos. Isso não autoriza ativar billing/Blaze nem completar
+  provisionamento pago. Preservar a regra financeira de ENVIRONMENTS.
+- Implementados `/api/v1/health/ready` e `npm run ops:report`; contrato em
+  `backend/api/docs/operations.md`. `/health` mantém liveness/compatibilidade.
+  Readiness consulta o pool real e confere identidade, com 503 genérico, deadline
+  de 2s, cache de 5s e uma consulta em andamento por processo. Timeout de consulta
+  de 1s; conexão com falha é descartada. DatabaseModule compartilha o pool.
+- Relatório operacional usa conexão explícita `OPERATIONS_DATABASE_URL`, APP_ENV
+  e FIREBASE_PROJECT_ID, sem .env/fallback. Snapshot read-only/repeatable-read,
+  somente contagens/idades de exclusões, push e sessões de voz expiradas/revogadas.
+  Limites de triagem documentados; não confundir pendência com falha comprovada do
+  worker. Não tem exposição HTTP, envio, reprocessamento ou modificação de dados.
+- `npm run check:local`: 117 unitários + 167 HTTP/PostgreSQL, format/lint/tipos/build
+  aprovados. Teste real de bloqueio/timeout/recuperação do banco; CLI compilada
+  aprovada em 6 cenários com PostgreSQL descartável separado. Traduções: 1.244;
+  configuração de ambientes: 3 testes. Logs locais `/tmp/multiverse-l10-api-check.log`.
+- Template Railway passou a usar `/health/ready` em deploy futuro. Nenhum deploy
+  remoto, alteração de plano ou chamada a provedor externo para validar este lote.
+  L10 continua parcial: alertas/monitoramento, backups/restauração e operação real
+  dos workers pendentes. L06 continua com validação integrada adiada.
+- Lucas autorizou push ao concluir; preparado para `codex/preparacao-lancamento`,
+  incluindo os lotes anteriores desta conversa ainda locais. Master tem autodeploy;
+  não fazer merge/push nela. Não abrir PR/disparar CI remoto automaticamente sem
+  conferir o limite de custos. Mudanças preexistentes alheias ao lote (whitespace
+  de MockRepository e vídeo de marketing removido) devem permanecer locais.
+
+## 2026-10-21 — Decisão financeira e publicação do e-mail de homologação
+
+- Lucas pediu publicação, mas escolheu **manter sem faturamento por enquanto**
+  quando informado sobre Blaze. Depois determinou: **sempre limitar qualquer gasto**.
+  Não ativar Blaze nem vincular billing. Nenhum novo recurso pago sem teto aprovado
+  por serviço/período; priorizar bloqueio efetivo e explicar quando não existir.
+  Alertas de orçamento não são limites rígidos. Regra em `docs/ENVIRONMENTS.md`.
+- A revisão automática rejeitou a tentativa de vincular billing por falta de
+  autorização financeira explícita. A operação não foi executada. A decisão
+  posterior de Lucas mantém o bloqueio; não repetir a tentativa.
+- Lucas autorizou chave Resend `Multiverse HML`, `Sending access`, domínio
+  `somosmultiverse.com.br`, guardada no Secret Manager exclusivo de staging.
+  Não criada: Secret Manager requer billing. Formulário cancelado; chave existente
+  de produção preservada. Não criar credencial sem o armazenamento aprovado.
+- Consulta confirmou staging `billingEnabled=false`, APIs Firestore/Functions/
+  Secret Manager desativadas e lista App Check debug tokens vazia. Produção segue
+  com faturamento preexistente; nenhum serviço ou limite de produção foi alterado.
+- Remetente preparado no arquivo ignorado
+  `backend/firebase/functions/.env.multiverse-staging-7f87c`, identificado como
+  Multiverse HML. Functions: 14 testes passaram novamente. Nenhum envio real,
+  deploy de Functions, segredo novo, commit ou push. L06 continua em andamento.
+
+## 2026-10-21 — Quarto lote: homologação separada (L06)
+
+- Autorizado por Lucas, mantendo arquitetura/padrões. Fonte operacional:
+  `docs/ENVIRONMENTS.md`; status em LAUNCH_READINESS/BACKLOG. Não marcar L06 concluído
+  enquanto API/Postgres staging, Functions e QA integrado não estiverem prontos.
+- Firebase staging criado: `multiverse-staging-7f87c`, número `663870288715`, app
+  `1:663870288715:ios:79160fa0300d1358602ece`, bundle `com.nexussoft.multiverse.staging`.
+  Google/e-mail ativos, OAuth Multiverse Homologação, suporte lucasamorim78c@gmail.com.
+  Plist público baixado com OAuth próprio; plano Spark mantido, sem billing/usuários
+  reais/copiar dados/segredos. Hosting staging publicado e AASA conferido HTTP 200.
+- `.firebaserc` default staging, aliases explícitos; predeploy Hosting gera bundle
+  por GCLOUD_PROJECT. Não publicar funções sem separar Firestore/App Check/Resend,
+  segredos e faturamento Blaze. Nenhuma chave Admin staging criada ainda.
+- Railway: projeto `3d9b8511-b917-4a7a-8a7d-577853c8a011`; só production.
+  Tentativa `railway environment new staging --json` recusada por builds pausados;
+  listagem posterior confirmou ausência de ambiente parcial. Status oficial de
+  21/10 mantinha incidente aberto. CLI foi vinculado em /tmp/multiverse-staging-ops,
+  não no repo. Retomar ambiente vazio + Postgres próprio + API explícita staging.
+- XcodeGen Debug→Staging.xcconfig / Release→Production.xcconfig. Debug app HML,
+  bundle/widget/AppGroup/scheme Firebase próprios. `Core/Configuration/AppEnvironment`
+  centraliza identidade. Script de build valida pares e copia só plist correto;
+  teste de configuração no CI. URL de staging vazia até existir domínio real;
+  Debug recusa host production. No scheme, loopback só serve API configurada staging.
+- API APP_ENV separado do NODE_ENV, compatibilidade de runtime production mantida;
+  valida projetos/credenciais/Railway/emulador. Header incompatível retorna 409 antes
+  das rotas, health inclui environment. Admin app cache separado por projeto.
+- Migration029 identidade DB. Migrador exige APP_ENV/Firebase explícitos e vincula
+  banco vazio antes das migrations; startup valida identidade. Legacy só pode ser
+  adotado explicitamente em production; nunca renomear DB apagando identidade.
+  **Antes de publicar API produção configurar APP_ENV=production**. Não houve deploy
+  de API/migrations, commit ou push (master tem autodeploy de produção).
+- Verificações: 296 iOS/35 suítes, API 110+160 com PostgreSQL real, formatação/lint/
+  tipos/build, 3 testes de empacotamento/isolamento e 1.244 traduções. SDK Admin real
+  rejeita aud de outro projeto. Smoke emulador criou/verificou/excluiu conta demo,
+  encerrando o processo ao final. Release sem assinatura compilou; bundles Debug e
+  Release conferidos (Firebase/widget correspondentes, só um plist em cada app).
+  Actionlint aprovado. Integração cloud com contas reais ainda pendente.
+- Mudanças de lotes anteriores e alterações preexistentes preservadas, inclusive
+  Localizable.xcstrings/Info.plist e exclusão do vídeo de marketing. Nenhum commit.
+
+## 2026-10-21 — Terceiro lote: termos, privacidade e suporte
+
+- Lucas adiou login Apple porque ainda não assinou Apple Developer. Botão removido
+  de Boas-vindas; fluxo/configuração continuam bloqueados em L01.
+- Lucas autorizou telas internas no estilo papel do Multiverse e confirmou:
+  **Elesys Studio LTDA** como responsável; **lucasamorim78c@gmail.com** para suporte
+  e pedidos de privacidade. Não existem URLs legais públicas no momento.
+- `Core/Legal/LegalResources.swift` carrega configuração e textos locais PT-BR/EN;
+  `Features/Legal/LegalDocumentView.swift` usa ScreenScaffold/MV/MVFont e abre pelas
+  rotas AuthRoute/Route existentes. Acesso antes do login e em Ajustes.
+- Contato com mailto, assunto/versão sem dados da conta, copiar e-mail e retorno
+  quando não há cliente disponível. Nenhuma mensagem é enviada automaticamente.
+- Textos em `Resources/{pt-BR,en}.lproj/LegalDocuments.json`; configuração em
+  `Resources/LegalConfiguration.json`. Documentos explicitamente em revisão para
+  lançamento: falta fechar retenção, regiões/transferências/prestadores, bases
+  legais por finalidade e público-alvo. Identificação/contato já confirmados.
+- Inventário registrou exportação parcial (diário/reviews carregados), mensagens
+  sem E2EE, voz sem gravação implementada e permanência de registros técnicos de
+  exclusão/moderação. Não prometer exclusão integral ou prazo não implementado.
+- Manifestos próprios do app/widget adicionados. UserDefaults local CA92.1 e App
+  Group 1C8F.1, categorias funcionais do app sem tracking. Analytics desativado por
+  FIREBASE_ANALYTICS_COLLECTION_DEACTIVATED, que prevalece sobre preferência antiga;
+  removida habilitação na inicialização. SDKs/serviços de autenticação continuam.
+- Exportador HTML usa os mesmos textos locais, não publica; --require-final recusa
+  textos em revisão ou sem responsável/contato. Nada foi publicado/enviado.
+- Validação: 291 testes iOS/34 suítes e 1.244 traduções aprovados; renderização nativa
+  PT-BR/EN claro/Noir em 320pt. Ajustado texto explicativo da entrada para não truncar.
+  Testes focados finais aprovados; harness visual temporário removido.
+  Manifestos conferidos no app/widget compilados. Archive assinado/App Store
+  Connect, URLs públicas, atendimento real e retenção continuam pendentes no plano.
+- Atualizados `docs/LAUNCH_READINESS.md`, BACKLOG e README iOS. Nenhuma alteração de
+  API neste lote, commit, push ou deploy. Preservadas mudanças locais anteriores.
+
+## 2026-10-21 — Segundo lote: edição e exclusão do diário (L04)
+
+- Pedido de Lucas: implementar o próximo lote e seguir padrões/arquitetura.
+  L04 concluído localmente; LAUNCH_READINESS/BACKLOG atualizados.
+- Menu em cada registro remoto: edição reutiliza LogSheet com mesmo UUID/obra,
+  nota, data, texto bruto e opções; exclusão exige confirmação. Erros preservam
+  rascunho/ação pendente e oferecem retry; ações simultâneas são bloqueadas.
+- API: PATCH exige registro próprio; DELETE retorna `{ id, state }` e remove
+  review/interações/notificações em transação. Migration 028 conserva identidade
+  da exclusão, sem texto, para retry e bloqueio de PUT/PATCH atrasado. Sem alteração
+  de infraestrutura ou dependências; lifecycle/trava por conta existente reutilizados.
+- `entryId` vincula reviews privadas ao registro correto. Recibos validam conteúdo,
+  ID e estado; médias/contagens da obra vêm mesmo após excluir seu último registro.
+  Visto manual fica separado do progresso derivado do diário; feed é invalidado.
+  Refresh após exclusão confirmada sem resposta repete a ação para recuperar as
+  estatísticas, sem reintroduzir o registro por uma resposta antiga.
+- Camadas preservadas: ActivityController/Service, ActivityAPI/AccountAPIClient,
+  APIErrorMapping, AppStore e views com ambiente/tokens/componentes existentes.
+- Validação: API formatação/lint/tipos/build + 99 unitários + 155 HTTP/PostgreSQL;
+  iOS 287 testes/33 suítes; 1.227 entradas PT-BR/EN aprovadas. Renders nativos
+  em 320pt, ambos idiomas e claro/Noir conferidos; harness temporário removido.
+- Publicar migration 028 e backend antes do app (reviews privadas exigem entryId).
+  Sem deploy/commit/push; CI remoto e QA físico permanecem em L07/L09. Edição
+  simultânea entre aparelhos usa a última gravação; paginação/offline ficam em E03/E04.
+- Alterações locais anteriores preservadas. Próximo lote sugerido: L01–L03,
+  login Apple, documentos/suporte e privacidade.
+
+## 2026-10-21 — Primeiro lote: tradução, PostgreSQL e CI
+
+- Pedido autorizado: corrigir a tradução e configurar testes com banco/CI,
+  atualizando o plano. L08 concluído; L07 implementado e validado localmente,
+  com primeira execução GitHub pendente após push. E07 parcialmente tratado.
+- `%@/2000` preenchido em PT-BR/EN sem reformatar o restante do catálogo;
+  verificador aprova 1.214 entradas. `make localization-check` integra `make test`.
+- `make api-check` / `make api-test` criam PostgreSQL 18 exclusivo em porta
+  aleatória localhost e removem container/volume no final. Comandos diretos
+  `npm run check` / `test:e2e` exigem TEST_DATABASE_URL; falta/erro de conexão
+  falham antes das suítes. Unitários continuam disponíveis em `npm test`.
+- HTTP serial, hooks de 60s e ambiente de teste sem URL/credenciais de aplicação
+  herdadas. Banco real e mocks externos existentes preservados.
+- `.github/workflows/ci.yml`: PR, push master e disparo manual; tradução,
+  API Node 24/PostgreSQL 18, Firebase Node 22 e iOS macOS 26/Xcode 26.6/iOS 26.5.
+  Actions fixadas por SHA, permissões de leitura e nenhum segredo de produção.
+- Validação local: API format/lint/tipos/build + 99 unitários + 149 HTTP;
+  Firebase 14; iOS 279/33 suítes com Xcode 27 beta/iOS 27, assinatura desativada
+  e API localhost; actionlint aprovado. Falta de banco/conexão inacessível falham;
+  limpeza após falha e SIGTERM preserva códigos 42/143 e não deixa containers.
+- `make api-test` também passou com NODE_ENV/URL/credenciais/flags inválidas
+  herdadas; o setup isolou a aplicação e usou o banco temporário.
+- Instalações limpas Linux (`npm ci`) aprovadas com Node 24.22.0/API
+  (99 + 149, format/lint/tipos/build) e Node 22.23.3/Firebase (14 testes).
+- Guia em `docs/TESTING.md` e entrada no README. Limite: CI remoto ainda não
+  executado, especialmente a combinação Xcode 26.6/iOS 26.5. Regras de branch,
+  Railway e produção não alteradas. Próxima sugestão: L04, edição/exclusão do diário.
+- Alterações locais anteriores em MockRepository.swift, Info.plist, catálogo e
+  exclusão do vídeo de marketing preservadas; sem commit/push nesta entrega.
+
+## 2026-10-21 — Auditoria geral e plano de preparação para lançamento
+
+- Lucas pediu análise do projeto, mocks, melhorias e pendências; depois pediu que
+  tudo fosse anotado para tratamento futuro e perguntou por onde começar.
+- Registro consolidado: [LAUNCH_READINESS.md](LAUNCH_READINESS.md), com estado
+  real por módulo, inventário de demos, prioridades, critérios de conclusão e
+  limitações da validação. BACKLOG aponta para esse registro como referência atual.
+- Validação da auditoria: 279 testes iOS/33 suítes; API format/lint/tipos/build,
+  99 unitários e 149 HTTP/PostgreSQL; Firebase 14. Tradução falha na entrada vazia
+  `%@/2000`. Testes HTTP passaram em série com maior timeout de preparação após
+  timeouts na execução paralela. Banco descartável encerrado; produção não alterada.
+- Achados principais: botão Apple sem implementação, documentos de privacidade/
+  termos sem links, manifestos próprios ausentes, diário sem edição/exclusão pela
+  interface, mesma API em Debug/Release, CI não versionado e operação/QA pendentes.
+- Primeiro lote sugerido: base de validação/tradução/CI; depois diário completo.
+  Preservar visual e PT-BR/EN; monetização segue adiada. Itens ainda não implementados.
+- Alterações locais preexistentes em MockRepository.swift, Info.plist,
+  Localizable.xcstrings e exclusão do vídeo de marketing foram preservadas.
+
 ## 2026-10-12 — Conversas: recolhimento, contexto e envio incremental
 
 - Discussões da comunidade agora permitem recolher um comentário e seus descendentes. O estado é local à conversa, preservado na paginação; responder reabre apenas os ancestrais da resposta. Ordem cronológica e cards existentes mantidos, com renderização lazy.

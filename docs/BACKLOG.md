@@ -1,5 +1,34 @@
 # Backlog — próximos passos sugeridos
 
+## Plano consolidado de 21/10/2026
+
+A auditoria atual, os mocks, as pendências e os critérios de conclusão estão em
+[Preparação do Multiverse para lançamento](LAUNCH_READINESS.md). Esse registro
+é a referência atual para organizar o tratamento dos achados; as seções antigas
+abaixo preservam decisões e propostas históricas, e algumas descrições de estado
+já foram superadas. Mensagens, clubes, salas e Duelo do Dia têm versões reais.
+
+Dois lotes implementados e validados localmente: tradução/PostgreSQL/CI e
+edição/exclusão do diário (L04). CI remoto pendente após push; migration 028/API
+devem preceder o novo app. Terceiro lote: telas internas de termos/privacidade/suporte e manifestos implementados;
+Apple bloqueado até assinatura Developer (L01). Textos em revisão, retenção,
+publicação e conferência de distribuição ainda pendentes (L02/L03). Homologação e operação seguem nas prioridades de lançamento.
+L06 em andamento: Firebase staging, Google/e-mail e Hosting separados; Debug/Release,
+clientes HTTP e identidade do banco preparados e testados. API/Postgres staging
+bloqueados pela indisponibilidade do Railway e sujeitos a orçamento antes de provisionar;
+Functions staging adiadas por decisão de Lucas de manter sem faturamento. Regra
+permanente: sempre limitar gastos; nenhum novo recurso pago sem teto aprovado.
+Chave Resend HML restrita autorizada, mas não criada enquanto Secret Manager
+depender de faturamento. Roteiro em [ENVIRONMENTS.md](ENVIRONMENTS.md).
+Lucas adiou a validação integrada de homologação. Próximo lote sem novos gastos
+concluído localmente: base operacional de L10, com readiness PostgreSQL e comando
+privado de diagnóstico das pendências de exclusão/push/voz. 117 testes unitários,
+167 HTTP/PostgreSQL e 6 cenários da CLI aprovados. Monitoramento/alertas hospedados,
+backups/restauração e operação com provedores reais seguem pendentes.
+Push autorizado em branch de revisão `codex/preparacao-lancamento`, sem acionar
+autodeploy de master. Ver [contrato](../backend/api/docs/operations.md).
+Monetização permanece adiada.
+
 ## Monetização — adiada por decisão do usuário (03/10/2026)
 
 **Status: somente levantamento.** Lucas decidiu documentar RevenueCat e afiliados

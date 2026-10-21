@@ -43,6 +43,15 @@ describe.skipIf(!databaseURL)('Diary and reviews with PostgreSQL', () => {
     request(app.getHttpServer())
       .get('/api/v1/me/activity')
       .auth(uid, { type: 'bearer' });
+  const update = (uid: string, id: string, body: object) =>
+    request(app.getHttpServer())
+      .patch('/api/v1/me/diary/' + id)
+      .auth(uid, { type: 'bearer' })
+      .send(body);
+  const remove = (uid: string, id: string) =>
+    request(app.getHttpServer())
+      .delete('/api/v1/me/diary/' + id)
+      .auth(uid, { type: 'bearer' });
   const profile = (uid: string) =>
     db.query(
       'INSERT INTO profiles(firebase_uid,username,display_name,avatar_color) VALUES($1,$1,$1,$2)',
@@ -392,5 +401,256 @@ describe.skipIf(!databaseURL)('Diary and reviews with PostgreSQL', () => {
     ).toEqual({ average: 0, log_count: 0 });
     await read('owner').expect(403);
     await save('owner', randomUUID(), input()).expect(403);
+  });
+
+  it('edits the exact revisit without changing identity, work or another account', async () => {
+    await profile('owner');
+    await profile('other');
+    const first = randomUUID(),
+      second = randomUUID();
+    await save('owner', first, input()).expect(200);
+    const before = (
+      await save('owner', second, {
+        ...input(),
+        rating: 2,
+        text: 'Revisit',
+        rewatch: true,
+      }).expect(200)
+    ).body;
+    const review = before.reviews.find(
+      (r: { entryId: string }) => r.entryId === second,
+    );
+    await update('other', second, input()).expect(404);
+    await remove('other', second).expect(404);
+    await update('owner', randomUUID(), input()).expect(404);
+    const edited = {
+      ...input(),
+      rating: 3.5,
+      text: 'Revisit edited',
+      liked: false,
+      spoiler: false,
+      rewatch: true,
+      loggedAt: '2026-09-29T10:00:00.000Z',
+    };
+    for (let retry = 0; retry < 2; retry++) {
+      const after = (await update('owner', second, edited).expect(200)).body;
+      expect(after.entries).toHaveLength(2);
+      expect(
+        after.entries.find((e: { id: string }) => e.id === second),
+      ).toMatchObject({
+        id: second,
+        rating: 3.5,
+        liked: false,
+        rewatch: true,
+        loggedAt: edited.loggedAt,
+      });
+      expect(
+        after.reviews.find((r: { entryId: string }) => r.entryId === second),
+      ).toMatchObject({
+        id: review.id,
+        createdAt: review.createdAt,
+        text: edited.text,
+        spoiler: false,
+      });
+      expect(
+        after.reviews.find((r: { entryId: string }) => r.entryId === first)
+          .text,
+      ).toBe(input().text);
+      expect(after.items[0]).toMatchObject({
+        avg: 3.5,
+        logCount: 2,
+        reviewCount: 2,
+      });
+    }
+    expect(
+      (
+        await update('owner', second, {
+          ...edited,
+          itemId: 'm-ultimato',
+        }).expect(409)
+      ).body.code,
+    ).toBe('LOG_ITEM_CONFLICT');
+    const cleared = (
+      await update('owner', second, { ...edited, text: '', rating: 0 }).expect(
+        200,
+      )
+    ).body;
+    expect(cleared.entries).toHaveLength(2);
+    expect(cleared.reviews.map((r: { entryId: string }) => r.entryId)).toEqual([
+      first,
+    ]);
+    expect(cleared.items[0]).toMatchObject({
+      avg: 4.5,
+      logCount: 2,
+      reviewCount: 1,
+    });
+  });
+
+  it('deletes only the authenticated owner even when two accounts use the same UUID', async () => {
+    await profile('owner');
+    await profile('other');
+    const id = randomUUID();
+    await save('owner', id, input()).expect(200);
+    await save('other', id, { ...input(), rating: 2 }).expect(200);
+    await request(app.getHttpServer())
+      .delete('/api/v1/me/diary/' + id)
+      .expect(401);
+    await request(app.getHttpServer())
+      .patch('/api/v1/me/diary/' + id)
+      .send(input())
+      .expect(401);
+    await remove('owner', 'invalid').expect(400);
+    const receipt = (
+      await remove('owner', id).set('Accept-Language', 'en').expect(200)
+    ).body;
+    expect(receipt.id).toBe(id);
+    expect(receipt.state.entries).toEqual([]);
+    expect(receipt.state.reviews).toEqual([]);
+    expect(receipt.state.items[0]).toMatchObject({
+      id: input().itemId,
+      avg: 2,
+      logCount: 1,
+      reviewCount: 1,
+    });
+    expect(receipt.state.universes[0].id).toBe('marvel');
+    expect((await read('other').expect(200)).body.entries).toHaveLength(1);
+    await update('other', id, { ...input(), rating: 3 }).expect(200);
+    await remove('owner', randomUUID()).expect(404);
+    await remove('missing', id).expect(404);
+  });
+
+  it('cascades review interactions and notifications and returns zero statistics for the last log', async () => {
+    await profile('owner');
+    await profile('other');
+    const id = randomUUID(),
+      comment = randomUUID();
+    const review = (await save('owner', id, input()).expect(200)).body
+      .reviews[0].id;
+    await db.query(
+      "INSERT INTO review_comments(id,review_id,firebase_uid,text) VALUES($1,$2,'other','Comment')",
+      [comment, review],
+    );
+    await db.query(
+      "INSERT INTO social_reactions(target_id,review_id,firebase_uid,liked) VALUES($1,$1,'other',true)",
+      [review],
+    );
+    await db.query(
+      "INSERT INTO review_reports(reporter_uid,review_id,reason) VALUES('other',$1,'spoiler')",
+      [review],
+    );
+    await db.query(
+      "INSERT INTO notifications(recipient_uid,actor_uid,kind,target_type,target_id,comment_id) VALUES('owner','other','comment','review',$1,$2)",
+      [review, comment],
+    );
+    const receipt = (await remove('owner', id).expect(200)).body;
+    expect(receipt.state.items[0]).toMatchObject({
+      avg: 0,
+      logCount: 0,
+      reviewCount: 0,
+      ratingHistogram: Array(10).fill(0),
+    });
+    for (const table of [
+      'diary_entries',
+      'reviews',
+      'review_comments',
+      'social_reactions',
+      'review_reports',
+      'notifications',
+    ])
+      expect((await db.query('SELECT 1 FROM ' + table)).rowCount).toBe(0);
+    expect((await remove('owner', id).expect(200)).body).toEqual(receipt);
+    for (const response of [
+      await save('owner', id, input()),
+      await update('owner', id, input()),
+    ]) {
+      expect(response.status).toBe(409);
+      expect(response.body.code).toBe('LOG_DELETED');
+    }
+    expect(
+      (await db.query('SELECT 1 FROM diary_entry_deletions')).rowCount,
+    ).toBe(1);
+    await request(app.getHttpServer())
+      .delete('/api/v1/me')
+      .auth('owner', { type: 'bearer' })
+      .expect(200);
+    expect(
+      (await db.query('SELECT 1 FROM diary_entry_deletions')).rowCount,
+    ).toBe(0);
+    await remove('owner', id).expect(403);
+  });
+
+  it('restores the preceding rating after deleting a revisit and never resurrects a concurrent deletion', async () => {
+    await profile('owner');
+    const first = randomUUID(),
+      second = randomUUID();
+    await save('owner', first, input()).expect(200);
+    await save('owner', second, {
+      ...input(),
+      rating: 2,
+      rewatch: true,
+    }).expect(200);
+    const results = await Promise.all([
+      update('owner', second, { ...input(), rating: 3 }),
+      remove('owner', second),
+    ]);
+    expect([200, 409]).toContain(results[0].status);
+    expect(results[1].status).toBe(200);
+    const after = (await read('owner').expect(200)).body;
+    expect(after.entries.map((e: { id: string }) => e.id)).toEqual([first]);
+    expect(after.items[0]).toMatchObject({
+      avg: 4.5,
+      logCount: 1,
+      reviewCount: 1,
+    });
+    await save('owner', second, input()).expect(409);
+    await save('owner', randomUUID(), input()).expect(200);
+  });
+
+  it('allows editing and deleting archived history while still rejecting new archived logs', async () => {
+    await profile('owner');
+    const id = randomUUID();
+    await save('owner', id, input()).expect(200);
+    await db.query(
+      "UPDATE catalog_items SET status='archived' WHERE id='m-civil'",
+    );
+    try {
+      const edited = (
+        await update('owner', id, { ...input(), text: 'Archived edit' }).expect(
+          200,
+        )
+      ).body;
+      expect(edited.reviews[0].text).toBe('Archived edit');
+      await save('owner', randomUUID(), input()).expect(409);
+      expect(
+        (await remove('owner', id).expect(200)).body.state.items[0].logCount,
+      ).toBe(0);
+    } finally {
+      await db.query(
+        "UPDATE catalog_items SET status='published' WHERE id='m-civil'",
+      );
+    }
+  });
+
+  it('rolls back failed deletion including its marker and permits a confirmed retry', async () => {
+    await profile('owner');
+    const id = randomUUID();
+    await save('owner', id, input()).expect(200);
+    await db.query(`CREATE FUNCTION reject_diary_delete() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'test failure'; END $$;
+      CREATE TRIGGER reject_diary_delete BEFORE DELETE ON diary_entries FOR EACH ROW EXECUTE FUNCTION reject_diary_delete()`);
+    try {
+      await remove('owner', id).expect(503);
+      const prior = (await read('owner').expect(200)).body;
+      expect(prior.entries).toHaveLength(1);
+      expect(prior.reviews).toHaveLength(1);
+      expect(
+        (await db.query('SELECT 1 FROM diary_entry_deletions')).rowCount,
+      ).toBe(0);
+    } finally {
+      await db.query(
+        'DROP TRIGGER reject_diary_delete ON diary_entries; DROP FUNCTION reject_diary_delete()',
+      );
+    }
+    await remove('owner', id).expect(200);
+    await remove('owner', id).expect(200);
   });
 });

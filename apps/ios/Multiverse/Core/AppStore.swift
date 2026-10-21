@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LogDraft: Equatable {
     var id = UUID()
+    var isEditing = false
     var loggedAt: Date?
     var itemID: String?
     var rating: Double = 0
@@ -108,6 +109,11 @@ final class AppStore {
     var usesRemoteActivity: Bool { activityAPI != nil }
     var logSaveError: String?
     private(set) var isSavingLog = false
+    private(set) var isDeletingLog = false
+    private(set) var pendingDiaryDeletion: DiaryEntry?
+    private(set) var diaryDeleteError: String?
+    var isMutatingActivity: Bool { isSavingLog || isDeletingLog }
+    private var activityReviews: [UUID: ActivityReview] = [:]
     private var activityFollowerCount = 0
     var usesRemoteCatalog: Bool { catalogAPI != nil }
     private(set) var catalogIssue: CatalogError?
@@ -492,7 +498,10 @@ final class AppStore {
 
     /// Refresh in place: a network error must not turn known history into an empty diary.
     func refreshActivity() async {
-        guard let activityAPI, !isLoading, !isSavingLog, !isRefreshingActivity else { return }
+        guard let activityAPI, !isLoading, !isMutatingActivity, !isRefreshingActivity else { return }
+        // Resolve the confirmed delete first: a plain GET can omit the last
+        // removed work, leaving its old cached statistics behind.
+        if let pendingDiaryDeletion { deleteLog(id: pendingDiaryDeletion.id); return }
         isRefreshingActivity = true
         activityRefreshError = nil
         let revision = activityRevision
@@ -513,12 +522,17 @@ final class AppStore {
 
     private func applyActivity(_ snapshot: ActivitySnapshot) {
         diary = snapshot.entries
+        activityReviews = Dictionary(uniqueKeysWithValues: snapshot.reviews.compactMap { review in review.entryId.map { ($0, review) } })
         reviews = snapshot.reviews.map(\.display)
         activityFollowerCount = snapshot.followerCount
         for universe in snapshot.universes where universesByID[universe.id] == nil { universesByID[universe.id] = universe }
         for item in snapshot.items { itemsByID[item.id] = item }
         items = items.map { itemsByID[$0.id] ?? $0 }
-        for entry in diary { checks[entry.itemId] = true }
+        if let pendingDiaryDeletion, !diary.contains(where: { $0.id == pendingDiaryDeletion.id }),
+           snapshot.items.contains(where: { $0.id == pendingDiaryDeletion.itemId }) {
+            self.pendingDiaryDeletion = nil
+            diaryDeleteError = nil
+        }
     }
 
     var logPickerItems: [Item] {
@@ -540,6 +554,7 @@ final class AppStore {
     // MARK: - Visto / diário
 
     func isSeen(_ id: String) -> Bool {
+        if usesRemoteActivity, diary.contains(where: { $0.itemId == id }) { return true }
         if let c = checks[id] { return c }
         return diary.contains { $0.itemId == id }
     }
@@ -1220,17 +1235,56 @@ final class AppStore {
 
     // MARK: - Sheet de registro
 
-    func openLogBlank() { guard !isSavingLog else { return }; logSaveError = nil; logDraft = LogDraft() }
+    func openLogBlank() { guard !isMutatingActivity else { return }; logSaveError = nil; logDraft = LogDraft() }
     func openLog(for itemID: String) {
-        guard !isSavingLog else { return }
+        guard !isMutatingActivity else { return }
         logSaveError = nil
         let mine = myDiaryEntry(for: itemID)
         logDraft = LogDraft(itemID: itemID, rating: mine?.rating ?? 0, liked: mine?.liked ?? false, rewatch: isSeen(itemID), spoiler: false, text: "")
     }
     func closeLog() { guard !isSavingLog else { return }; logDraft = nil; logSaveError = nil }
 
+    func editLog(id: UUID) {
+        guard usesRemoteActivity, !isMutatingActivity, pendingDiaryDeletion?.id != id,
+              let entry = diary.first(where: { $0.id == id }) else { return }
+        let review = activityReviews[id]
+        logSaveError = nil
+        logDraft = LogDraft(id: id, isEditing: true, loggedAt: entry.loggedAt, itemID: entry.itemId,
+                            rating: entry.rating, liked: entry.liked, rewatch: entry.rewatch,
+                            spoiler: review?.spoiler ?? false, text: review?.text ?? "")
+    }
+
+    func deleteLog(id: UUID) {
+        guard let api = activityAPI, !isMutatingActivity, logDraft == nil,
+              pendingDiaryDeletion == nil || pendingDiaryDeletion?.id == id,
+              let entry = pendingDiaryDeletion ?? diary.first(where: { $0.id == id }) else { return }
+        pendingDiaryDeletion = entry
+        diaryDeleteError = nil
+        isDeletingLog = true
+        activityRevision += 1
+        activityRefreshError = nil
+        Task { @MainActor [self] in
+            defer { isDeletingLog = false }
+            do {
+                let receipt = try await api.deleteLog(id: entry.id)
+                try Task.checkCancellation()
+                try receipt.validate(deleting: entry, userID: meID)
+                applyActivity(receipt.state)
+                activityLoadError = nil
+                refreshSocialAfterDiaryChange()
+                syncWidgetData()
+                showToast(L10n.text("Registro excluído do diário."))
+            } catch { diaryDeleteError = error.localizedDescription }
+        }
+    }
+
+    private func refreshSocialAfterDiaryChange() {
+        social?.invalidateFeed()
+        if let social { Task { await social.loadFeed() } }
+    }
+
     func setLogItem(_ itemID: String) {
-        guard !isSavingLog, var d = logDraft else { return }
+        guard !isMutatingActivity, var d = logDraft, !d.isEditing else { return }
         d.itemID = itemID
         d.rewatch = isSeen(itemID)
         logDraft = d
@@ -1244,7 +1298,7 @@ final class AppStore {
     }
 
     func saveLog(at date: Date = .now) {
-        guard !isSavingLog else { return }
+        guard !isMutatingActivity else { return }
         if let activityAPI { saveRemoteLog(using: activityAPI, at: date); return }
         guard let d = logDraft, let itemID = d.itemID, let item = itemsByID[itemID] else { return }
         let entry = DiaryEntry(itemId: itemID, loggedAt: date, rating: d.rating, liked: d.liked, rewatch: d.rewatch)
@@ -1288,23 +1342,22 @@ final class AppStore {
         Task { @MainActor [self] in
             defer { isSavingLog = false }
             do {
-                let snapshot = try await api.saveLog(id: draft.id, input: input)
-                try snapshot.validate(for: meID)
-                guard let confirmed = snapshot.entries.first(where: { $0.id == draft.id }),
-                      confirmed.itemId == input.itemId, confirmed.rating == input.rating,
-                      confirmed.liked == input.liked, confirmed.rewatch == input.rewatch,
-                      abs(confirmed.loggedAt.timeIntervalSince(input.loggedAt)) < 1 else { throw AuthError.apiUnavailable }
+                let snapshot: ActivitySnapshot
+                if draft.isEditing { snapshot = try await api.updateLog(id: draft.id, input: input) }
+                else { snapshot = try await api.saveLog(id: draft.id, input: input) }
+                try Task.checkCancellation()
+                try snapshot.validateSavedLog(id: draft.id, input: input, userID: meID)
                 applyActivity(snapshot)
-                social?.invalidateFeed()
-                if let social { Task { await social.loadFeed() } }
+                activityLoadError = nil
+                refreshSocialAfterDiaryChange()
                 logDraft = nil
                 showToast(L10n.text("Registro salvo no diário."))
-                if shieldAdvanceAutomatically, let idx = timelineIndex(for: item) { advanceShieldPoint(universeID: item.uni, to: idx) }
+                if !draft.isEditing, shieldAdvanceAutomatically, let idx = timelineIndex(for: item) { advanceShieldPoint(universeID: item.uni, to: idx) }
                 syncWidgetData()
             } catch {
                 // A rejected future date was never committed. Allow a retry after
                 // the device clock is corrected, preserving the UUID and review.
-                if error as? ActivityError == .invalidDate { logDraft?.loggedAt = nil }
+                if error as? ActivityError == .invalidDate, !draft.isEditing { logDraft?.loggedAt = nil }
                 logSaveError = error.localizedDescription
             }
         }
@@ -1474,7 +1527,7 @@ final class AppStore {
     private func onboardingSnapshot(step: Int? = nil, completed: Bool = false) -> OnboardingState {
         let currentStep = onboardingPhase == .step1 ? 1 : (onboardingPhase == .step2 ? 2 : 3)
         return OnboardingState(universeIDs: onboardingUniverses.sorted(),
-                               seenItemIDs: items.filter { $0.type != "Personagem" && isSeen($0.id) }.map(\.id).sorted(),
+                               seenItemIDs: items.filter { $0.type != "Personagem" && (usesRemoteActivity ? checks[$0.id] == true : isSeen($0.id)) }.map(\.id).sorted(),
                                followedUserIDs: follows.sorted(), step: step ?? currentStep,
                                completed: completed, version: remoteVersion)
     }

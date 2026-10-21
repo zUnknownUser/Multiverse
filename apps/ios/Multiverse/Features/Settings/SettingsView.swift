@@ -19,6 +19,7 @@ struct SettingsView: View {
                 themeSection
                 privacySection
                 notificationsSection
+                helpSection
                 creditsSection
 
                 HStack(spacing: 10) {
@@ -210,6 +211,24 @@ struct SettingsView: View {
                 }.padding(14).comicCard(shadow: MV.Shadow.s)
                 .task { await notifications.loadPreferences() }
             }
+        }
+    }
+
+    private var helpSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(L10n.text("AJUDA E INFORMAÇÕES")).kicker(11).foregroundStyle(MV.C.muted)
+            VStack(spacing: 0) {
+                ForEach(LegalDocumentKind.allCases, id: \.self) { kind in
+                    if kind != .terms { Divider().overlay(MV.C.divider) }
+                    Button { store.push(.legal(kind)) } label: {
+                        HStack {
+                            Text(kind.title).font(MVFont.bold(15))
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.caption.bold())
+                        }.foregroundStyle(MV.C.ink).padding(16).contentShape(Rectangle())
+                    }.buttonStyle(.plain)
+                }
+            }.comicCard(shadow: MV.Shadow.s)
         }
     }
 

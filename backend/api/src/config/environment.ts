@@ -1,4 +1,5 @@
 export interface Environment {
+  APP_ENV: 'local' | 'test' | 'staging' | 'production';
   NODE_ENV: 'development' | 'test' | 'production';
   PORT: number;
   DATABASE_URL?: string;
@@ -23,6 +24,28 @@ export function validateEnvironment(
   ) {
     throw new Error('NODE_ENV must be development, test or production.');
   }
+
+  const appEnv =
+    config.APP_ENV ??
+    (nodeEnv === 'test'
+      ? 'test'
+      : nodeEnv === 'production'
+        ? 'production'
+        : 'local');
+  if (
+    typeof appEnv !== 'string' ||
+    !['local', 'test', 'staging', 'production'].includes(appEnv)
+  )
+    throw new Error('APP_ENV must be local, test, staging or production.');
+  if ((nodeEnv === 'test') !== (appEnv === 'test'))
+    throw new Error('APP_ENV=test requires NODE_ENV=test and vice versa.');
+  if (['staging', 'production'].includes(appEnv) && nodeEnv !== 'production')
+    throw new Error('Hosted environments require NODE_ENV=production.');
+  if (
+    config.RAILWAY_ENVIRONMENT_NAME &&
+    config.RAILWAY_ENVIRONMENT_NAME !== appEnv
+  )
+    throw new Error('APP_ENV must match RAILWAY_ENVIRONMENT_NAME.');
 
   const rawPort = config.PORT ?? '3000';
   if (typeof rawPort !== 'string' && typeof rawPort !== 'number') {
@@ -54,12 +77,41 @@ export function validateEnvironment(
     throw new Error(
       'Production requires DATABASE_URL and FIREBASE_PROJECT_ID; Auth emulator is forbidden.',
     );
-  const projectID = config.FIREBASE_PROJECT_ID ?? 'multiverse-7f87c';
+  const projectID = config.FIREBASE_PROJECT_ID ?? 'demo-multiverse-local';
   if (
     typeof projectID !== 'string' ||
     !/^[a-z][a-z0-9-]{4,62}$/.test(projectID)
   )
     throw new Error('Invalid FIREBASE_PROJECT_ID');
+  if (appEnv !== 'production' && projectID === 'multiverse-7f87c')
+    throw new Error(
+      'Production Firebase is forbidden outside APP_ENV=production.',
+    );
+  if (appEnv === 'production' && projectID !== 'multiverse-7f87c')
+    throw new Error('Production requires the production Firebase project.');
+  if (appEnv === 'staging' && projectID !== 'multiverse-staging-7f87c')
+    throw new Error('Staging requires the staging Firebase project.');
+  if (
+    config.FIREBASE_AUTH_EMULATOR_HOST &&
+    (appEnv !== 'local' || !projectID.startsWith('demo-'))
+  )
+    throw new Error(
+      'Auth emulator requires APP_ENV=local and a demo- Firebase project.',
+    );
+  if (config.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    try {
+      if (typeof config.FIREBASE_SERVICE_ACCOUNT_JSON !== 'string')
+        throw new Error();
+      const account = JSON.parse(config.FIREBASE_SERVICE_ACCOUNT_JSON) as {
+        project_id?: string;
+      };
+      if (account.project_id !== projectID) throw new Error();
+    } catch {
+      throw new Error(
+        'Firebase credential project does not match FIREBASE_PROJECT_ID.',
+      );
+    }
+  }
   const openAIKey = config.OPENAI_API_KEY;
   if (openAIKey !== undefined && typeof openAIKey !== 'string')
     throw new Error('OPENAI_API_KEY must be a string.');
@@ -101,6 +153,7 @@ export function validateEnvironment(
       throw new Error('Voice requires a LiveKit Cloud wss URL.');
   }
   return {
+    APP_ENV: appEnv as Environment['APP_ENV'],
     NODE_ENV: nodeEnv,
     VOICE_ENABLED: voiceEnabled,
     LIVEKIT_URL: livekit[0],

@@ -1,0 +1,117 @@
+{
+  "terms": {
+    "title": "Terms of Use",
+    "sections": [
+      {
+        "id": "service",
+        "title": "About Multiverse",
+        "body": "Multiverse lets you organize movies, series and comics, keep a diary and talk with other people. Features may change during testing. Catalog material, covers and trademarks belong to their respective owners. Multiverse is not affiliated with Marvel or DC."
+      },
+      {
+        "id": "account",
+        "title": "Your account",
+        "body": "Use accurate information and keep your credentials secure. Do not impersonate someone else or share verification codes. If you lose access, use password recovery or contact support."
+      },
+      {
+        "id": "community",
+        "title": "Community and content",
+        "body": "Do not post threats, harassment, discrimination, sexual exploitation, illegal content, spam or other people’s private data. Only share content you have the right to use. Mark spoilers. Use the reporting and blocking options available on content and profiles."
+      },
+      {
+        "id": "ownership",
+        "title": "What you publish",
+        "body": "You retain your rights to content you create. By submitting it, you allow Multiverse to store, process and display it to operate the features you choose, respecting the applicable visibility settings. Do not post sensitive information in public areas. Other people may copy what they can view."
+      },
+      {
+        "id": "moderation",
+        "title": "Reports and moderation",
+        "body": "Reported content may be reviewed and hidden when it violates these rules. Blocking someone limits interactions in the app. To report a moderation error, send support the content identifier and a description of what happened."
+      },
+      {
+        "id": "closing",
+        "title": "Closing your account and changes",
+        "body": "You can request deletion in Settings → Delete account. Read the Privacy Policy to understand data removal and the technical records that remain. This version of the terms is under review; changes will be identified by the document date. Nothing in these terms removes rights guaranteed by applicable law."
+      }
+    ]
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "sections": [
+      {
+        "id": "scope",
+        "title": "About your data",
+        "body": "Elesys Studio LTDA is responsible for Multiverse and the data processing described here. Use the contact at the end for questions or privacy requests. This text describes the current version’s data flows; final retention periods and provider details are still under review before public launch."
+      },
+      {
+        "id": "identity",
+        "title": "Account and authentication",
+        "body": "We use your email, account identifier and authentication data to provide access and recovery. Firebase Authentication handles email/password or Google sign-in. The Multiverse API receives authentication tokens, not your password. Your name, handle, bio and avatar make up your profile; a photo is uploaded only when you select one."
+      },
+      {
+        "id": "activity",
+        "title": "Diary, library and community",
+        "body": "We store entries, ratings, reviews, lists, favorites, progress, follows, posts, comments, votes and club/room participation to maintain your history and interactions. Preferences, blocks and reports control the experience and help address abuse. Other people in the app can view your profile and community content. Reviews become public when you enable Public diary; personal lists are private."
+      },
+      {
+        "id": "messages",
+        "title": "Messages and voice",
+        "body": "Private messages are stored on the server and are accessible to authorized participants. This version does not offer end-to-end encryption. A reported message may be reviewed by moderators. In voice rooms, microphone audio is transmitted through LiveKit when you grant permission and participate; the app does not implement audio recording."
+      },
+      {
+        "id": "support",
+        "title": "Contact and support",
+        "body": "When you send a support or privacy request, we receive your email address, message and any attachments you choose to include. We use this information to understand the issue, respond and handle the request. The support channel uses Gmail/Google. Do not send passwords or verification codes."
+      },
+      {
+        "id": "providers",
+        "title": "Providers and technical data",
+        "body": "Firebase/Google provide authentication, abuse protection and email services; Resend delivers verification codes. Railway hosts the API and database; LiveKit processes voice communication. Requests to these services and cover-image providers may expose IP addresses and connection information. Data may be processed outside Brazil. Provider regions, transfer safeguards and retention settings are still under review."
+      },
+      {
+        "id": "device",
+        "title": "On your device",
+        "body": "Preferences and session state are kept on your device; widgets may share a progress summary with the app. You can control microphone and notification access in iOS Settings. Firebase Analytics collection is disabled in this version, including login events. This does not disable authentication or the services needed for features you use."
+      },
+      {
+        "id": "retention",
+        "title": "Retention and deletion",
+        "body": "Account and content data remain as needed for features or until the applicable deletion. In Settings → Delete account, the system requests removal of your identity and profile, with related data. If a temporary failure occurs, deletion may remain pending until completed. Technical deletion records and moderation audit records remain; an automatic purge period has not yet been defined for them. Backups and provider retention are under review. Deleting a diary entry removes its review and related interactions; a marker without the text prevents a delayed retry from recreating the entry."
+      },
+      {
+        "id": "rights",
+        "title": "Controls and requests",
+        "body": "You can edit your profile and diary, change review visibility, block people and request account deletion. The export on the deletion screen contains only diary entries and reviews loaded in the app, not all account data. Through the privacy contact, you can request information on processing and sharing, access, correction and consideration of deletion or objection requests under applicable law. Identity verification may be required, without asking for your password."
+      }
+    ]
+  },
+  "support": {
+    "title": "Help and support",
+    "sections": [
+      {
+        "id": "access",
+        "title": "I can’t sign in",
+        "body": "On the welcome screen, choose Sign in and password recovery. For Google accounts, use the same Google account you registered with. If your verification code does not arrive, check spam and wait for the countdown before resending. Do not share the code with anyone."
+      },
+      {
+        "id": "diary",
+        "title": "Edit or delete an entry",
+        "body": "Open your Diary and use the entry menu to edit or delete it. Deletion asks for confirmation and also removes the review and its interactions. If the connection fails, keep the app open and use Try again."
+      },
+      {
+        "id": "safety",
+        "title": "Report and block",
+        "body": "Use the content menu to report and a person’s profile to block them. Review blocks in Settings → Blocked users. To appeal a decision, tell support which content was affected and why."
+      },
+      {
+        "id": "privacy",
+        "title": "My data and account",
+        "body": "Read the Privacy Policy to see which data is used. In Settings → Delete account, you can export diary entries/reviews and request deletion. This export is partial. If you cannot sign in or need other data, use the contact below."
+      },
+      {
+        "id": "issue",
+        "title": "How to describe an issue",
+        "body": "Include the app version, what you tried to do and the error message. If you send an image, remove other people’s personal data. The email button opens your email app so you can review and send; no request is sent automatically."
+      }
+    ]
+  }
+}

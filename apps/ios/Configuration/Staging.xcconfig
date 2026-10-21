@@ -1,0 +1,10 @@
+// Public deployment settings. Secrets belong on the server.
+MULTIVERSE_ENVIRONMENT = staging
+MULTIVERSE_BUNDLE_ID = com.nexussoft.multiverse.staging
+MULTIVERSE_DISPLAY_NAME = Multiverse HML
+MULTIVERSE_URL_SCHEME = multiverse-staging
+MULTIVERSE_FIREBASE_PROJECT_ID = multiverse-staging-7f87c
+MULTIVERSE_FIREBASE_PLIST = Configuration/Staging/GoogleService-Info.plist
+MULTIVERSE_GOOGLE_REVERSED_CLIENT_ID = com.googleusercontent.apps.663870288715-666n5o8q8onkliomoevvnn2t4n1ekc8o
+// Staging stays unconfigured until its real Railway URL exists; never fall back to production.
+MULTIVERSE_API_BASE_URL =

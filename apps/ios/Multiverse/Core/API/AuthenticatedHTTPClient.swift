@@ -44,6 +44,7 @@ import Foundation
         if !query.isEmpty { components.queryItems = query }
         for attempt in 0...1 {
             var request = URLRequest(url: components.url!, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)
+            request.setValue(AppEnvironment.current.rawValue, forHTTPHeaderField: "X-Multiverse-Environment")
             request.httpMethod = method
             request.httpBody = body
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -62,6 +63,7 @@ import Foundation
             if let generation { try lifecycle?.check(generation) }
             guard tokens.userID == uid else { throw AuthError.sessionExpired }
             guard let http = response as? HTTPURLResponse else { throw AuthError.apiUnavailable }
+            if let environment = http.value(forHTTPHeaderField: "X-Multiverse-Environment"), environment != AppEnvironment.current.rawValue { throw AuthError.apiNotConfigured }
             if http.statusCode == 401 && attempt == 0 { continue }
             if (200..<300).contains(http.statusCode) {
                 do {

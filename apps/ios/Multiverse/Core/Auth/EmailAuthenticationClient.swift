@@ -87,7 +87,7 @@ final class FirebaseEmailAuthenticationClient: EmailAuthenticationClient {
             Auth.auth().languageCode = L10n.language()
             let settings = ActionCodeSettings()
             settings.handleCodeInApp = true
-            settings.setIOSBundleID(Bundle.main.bundleIdentifier ?? "com.nexussoft.multiverse")
+            settings.setIOSBundleID(AppEnvironment.current.bundleID)
             guard let projectID = FirebaseApp.app()?.options.projectID else { throw AuthError.emailAuthenticationFailed }
             settings.url = URL(string: "https://\(projectID).firebaseapp.com")
             try await Auth.auth().sendPasswordReset(withEmail: email, actionCodeSettings: settings)

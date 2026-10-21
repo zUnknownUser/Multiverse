@@ -1,0 +1,117 @@
+{
+  "terms": {
+    "title": "Termos de Uso",
+    "sections": [
+      {
+        "id": "service",
+        "title": "Sobre o Multiverse",
+        "body": "O Multiverse permite organizar filmes, séries e HQs, manter um diário e conversar com outras pessoas. Recursos podem mudar durante os testes. Catálogo, capas e marcas pertencem aos respectivos titulares. O Multiverse não é afiliado à Marvel ou à DC."
+      },
+      {
+        "id": "account",
+        "title": "Sua conta",
+        "body": "Use informações corretas e mantenha suas credenciais protegidas. Não se passe por outra pessoa nem compartilhe códigos de verificação. Se perder o acesso, use a recuperação de senha ou procure o suporte."
+      },
+      {
+        "id": "community",
+        "title": "Convivência e conteúdo",
+        "body": "Não publique ameaças, assédio, discriminação, exploração sexual, conteúdo ilegal, spam ou dados privados de terceiros. Compartilhe apenas conteúdo que você tem direito de usar. Sinalize spoilers. Use as opções de denúncia e bloqueio disponíveis nos conteúdos e perfis."
+      },
+      {
+        "id": "ownership",
+        "title": "O que você publica",
+        "body": "Você mantém seus direitos sobre o conteúdo que cria. Ao enviá-lo, permite que o Multiverse o armazene, processe e exiba para operar os recursos que você escolheu, respeitando a visibilidade aplicável. Não envie dados sensíveis em áreas públicas. Outras pessoas podem copiar o que conseguem visualizar."
+      },
+      {
+        "id": "moderation",
+        "title": "Denúncias e moderação",
+        "body": "Conteúdo denunciado pode ser analisado e ocultado quando viola estas regras. Bloquear alguém limita as interações no app. Para informar um erro de moderação, envie ao suporte a identificação do conteúdo e uma descrição do ocorrido."
+      },
+      {
+        "id": "closing",
+        "title": "Encerrar a conta e alterações",
+        "body": "Você pode solicitar a exclusão em Ajustes → Excluir conta. Consulte a Política de Privacidade para entender a remoção de dados e os registros técnicos que permanecem. Esta versão dos termos está em revisão; mudanças serão identificadas pela data do documento. Nenhuma disposição afasta direitos garantidos pela legislação aplicável."
+      }
+    ]
+  },
+  "privacy": {
+    "title": "Política de Privacidade",
+    "sections": [
+      {
+        "id": "scope",
+        "title": "Sobre seus dados",
+        "body": "A Elesys Studio LTDA é responsável pelo Multiverse e pelo tratamento de dados descrito aqui. Use o contato ao final para dúvidas ou pedidos de privacidade. Este texto descreve os fluxos da versão atual; prazos finais de retenção e detalhes dos prestadores ainda estão em revisão antes do lançamento público."
+      },
+      {
+        "id": "identity",
+        "title": "Conta e autenticação",
+        "body": "Usamos e-mail, identificador da conta e dados de autenticação para permitir acesso e recuperação. Firebase Authentication processa o login por e-mail/senha ou Google. A API do Multiverse recebe tokens de autenticação, não sua senha. Nome, apelido, bio e avatar compõem o perfil; uma foto só é enviada quando você a escolhe."
+      },
+      {
+        "id": "activity",
+        "title": "Diário, biblioteca e comunidade",
+        "body": "Armazenamos registros, notas, reviews, listas, favoritos, progresso, seguidores, posts, comentários, votos e participações em clubes/salas para manter seu histórico e as interações. Preferências, bloqueios e denúncias controlam a experiência e ajudam a tratar abuso. Perfil e conteúdo comunitário podem ser vistos por outras pessoas no app. As reviews ficam públicas quando você ativa Diário público; listas pessoais são privadas."
+      },
+      {
+        "id": "messages",
+        "title": "Mensagens e voz",
+        "body": "Mensagens privadas ficam no servidor e são acessíveis aos participantes autorizados. Esta versão não oferece criptografia ponta a ponta. A mensagem denunciada pode ser analisada pela moderação. Nas salas de voz, o áudio do microfone é transmitido pelo LiveKit quando você autoriza e participa; o app não implementa gravação de áudio."
+      },
+      {
+        "id": "support",
+        "title": "Contato e atendimento",
+        "body": "Ao enviar uma solicitação de suporte ou privacidade, recebemos seu e-mail, o texto e os anexos que você decidir incluir. Usamos essas informações para entender o problema, responder e tratar o pedido. O canal de atendimento usa Gmail/Google. Não envie senhas nem códigos de verificação."
+      },
+      {
+        "id": "providers",
+        "title": "Prestadores e dados técnicos",
+        "body": "Firebase/Google fornecem autenticação, proteção contra abuso e serviços de e-mail; Resend entrega códigos de confirmação. Railway hospeda a API e o banco; LiveKit processa a comunicação de voz. Requisições a esses serviços e a provedores de capas podem expor IP e informações de conexão. Dados podem ser processados fora do Brasil. As regiões, garantias de transferência e retenção de cada prestador ainda estão em revisão."
+      },
+      {
+        "id": "device",
+        "title": "No seu aparelho",
+        "body": "Preferências e estado de sessão são mantidos no aparelho; widgets podem compartilhar um resumo de progresso com o app. Você pode controlar microfone e notificações nos Ajustes do iOS. A coleta do Firebase Analytics está desativada nesta versão, inclusive eventos de login. Isso não desativa a autenticação nem os serviços necessários aos recursos que você usa."
+      },
+      {
+        "id": "retention",
+        "title": "Retenção e exclusão",
+        "body": "Dados da conta e do conteúdo permanecem enquanto necessários aos recursos ou até a exclusão aplicável. Em Ajustes → Excluir conta, o sistema solicita a remoção da identidade e do perfil, com seus dados relacionados. Se houver falha temporária, a exclusão pode continuar pendente até ser concluída. Registros técnicos de exclusão e auditoria de moderação permanecem; ainda não há um prazo automático de expurgo definido para eles. Cópias de segurança e retenção nos prestadores estão em revisão. Excluir um registro do diário remove a review e as interações vinculadas; um marcador sem o texto evita que uma tentativa atrasada recrie o registro."
+      },
+      {
+        "id": "rights",
+        "title": "Controle e solicitações",
+        "body": "Você pode editar seu perfil e diário, mudar a visibilidade das reviews, bloquear pessoas e solicitar exclusão da conta. A exportação disponível na tela de exclusão contém apenas diário e reviews carregados no app, não todos os dados da conta. Pelo contato abaixo, você pode pedir informações sobre tratamento e compartilhamento, acesso, correção e avaliação de pedidos de eliminação ou oposição, conforme a legislação aplicável. Pode ser necessária uma verificação de identidade, sem pedir sua senha."
+      }
+    ]
+  },
+  "support": {
+    "title": "Ajuda e suporte",
+    "sections": [
+      {
+        "id": "access",
+        "title": "Não consigo entrar",
+        "body": "Na tela de entrada, use Entrar e a opção de recuperação de senha. Para contas Google, use a mesma conta Google do cadastro. Se o código de confirmação não chegar, confira spam e aguarde o contador antes de reenviar. Não compartilhe o código com ninguém."
+      },
+      {
+        "id": "diary",
+        "title": "Corrigir ou apagar um registro",
+        "body": "Abra seu Diário e use o menu do registro para editar ou excluir. A exclusão pede confirmação e também remove a review e suas interações. Se a conexão falhar, mantenha o app aberto e use Tentar de novo."
+      },
+      {
+        "id": "safety",
+        "title": "Denunciar e bloquear",
+        "body": "Use o menu do conteúdo para denunciar e o perfil para bloquear uma pessoa. Confira os bloqueios em Ajustes → Usuários bloqueados. Para contestar uma decisão, informe ao suporte qual conteúdo foi afetado e o motivo."
+      },
+      {
+        "id": "privacy",
+        "title": "Meus dados e minha conta",
+        "body": "Consulte a Política de Privacidade para ver quais dados são usados. Em Ajustes → Excluir conta, você pode exportar diário/reviews e solicitar exclusão. Essa exportação é parcial. Se não conseguir entrar ou precisar de outros dados, use o contato abaixo."
+      },
+      {
+        "id": "issue",
+        "title": "Como descrever um problema",
+        "body": "Informe a versão do app, o que tentou fazer e a mensagem de erro. Se enviar uma imagem, remova dados pessoais de outras pessoas. O botão de e-mail abre seu app de e-mail para você revisar e enviar; nenhum chamado é enviado automaticamente."
+      }
+    ]
+  }
+}

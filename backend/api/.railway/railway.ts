@@ -6,10 +6,11 @@ export const partial = 'api';
 
 export default defineRailway(() => {
   const api = service('api', {
-    healthcheck: '/api/v1/health',
+    healthcheck: '/api/v1/health/ready',
     healthcheckTimeout: 120,
     preDeploy: 'npm run db:migrate',
     env: {
+      APP_ENV: 'production',
       NODE_ENV: 'production',
       PORT: '3000',
       FIREBASE_PROJECT_ID: 'multiverse-7f87c',

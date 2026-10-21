@@ -28,7 +28,7 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { FirebaseAuthGuard } from './auth/firebase-auth.guard.js';
 import { FirebaseTokenVerifier } from './auth/firebase-token-verifier.js';
-import { DatabaseService } from './database/database.service.js';
+import { DatabaseModule } from './database/database.module.js';
 import { AccountsService } from './accounts/accounts.service.js';
 import { AccountLifecycleService } from './accounts/account-lifecycle.service.js';
 import { AccountsController } from './accounts/accounts.controller.js';
@@ -90,7 +90,6 @@ import { InteractionsController } from './social/interactions.controller.js';
     InteractionsService,
     SocialService,
     PeopleService,
-    DatabaseService,
     CatalogService,
     MarvelService,
     ActivityService,
@@ -106,6 +105,7 @@ import { InteractionsController } from './social/interactions.controller.js';
       ignoreEnvFile: process.env.NODE_ENV === 'test',
       validate: validateEnvironment,
     }),
+    DatabaseModule,
     HealthModule,
     AIModule,
   ],
