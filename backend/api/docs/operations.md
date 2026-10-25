@@ -64,3 +64,29 @@ Monitoramento hospedado, alertas com destinatários definidos, retenção de log
 backups/restauração e validação dos workers com provedores reais continuam em L10.
 Não contratar ou ativar recursos pagos sem teto aprovado; alertas de orçamento
 não equivalem a bloqueio financeiro. Ver [ambientes](../../../docs/ENVIRONMENTS.md).
+
+## Ensaio local de recuperação
+
+`npm run test:recovery:local` cria um PostgreSQL 18 descartável em loopback, aplica
+todas as migrations, insere perfil/diário/review/cotas sintéticos, faz `pg_dump -Fc`
+e restaura em outro banco com `pg_restore --exit-on-error`. Compara SHA-256 das
+linhas de todas as tabelas, repete o migrador e valida cascatas e cotas. Exige
+container criado pelo wrapper, label de teste, porta correspondente e auto-remove;
+recusa URLs remotas. Dump só em memória; container/bancos removidos ao sair.
+Validação em 25/10/2026: 70 tabelas restauradas com sucesso. Não é backup de produção.
+
+Produção ainda requer retenção e destino protegido aprovados, backup automatizado
+e ensaio com uma cópia real isolada. Não ativar PITR ou armazenamento pago sem
+orçamento. Ao operar backup real: usar credencial de leitura apropriada, cliente
+PostgreSQL compatível, destino cifrado e sem versionar o dump; restaurar somente
+em banco novo/isolado, verificar contagens/checksums e identidade do ambiente,
+e nunca conectar o app HML à cópia identificada como produção. Registrar data,
+duração, versão e resultado sem conteúdo/segredos; apagar a cópia de ensaio após
+conferência. A restauração não pode ser tratada como homologada só pelo ensaio sintético.
+
+Railway em 25/10: compute hard US$10/ciclo e soft US$5; Agent hard US$0.
+Os menores valores permitidos foram aplicados e relidos via `railway usage limit
+status --json`. Hard de compute zero desabilitaria o teto, portanto não usar.
+Ao atingir o teto o Railway interrompe os workloads; observar disponibilidade e
+consumo no ciclo seguinte. Não equivale a teto global da fatura ou dos outros
+provedores. Nenhum plano/serviço novo habilitado.

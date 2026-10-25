@@ -1,5 +1,35 @@
 # Homologação, produção e desenvolvimento local
 
+## Limites de consumo — 25/10/2026
+
+Lucas autorizou o menor teto disponível. Aplicado e relido via Railway CLI:
+workspace `7b3af3bb-30f7-4374-9a4f-bbd552c71260`, hard **US$10/ciclo**, alerta
+soft **US$5**; Railway Agent hard **US$0** (bloqueia consumo adicional).
+Compute hard zero desabilita limite, não representa custo zero. O hard interrompe
+API e banco ao atingir o teto; não é teto global da fatura nem cobre outros
+provedores. Não houve contratação/upgrade. Referência: [Railway usage CLI](https://docs.railway.com/cli/usage).
+
+Ensaio de backup/restore local sintético validado em 70 tabelas; não há novo
+backup/PITR de produção. Homologação integrada segue adiada. O estado sem teto
+registrado em 24/10 abaixo foi superado por esta configuração.
+
+## Atualização de produção — 24/10/2026
+
+Deploy da API autorizado por Lucas e concluído via Railway CLI, a partir da master
+`55e7bb3`. Deployment `7f338613-24ae-45d3-b87d-f658cfefd05e`: **SUCCESS**.
+Migrations 028/029 aplicadas em produção; APP_ENV/Firebase de produção conferidos.
+Healthcheck configurado em `/api/v1/health/ready` (120s) e resposta pública
+200 `ready`/`production` confirmada. Catálogo 200, ausência de token 401 e
+header de staging 409 também validados. O roteiro histórico abaixo de publicação
+028/029 está cumprido para essa versão; não repetir provisionamento por causa dele.
+
+Homologação integrada continua adiada; nenhum novo ambiente, serviço pago ou
+plano foi ativado. A consulta de limites retornou **nenhum teto de consumo para o
+workspace**. O teto de US$5 do Railway Agent é separado e não protege o consumo
+de API/Postgres. Definir valor autorizado antes de configurar um limite que possa
+interromper serviços. Backups do volume ausentes e PITR desativado na consulta;
+backup/restauração continuam pendentes, sem ativação paga nesta publicação.
+
 Atualizado em 21/10/2026. Este guia é a fonte operacional do lote L06. A arquitetura
 continua Feature-First/Core no iOS e Controller/Service/Config no NestJS.
 

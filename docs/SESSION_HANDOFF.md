@@ -1,3 +1,79 @@
+## 2026-10-25 — Cinco melhorias e correções white-box
+
+- Lucas autorizou implementar os cinco pontos e depois fazer push/deploy de tudo
+  que mudou. Preservar padrões e arquitetura; nenhum serviço pago novo.
+- Primeiro uso: Home oferece primeiro registro/retomar; seleção de obra tem busca;
+  onboarding pode terminar após obras quando servidor declara seguir opcional.
+  CTA usa Button acessível; requisitos de versões antigas continuam respeitados.
+- Diário/biblioteca: busca acento/caixa, ano/status, listas, links para diário e
+  catálogo; renderização em blocos de 30. API ainda traz snapshot completo porque
+  estatísticas/favoritos/progresso dependem dele; E03 de rede permanece pendente.
+- Comunidade: vazio distingue busca/seguidos/sem respostas/escopo; ações para
+  limpar busca, ver recentes, iniciar conversa e acessar notificações de respostas.
+- Rascunho JSON protegido e atômico por UID/ambiente, fora de backup do dispositivo;
+  preserva UUID/data para retry após reinício. Não sobrescreve rascunho por outra
+  obra. Salvar, descartar e reset da sessão limpam; fechamento preserva alterações,
+  mas edição sem mudança é descartada. Falha local informa erro na tela.
+- WB-01: recibos independentes, 20 criações/hora, público e privado, sem reembolso
+  por excluir/limpar. WB-02: perfil/cota antes de Sharp; 20 tentativas/hora incluindo
+  inválidas, 1 por UID e 2 por instância, revalida conta após processar. Migration030.
+- API: 117 unitários + 174 HTTP; sete regressões white-box agora no CI regular;
+  backfill da migration validado. iOS: 302 testes/36 suítes; 1.278 traduções, 3 checks
+  de configuração. Ensaio pg_dump/pg_restore de 70 tabelas sintéticas aprovado.
+- Railway: Lucas autorizou menor teto. Aplicados hard US$10/ciclo, soft US$5 e
+  Agent hard US$0; confirmados por CLI. Isso pode parar serviços ao atingir quota.
+  Não usar hard compute zero (remove o limite). PITR/backups de produção não ativados.
+- Publicação em andamento. O código iOS não pode ser distribuído pela App Store
+  sem assinatura Apple Developer; validar build Release sem assinatura.
+- Mudanças alheias preservadas e não incluir no commit: whitespace MockRepository
+  e exclusão de marketing/videos/multiverse-ads-content-creator.mp4.
+
+## 2026-10-24 — Deploy da master em produção concluído
+
+- Lucas solicitou deploy após retorno do Railway e pediu explicitamente CLI.
+  Login da CLI foi renovado pelo próprio usuário; publicação feita pela CLI.
+- Projeto `multiverse`, serviço `api`, ambiente `production`; sem criação de
+  infraestrutura nem mudança de plano. `APP_ENV=production`, Firebase de produção
+  e presença das credenciais/banco conferidos sem expor segredos.
+- `railway deployment redeploy --from-source` publicou a master `55e7bb3`;
+  deployment `7f338613-24ae-45d3-b87d-f658cfefd05e` confirmado **SUCCESS**.
+  A versão anterior era `eaa22bd`. Fonte runtime/migrations local igual à master;
+  arquivos locais da auditoria e alterações alheias não foram enviados.
+- Healthcheck do serviço passou a `/api/v1/health/ready`, timeout 120s;
+  predeploy `npm run db:migrate` preservado. Logs confirmam aplicação de
+  `028_diary_entry_deletions.sql` e `029_deployment_identity.sql`.
+- `npm run check:local`: format/lint/tipos/build, 117 unitários e 167 HTTP com
+  PostgreSQL descartável aprovados. Cinco checks HTTP de produção aprovados:
+  health/ready 200 ready/production, health 200, catálogo Marvel com um item 200,
+  diário sem token 401/no-store, header staging 409 ENVIRONMENT_MISMATCH.
+  Não foram criadas contas/conteúdo nem enviados e-mails para esses checks.
+- Custos/operação: `workspaceUsage.usageLimit=null`; o limite US$5 retornado para
+  Railway Agent não limita serviços do workspace. PITR desativado e lista de
+  backups do volume vazia. Não habilitar backups pagos nem inventar um teto;
+  valor e política de interrupção precisam ser definidos com Lucas.
+- WB-01/WB-02 permanecem sem correção. Homologação integrada segue adiada e
+  Firebase staging sem faturamento. O deploy não distribui uma versão iOS.
+- Plano e ENVIRONMENTS atualizados localmente. Não foi necessário novo commit/push.
+  Logs de validação e smoke: `/tmp/multiverse-deploy-validation-20261024.log` e
+  `/tmp/multiverse-deploy-smoke-20261024.json`.
+
+## 2026-10-22 — Auditoria white-box solicitada por Lucas
+
+- Relatório: `docs/WHITE_BOX_AUDIT_2026-10-22.md`, base master `55e7bb3`.
+- Dois achados P2 confirmados: WB-01, exclusão de review reduz a contagem que
+  controla a cota horária; WB-02, Sharp processa foto antes da validação do perfil,
+  sem quota própria. Nenhuma correção de aplicação realizada nesta auditoria.
+- `bash scripts/with-test-db.sh audit:whitebox` executa diagnósticos locais em
+  banco descartável. Resultado esperado no código atual: exit 1, dois testes
+  falhando e um controle de autenticação/isolamento passando. Não inverter as
+  asserções nem confundir esse resultado com falha da suíte regular.
+- `npm run check:local`: 117 unitários + 167 HTTP/PostgreSQL, format/lint/tipos/build
+  aprovados. Functions: 14 testes aprovados. Audit das dependências de produção
+  de ambos retornou zero advisories. Nenhum teste iOS reexecutado nesta rodada.
+- Plano atualizado com correções e critérios; homologação integrada continua
+  adiada. Nenhum gasto novo, serviço pago, push ou deploy. Preservados whitespace
+  preexistente de MockRepository e exclusão local do vídeo de marketing.
+
 ## 2026-10-21 — Merge autorizado para master
 
 - Lucas solicitou explicitamente integrar `codex/preparacao-lancamento` em master
@@ -805,3 +881,7 @@ catálogo, diário e feed ainda eram somente mock; foram atualizados.
 Contrato e operação desta etapa: [interactions.md](../backend/api/docs/interactions.md).
 Backlog de produto: [BACKLOG.md](BACKLOG.md); suas propostas históricas não são
 uma autorização automática para redesenhar o app.
+
+Validação incremental final: 35 testes de HTTP/rascunhos passaram após acrescentar
+falha de escrita local e mensagem específica de cota de foto. A suíte completa
+anterior passou com 302 testes; os dois cenários adicionais passaram nesta rodada.

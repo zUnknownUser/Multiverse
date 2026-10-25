@@ -528,6 +528,7 @@ final class AuthStore {
     }
 
     private func reset() {
+        if let session { try? FileLogDraftStorage(userID: session.userID).save(nil) }
         pendingEmailLink = nil
         lifecycle.invalidate()
         bootstrapID = nil

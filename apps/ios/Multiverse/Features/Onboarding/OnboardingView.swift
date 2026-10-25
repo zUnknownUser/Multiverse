@@ -79,37 +79,41 @@ struct OnboardingView: View {
     }
 
     private var footerButtons: some View {
-        HStack(spacing: 12) {
-            if canGoBack {
-                Button { store.backOnboarding() } label: {
-                    Text("←")
-                        .font(MVFont.black(20))
-                        .foregroundStyle(MV.C.ink)
-                        .frame(width: 54, height: 54)
-                        .background(MV.C.card)
+        VStack(spacing: 16) {
+            if store.onboardingPhase == .step2 && store.onboardingFollowingOptional && store.onboardingStepCount > 2 {
+                Button(L10n.text("COMEÇAR AGORA, SEGUIR PESSOAS DEPOIS")) { store.finishOptionalOnboarding() }
+                    .font(MVFont.bold(11)).foregroundStyle(MV.C.ink).disabled(store.onboardingTransitioning)
+            }
+            HStack(spacing: 12) {
+                if canGoBack {
+                    Button { store.backOnboarding() } label: {
+                        Text("←")
+                            .font(MVFont.black(20))
+                            .foregroundStyle(MV.C.ink)
+                            .frame(width: 54, height: 54)
+                            .background(MV.C.card)
+                            .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
+                            .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
+                    }
+                    .buttonStyle(.plain)
+                }
+                Button { store.advanceOnboarding() } label: {
+                    Text(ctaLabel)
+                        .font(MVFont.bold(15))
+                        .foregroundStyle(isCTAEnabled ? MV.C.card : MV.C.muted)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 54)
+                        .background(isCTAEnabled ? MV.C.marvel : MV.C.desk)
                         .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
                         .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
-                }
-                .buttonStyle(.plain)
+                        .background(
+                            RoundedRectangle(cornerRadius: MV.R.md)
+                                .fill(isCTAEnabled ? MV.C.ink : .clear)
+                                .offset(x: MV.Shadow.m, y: MV.Shadow.m)
+                        )
+                        .contentShape(Rectangle())
+                }.buttonStyle(.plain).disabled(!isCTAEnabled)
             }
-            Text(ctaLabel)
-                .font(MVFont.bold(15))
-                .foregroundStyle(isCTAEnabled ? MV.C.card : MV.C.muted)
-                .frame(maxWidth: .infinity)
-                .frame(height: 54)
-                .background(isCTAEnabled ? MV.C.marvel : MV.C.desk)
-                .overlay(RoundedRectangle(cornerRadius: MV.R.md).strokeBorder(MV.C.ink, lineWidth: MV.stroke))
-                .clipShape(RoundedRectangle(cornerRadius: MV.R.md))
-                .background(
-                    RoundedRectangle(cornerRadius: MV.R.md)
-                        .fill(isCTAEnabled ? MV.C.ink : .clear)
-                        .offset(x: MV.Shadow.m, y: MV.Shadow.m)
-                )
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    guard isCTAEnabled else { return }
-                    store.advanceOnboarding()
-                }
         }
     }
 }

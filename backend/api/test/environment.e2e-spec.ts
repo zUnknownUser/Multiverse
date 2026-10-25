@@ -69,7 +69,7 @@ describe('Deployment isolation with PostgreSQL and the real migrator', () => {
     const before = (
       await client.query('SELECT count(*)::int AS count FROM schema_migrations')
     ).rows[0].count;
-    expect(before).toBe(29);
+    expect(before).toBe(30);
     await expect(migrate('production', 'multiverse-7f87c')).rejects.toThrow(
       'Database belongs to another environment',
     );

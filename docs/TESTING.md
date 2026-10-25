@@ -61,6 +61,34 @@ a limpeza. Os containers deste comando têm o prefixo `multiverse-test-` e a lab
 `com.multiverse.test-database=true`; inspecione e remova somente o container da
 execução interrompida. Nenhum volume persistente nomeado é criado.
 
+## Auditoria white-box local
+
+As reproduções de 22/10 foram corrigidas em 25/10. As sete asserções agora estão
+em `backend/api/test/white-box.e2e-spec.ts` e fazem parte do `check`/CI regular.
+O atalho abaixo executa somente esse conjunto:
+
+```sh
+cd backend/api
+bash scripts/with-test-db.sh audit:whitebox
+npm run test:recovery:local
+```
+
+Ambos usam bancos descartáveis e não acessam provedores reais. White-box cobre
+backfill da migration, isolamento, exclusão/recriação/retry/concorrência de reviews,
+janela de quota, autorização anterior ao Sharp, tentativas inválidas, concorrência
+e exclusão durante processamento. Resultado atual: verde. O relatório preserva
+a reprodução vermelha histórica, sem inverter asserções.
+
+O ensaio de recuperação compara as 70 tabelas após pg_dump/pg_restore e confirma
+checksums de migrations, quotas e cascatas. Usa só dados sintéticos; não certifica
+backup de produção. Instruções em [operação](../backend/api/docs/operations.md).
+
+Validação de 25/10: 117 unitários + 174 HTTP/PostgreSQL; 302 testes iOS/36 suítes,
+1.278 traduções PT-BR/EN e 3 verificações de configuração. Os testes iOS novos
+cobrem reinício após resposta perdida, preservação de UUID/data/texto, isolamento
+do rascunho, descarte, arquivo danificado, filtros combinados e onboarding opcional.
+
+
 ## iOS
 
 `make ios-test` gera o projeto e roda as suítes em série. O build de teste aponta
@@ -133,3 +161,7 @@ ignorando trabalhos concluídos, sem expor identidades nem alterar os registros.
 Também verifica transação somente leitura/repeatable read e recusa de ambiente
 incorreto antes de consultar as filas. Nenhum desses testes chama provedores
 externos, envia e-mail/push ou usa contas reais.
+
+Validação incremental final: 35 testes de HTTP/rascunhos passaram após acrescentar
+falha de escrita local e mensagem específica de cota de foto. A suíte completa
+anterior passou com 302 testes; os dois cenários adicionais passaram nesta rodada.

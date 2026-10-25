@@ -76,16 +76,28 @@ export class ActivityService {
       if (!item.rowCount)
         throw new ConflictException({ code: 'ITEM_UNAVAILABLE' });
       if (input.text || input.rating > 0) {
-        const budget = await client.query(
-          `SELECT p.public_diary,
-           EXISTS(SELECT 1 FROM reviews WHERE firebase_uid=$1 AND entry_id=$2) AS existing,
-           (SELECT count(*)::int FROM reviews WHERE firebase_uid=$1 AND created_at>now()-interval '1 hour') AS recent
-           FROM profiles p WHERE p.firebase_uid=$1`,
+        const review = await client.query(
+          'SELECT 1 FROM reviews WHERE firebase_uid=$1 AND entry_id=$2',
           [uid, id],
         );
-        const { public_diary, existing, recent } = budget.rows[0];
-        if (public_diary && !existing && recent >= 20)
-          throw new HttpException({ code: 'PUBLICATION_LIMIT' }, 429);
+        if (!review.rowCount) {
+          // The lifecycle lock serializes admission per account. Keep receipts
+          // independent of reviews so deletion cannot refund a publication.
+          await client.query(
+            "DELETE FROM review_publications WHERE firebase_uid=$1 AND created_at<=now()-interval '1 hour'",
+            [uid],
+          );
+          const budget = await client.query(
+            'SELECT count(*)::int AS recent FROM review_publications WHERE firebase_uid=$1',
+            [uid],
+          );
+          if (budget.rows[0].recent >= 20)
+            throw new HttpException({ code: 'PUBLICATION_LIMIT' }, 429);
+          await client.query(
+            'INSERT INTO review_publications(firebase_uid) VALUES($1)',
+            [uid],
+          );
+        }
       }
       // The client keeps this UUID across retries, including lost HTTP responses.
       await client.query(

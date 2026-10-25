@@ -72,6 +72,36 @@ struct ActivityTests {
         }
         #expect(condition())
     }
+    @Test func interruptedSaveCanResumeAfterRestartWithSameIdentity() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let storage = FileLogDraftStorage(userID: "duda", environment: .staging, directory: directory)
+        let api = ActivityStub()
+        let first = AppStore(activityAPI: api, draftStorage: storage)
+        await first.bootstrap()
+        first.openLog(for: "m-civil")
+        first.logDraft?.text = "Persistir também quando a resposta se perde"
+        first.saveLog()
+        try await settle { api.pending != nil }
+        let initial = try #require(api.requests.first)
+        api.complete(.failure(AuthError.networkUnavailable))
+        try await settle { !first.isSavingLog }
+        first.closeLog()
+        let next = AppStore(activityAPI: api, draftStorage: storage)
+        await next.bootstrap()
+        next.openLogBlank()
+        next.saveLog()
+        try await settle { api.pending != nil }
+        #expect(api.requests.last?.0 == initial.0)
+        #expect(api.requests.last?.1 == initial.1)
+        api.complete(.success(try acknowledged(api)))
+        try await settle { !next.isSavingLog }
+        #expect(next.logDraft == nil)
+        #expect(next.savedLogDraft == nil)
+        #expect(try storage.load() == nil)
+        #expect(next.diary.count == 1)
+    }
+
     @Test func emptyIsSuccessAndFailedReadCanRecoverWithoutFakeWidgets() async {
         let api = ActivityStub()
         api.readFailure = true

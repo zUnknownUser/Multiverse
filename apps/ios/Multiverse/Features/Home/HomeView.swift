@@ -7,6 +7,10 @@ struct HomeView: View {
         ScreenScaffold {
             VStack(alignment: .leading, spacing: 26) {
                 header.padding(.horizontal, MV.pad)
+                if store.savedLogDraft != nil || store.canOfferFirstRecord {
+                    firstRecordCard.padding(.horizontal, MV.pad)
+                }
+                if let error = store.draftStorageError { AuthErrorBanner(message: error).padding(.horizontal, MV.pad) }
                 if store.showsDemoFeatures && store.liveEvent != nil { LivePremiereBanner().padding(.horizontal, MV.pad) }
                 if store.showsDemoFeatures && store.isShieldActive { ShieldStatusBanner().padding(.horizontal, MV.pad) }
                 if store.showsDemoFeatures { wrappedBanner.padding(.horizontal, MV.pad) }
@@ -54,6 +58,18 @@ struct HomeView: View {
             await store.people?.loadHome()
             await store.social?.loadFeed()
         }
+    }
+
+    private var firstRecordCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(L10n.text(store.savedLogDraft == nil ? "SEU DIÁRIO COMEÇA AQUI" : "SEU RASCUNHO ESTÁ AQUI"))
+                .font(MVFont.section(19)).foregroundStyle(MV.C.ink)
+            Text(L10n.text(store.savedLogDraft == nil
+                ? "Escolha uma obra e registre o que você viu, leu ou jogou. Nota e texto são opcionais."
+                : "Continue de onde parou. Seu rascunho fica neste aparelho até salvar, descartar ou sair da conta."))
+                .font(MVFont.body(14)).foregroundStyle(MV.C.muted)
+            PrimaryAuthButton(title: L10n.text(store.savedLogDraft == nil ? "FAZER PRIMEIRO REGISTRO" : "CONTINUAR RASCUNHO")) { store.openLogBlank() }
+        }.padding(16).comicCard()
     }
 
     private var header: some View {

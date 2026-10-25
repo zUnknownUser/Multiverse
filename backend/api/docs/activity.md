@@ -64,8 +64,8 @@ Para validar manualmente: busque uma obra, registre nota/texto e marque Curti;
 confira detalhes, diário, contagem, favorito e review no perfil. Reabra o app e
 confirme o histórico. Sem conexão, tente atualizar e confira que o histórico
 permanece; restabeleça a conexão e tente novamente. Entre em outra conta para
-validar seu estado vazio. Repita em inglês. Um salvamento sem confirmação mantém
-o rascunho na sheet, mas não há armazenamento offline do rascunho entre reinícios.
+validar seu estado vazio. Repita em inglês. Um salvamento sem confirmação mantém o rascunho privado no aparelho, incluindo
+UUID/data para repetir após reinício sem duplicar. Não há envio automático em segundo plano.
 
 ## Edição e exclusão individual (lote L04)
 
@@ -96,5 +96,31 @@ mesma obra não muda. Cancele uma edição e uma exclusão para confirmar que na
 gravado. Exclua após confirmar e confira favoritos, progresso, médias e reviews;
 repita depois de perder a conexão/resposta. Faça isso em PT-BR/EN e claro/Noir.
 Um visto marcado manualmente pode continuar após excluir o último registro.
-Não há sincronização instantânea entre aparelhos nem rascunho offline persistido;
-recarregar a atividade busca o estado confirmado no servidor.
+Não há sincronização instantânea entre aparelhos; recarregar a atividade busca
+o estado confirmado no servidor. O rascunho é local e não sincroniza entre aparelhos.
+
+## Cotas e recuperação — 25/10/2026
+
+Migration 030 cria recibos de criação em `review_publications`, independentes de
+reviews. Limite: 20 novas reviews por conta em janela móvel de uma hora, inclusive
+diário privado (impede contornar o limite alternando visibilidade). Excluir ou
+limpar texto/nota não devolve cota; recriar a review consome outra unidade. Editar
+ou repetir uma review ainda existente não consome. Sem texto/nota não consome.
+Admissão e publicação compartilham transação/trava de ciclo de vida; falha reverte
+ambas. Recibos antigos são limpos na próxima criação e somem junto com a conta.
+A migration conserva o consumo dos últimos 60 minutos. Excesso: 429
+`PUBLICATION_LIMIT`; a janela vencida permite novas criações.
+
+No iOS, um rascunho por conta/ambiente usa JSON atômico com proteção completa do
+arquivo, nome derivado por SHA-256 e exclusão dos backups do aparelho. Fechar
+preserva alterações; fechar edição sem alterações a descarta. Salvar confirmado,
+descartar explicitamente e encerrar sessão removem o arquivo. Falha de gravação
+local é mostrada, sem prometer recuperação. Outra obra não sobrescreve o rascunho.
+A Home permite retomar; a seleção de obras oferece busca por título.
+
+Diário e biblioteca permitem busca sem distinção de acentos/caixa. Diário combina
+ano e status (curtidos, com nota, revisitados); biblioteca busca obras/listas.
+A tela exibe blocos de 30 registros com pilhas lazy. Isso limita renderização,
+**não pagina a API**: o snapshot completo segue necessário para estatísticas,
+favoritos e progresso. Paginação de rede exige separar esses agregados antes de
+limitar o histórico; permanece melhoria de capacidade E03.

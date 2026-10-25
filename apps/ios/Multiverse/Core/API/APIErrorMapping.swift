@@ -49,6 +49,7 @@ struct MultiverseAPIErrorMapper: APIErrorMapping {
         case "POST_STALE": return CommunityError.stale
         case "INVALID_IMAGE": return CommunityError.invalidImage
         case "ROOM_PROGRESS_REQUIRED": return CommunityError.roomProgress
+        case "IMAGE_LIMIT" where path == "me/profile/details": return AuthError.tooManyRequests
         case "CLUB_FULL", "CLUB_LIMIT", "SCHEDULE_LIMIT", "IMAGE_LIMIT": return CommunityError.capacity
         case "SCHEDULE_DATE_USED": return CommunityError.scheduleDate
         case "MENTION_LIMIT": return CommunityError.mentionLimit

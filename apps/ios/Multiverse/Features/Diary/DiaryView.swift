@@ -4,7 +4,11 @@ struct DiaryView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
-    private var groupedByMonth: [DiaryMonth] { DiaryTimeline.months(store.diary) }
+    @State private var query = DiaryQuery()
+    @State private var visibleCount = 30
+    private var matchingEntries: [DiaryEntry] { query.entries(store.diary) { store.item($0)?.title ?? "" } }
+    private var groupedByMonth: [DiaryMonth] { DiaryTimeline.months(Array(matchingEntries.prefix(visibleCount))) }
+    private var years: [Int] { Array(Set(store.diary.map { Calendar.current.component(.year, from: $0.loggedAt) })).sorted(by: >) }
 
     private var yearRange: String {
         let dates = store.diary.map(\.loggedAt)
@@ -15,7 +19,7 @@ struct DiaryView: View {
 
     var body: some View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
-            VStack(alignment: .leading, spacing: 22) {
+            LazyVStack(alignment: .leading, spacing: 22) {
                 ActivityRefreshNotice()
                 if store.isDeletingLog {
                     HStack(spacing: 8) {
@@ -37,6 +41,22 @@ struct DiaryView: View {
                         .font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.muted)
                 }
 
+                if !store.diary.isEmpty {
+                    TextField(L10n.text("Buscar obra pelo título"), text: $query.text).padding(12).comicCard(shadow: MV.Shadow.s).autocorrectionDisabled()
+                    HStack {
+                        Picker(L10n.text("Filtrar registros"), selection: $query.selection) {
+                            ForEach(DiarySelection.allCases, id: \.self) { Text(L10n.text($0.rawValue)).tag($0) }
+                        }
+                        Picker(L10n.text("Ano"), selection: $query.year) {
+                            Text(L10n.text("Todos os anos")).tag(nil as Int?)
+                            ForEach(years, id: \.self) { Text(String($0)).tag(Optional($0)) }
+                        }
+                    }.tint(MV.C.ink)
+                    if matchingEntries.isEmpty {
+                        Text(L10n.text("Nenhum registro corresponde aos filtros.")).font(MVFont.body(14)).foregroundStyle(MV.C.muted)
+                        Button(L10n.text("LIMPAR FILTROS")) { query = DiaryQuery() }
+                    }
+                }
                 if store.diary.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         Text(L10n.text("Seu diário começa com o primeiro registro."))
@@ -55,17 +75,21 @@ struct DiaryView: View {
                                 .background(MV.C.ink)
                             Rectangle().fill(MV.C.ink).frame(height: 2)
                         }
-                        VStack(spacing: 12) {
+                        LazyVStack(spacing: 12) {
                             ForEach(group.entries) { entry in
                                 DiaryRow(entry: entry)
                             }
                         }
                     }
                 }
+                if matchingEntries.count > visibleCount {
+                    PrimaryAuthButton(title: L10n.text("CARREGAR MAIS")) { visibleCount += 30 }
+                }
             }
             .padding(.horizontal, MV.pad)
             .padding(.bottom, 24)
         }
+        .onChange(of: query) { _, _ in visibleCount = 30 }
         .refreshable { await store.refreshActivity() }
     }
 }

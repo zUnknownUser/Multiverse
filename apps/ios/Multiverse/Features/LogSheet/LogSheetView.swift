@@ -5,10 +5,18 @@ import SwiftUI
 struct LogSheetView: View {
     @Environment(AppStore.self) private var store
 
+    @State private var confirmingDiscard = false
+
     var body: some View {
         VStack(spacing: 0) {
             Capsule().fill(MV.C.ink).frame(width: 44, height: 5).padding(.top, 10).padding(.bottom, 14)
 
+            HStack {
+                Button(L10n.text("FECHAR")) { store.closeLog() }
+                Spacer()
+                Button(L10n.text("DESCARTAR RASCUNHO"), role: .destructive) { confirmingDiscard = true }
+            }.font(MVFont.bold(11)).padding(.horizontal, MV.pad).padding(.bottom, 12).disabled(store.isSavingLog)
+            if let error = store.draftStorageError { AuthErrorBanner(message: error).padding(.horizontal, MV.pad) }
             ScrollView {
                 if store.logDraft?.itemID == nil {
                     PickItemContent()
@@ -28,20 +36,31 @@ struct LogSheetView: View {
         .presentationDragIndicator(.hidden)
         .presentationCornerRadius(20)
         .interactiveDismissDisabled(store.isSavingLog)
+        .confirmationDialog(L10n.text("Descartar este rascunho?"), isPresented: $confirmingDiscard, titleVisibility: .visible) {
+            Button(L10n.text("DESCARTAR RASCUNHO"), role: .destructive) { store.discardLogDraft() }
+            Button(L10n.text("Cancelar"), role: .cancel) {}
+        }
         .task { await store.social?.loadPrivacy() }
     }
 }
 
 private struct PickItemContent: View {
     @Environment(AppStore.self) private var store
+    @State private var query = ""
+    private var matchingItems: [Item] { store.logPickerItems.filter { ProductSearch.matches($0.title, query: query) } }
     private let columns = [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(L10n.text("O QUE VOCÊ VIU, LEU OU JOGOU?"))
                 .font(MVFont.section(18)).foregroundStyle(MV.C.ink)
+            TextField(L10n.text("Buscar obra pelo título"), text: $query)
+                .padding(12).comicCard(shadow: MV.Shadow.s).autocorrectionDisabled()
+            if matchingItems.isEmpty && !store.logPickerItems.isEmpty {
+                Text(L10n.text("Nenhuma obra encontrada. Tente outro título.")).font(MVFont.body(14)).foregroundStyle(MV.C.muted)
+            }
             LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(store.logPickerItems) { item in
+                ForEach(matchingItems) { item in
                         Button { store.setLogItem(item.id) } label: {
                             PosterView(item: item, universe: store.universe(of: item), width: 104, height: 156, titleSize: 11)
                         }
@@ -71,7 +90,7 @@ private struct LogFormContent: View {
                     HStack {
                         Text(L10n.text("EDITAR REGISTRO")).font(MVFont.section(18)).foregroundStyle(MV.C.ink)
                         Spacer()
-                        Button(L10n.text("Cancelar")) { store.closeLog() }
+                        Button(L10n.text("FECHAR")) { store.closeLog() }
                             .font(MVFont.bold(12)).foregroundStyle(MV.C.muted)
                     }
                 }
@@ -98,6 +117,9 @@ private struct LogFormContent: View {
             .padding(.bottom, 24)
             .disabled(store.isSavingLog)
             .allowsHitTesting(!store.isSavingLog)
+        } else {
+            Text(L10n.text("A obra deste rascunho não está disponível. Atualize o catálogo ou descarte o rascunho para começar outro."))
+                .font(MVFont.body(14)).foregroundStyle(MV.C.muted).padding(MV.pad)
         }
     }
 

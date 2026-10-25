@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct LogDraft: Equatable {
+struct LogDraft: Codable, Equatable {
     var id = UUID()
     var isEditing = false
     var loggedAt: Date?
@@ -196,7 +196,18 @@ final class AppStore {
     var essentialVotes: [String: Int] = [:]
 
     // MARK: - Registro
-    var logDraft: LogDraft?
+    var logDraft: LogDraft? {
+        didSet {
+            guard let logDraft else { return }
+            savedLogDraft = logDraft
+            do { try draftStorage?.save(logDraft); draftStorageError = nil }
+            catch { draftStorageError = L10n.text("Não foi possível guardar o rascunho neste aparelho. Mantenha esta tela aberta ou salve o registro.") }
+        }
+    }
+    private var originalEditingDraft: LogDraft?
+    private let draftStorage: (any LogDraftStorage)?
+    private(set) var savedLogDraft: LogDraft?
+    private(set) var draftStorageError: String?
 
     /// Usuário sendo desafiado — abre a `DuelChallengeSheet` de qualquer tela (perfil, Home, conversa).
     var showingChallengeUserID: String?
@@ -278,8 +289,15 @@ final class AppStore {
         roomsAPI: (any RoomsAPI)? = nil,
         voiceAPI: (any VoiceAPI)? = nil,
         profileEditingAPI: (any ProfileEditingAPI)? = nil,
-        duelCurationAPI: (any DuelCurationAPI)? = nil
+        duelCurationAPI: (any DuelCurationAPI)? = nil,
+        draftStorage: (any LogDraftStorage)? = nil
     ) {
+        let storage = draftStorage ?? session.flatMap { session in
+            activityAPI == nil ? nil : FileLogDraftStorage(userID: session.userID)
+        }
+        self.draftStorage = storage
+        do { savedLogDraft = try storage?.load() }
+        catch { draftStorageError = L10n.text("Não foi possível recuperar o rascunho deste aparelho.") }
         self.readingOrderStore = readingOrdersAPI.map { ReadingOrdersStore(api: $0) }
         self.directMessages = directMessagesAPI.map { DirectMessagesStore(api: $0, ownerID: session?.userID ?? "duda") }
         self.library = libraryAPI.map { LibraryStore(api: $0) }
@@ -1235,23 +1253,62 @@ final class AppStore {
 
     // MARK: - Sheet de registro
 
-    func openLogBlank() { guard !isMutatingActivity else { return }; logSaveError = nil; logDraft = LogDraft() }
+    var canOfferFirstRecord: Bool { hasBootstrapped && !isLoading && activityLoadError == nil && diary.isEmpty }
+
+    func openLogBlank() {
+        guard !isMutatingActivity else { return }
+        logSaveError = nil
+        logDraft = savedLogDraft ?? LogDraft()
+    }
+
+    func discardLogDraft() {
+        guard !isMutatingActivity else { return }
+        do {
+            try draftStorage?.save(nil)
+            savedLogDraft = nil
+            originalEditingDraft = nil
+            logDraft = nil
+            logSaveError = nil
+            draftStorageError = nil
+        } catch { draftStorageError = L10n.text("Não foi possível remover o rascunho deste aparelho. Tente novamente.") }
+    }
+
+    private func finishLogDraft() {
+        do { try draftStorage?.save(nil); savedLogDraft = nil; draftStorageError = nil }
+        catch { draftStorageError = L10n.text("Registro salvo, mas o rascunho local não pôde ser removido. Tente descartá-lo novamente.") }
+        logDraft = nil
+    }
+
+    private func resumeExistingDraft() -> Bool {
+        guard let savedLogDraft else { return false }
+        logDraft = savedLogDraft
+        showToast(L10n.text("Retome ou descarte seu rascunho antes de começar outro registro."))
+        return true
+    }
     func openLog(for itemID: String) {
         guard !isMutatingActivity else { return }
         logSaveError = nil
+        if resumeExistingDraft() { return }
         let mine = myDiaryEntry(for: itemID)
         logDraft = LogDraft(itemID: itemID, rating: mine?.rating ?? 0, liked: mine?.liked ?? false, rewatch: isSeen(itemID), spoiler: false, text: "")
     }
-    func closeLog() { guard !isSavingLog else { return }; logDraft = nil; logSaveError = nil }
+    func closeLog() {
+        guard !isSavingLog else { return }
+        if let originalEditingDraft, logDraft == originalEditingDraft { discardLogDraft(); return }
+        logDraft = nil
+        logSaveError = nil
+    }
 
     func editLog(id: UUID) {
         guard usesRemoteActivity, !isMutatingActivity, pendingDiaryDeletion?.id != id,
               let entry = diary.first(where: { $0.id == id }) else { return }
-        let review = activityReviews[id]
         logSaveError = nil
+        if resumeExistingDraft() { return }
+        let review = activityReviews[id]
         logDraft = LogDraft(id: id, isEditing: true, loggedAt: entry.loggedAt, itemID: entry.itemId,
                             rating: entry.rating, liked: entry.liked, rewatch: entry.rewatch,
                             spoiler: review?.spoiler ?? false, text: review?.text ?? "")
+        originalEditingDraft = logDraft
     }
 
     func deleteLog(id: UUID) {
@@ -1313,7 +1370,7 @@ final class AppStore {
             reviews.insert(review, at: 0)
             newReview = review
         }
-        logDraft = nil
+        finishLogDraft()
         showToast(L10n.text("Publicado no feed do seu pessoal"))
 
         if shieldAdvanceAutomatically, let idx = timelineIndex(for: item) {
@@ -1350,7 +1407,7 @@ final class AppStore {
                 applyActivity(snapshot)
                 activityLoadError = nil
                 refreshSocialAfterDiaryChange()
-                logDraft = nil
+                finishLogDraft()
                 showToast(L10n.text("Registro salvo no diário."))
                 if !draft.isEditing, shieldAdvanceAutomatically, let idx = timelineIndex(for: item) { advanceShieldPoint(universeID: item.uni, to: idx) }
                 syncWidgetData()
@@ -1426,6 +1483,11 @@ final class AppStore {
         case .step3: finishOnboardingLoading()
         case .loading: break
         }
+    }
+    func finishOptionalOnboarding() {
+        guard usesAccountAPI, onboardingPhase == .step2, onboardingFollowingOptional,
+              !onboardingUniverses.isEmpty else { return }
+        transitionRemoteOnboarding(back: false, skipPeople: true)
     }
     func backOnboarding() {
         if accountAPI != nil { transitionRemoteOnboarding(back: true); return }
@@ -1558,7 +1620,7 @@ final class AppStore {
         }
     }
 
-    private func transitionRemoteOnboarding(back: Bool) {
+    private func transitionRemoteOnboarding(back: Bool, skipPeople: Bool = false) {
         guard !onboardingTransitioning else { return }
         onboardingTransitioning = true
         onboardingDebounce?.cancel()
@@ -1567,7 +1629,7 @@ final class AppStore {
             _ = try? await onboardingSaveQueue?.value
             let step = onboardingPhase == .step1 ? 1 : (onboardingPhase == .step2 ? 2 : 3)
             do {
-                if !back && step >= 2 && !(step == 3 && onboardingFollowingOptional && follows.isEmpty) {
+                if !back && !skipPeople && step >= 2 && !(step == 3 && onboardingFollowingOptional && follows.isEmpty) {
                     try await refreshOnboardingSuggestions()
                     if step == 3 && onboardingSelectedFollowCount < minimumOnboardingFollows {
                         onboardingError = nil
@@ -1576,7 +1638,7 @@ final class AppStore {
                     }
                     if onboardingCandidates.isEmpty { onboardingPhase = .step2 }
                 }
-                let finish = !back && (step == 3 || (step == 2 && onboardingCandidates.isEmpty))
+                let finish = !back && (step == 3 || (step == 2 && (onboardingCandidates.isEmpty || skipPeople)))
                 let next = back ? max(1, step - 1) : min(3, step + 1)
                 _ = try await enqueueOnboardingSave(onboardingSnapshot(step: next, completed: finish)).value
                 onboardingError = nil

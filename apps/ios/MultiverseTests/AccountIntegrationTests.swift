@@ -78,6 +78,24 @@ struct AccountIntegrationTests {
         (0..<count).map { RemoteProfile(userID: "person-\($0)", username: "person\($0)", displayName: "Person \($0)", avatarColor: "#F4A814", bio: "") }
     }
 
+    @Test(arguments: [true, false]) func quickStartHonorsServerFollowingPolicy(optional: Bool) async throws {
+        let uid = UUID().uuidString
+        let api = AccountStub(uid: uid)
+        api.people = people(3)
+        api.followingOptional = optional
+        api.progress.universeIDs = ["marvel"]
+        api.progress.step = 2
+        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: "@real.name"), accountAPI: api)
+        await store.bootstrap()
+        store.finishOptionalOnboarding()
+        for _ in 0..<200 where store.onboardingTransitioning { try await Task.sleep(for: .milliseconds(5)) }
+        #expect(store.isOnboarded == optional)
+        #expect(api.progress.completed == optional)
+        #expect(api.progress.followedUserIDs.isEmpty)
+        if optional { #expect(api.progress.step == 3) }
+        else { #expect(api.savedVersions.isEmpty) }
+    }
+
     @Test func profileEditsPersistAndFailuresKeepConfirmedDetails() async throws {
         let uid = UUID().uuidString, api = AccountStub(uid: UUID().uuidString)
         api.profile = RemoteProfile(userID: uid, username: "profileuser", displayName: "Before", avatarColor: "#F4A814", bio: "Before")

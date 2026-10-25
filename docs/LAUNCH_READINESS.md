@@ -10,7 +10,62 @@ O estado de cada item está indicado abaixo. Atualizar cada item com mudança,
 evidência e pendências quando for tratado. Preservar identidade visual,
 componentes e PT-BR/EN.
 
+## Melhorias autorizadas — 25/10/2026
+
+Lucas autorizou os cinco pontos, com padrões existentes e sem novos serviços pagos.
+Push/deploy autorizado após validação; publicação deste lote em andamento. Acompanhar neste quadro; homologação
+integrada e assinatura Apple continuam adiadas.
+
+| Lote | Escopo concreto | Estado |
+| --- | --- | --- |
+| M01 Primeiro uso | Atalho inicial para registrar; busca na seleção de obra; opção de concluir sem seguir pessoas quando o servidor permite | Implementado e validado localmente |
+| M02 Diário/biblioteca | Busca por título, filtros do diário, exibição progressiva e acesso direto ao diário | Implementado e validado localmente |
+| M03 Comunidade | Estados vazios específicos por filtro, ações para recuperar resultados e acesso às respostas | Implementado e validado localmente |
+| M04 Confiabilidade | Rascunho local por conta/ambiente, retomada com UUID/data preservados, descarte explícito e limpeza de sessão | Implementado e validado localmente |
+| M05 Segurança/operação | WB-01/WB-02, testes no CI, teto Railway e ensaio local de backup/restauração | Correções e ensaio local validados; backups de produção pendentes |
+
+Railway: teto de consumo **US$ 10/ciclo**, alerta **US$ 5** e consumo adicional
+Railway Agent **US$ 0**, aplicados e relidos em 25/10. São os menores valores
+aceitos pelo CLI. O teto interrompe workloads; alerta não bloqueia consumo.
+Nenhum plano, PITR ou recurso pago novo foi habilitado.
+
+Evidência local: 117 unitários + 174 HTTP/PostgreSQL, incluindo sete regressões
+white-box; 302 testes iOS/36 suítes; 1.278 traduções e 3 checks de configuração.
+Backup/restore sintético aprovado sobre 70 tabelas. M02 usa exibição progressiva
+local de 30 registros: paginação de rede E03 requer separar agregados de estatísticas,
+favoritos e progresso e continua pendente. Backup automatizado/restore de cópia real
+L10 também continua pendente. Não confundir ensaio sintético com backup publicado.
+As anotações datadas abaixo preservam o histórico anterior a estas correções.
+
 ## Por onde começar
+
+**Deploy de produção — 24/10/2026:** concluído pelo Railway CLI a pedido de Lucas.
+Master `55e7bb3`, deployment `7f338613-24ae-45d3-b87d-f658cfefd05e`, estado
+**SUCCESS**. Migrations 028/029 aplicadas; healthcheck do serviço atualizado para
+`/api/v1/health/ready`. Cinco verificações remotas aprovadas: readiness/liveness
+200, catálogo público 200, diário sem autenticação 401 e ambiente divergente 409.
+Antes de publicar, format/lint/tipos/build e 117 unitários + 167 HTTP/PostgreSQL
+passaram novamente. Isso publica os lotes já integrados; **WB-01/WB-02 continuam
+pendentes**. Homologação integrada e distribuição do app não foram realizadas.
+Nenhum recurso/plano novo habilitado. Consulta confirmou ausência de limite de
+consumo do workspace Railway e de backups de volume/PITR; registrar e tratar
+separadamente com teto aprovado, sem considerar alertas como bloqueio financeiro.
+
+**Atualização de segurança — 22/10/2026:** auditoria white-box local concluída;
+[relatório e reproduções](WHITE_BOX_AUDIT_2026-10-22.md). Dois achados P2 confirmados,
+ainda sem correção: WB-01 (exclusão devolve quota de reviews) e WB-02 (processamento
+de foto antes de autorizar o perfil, sem quota própria). Priorizar esse lote local
+antes de ampliar o beta, preservando arquitetura e a restrição de custos.
+
+- [x] Revisão, duas reproduções adversariais e reexecução dos testes regulares.
+- [x] WB-01: quota durável sem reembolso por exclusão/edição; retries idempotentes.
+- [x] WB-02: autorização e quota antes do encoder; concorrência limitada.
+- [x] Após corrigir, integrar as asserções de segurança à suíte regular.
+
+Os 117 testes unitários e 167 HTTP/PostgreSQL regulares passaram, assim como os
+14 das Functions. A suíte dedicada `audit:whitebox` mantém as duas asserções de
+segurança falhando (1 controle aprovado / 2 falhas), separada do CI regular.
+Homologação integrada continua adiada. Não houve alteração da aplicação ou deploy.
 
 Os dois primeiros lotes estão **implementados e validados localmente**: base de
 testes/tradução/CI e edição/exclusão do diário (L04). O terceiro lote tem telas e
@@ -400,3 +455,7 @@ Consultadas na auditoria de 21/10/2026; revalidar ao implementar/publicar.
 - 21/10/2026: L04 concluído localmente. Regressão final iOS: 287 testes/33 suítes;
   API: 99 + 155; tradução: 1.227; renders estreitos conferidos. Migration 028 e
   backend devem preceder o app na publicação. Próximo lote sugerido: L01–L03.
+
+Validação incremental final: 35 testes de HTTP/rascunhos passaram após acrescentar
+falha de escrita local e mensagem específica de cota de foto. A suíte completa
+anterior passou com 302 testes; os dois cenários adicionais passaram nesta rodada.

@@ -1,5 +1,36 @@
 # Backlog — próximos passos sugeridos
 
+## Melhorias e segurança — 25/10/2026
+
+Primeiro uso com atalho para registro e conclusão opcional do onboarding; busca
+na seleção de obras, diário e biblioteca; filtros e exibição progressiva do diário;
+estados vazios e acesso a respostas na comunidade; rascunho persistente por conta
+com retry após reinício. Padrões Feature-First/Core e tokens PT-BR/EN preservados.
+WB-01/WB-02 corrigidos, migration 030 e sete regressões incluídas no CI.
+117 unitários + 174 HTTP e 302 testes iOS aprovados. Plano detalhado em
+[LAUNCH_READINESS](LAUNCH_READINESS.md). Push/deploy autorizado e em andamento.
+
+Teto Railway aplicado: US$10/ciclo, alerta US$5, Agent US$0. Ensaio local de
+restauração passou sobre 70 tabelas sintéticas. Permanecem E03 (paginação de rede
+com agregados separados), backup automatizado/restauração de cópia real,
+homologação integrada adiada e Apple Developer. As seções abaixo são históricas.
+
+## Publicação — 24/10/2026
+
+Master `55e7bb3` publicada em produção via Railway CLI, deployment
+`7f338613-24ae-45d3-b87d-f658cfefd05e` **SUCCESS**, migrations 028/029 aplicadas e
+cinco checks remotos aprovados. Healthcheck inclui o banco. WB-01/WB-02 continuam
+pendentes; homologação integrada segue adiada. Nenhum recurso pago novo foi criado;
+limite financeiro do workspace e backup/restauração continuam pendentes.
+
+## Segurança — 22/10/2026
+
+Auditoria white-box concluída localmente: [relatório](WHITE_BOX_AUDIT_2026-10-22.md).
+Próximo lote recomendado, sem serviços pagos: corrigir WB-01 (quota de reviews
+contornada por exclusão) e WB-02 (foto processada antes de autorizar o perfil).
+Ambos P2, reproduzidos e ainda pendentes; o plano consolidado contém os critérios
+de conclusão. A suíte de diagnóstico continua vermelha até as correções.
+
 ## Plano consolidado de 21/10/2026
 
 A auditoria atual, os mocks, as pendências e os critérios de conclusão estão em

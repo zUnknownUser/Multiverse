@@ -21519,6 +21519,550 @@
           }
         }
       }
+    },
+    "Não foi possível guardar o rascunho neste aparelho. Mantenha esta tela aberta ou salve o registro." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not save the draft on this device. Keep this screen open or save your entry."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível guardar o rascunho neste aparelho. Mantenha esta tela aberta ou salve o registro."
+          }
+        }
+      }
+    },
+    "Não foi possível recuperar o rascunho deste aparelho." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not recover the draft on this device."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível recuperar o rascunho deste aparelho."
+          }
+        }
+      }
+    },
+    "Não foi possível remover o rascunho deste aparelho. Tente novamente." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not remove the draft on this device. Try again."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível remover o rascunho deste aparelho. Tente novamente."
+          }
+        }
+      }
+    },
+    "Registro salvo, mas o rascunho local não pôde ser removido. Tente descartá-lo novamente." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entry saved, but the local draft could not be removed. Try discarding it again."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registro salvo, mas o rascunho local não pôde ser removido. Tente descartá-lo novamente."
+          }
+        }
+      }
+    },
+    "Retome ou descarte seu rascunho antes de começar outro registro." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume or discard your draft before starting another entry."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retome ou descarte seu rascunho antes de começar outro registro."
+          }
+        }
+      }
+    },
+    "DESCARTAR RASCUNHO" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DISCARD DRAFT"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DESCARTAR RASCUNHO"
+          }
+        }
+      }
+    },
+    "Descartar este rascunho?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard this draft?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descartar este rascunho?"
+          }
+        }
+      }
+    },
+    "Buscar obra pelo título" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search works by title"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar obra pelo título"
+          }
+        }
+      }
+    },
+    "Nenhuma obra encontrada. Tente outro título." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No works found. Try another title."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhuma obra encontrada. Tente outro título."
+          }
+        }
+      }
+    },
+    "A obra deste rascunho não está disponível. Atualize o catálogo ou descarte o rascunho para começar outro." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This draft’s work is unavailable. Refresh the catalog or discard the draft to start another."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A obra deste rascunho não está disponível. Atualize o catálogo ou descarte o rascunho para começar outro."
+          }
+        }
+      }
+    },
+    "SEU DIÁRIO COMEÇA AQUI" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YOUR DIARY STARTS HERE"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SEU DIÁRIO COMEÇA AQUI"
+          }
+        }
+      }
+    },
+    "SEU RASCUNHO ESTÁ AQUI" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YOUR DRAFT IS HERE"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SEU RASCUNHO ESTÁ AQUI"
+          }
+        }
+      }
+    },
+    "Escolha uma obra e registre o que você viu, leu ou jogou. Nota e texto são opcionais." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a work and log what you watched, read or played. Ratings and text are optional."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha uma obra e registre o que você viu, leu ou jogou. Nota e texto são opcionais."
+          }
+        }
+      }
+    },
+    "Continue de onde parou. Seu rascunho fica neste aparelho até salvar, descartar ou sair da conta." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick up where you left off. Your draft stays on this device until you save, discard or sign out."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue de onde parou. Seu rascunho fica neste aparelho até salvar, descartar ou sair da conta."
+          }
+        }
+      }
+    },
+    "CONTINUAR RASCUNHO" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CONTINUE DRAFT"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CONTINUAR RASCUNHO"
+          }
+        }
+      }
+    },
+    "COMEÇAR AGORA, SEGUIR PESSOAS DEPOIS" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "START NOW, FOLLOW PEOPLE LATER"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMEÇAR AGORA, SEGUIR PESSOAS DEPOIS"
+          }
+        }
+      }
+    },
+    "Todos os registros" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All entries"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos os registros"
+          }
+        }
+      }
+    },
+    "Curtidos" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liked"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Curtidos"
+          }
+        }
+      }
+    },
+    "Com nota" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rated"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Com nota"
+          }
+        }
+      }
+    },
+    "Revisitados" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisited"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisitados"
+          }
+        }
+      }
+    },
+    "Filtrar registros" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter entries"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrar registros"
+          }
+        }
+      }
+    },
+    "Ano" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Year"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ano"
+          }
+        }
+      }
+    },
+    "Todos os anos" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All years"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos os anos"
+          }
+        }
+      }
+    },
+    "Nenhum registro corresponde aos filtros." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No entries match these filters."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum registro corresponde aos filtros."
+          }
+        }
+      }
+    },
+    "LIMPAR FILTROS" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CLEAR FILTERS"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LIMPAR FILTROS"
+          }
+        }
+      }
+    },
+    "ABRIR MEU DIÁRIO" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OPEN MY DIARY"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ABRIR MEU DIÁRIO"
+          }
+        }
+      }
+    },
+    "Buscar na biblioteca" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search your library"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar na biblioteca"
+          }
+        }
+      }
+    },
+    "EXPLORAR CATÁLOGO" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EXPLORE CATALOG"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EXPLORAR CATÁLOGO"
+          }
+        }
+      }
+    },
+    "Nenhum resultado na sua biblioteca." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No results in your library."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum resultado na sua biblioteca."
+          }
+        }
+      }
+    },
+    "LIMPAR BUSCA" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CLEAR SEARCH"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LIMPAR BUSCA"
+          }
+        }
+      }
+    },
+    "Nenhuma publicação corresponde à busca. Tente outras palavras." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No posts match your search. Try different words."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhuma publicação corresponde à busca. Tente outras palavras."
+          }
+        }
+      }
+    },
+    "As pessoas que você segue ainda não publicaram neste recorte. Explore as conversas recentes." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "People you follow have not posted here yet. Explore recent conversations."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As pessoas que você segue ainda não publicaram neste recorte. Explore as conversas recentes."
+          }
+        }
+      }
+    },
+    "VER CONVERSAS RECENTES" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SEE RECENT CONVERSATIONS"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VER CONVERSAS RECENTES"
+          }
+        }
+      }
+    },
+    "ACOMPANHAR RESPOSTAS" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CHECK REPLIES"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ACOMPANHAR RESPOSTAS"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

@@ -32,12 +32,17 @@ struct LibraryView: View {
     @Environment(AppStore.self) private var store
     @State private var selection = 0
     @State private var creating = false
+    @State private var query = ""
     var body: some View {
         ScreenScaffold {
             LazyVStack(alignment: .leading, spacing: 18) {
                 Text(L10n.text("BIBLIOTECA")).font(MVFont.display(28, width: 118))
                 Text(L10n.text("Seus desejos, favoritos e listas. Só você pode ver."))
                     .font(MVFont.body(13, weight: 500)).foregroundStyle(MV.C.muted)
+                Button { store.push(.diary) } label: {
+                    Label(L10n.text("ABRIR MEU DIÁRIO"), systemImage: "book.closed").font(MVFont.bold(12))
+                }.buttonStyle(.bordered)
+                TextField(L10n.text("Buscar na biblioteca"), text: $query).padding(12).comicCard(shadow: MV.Shadow.s).autocorrectionDisabled()
                 Picker(L10n.text("Biblioteca"), selection: $selection) {
                     Text(L10n.text("Quero consumir")).tag(0)
                     Text(L10n.text("Favoritos")).tag(1)
@@ -49,11 +54,18 @@ struct LibraryView: View {
                         if selection == 2 {
                             Button(L10n.text("CRIAR LISTA")) { creating = true }.buttonStyle(.borderedProminent).disabled(!library.canMutate)
                             if library.lists.isEmpty { LibraryEmptyState(message: L10n.text("Crie sua primeira lista para organizar as obras.")) }
-                            ForEach(library.lists) { list in PersonalListRow(list: list) }
+                            let lists = library.lists.filter { ProductSearch.matches($0.title, query: query) }
+                            if lists.isEmpty && !library.lists.isEmpty { searchEmpty }
+                            ForEach(lists) { list in PersonalListRow(list: list) }
                         } else {
                             let ids = selection == 0 ? library.wantedIDs : library.favoriteIDs
-                            if ids.isEmpty { LibraryEmptyState(message: L10n.text("Nada salvo aqui ainda. Explore uma obra para começar.")) }
-                            ForEach(ids, id: \.self) { id in
+                            if ids.isEmpty {
+                                LibraryEmptyState(message: L10n.text("Nada salvo aqui ainda. Explore uma obra para começar."))
+                                Button(L10n.text("EXPLORAR CATÁLOGO")) { store.goToTab(.search) }
+                            }
+                            let matches = ids.filter { ProductSearch.matches(store.item($0)?.title ?? "", query: query) }
+                            if matches.isEmpty && !ids.isEmpty { searchEmpty }
+                            ForEach(matches, id: \.self) { id in
                                 LibraryItemRow(itemID: id) {
                                     Task { await library.change(selection == 0 ? "wanted" : "favorite", itemID: id, enabled: false) }
                                 }.disabled(!library.canMutate)
@@ -63,7 +75,14 @@ struct LibraryView: View {
                 }
             }.foregroundStyle(MV.C.ink).padding(MV.pad)
         }.task { await store.library?.refresh() }.refreshable { await store.library?.refresh() }
+        .onChange(of: selection) { _, _ in query = "" }
         .sheet(isPresented: $creating) { if let library = store.library { PersonalListEditor(library: library) } }
+    }
+    private var searchEmpty: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            LibraryEmptyState(message: L10n.text("Nenhum resultado na sua biblioteca."))
+            Button(L10n.text("LIMPAR BUSCA")) { query = "" }
+        }
     }
 }
 struct PersonalListRow: View {

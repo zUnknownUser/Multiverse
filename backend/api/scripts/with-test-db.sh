@@ -4,8 +4,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 script="${1:-test:all}"
 case "$script" in
-  test:all|test:e2e|check) ;;
-  *) echo "Usage: bash scripts/with-test-db.sh [test:all|test:e2e|check]" >&2; exit 2 ;;
+  test:all|test:e2e|check|audit:whitebox|test:recovery) ;;
+  *) echo "Usage: bash scripts/with-test-db.sh [test:all|test:e2e|check|audit:whitebox|test:recovery]" >&2; exit 2 ;;
 esac
 if ! docker info >/dev/null 2>&1; then
   echo "Docker is required. Start Docker and retry; no existing database will be used." >&2
@@ -52,6 +52,7 @@ fi
 
 port="$(docker inspect --format '{{(index (index .NetworkSettings.Ports "5432/tcp") 0).HostPort}}' "$container")"
 export TEST_DATABASE_URL="postgresql://multiverse_test:multiverse_test_only@127.0.0.1:$port/multiverse_test"
+export TEST_DATABASE_CONTAINER="$container"
 echo "Running $script against disposable PostgreSQL 18 on localhost:$port."
 npm run "$script" &
 test_pid=$!

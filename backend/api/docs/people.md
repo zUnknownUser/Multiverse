@@ -62,3 +62,16 @@ inglês e português. Sem outras contas elegíveis, a Home não mostra sugestõe
 
 Comentários e reações persistidos, permissões e operação de moderação estão
 documentados em [interactions.md](interactions.md).
+
+## Proteção do processamento da foto — 25/10/2026
+
+`PUT /me/profile/details` com `photoAction=replace` exige perfil ativo antes de
+chamar Sharp. Migration 030 mantém `profile_photo_limits`: 20 tentativas por conta
+em uma janela de uma hora iniciada no primeiro envio; imagens inválidas também
+consomem tentativa. Excesso ou saturação retornam 429 `IMAGE_LIMIT` sem decodificar.
+Cada instância admite duas operações simultâneas e uma por UID, sem fila de
+buffers. A cota no PostgreSQL vale também entre instâncias/reinícios. Remover a
+foto ou editar só nome/bio não consome cota. A conta é revalidada depois de processar,
+impedindo persistência após exclusão concorrente. Foto continua JPEG 512×512,
+no máximo 256 KiB, entrada JPEG/PNG/WebP não animada até 20 milhões de pixels.
+O iOS apresenta espera para essa cota; apagar conteúdo não a libera.

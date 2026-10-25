@@ -58,8 +58,10 @@ fecha apenas após confirmação, preservando seleção e erro em falhas. A API 
 informa a identidade do denunciante ao autor e não promete prazo de atendimento.
 
 Limites iniciais: 50 denúncias novas por conta em 24 horas e 20 reviews novas por
-hora para contas com diário público. Repetir um salvamento com o mesmo UUID não
-consome outra publicação. Respostas 429 explicam a espera e preservam o rascunho.
+hora por conta, tanto com diário público quanto privado. A cota usa recibos
+independentes da review desde a migration 030: excluir conteúdo ou alternar
+privacidade não a devolve. Repetir uma review existente não consome outra unidade;
+limpar nota/texto e recriá-la consome. Ver [diário](activity.md). Respostas 429 explicam a espera e preservam o rascunho.
 Esses limites são uma proteção inicial; não substituem moderação humana/antifraude.
 
 A fila `review_reports.status='pending'` precisa de acompanhamento operacional.

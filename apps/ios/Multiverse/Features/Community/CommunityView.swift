@@ -67,6 +67,11 @@ struct CommunityView: View {
                         Text(L10n.text("Em conversa")).tag("active")
                     }.pickerStyle(.segmented)
                 }
+                if store.notifications != nil {
+                    Button { store.openNotifications() } label: {
+                        Label(L10n.text("ACOMPANHAR RESPOSTAS"), systemImage: "bell").font(MVFont.bold(12))
+                    }.buttonStyle(.bordered)
+                }
                 ViewThatFits(in: .horizontal) {
                     HStack { publicationActions }
                     VStack(alignment: .leading) { publicationActions }
@@ -74,7 +79,7 @@ struct CommunityView: View {
                 if let error = timeline.error { AuthErrorBanner(message: error); Button(L10n.text("TENTAR DE NOVO")) { Task { await load() } } }
                 if timeline.busy { ProgressView() }
                 if timeline.posts.isEmpty && !timeline.busy && timeline.error == nil {
-                    Text(initialFeed == "unanswered" ? L10n.text("Nenhuma conversa sem respostas por aqui. Explore as outras publicações ou comece a sua.") : L10n.text("Nenhuma publicação por aqui ainda. Comece uma conversa.")).font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.muted).frame(maxWidth: .infinity, alignment: .leading).padding(14).comicCard(shadow: MV.Shadow.s)
+                    emptyState
                 }
                 ForEach(timeline.posts) { post in CommunityPostCard(post: post, user: timeline.users[post.user]) }
                 if timeline.cursor != nil { Button(L10n.text("CARREGAR MAIS")) { Task { await load(more: true) } }.disabled(timeline.busy) }
@@ -86,6 +91,30 @@ struct CommunityView: View {
             PostComposer(universe: filter.universe, item: item, kind: kind ?? "discussion", club: club, schedule: schedule)
         }
     }
+    private var emptyState: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            switch CommunityEmptyReason(filter: filter) {
+            case .search:
+                Text(L10n.text("Nenhuma publicação corresponde à busca. Tente outras palavras."))
+                Button(L10n.text("LIMPAR BUSCA")) { search = "" }
+            case .following:
+                Text(L10n.text("As pessoas que você segue ainda não publicaram neste recorte. Explore as conversas recentes."))
+                Button(L10n.text("VER CONVERSAS RECENTES")) { feed = "recent" }
+            case .unanswered:
+                Text(L10n.text("Nenhuma conversa sem respostas por aqui. Explore as outras publicações ou comece a sua."))
+                Button(L10n.text("VER CONVERSAS RECENTES")) {
+                    var recent = filter; recent.feed = "recent"
+                    store.push(.communityFeed(recent))
+                }
+            case .scope:
+                Text(L10n.text("Nenhuma publicação por aqui ainda. Comece uma conversa."))
+                Button(L10n.text("NOVA PUBLICAÇÃO")) { composing = true }
+                if !selectedUniverse.isEmpty { Button(L10n.text("Todos os universos")) { selectedUniverse = "" } }
+            }
+        }.font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
+            .frame(maxWidth: .infinity, alignment: .leading).padding(14).comicCard(shadow: MV.Shadow.s)
+    }
+
     @ViewBuilder private var publicationActions: some View {
         Button(L10n.text("NOVA PUBLICAÇÃO")) { composing = true }.buttonStyle(.borderedProminent).fixedSize(horizontal: true, vertical: false)
         if initialFeed != "unanswered" {
