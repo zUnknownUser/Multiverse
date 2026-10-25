@@ -15,7 +15,8 @@ uma por UID e duas por instância; perfil revalidado após processamento.
 As sete regressões estão em `backend/api/test/white-box.e2e-spec.ts`, executadas
 pelo CI regular e pelo atalho `audit:whitebox`. Incluem migração de consumo recente,
 isolamento, concorrência, janela, imagens inválidas e exclusão durante processamento.
-117 unitários + 174 HTTP aprovados. Publicação desta correção em andamento.
+117 unitários + 174 HTTP aprovados. Correções publicadas no deployment Railway `899dd38a-65d8-4ab7-afb7-cb8aea2928ee`,
+commit `86b1d51`, migration 030 aplicada e cinco smoke checks aprovados.
 A descrição abaixo mantém as evidências da versão auditada em 22/10.
 
 ## Resultado
@@ -27,8 +28,8 @@ Nenhuma falha crítica foi identificada nesta rodada; isso não comprova sua aus
 
 | ID | Achado | Evidência | Estado |
 | --- | --- | --- | --- |
-| WB-01 | Exclusão de review devolve a cota horária de publicação | Após 20 publicações e um HTTP 429, excluir uma permitiu outra com HTTP 200 | Corrigido e validado localmente em 25/10 |
-| WB-02 | Imagem de perfil processada antes da autorização do perfil, sem cota própria de processamento | Uma conta sem perfil recebeu 404, mas o encoder Sharp já havia sido chamado | Corrigido e validado localmente em 25/10 |
+| WB-01 | Exclusão de review devolve a cota horária de publicação | Após 20 publicações e um HTTP 429, excluir uma permitiu outra com HTTP 200 | Corrigido, validado e publicado em 25/10 |
+| WB-02 | Imagem de perfil processada antes da autorização do perfil, sem cota própria de processamento | Uma conta sem perfil recebeu 404, mas o encoder Sharp já havia sido chamado | Corrigido, validado e publicado em 25/10 |
 
 Recomendação: tratar WB-01 e WB-02 no próximo lote local, antes de ampliar o beta.
 As recomendações de capacidade e pendências operacionais abaixo permanecem

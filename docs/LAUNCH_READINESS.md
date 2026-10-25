@@ -10,10 +10,33 @@ O estado de cada item está indicado abaixo. Atualizar cada item com mudança,
 evidência e pendências quando for tratado. Preservar identidade visual,
 componentes e PT-BR/EN.
 
+## Publicação das melhorias — 25/10/2026
+
+Código enviado para master no commit `86b1d51776bce056abf61c33df5a954ac3a83af2`.
+Autodeploy Railway `899dd38a-65d8-4ab7-afb7-cb8aea2928ee` confirmado **SUCCESS**;
+log confirma `Applied 030_review_and_photo_budgets.sql`. WB-01/WB-02 publicados.
+Cinco smoke checks remotos aprovados: readiness 200 ready/production, liveness 200,
+catálogo Marvel 200, diário sem token 401/no-store e header staging 409.
+Não foram criadas contas/conteúdo nem enviados e-mails/push nos checks.
+
+Build Release iOS sem assinatura aprovado; bundle e Firebase de produção
+conferidos. Código do app publicado no GitHub; distribuição App Store/TestFlight
+continua pendente da assinatura Apple Developer. Functions/Hosting não mudaram.
+
+Railway watch paths atualizado e relido como `/backend/api/**`: mudanças só em
+iOS/documentação do repositório não reconstruirão a API. Esse filtro segue a
+[configuração oficial](https://docs.railway.com/builds/build-configuration#configure-watch-paths).
+Teto compute US$10/ciclo + alerta US$5 e Agent US$0 permanecem ativos.
+
+CI do código: [run 40231739909](https://github.com/zUnknownUser/Multiverse/actions/runs/40231739909).
+API, Firebase e traduções aprovados; simulador iOS ainda em execução na última
+consulta. Localmente, 302 testes iOS + rodada incremental de 35 passaram; build
+Release aprovado. Atualizar o resultado remoto quando terminar.
+
 ## Melhorias autorizadas — 25/10/2026
 
 Lucas autorizou os cinco pontos, com padrões existentes e sem novos serviços pagos.
-Push/deploy autorizado após validação; publicação deste lote em andamento. Acompanhar neste quadro; homologação
+Push/deploy autorizado após validação; publicação da API concluída; distribuição iOS pendente. Acompanhar neste quadro; homologação
 integrada e assinatura Apple continuam adiadas.
 
 | Lote | Escopo concreto | Estado |
