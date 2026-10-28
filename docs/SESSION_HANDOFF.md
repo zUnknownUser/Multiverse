@@ -13,8 +13,13 @@
 - Testes locais: API 117 unitários + 176 HTTP; iOS 318 testes/38 suítes; 1.278
   traduções e três checks de ambiente. Release sem assinatura aprovado. Uma tentativa
   do simulador terminou antes de iniciar; nova execução completa aprovada.
-- Push/deploy autorizados pelo usuário; publicação deste lote em andamento.
-  CI do lote anterior 40710681608: todos os quatro jobs confirmados aprovados.
+- Publicado na master: `33979b3507311d9e7d839a67ce8f95694ed53976`. Railway
+  `5359f1a1-178c-4b2b-a2d0-e3b2c9f99a33` SUCCESS com commit conferido. Treze checks
+  remotos passaram; bootstrap 31 itens de 172 publicados. Apenas leituras, sem
+  contas/conteúdo/e-mails/notificações. Limites/planos de gasto mantidos.
+- CI atual 40759671622: API, Firebase e configuração/traduções aprovados; iOS remoto
+  ainda em execução na última consulta. CI anterior 40710681608: todos aprovados.
+  Release local sem assinatura aprovado; distribuição do app depende de Apple Developer.
 - Direção confirmada por Lucas: comunidade social Marvel/DC com experiência clara;
   o visual e a estrutura atuais estão aprovados, sem pedido de redesenho. Avaliação
   e próximo lote de clareza registrados em LAUNCH_READINESS/E10. Atenção ao “+” do

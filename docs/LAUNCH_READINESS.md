@@ -498,7 +498,7 @@ Railway `3ea2ce38-18d2-4c8b-9334-0b226e7a40cf` confirmou SUCCESS e cinco checks
 remotos passaram. CI 40710681608: API/Firebase/traduções aprovados; iOS remoto ainda
 em execução na última consulta. Não houve migration nem ativação de serviço pago.
 
-### Catálogo e CatalogStore — implementado, publicação em validação (28/10/2026)
+### Catálogo e CatalogStore — concluído e publicado (28/10/2026)
 
 Escopo autorizado: bootstrap limitado, busca/edições/séries paginadas, metadados sob
 demanda, progresso independente da página, testes e push/deploy. CatalogStore é
@@ -517,7 +517,7 @@ atual e possíveis ambiguidades de navegação sem redesenhar recursos neste esc
 - Validação local final: 117 unitários + 176 HTTP com PostgreSQL isolado, 318 testes
   iOS em 38 suítes, 1.278 traduções, três checks de ambiente e Release sem assinatura
   aprovados. Uma tentativa do simulador encerrou antes dos testes; a repetição completa
-  passou. Publicação será registrada após conclusão. Sem migration ou novo serviço.
+  passou. Sem migration ou novo serviço.
 - CI anterior 40710681608 confirmado integralmente aprovado, incluindo iOS.
 
 ### Clareza da experiência social — avaliação do código (28/10/2026)
@@ -547,3 +547,16 @@ Próximo lote recomendado: percorrer esses quatro caminhos com uma conta nova,
 registrar atritos concretos e corrigir textos/entrada/retorno onde houver ambiguidade.
 Não ampliar recursos nem contratar serviços para esta validação. Homologação
 integrada e assinatura Apple continuam pendentes por decisão anterior.
+
+
+Publicação do catálogo em 28/10: código `33979b3507311d9e7d839a67ce8f95694ed53976`
+na master; Railway `5359f1a1-178c-4b2b-a2d0-e3b2c9f99a33` confirmou SUCCESS para
+o mesmo commit. Treze verificações de produção passaram: saúde, bootstrap,
+paginação, séries/ordem numérica, resolução exata, validação de parâmetros,
+autenticação e rejeição de ambiente incorreto. Bootstrap real: 31 itens; catálogo
+completo: 172. Nenhuma conta/conteúdo criado, e-mail ou notificação enviado.
+CI [40759671622](https://github.com/zUnknownUser/Multiverse/actions/runs/40759671622):
+API, Firebase e configuração/traduções aprovados; iOS ainda em execução na última
+consulta, com suíte local completa aprovada. App iOS tem Release sem assinatura
+validado; distribuição pela loja/TestFlight continua pendente de Apple Developer.
+Nenhum plano, limite de gasto ou serviço contratado foi alterado.
