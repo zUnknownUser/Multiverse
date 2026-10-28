@@ -493,5 +493,7 @@ anterior passou com 302 testes; os dois cenários adicionais passaram nesta roda
 - CI do lote anterior 40231739909: os quatro jobs concluíram com sucesso.
 
 Validação de 28/10: API 117 unitários + 175 HTTP, formatação/lint/tipos/build; iOS
-309 testes em 37 suítes; 1.278 traduções e 3 verificações de ambiente. Publicação
-autorizada em andamento. Não houve migration nem ativação de serviço pago.
+309 testes em 37 suítes; 1.278 traduções e 3 verificações de ambiente. Build Release sem assinatura aprovado. Código `9759242` enviado à master;
+Railway `3ea2ce38-18d2-4c8b-9334-0b226e7a40cf` confirmou SUCCESS e cinco checks
+remotos passaram. CI 40710681608: API/Firebase/traduções aprovados; iOS remoto ainda
+em execução na última consulta. Não houve migration nem ativação de serviço pago.

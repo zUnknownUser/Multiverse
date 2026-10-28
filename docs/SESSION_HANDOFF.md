@@ -16,7 +16,15 @@
 - Validação local: API 117 unitários + 175 HTTP com PostgreSQL descartável; formatação,
   lint, tipos e build aprovados. iOS 309 testes/37 suítes; 1.278 traduções e 3 checks
   de ambiente. Sem gravações em contas reais durante testes.
-- Push/deploy já autorizados pelo usuário; publicação deste lote em andamento.
+- Publicado na master: `9759242c65274d651039cea1a409299b9a4f99a8`.
+  Railway deploy `3ea2ce38-18d2-4c8b-9334-0b226e7a40cf`: SUCCESS, commit conferido.
+  Cinco smoke checks aprovados: readiness/liveness production, catálogo limitado,
+  diário paginado sem token 401/no-store e header staging rejeitado com 409.
+  Build Release iOS sem assinatura aprovado; não houve distribuição pela loja.
+- CI [40710681608](https://github.com/zUnknownUser/Multiverse/actions/runs/40710681608):
+  API, Firebase e traduções aprovados; iOS remoto ainda em execução na última consulta.
+  Testes completos locais: 309 iOS e 292 API aprovados. Sem mudança em limites/planos
+  de cobrança e sem novos recursos pagos. Homologação integrada permanece pendente.
 - Preservadas alterações alheias em MockRepository.swift e marketing; não incluí-las.
 
 ## Publicação das melhorias — 25/10/2026
