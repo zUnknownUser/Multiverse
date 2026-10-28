@@ -423,9 +423,9 @@ Fontes: [MockRepository](../apps/ios/Multiverse/Core/Repository/MockRepository.s
 
 | ID | Estado | Melhoria | Resultado esperado |
 | --- | --- | --- | --- |
-| E01 | Pendente | Remover carregamento demo da composição normal | Sessão real não carrega fixtures/módulos ocultos nem latência artificial de 220 ms; previews/testes preservados |
-| E02 | Pendente | Dividir AppStore, hoje com cerca de 2.000 linhas | Estado de diário, onboarding, navegação e legado com responsabilidades claras; aproveitar stores já existentes |
-| E03 | Pendente | Paginar diário e carga inicial de catálogo | Evitar snapshots completos crescentes; salvar registro não precisa retornar todo histórico; preservar progresso/estatísticas corretos |
+| E01 | Concluído | Remover carregamento demo da composição normal | Sessão real não carrega fixtures/módulos ocultos nem latência artificial de 220 ms; previews/testes preservados |
+| E02 | Parcial | Dividir AppStore, hoje com cerca de 2.000 linhas | Estado de diário, onboarding, navegação e legado com responsabilidades claras; aproveitar stores já existentes |
+| E03 | Parcial | Paginar diário e carga inicial de catálogo | Evitar snapshots completos crescentes; salvar registro não precisa retornar todo histórico; preservar progresso/estatísticas corretos |
 | E04 | Pendente | Leitura offline e rascunhos persistentes | Últimos dados e rascunhos sobrevivem ao relançamento; fila/retry com isolamento por conta e idempotência definidos |
 | E05 | Pendente | Evoluir armazenamento de imagens | Planejar object storage e entrega autorizada antes da escala; manter bloqueios, exclusão e privacidade ao sair de PostgreSQL/base64 |
 | E06 | Pendente | Proteção geral contra excesso de requisições | Complementar limites por ação; verificar proteção já existente no provedor antes de configurar limites globais |
@@ -482,3 +482,16 @@ Consultadas na auditoria de 21/10/2026; revalidar ao implementar/publicar.
 Validação incremental final: 35 testes de HTTP/rascunhos passaram após acrescentar
 falha de escrita local e mensagem específica de cota de foto. A suíte completa
 anterior passou com 302 testes; os dois cenários adicionais passaram nesta rodada.
+
+## Lote de capacidade — 28/10/2026
+
+- E01 concluído: composição autenticada não instancia/carrega MockRepository. Previews e testes podem injetar fixtures explicitamente; regressão cobre módulos vazios.
+- E02 parcial: DiaryStore possui estado, resumo, cursor, deduplicação e controle de consultas. AppStore mantém a coordenação das gravações/rascunhos e integração com catálogo/social; onboarding/navegação ainda precisam ser extraídos.
+- E03 parcial: diário usa páginas de 30 com busca/status/ano no servidor. Mutações retornam página + UUID editado quando necessário. Resumo separado mantém contagens, favoritos, progresso e estatísticas; exportação continua completa. Reviews de obra/universo usam consulta própria limitada.
+- Catálogo: próximo passo dentro de E03, após validar diário e seus consumidores.
+- Sem novos serviços pagos. Homologação integrada e Apple continuam pendentes.
+- CI do lote anterior 40231739909: os quatro jobs concluíram com sucesso.
+
+Validação de 28/10: API 117 unitários + 175 HTTP, formatação/lint/tipos/build; iOS
+309 testes em 37 suítes; 1.278 traduções e 3 verificações de ambiente. Publicação
+autorizada em andamento. Não houve migration nem ativação de serviço pago.

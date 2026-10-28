@@ -1,3 +1,24 @@
+## Diário paginado e composição real — 28/10/2026
+
+- E01 concluído: AppStore autenticado usa APIs e não instancia/carrega MockRepository.
+  Fixtures de onboarding nos testes são explícitas; demos/previews preservados.
+- E02 parcial: DiaryStore possui estado, resumo, cursores e consultas protegidas
+  contra respostas antigas/duplicações. AppStore ainda coordena gravações/rascunhos,
+  catálogo e social; a extração completa de onboarding/navegação segue pendente.
+- E03 parcial: páginas de 30 no diário com busca, ano/fuso e status no servidor.
+  Gravações limitadas mantêm UUID editado mesmo antigo. Resumo separado sustenta
+  estatísticas, favoritos, progresso, contagem e últimas reviews. Obras/universos
+  consultam até cinco reviews próprias independentemente da página do diário.
+  Exportação explícita conserva o histórico completo e mostra falhas com retry.
+- Contrato aditivo: chamadas sem query mantêm snapshots completos. Nenhuma migration,
+  nova variável ou serviço pago. Catálogo inicial ainda completo; próximo passo E03
+  precisa tratar séries, busca, detalhe sob demanda e denominadores de progresso.
+- Validação local: API 117 unitários + 175 HTTP com PostgreSQL descartável; formatação,
+  lint, tipos e build aprovados. iOS 309 testes/37 suítes; 1.278 traduções e 3 checks
+  de ambiente. Sem gravações em contas reais durante testes.
+- Push/deploy já autorizados pelo usuário; publicação deste lote em andamento.
+- Preservadas alterações alheias em MockRepository.swift e marketing; não incluí-las.
+
 ## Publicação das melhorias — 25/10/2026
 
 Código enviado para master no commit `86b1d51776bce056abf61c33df5a954ac3a83af2`.
@@ -17,9 +38,7 @@ iOS/documentação do repositório não reconstruirão a API. Esse filtro segue 
 Teto compute US$10/ciclo + alerta US$5 e Agent US$0 permanecem ativos.
 
 CI do código: [run 40231739909](https://github.com/zUnknownUser/Multiverse/actions/runs/40231739909).
-API, Firebase e traduções aprovados; simulador iOS ainda em execução na última
-consulta. Localmente, 302 testes iOS + rodada incremental de 35 passaram; build
-Release aprovado. Atualizar o resultado remoto quando terminar.
+Os quatro jobs (API, Firebase, traduções e iOS) foram confirmados como aprovados em 28/10.
 ## 2026-10-25 — Cinco melhorias e correções white-box
 
 - Lucas autorizou implementar os cinco pontos e depois fazer push/deploy de tudo

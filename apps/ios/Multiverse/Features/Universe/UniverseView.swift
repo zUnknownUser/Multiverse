@@ -116,8 +116,12 @@ private struct GeneralTabContent: View {
             VStack(alignment: .leading, spacing: 12) {
                 SectionHeader(title: L10n.text(store.showsDemoFeatures ? "Reviews populares" : "SUAS REVIEWS")).padding(.horizontal, MV.pad)
                 VStack(spacing: 12) {
-                    ForEach(store.reviewsIn(universe: universeID, limit: 3)) { review in
-                        FeedReviewCard(review: review)
+                    if store.usesRemoteActivity {
+                        OwnReviews(universeID: universeID, limit: 3)
+                    } else {
+                        ForEach(store.reviewsIn(universe: universeID, limit: 3)) { review in
+                            FeedReviewCard(review: review)
+                        }
                     }
                 }
                 .padding(.horizontal, MV.pad)

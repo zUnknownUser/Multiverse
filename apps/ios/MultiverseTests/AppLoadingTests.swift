@@ -57,6 +57,18 @@ import Testing
     }
     private var session: AuthSession { .init(userID: "loading-owner", email: "test@example.com", handle: "@owner") }
 
+    @Test func realCompositionDoesNotLoadDemoModules() async {
+        let catalog = LoadingCatalogStub(), account = LoadingAccountStub()
+        let store = AppStore(session: session, accountAPI: account, catalogAPI: catalog)
+        await store.bootstrap()
+        #expect(!store.items.isEmpty)
+        #expect(store.users.map(\.id) == [session.userID])
+        #expect(store.diary.isEmpty && store.reviews.isEmpty && store.duels.isEmpty)
+        #expect(store.clubs.isEmpty && store.theories.isEmpty && store.conversations.isEmpty)
+        #expect(store.rooms.isEmpty && store.lists.isEmpty && store.readingOrders.isEmpty)
+        #expect(store.wantList.isEmpty && store.orderFollows.isEmpty)
+    }
+
     @Test func concurrentBootstrapAndRetryOnlyLoadOnce() async throws {
         let catalog = LoadingCatalogStub(), account = LoadingAccountStub(), writer = WidgetSnapshotSpy()
         catalog.hold = true

@@ -382,6 +382,22 @@ struct AccountHTTPTests {
         #expect(AccountURLProtocol.fixture.requests.isEmpty)
     }
 
+    @Test func activityPagesUseBoundedQueriesAndExportRemainsComplete() async throws {
+        let empty = #"{"entries":[],"reviews":[],"items":[],"universes":[],"followerCount":0}"#
+        AccountURLProtocol.fixture.reset([(200, empty), (200, empty)])
+        let (api, transport) = client(TokenStub())
+        defer { transport.invalidateAndCancel() }
+        _ = try await api.fetchActivityPage(query: .init(text: "Guerra Civil", selection: .liked, year: 2025), after: "opaque-cursor")
+        _ = try await api.exportActivity()
+        let requests = AccountURLProtocol.fixture.requests
+        let parameters = URLComponents(url: requests[0].url!, resolvingAgainstBaseURL: false)!.queryItems!
+        #expect(parameters.contains(URLQueryItem(name: "limit", value: "30")))
+        #expect(parameters.contains(URLQueryItem(name: "selection", value: "liked")))
+        #expect(parameters.contains(URLQueryItem(name: "year", value: "2025")))
+        #expect(parameters.contains(URLQueryItem(name: "after", value: "opaque-cursor")))
+        #expect(requests[1].url?.query == nil)
+    }
+
     @Test func diaryFailuresHaveRelevantMessagesAndNeverAutomaticallyRepeatWrites() async {
         let input = SaveLogInput(itemId: "m-civilwar", loggedAt: .now, rating: 4, liked: false, rewatch: false, spoiler: false, text: "Review")
         let (api, transport) = client(TokenStub())

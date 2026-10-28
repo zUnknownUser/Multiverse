@@ -11,11 +11,13 @@ import {
   ParseUUIDPipe,
   Put,
   Req,
+  Query,
   ValidationPipe,
 } from '@nestjs/common';
 import type { AuthenticatedRequest } from '../auth/firebase-auth.guard.js';
 import { catalogLanguage } from '../catalog/catalog.service.js';
 import { ActivityService } from './activity.service.js';
+import { activityQuery } from './activity-query.js';
 import { SaveLogDTO } from './activity.dto.js';
 
 @Controller('me')
@@ -25,9 +27,14 @@ export class ActivityController {
   ) {}
   @Get('activity') read(
     @Req() req: AuthenticatedRequest,
+    @Query() query: Record<string, unknown>,
     @Headers('accept-language') language?: string,
   ) {
-    return this.activity.read(req.identity.uid, catalogLanguage(language));
+    return this.activity.read(
+      req.identity.uid,
+      catalogLanguage(language),
+      activityQuery(query),
+    );
   }
   @Put('diary/:id') save(
     @Req() req: AuthenticatedRequest,
@@ -43,6 +50,7 @@ export class ActivityController {
       }),
     )
     body: SaveLogDTO,
+    @Query() query: Record<string, unknown>,
     @Headers('accept-language') language?: string,
   ) {
     return this.activity.save(
@@ -50,6 +58,8 @@ export class ActivityController {
       id,
       body,
       catalogLanguage(language),
+      false,
+      activityQuery(query),
     );
   }
 
@@ -67,6 +77,7 @@ export class ActivityController {
       }),
     )
     body: SaveLogDTO,
+    @Query() query: Record<string, unknown>,
     @Headers('accept-language') language?: string,
   ) {
     return this.activity.save(
@@ -75,18 +86,21 @@ export class ActivityController {
       body,
       catalogLanguage(language),
       true,
+      activityQuery(query),
     );
   }
 
   @Delete('diary/:id') remove(
     @Req() req: AuthenticatedRequest,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Query() query: Record<string, unknown>,
     @Headers('accept-language') language?: string,
   ) {
     return this.activity.remove(
       req.identity.uid,
       id,
       catalogLanguage(language),
+      activityQuery(query),
     );
   }
 }

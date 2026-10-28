@@ -85,7 +85,7 @@ struct AccountIntegrationTests {
         api.followingOptional = optional
         api.progress.universeIDs = ["marvel"]
         api.progress.step = 2
-        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: "@real.name"), accountAPI: api)
+        let store = AppStore(repository: MockRepository(startFollowing: false), session: AuthSession(userID: uid, email: "test@example.com", handle: "@real.name"), accountAPI: api)
         await store.bootstrap()
         store.finishOptionalOnboarding()
         for _ in 0..<200 where store.onboardingTransitioning { try await Task.sleep(for: .milliseconds(5)) }
@@ -101,7 +101,7 @@ struct AccountIntegrationTests {
         api.profile = RemoteProfile(userID: uid, username: "profileuser", displayName: "Before", avatarColor: "#F4A814", bio: "Before")
         api.progress.completed = true
         let session = AuthSession(userID: uid, email: "test@example.com", handle: "@profileuser")
-        let store = AppStore(session: session, accountAPI: api, profileEditingAPI: api)
+        let store = AppStore(repository: MockRepository(startFollowing: false), session: session, accountAPI: api, profileEditingAPI: api)
         await store.bootstrap()
         let input = ProfileEditInput(displayName: "After", bio: "New bio", avatarColor: "#2E5BE8", avatarID: "robot", photoAction: "remove", photo: nil)
         api.failure = .networkUnavailable
@@ -110,7 +110,7 @@ struct AccountIntegrationTests {
         api.failure = nil
         try await store.editProfile(input)
         #expect(store.user(uid)?.name == "After" && store.user(uid)?.bio == "New bio" && store.user(uid)?.avatarID == "robot")
-        let restored = AppStore(session: session, accountAPI: api, profileEditingAPI: api)
+        let restored = AppStore(repository: MockRepository(startFollowing: false), session: session, accountAPI: api, profileEditingAPI: api)
         await restored.bootstrap()
         #expect(restored.user(uid)?.name == "After" && restored.user(uid)?.handle == "@profileuser")
     }
@@ -120,7 +120,7 @@ struct AccountIntegrationTests {
         api.profile = RemoteProfile(userID: uid, username: "avataruser", displayName: "Avatar User", avatarColor: "#F4A814", bio: "")
         api.progress.completed = true
         let session = AuthSession(userID: uid, email: "test@example.com", handle: "@avataruser")
-        let store = AppStore(session: session, accountAPI: api)
+        let store = AppStore(repository: MockRepository(startFollowing: false), session: session, accountAPI: api)
         await store.bootstrap()
         try await store.saveAvatar("cosmic")
         #expect(store.user(uid)?.avatarID == "cosmic")
@@ -128,7 +128,7 @@ struct AccountIntegrationTests {
         await #expect(throws: AuthError.networkUnavailable) { try await store.saveAvatar("robot") }
         #expect(store.user(uid)?.avatarID == "cosmic")
         api.failure = nil
-        let restored = AppStore(session: session, accountAPI: api)
+        let restored = AppStore(repository: MockRepository(startFollowing: false), session: session, accountAPI: api)
         await restored.bootstrap()
         #expect(restored.user(uid)?.avatarID == "cosmic")
         try await restored.saveAvatar(nil)
@@ -140,7 +140,7 @@ struct AccountIntegrationTests {
         api.profile = RemoteProfile(userID: uid, username: "newuser", displayName: "New", avatarColor: "#F4A814", bio: "")
         api.people = people(5); api.followingOptional = true
         api.progress = OnboardingState(universeIDs: ["marvel"], step: 3)
-        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        let store = AppStore(repository: MockRepository(startFollowing: false), session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
         await store.bootstrap()
         if selected == 1 { store.toggleFollow("person-0", silent: true) }
         #expect(store.canAdvanceOnboarding && store.minimumOnboardingFollows == 0)
@@ -155,7 +155,7 @@ struct AccountIntegrationTests {
         api.profile = RemoteProfile(userID: uid, username: "newuser", displayName: "New", avatarColor: "#F4A814", bio: "")
         api.people = people(3); api.followingOptional = true
         api.progress = OnboardingState(universeIDs: ["dc"], step: 3)
-        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        let store = AppStore(repository: MockRepository(startFollowing: false), session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
         await store.bootstrap(); api.failure = .networkUnavailable
         store.advanceOnboarding(); try await waitForTransition(store)
         #expect(!store.isOnboarded && store.onboardingError != nil && store.canAdvanceOnboarding)
@@ -170,7 +170,7 @@ struct AccountIntegrationTests {
         let api = AccountStub(uid: uid)
         api.people = people(count)
         api.progress = OnboardingState(universeIDs: ["marvel"], step: 2)
-        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        let store = AppStore(repository: MockRepository(startFollowing: false), session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
         await store.bootstrap()
         #expect(store.onboardingStepCount == (count == 0 ? 2 : 3))
         #expect(store.minimumOnboardingFollows == min(3, count))
@@ -192,7 +192,7 @@ struct AccountIntegrationTests {
         defer { UserDefaults.standard.removeObject(forKey: "mv-onboarded-\(uid)") }
         let api = AccountStub(uid: uid)
         api.progress = OnboardingState(universeIDs: ["marvel"], step: 2)
-        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        let store = AppStore(repository: MockRepository(startFollowing: false), session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
         await store.bootstrap()
         api.people = people(1)
         store.advanceOnboarding()
@@ -221,7 +221,7 @@ struct AccountIntegrationTests {
         let api = AccountStub(uid: uid)
         api.people = people(3)
         api.progress = OnboardingState(universeIDs: ["marvel"], seenItemIDs: ["m-civil"], followedUserIDs: api.people.map(\.userID), step: 3)
-        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        let store = AppStore(repository: MockRepository(startFollowing: false), session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
         await store.bootstrap()
         api.people = []
         // Pull to refresh also works while the CTA cannot advance.
@@ -244,7 +244,7 @@ struct AccountIntegrationTests {
         let api = AccountStub(uid: uid)
         api.people = people(1)
         api.progress = OnboardingState(universeIDs: ["marvel"], followedUserIDs: ["person-0"], step: 3)
-        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        let store = AppStore(repository: MockRepository(startFollowing: false), session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
         await store.bootstrap()
         api.suggestionFailure = .networkUnavailable
         store.advanceOnboarding()
@@ -271,7 +271,7 @@ struct AccountIntegrationTests {
         defer { UserDefaults.standard.removeObject(forKey: "mv-onboarded-\(uid)") }
         let api = AccountStub(uid: uid)
         api.progress.completed = true
-        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        let store = AppStore(repository: MockRepository(startFollowing: false), session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
         await store.bootstrap()
         #expect(store.homeSuggestedPeople.isEmpty)
         #expect(store.searchResults(query: "", filter: .people).rows.isEmpty)
@@ -305,7 +305,7 @@ struct AccountIntegrationTests {
         let api = AccountStub(uid: uid)
         api.progress.completed = completed
         api.suggestionFailure = .apiUnavailable
-        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        let store = AppStore(repository: MockRepository(startFollowing: false), session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
         await store.bootstrap()
         #expect(store.isOnboarded == completed)
         #expect((store.accountLoadError == nil) == completed)
@@ -422,7 +422,7 @@ struct AccountIntegrationTests {
         api.progress = OnboardingState(universeIDs: ["marvel"], seenItemIDs: ["m-civil"], step: 2, version: 7)
         UserDefaults.standard.set(true, forKey: "mv-onboarded-\(uid)")
         let session = AuthSession(userID: uid, email: "test@example.com", handle: "")
-        let store = AppStore(session: session, accountAPI: api)
+        let store = AppStore(repository: MockRepository(startFollowing: false), session: session, accountAPI: api)
         await store.bootstrap()
         #expect(!store.isOnboarded)
         #expect(store.onboardingPhase == .step2)
@@ -440,7 +440,7 @@ struct AccountIntegrationTests {
         defer { UserDefaults.standard.removeObject(forKey: "mv-onboarded-\(uid)") }
         let api = AccountStub(uid: uid)
         api.progress = OnboardingState(universeIDs: ["marvel"], step: 2)
-        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        let store = AppStore(repository: MockRepository(startFollowing: false), session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
         await store.bootstrap()
         #expect(store.minimumOnboardingFollows == 0)
         api.failure = .networkUnavailable
@@ -463,7 +463,7 @@ struct AccountIntegrationTests {
         let api = AccountStub(uid: uid)
         api.people = [RemoteProfile(userID: "real-person", username: "lorista", displayName: "Lorista", avatarColor: "#F4A814", bio: "Real person")]
         api.progress = OnboardingState(universeIDs: ["marvel"])
-        let store = AppStore(session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
+        let store = AppStore(repository: MockRepository(startFollowing: false), session: AuthSession(userID: uid, email: "test@example.com", handle: ""), accountAPI: api)
         await store.bootstrap()
         #expect(store.minimumOnboardingFollows == 1)
         #expect(store.onboardingPeopleSorted().map(\.id) == ["real-person"])

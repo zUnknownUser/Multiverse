@@ -3,9 +3,36 @@ import Foundation
 @MainActor
 protocol ActivityAPI: Sendable {
     func fetchActivity() async throws -> ActivitySnapshot
+    func fetchActivityPage(query: DiaryQuery, after: String?) async throws -> ActivitySnapshot
+    func exportActivity() async throws -> ActivitySnapshot
+    func fetchReviews(itemID: String?, universeID: String?) async throws -> ActivitySnapshot
     func saveLog(id: UUID, input: SaveLogInput) async throws -> ActivitySnapshot
     func updateLog(id: UUID, input: SaveLogInput) async throws -> ActivitySnapshot
     func deleteLog(id: UUID) async throws -> DeleteLogReceipt
+}
+
+extension ActivityAPI {
+    func fetchReviews(itemID: String?, universeID: String?) async throws -> ActivitySnapshot { try await fetchActivity() }
+    func fetchActivityPage(query: DiaryQuery, after: String?) async throws -> ActivitySnapshot { try await fetchActivity() }
+    func exportActivity() async throws -> ActivitySnapshot { try await fetchActivity() }
+}
+
+struct ActivitySummary: Codable, Sendable {
+    let total: Int
+    let reviewCount: Int
+    let averageRating: Double
+    let years: [Int]
+    let recentReviews: [ActivityReview]
+    let latestEntries: [DiaryEntry]
+    let buckets: [ActivityBucket]
+    let activeDays: [String]
+}
+
+struct ActivityBucket: Codable, Sendable {
+    let year: Int
+    let type: String
+    let universe: String
+    let count: Int
 }
 
 struct SaveLogInput: Codable, Sendable, Equatable {
@@ -43,8 +70,21 @@ struct ActivitySnapshot: Codable, Sendable {
     let items: [Item]
     let universes: [Universe]
     let followerCount: Int
+    var summary: ActivitySummary? = nil
+    var nextCursor: String? = nil
 
     func validate(for userID: String) throws {
+        if let summary {
+            guard summary.total >= entries.count, summary.reviewCount >= 0, summary.reviewCount <= summary.total,
+                  (0...5).contains(summary.averageRating),
+                  summary.latestEntries.count <= summary.total,
+                  summary.recentReviews.count <= 4,
+                  summary.recentReviews.allSatisfy({ $0.user == userID }),
+                  Set(summary.latestEntries.map(\.itemId)).count == summary.latestEntries.count,
+                  summary.latestEntries.allSatisfy({ (0...5).contains($0.rating) }),
+                  summary.buckets.allSatisfy({ $0.count >= 0 }),
+                  nextCursor == nil || !entries.isEmpty else { throw AuthError.apiUnavailable }
+        }
         let itemIDs = Set(items.map(\.id))
         let universeIDs = Set(universes.map(\.id))
         let entriesByID = Dictionary(entries.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })

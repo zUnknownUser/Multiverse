@@ -367,6 +367,9 @@ struct ItemView: View {
                 }
             }
 
+            if store.usesRemoteActivity {
+                OwnReviews(itemID: item.id)
+            } else {
             let revs = Array(store.reviewsForItem(item.id, friendsOnly: reviewFilter == .friends).prefix(5))
             if revs.isEmpty {
                 Text(store.usesRemoteActivity ? L10n.text("Você ainda não registrou uma nota ou review para esta obra.") : L10n.text("Nenhum amigo escreveu sobre isso ainda. Seja o primeiro."))
@@ -380,6 +383,7 @@ struct ItemView: View {
                         FeedReviewCard(review: review, showFollowingTag: store.isFollowing(review.user))
                     }
                 }
+            }
             }
 
             if store.showsDemoFeatures {

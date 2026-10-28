@@ -135,6 +135,12 @@ struct ProStatsView: View {
 
     private var hoursByUniverse: [(universe: Universe, hours: Int)] {
         var totals: [String: Double] = [:]
+        if let summary = store.diaryStore.summary {
+            for bucket in summary.buckets where bucket.year == Calendar.current.component(.year, from: .now) {
+                totals[bucket.universe, default: 0] += Double(bucket.count) * Logic.loreHours(bucket.type)
+            }
+            return store.universes.compactMap { u in totals[u.id].map { (u, Int($0.rounded())) } }
+        }
         for entry in store.diary where Calendar.current.isDate(entry.loggedAt, equalTo: .now, toGranularity: .year) {
             guard let item = store.item(entry.itemId) else { continue }
             totals[item.uni, default: 0] += Logic.loreHours(item.type)
@@ -143,7 +149,16 @@ struct ProStatsView: View {
     }
 
     private var frequencyGrid: [Bool] {
-        DiaryTimeline.activityDays(store.diary)
+        if let summary = store.diaryStore.summary {
+            let formatter = DateFormatter()
+            formatter.calendar = Calendar(identifier: .gregorian)
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.timeZone = .current
+            formatter.dateFormat = "yyyy-MM-dd"
+            let days = Set(summary.activeDays)
+            return (0..<105).reversed().map { days.contains(formatter.string(from: Calendar.current.date(byAdding: .day, value: -$0, to: .now)!)) }
+        }
+        return DiaryTimeline.activityDays(store.diary)
     }
 
     private func currentStreak(frequency: [Bool]) -> Int {
@@ -155,6 +170,7 @@ struct ProStatsView: View {
     }
 
     private var myAverageRating: String {
+        if let summary = store.diaryStore.summary { return summary.reviewCount == 0 ? "—" : L10n.decimal(summary.averageRating) }
         let mine = store.reviews.filter { $0.user == store.meID }
         guard !mine.isEmpty else { return "—" }
         let avg = mine.reduce(0.0) { $0 + $1.rating } / Double(mine.count)
@@ -168,6 +184,10 @@ struct ProStatsView: View {
 
     private var favoriteType: String {
         var counts: [String: Int] = [:]
+        if let summary = store.diaryStore.summary {
+            for bucket in summary.buckets { counts[bucket.type, default: 0] += bucket.count }
+            return L10n.text(counts.max(by: { $0.value < $1.value })?.key ?? "—")
+        }
         for entry in store.diary {
             guard let item = store.item(entry.itemId) else { continue }
             counts[item.type, default: 0] += 1

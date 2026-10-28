@@ -72,7 +72,26 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, Com
         return try await request("reviews/" + id + "/report", method: "PUT", body: JSONEncoder().encode(Input(reason: reason, alsoBlock: alsoBlock)))
     }
     func fetchAccount() async throws -> AccountEnvelope { try await request("me") }
-    func fetchActivity() async throws -> ActivitySnapshot { try await request("me/activity") }
+    func fetchActivity() async throws -> ActivitySnapshot { try await fetchActivityPage(query: DiaryQuery(), after: nil) }
+    func exportActivity() async throws -> ActivitySnapshot { try await request("me/activity") }
+    func fetchActivityPage(query: DiaryQuery, after: String?) async throws -> ActivitySnapshot {
+        var parameters = activityParameters
+        parameters.append(URLQueryItem(name: "search", value: query.text))
+        let selection: String = switch query.selection { case .all: "all"; case .liked: "liked"; case .rated: "rated"; case .rewatched: "rewatched" }
+        parameters.append(URLQueryItem(name: "selection", value: selection))
+        if let year = query.year { parameters.append(URLQueryItem(name: "year", value: String(year))) }
+        if let after { parameters.append(URLQueryItem(name: "after", value: after)) }
+        return try await request("me/activity", query: parameters)
+    }
+    func fetchReviews(itemID: String?, universeID: String?) async throws -> ActivitySnapshot {
+        var parameters = [URLQueryItem(name: "limit", value: "5"), URLQueryItem(name: "selection", value: "reviewed")]
+        if let itemID { parameters.append(URLQueryItem(name: "itemId", value: itemID)) }
+        if let universeID { parameters.append(URLQueryItem(name: "universeId", value: universeID)) }
+        return try await request("me/activity", query: parameters)
+    }
+    private var activityParameters: [URLQueryItem] {
+        [URLQueryItem(name: "limit", value: "30"), URLQueryItem(name: "timeZone", value: TimeZone.current.identifier)]
+    }
     func searchPeople(query: String, after: String?) async throws -> PeoplePage {
         var parameters = [URLQueryItem(name: "q", value: query), URLQueryItem(name: "limit", value: "20")]
         if let after { parameters.append(URLQueryItem(name: "after", value: after)) }
@@ -93,10 +112,10 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, Com
     private func writeLog(id: UUID, input: SaveLogInput, method: String) async throws -> ActivitySnapshot {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        return try await request("me/diary/" + id.uuidString.lowercased(), method: method, body: encoder.encode(input))
+        return try await request("me/diary/" + id.uuidString.lowercased(), method: method, body: encoder.encode(input), query: activityParameters)
     }
     func deleteLog(id: UUID) async throws -> DeleteLogReceipt {
-        try await request("me/diary/" + id.uuidString.lowercased(), method: "DELETE")
+        try await request("me/diary/" + id.uuidString.lowercased(), method: "DELETE", query: activityParameters)
     }
     func usernameAvailable(_ username: String) async throws -> Bool {
         let response: Availability = try await request("me/username-availability", query: [URLQueryItem(name: "username", value: username)])

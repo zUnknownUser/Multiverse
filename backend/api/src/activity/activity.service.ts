@@ -1,3 +1,5 @@
+import { activityPage } from './activity-pagination.js';
+import type { ActivityQuery } from './activity-query.js';
 import { catalogCoverField } from '../catalog/catalog-cover.js';
 import {
   catalogSeriesJoin,
@@ -35,10 +37,10 @@ export class ActivityService {
       throw new NotFoundException({ code: 'PROFILE_REQUIRED' });
   }
 
-  async read(uid: string, locale: string) {
+  async read(uid: string, locale: string, query?: ActivityQuery) {
     return this.lifecycle.withActiveAccount(uid, async (client) => {
       await this.assertProfile(client, uid);
-      return this.snapshot(client, uid, locale);
+      return this.snapshot(client, uid, locale, [], query);
     });
   }
 
@@ -48,6 +50,7 @@ export class ActivityService {
     input: SaveLogDTO,
     locale: string,
     existingOnly = false,
+    query?: ActivityQuery,
   ) {
     if (new Date(input.loggedAt).getTime() > Date.now() + 300_000)
       throw new BadRequestException({ code: 'INVALID_LOG_DATE' });
@@ -131,7 +134,7 @@ export class ActivityService {
           [uid, id],
         );
       }
-      return this.snapshot(client, uid, locale);
+      return this.snapshot(client, uid, locale, [], query, id);
     });
   }
 
@@ -147,7 +150,7 @@ export class ActivityService {
     );
   }
 
-  async remove(uid: string, id: string, locale: string) {
+  async remove(uid: string, id: string, locale: string, query?: ActivityQuery) {
     return this.lifecycle.withActiveAccount(uid, async (client) => {
       await this.assertProfile(client, uid);
       const entry = await client.query<{ item_id: string }>(
@@ -170,7 +173,10 @@ export class ActivityService {
         'DELETE FROM diary_entries WHERE firebase_uid=$1 AND id=$2',
         [uid, id],
       );
-      return { id, state: await this.snapshot(client, uid, locale, [itemID]) };
+      return {
+        id,
+        state: await this.snapshot(client, uid, locale, [itemID], query),
+      };
     });
   }
 
@@ -179,19 +185,26 @@ export class ActivityService {
     uid: string,
     locale: string,
     affectedItemIDs: string[] = [],
+    query?: ActivityQuery,
+    savedID?: string,
   ) {
+    const { selectedIDs, nextCursor, summary, metadataIDs } =
+      await activityPage(client, uid, locale, query, savedID);
+    affectedItemIDs = [...affectedItemIDs, ...metadataIDs];
     const entries = await client.query(
       `SELECT id,item_id AS "itemId",logged_at AS "loggedAt",rating,liked,rewatch
       FROM diary_entries WHERE firebase_uid=$1 AND item_id IN
-      (SELECT id FROM catalog_items WHERE universe_id IN ('marvel','dc')) ORDER BY logged_at DESC,created_at DESC,id`,
-      [uid],
+      (SELECT id FROM catalog_items WHERE universe_id IN ('marvel','dc'))
+      AND ($2::uuid[] IS NULL OR id=ANY($2)) ORDER BY logged_at DESC,created_at DESC,id`,
+      [uid, selectedIDs],
     );
     const reviews = await client.query(
       `SELECT r.id,r.entry_id AS "entryId",r.firebase_uid AS "user",d.item_id AS item,d.rating,r.text,r.spoiler,
       r.created_at AS "createdAt" FROM reviews r JOIN diary_entries d ON d.firebase_uid=r.firebase_uid AND d.id=r.entry_id
       WHERE r.firebase_uid=$1 AND d.item_id IN
-      (SELECT id FROM catalog_items WHERE universe_id IN ('marvel','dc')) ORDER BY r.created_at DESC,r.id`,
-      [uid],
+      (SELECT id FROM catalog_items WHERE universe_id IN ('marvel','dc'))
+      AND ($2::uuid[] IS NULL OR d.id=ANY($2)) ORDER BY r.created_at DESC,r.id`,
+      [uid, selectedIDs],
     );
     // Preserve archived hero works in private history without resurfacing retired universes.
     const items = await client.query(
@@ -203,9 +216,9 @@ export class ActivityService {
       LEFT JOIN catalog_item_translations t ON t.item_id=i.id AND t.locale=$2
       ${descriptionSourceJoin} ${catalogSeriesJoin('$2')}
       JOIN catalog_item_statistics s ON s.item_id=i.id
-      WHERE i.universe_id IN ('marvel','dc') AND (i.id IN (SELECT item_id FROM diary_entries WHERE firebase_uid=$1)
+      WHERE i.universe_id IN ('marvel','dc') AND (i.id IN (SELECT item_id FROM diary_entries WHERE firebase_uid=$1 AND ($4::uuid[] IS NULL OR id=ANY($4)))
       OR i.id=ANY($3::varchar[])) ORDER BY i.sort_order,i.id`,
-      [uid, locale, affectedItemIDs],
+      [uid, locale, affectedItemIDs, selectedIDs],
     );
     const universes = await client.query(
       `SELECT u.id,coalesce(t.name,p.name) AS name,u.color AS c,u.dark_color AS c2,
@@ -214,9 +227,9 @@ export class ActivityService {
       JOIN catalog_universe_translations p ON p.universe_id=u.id AND p.locale='pt-BR'
       LEFT JOIN catalog_universe_translations t ON t.universe_id=u.id AND t.locale=$2
       WHERE u.id IN ('marvel','dc') AND u.id IN (SELECT i.universe_id FROM catalog_items i
-      WHERE i.id IN (SELECT item_id FROM diary_entries WHERE firebase_uid=$1) OR i.id=ANY($3::varchar[]))
+      WHERE i.id IN (SELECT item_id FROM diary_entries WHERE firebase_uid=$1 AND ($4::uuid[] IS NULL OR id=ANY($4))) OR i.id=ANY($3::varchar[]))
       ORDER BY u.sort_order,u.id`,
-      [uid, locale, affectedItemIDs],
+      [uid, locale, affectedItemIDs, selectedIDs],
     );
     const followers = await client.query(
       `SELECT count(*)::int AS count FROM visible_follows f JOIN profiles p ON p.firebase_uid=f.follower_uid
@@ -224,6 +237,7 @@ export class ActivityService {
       [uid],
     );
     return {
+      ...(query ? { summary, nextCursor } : {}),
       entries: entries.rows,
       reviews: reviews.rows,
       items: items.rows,

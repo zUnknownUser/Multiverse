@@ -6,11 +6,12 @@ struct DiaryView: View {
 
     @State private var query = DiaryQuery()
     @State private var visibleCount = 30
-    private var matchingEntries: [DiaryEntry] { query.entries(store.diary) { store.item($0)?.title ?? "" } }
-    private var groupedByMonth: [DiaryMonth] { DiaryTimeline.months(Array(matchingEntries.prefix(visibleCount))) }
-    private var years: [Int] { Array(Set(store.diary.map { Calendar.current.component(.year, from: $0.loggedAt) })).sorted(by: >) }
+    private var matchingEntries: [DiaryEntry] { store.usesRemoteActivity ? store.diary : query.entries(store.diary) { store.item($0)?.title ?? "" } }
+    private var groupedByMonth: [DiaryMonth] { DiaryTimeline.months(store.usesRemoteActivity ? matchingEntries : Array(matchingEntries.prefix(visibleCount))) }
+    private var years: [Int] { store.diaryStore.summary?.years.sorted(by: >) ?? Array(Set(store.diary.map { Calendar.current.component(.year, from: $0.loggedAt) })).sorted(by: >) }
 
     private var yearRange: String {
+        if let first = years.min(), let last = years.max() { return first == last ? String(first) : "\(first)–\(last)" }
         let dates = store.diary.map(\.loggedAt)
         let first = L10n.date(dates.min() ?? .now, template: "yyyy")
         let last = L10n.date(dates.max() ?? .now, template: "yyyy")
@@ -37,11 +38,11 @@ struct DiaryView: View {
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(L10n.text("DIÁRIO")).font(MVFont.display(30, width: 122)).foregroundStyle(MV.C.ink)
-                    Text(store.diary.isEmpty ? L10n.text("Nenhum registro ainda") : L10n.format("diary.recordCount", store.diary.count) + " · " + yearRange)
+                    Text(store.diaryCount == 0 ? L10n.text("Nenhum registro ainda") : L10n.format("diary.recordCount", store.diaryCount) + " · " + yearRange)
                         .font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.muted)
                 }
 
-                if !store.diary.isEmpty {
+                if store.diaryCount > 0 {
                     TextField(L10n.text("Buscar obra pelo título"), text: $query.text).padding(12).comicCard(shadow: MV.Shadow.s).autocorrectionDisabled()
                     HStack {
                         Picker(L10n.text("Filtrar registros"), selection: $query.selection) {
@@ -57,7 +58,7 @@ struct DiaryView: View {
                         Button(L10n.text("LIMPAR FILTROS")) { query = DiaryQuery() }
                     }
                 }
-                if store.diary.isEmpty {
+                if store.diaryCount == 0 {
                     VStack(alignment: .leading, spacing: 12) {
                         Text(L10n.text("Seu diário começa com o primeiro registro."))
                             .font(MVFont.body(14)).foregroundStyle(MV.C.muted)
@@ -82,14 +83,27 @@ struct DiaryView: View {
                         }
                     }
                 }
-                if matchingEntries.count > visibleCount {
+                if let error = store.diaryStore.pageError { AuthErrorBanner(message: error) }
+                if store.usesRemoteActivity && (store.diaryStore.nextCursor != nil || store.diaryStore.pageError != nil) {
+                    PrimaryAuthButton(title: L10n.text("CARREGAR MAIS"), isLoading: store.diaryStore.isLoadingPage) {
+                        Task { await store.loadDiaryPage(query: query, more: query == store.diaryStore.query && store.diaryStore.nextCursor != nil) }
+                    }
+                }
+                if !store.usesRemoteActivity && matchingEntries.count > visibleCount {
                     PrimaryAuthButton(title: L10n.text("CARREGAR MAIS")) { visibleCount += 30 }
                 }
             }
             .padding(.horizontal, MV.pad)
             .padding(.bottom, 24)
         }
-        .onChange(of: query) { _, _ in visibleCount = 30 }
+        .task(id: query) {
+            visibleCount = 30
+            guard store.usesRemoteActivity, query != store.diaryStore.query else { return }
+            do { try await Task.sleep(for: .milliseconds(250)) } catch { return }
+            await store.loadDiaryPage(query: query)
+        }
+        .onAppear { query = store.diaryStore.query }
+        .onChange(of: store.diaryStore.query) { _, value in query = value }
         .refreshable { await store.refreshActivity() }
     }
 }

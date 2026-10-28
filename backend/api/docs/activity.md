@@ -43,7 +43,7 @@ identifica explicitamente as reviews da própria conta; avaliações sem texto t
 uma descrição localizada. Tocar repetidamente na mesma estrela permite nota
 inteira, meia estrela e sem nota. Novos estados e mensagens têm PT-BR e inglês.
 
-Estas rotas operam sobre a atividade da própria conta, sem paginação. O [feed social](social-feed.md)
+Estas rotas operam sobre a atividade da própria conta. O contrato original sem query retorna snapshot completo; a paginação aditiva está descrita abaixo. O [feed social](social-feed.md)
 tem paginação e regras próprias de publicação, privacidade e bloqueio. Comentários e reações têm [contrato próprio](interactions.md). O botão de curtir
 obra fora do registro, a lista de desejos e listas continuam nos módulos anteriores.
 O menu de cada registro no diário oferece edição e exclusão; o formulário atual
@@ -52,8 +52,7 @@ exige confirmação e só altera a tela após um recibo válido. Falhas preserva
 registro e oferecem retry. Puxar para atualizar com exclusão já confirmada e
 pendente repete essa mesma ação para recuperar também as estatísticas da obra.
 O progresso derivado do diário é recalculado; marcações
-manuais de visto do onboarding permanecem independentes. A paginação do diário
-pessoal continua como etapa posterior.
+manuais de visto do onboarding permanecem independentes. O contrato paginado do diário pessoal está descrito abaixo.
 
 As migrations `005_diary_reviews.sql` e `009_rating_histogram.sql` devem preceder o deploy. Testes HTTP usam schema
 PostgreSQL isolado e cobrem isolamento por conta, concorrência, retry, transações,
@@ -124,3 +123,25 @@ A tela exibe blocos de 30 registros com pilhas lazy. Isso limita renderização,
 **não pagina a API**: o snapshot completo segue necessário para estatísticas,
 favoritos e progresso. Paginação de rede exige separar esses agregados antes de
 limitar o histórico; permanece melhoria de capacidade E03.
+
+## Paginação aditiva — 28/10/2026
+
+`GET /me/activity?limit=30` aceita `after`, `search` (todas as palavras do título,
+sem acentos/caixa), `selection` (`all`, `liked`, `rated`, `rewatched`), `year` e
+`timeZone` IANA. Consultas de reviews também aceitam `selection=reviewed`, `itemId` e `universeId` (Marvel/DC), sem depender da página aberta no diário. Limite 1–100. Cursor opaco preserva microssegundos e desempate
+por criação/UUID, vinculado à conta, idioma e filtros. Resposta adiciona
+`nextCursor` e `summary` (total, reviewCount, averageRating, years, latestEntries, recentReviews, buckets, activeDays).
+O resumo independe dos filtros/páginas; latestEntries contém só a última entrada
+por obra para progresso/defaults/favoritos, sem textos ou metadados completos.
+PUT/PATCH/DELETE também aceitam `limit=30`; uma edição antiga inclui o UUID
+confirmado além da página, no máximo 31 registros. Cliente reinicia a navegação
+após mutações. Sem query mantém o contrato completo, inclusive exportação.
+Paginação reflete dados atuais; edições concorrentes requerem atualizar o diário.
+
+O resumo inclui as quatro reviews mais recentes, totais por ano/tipo/universo e
+dias ativos dos últimos 105 dias no fuso solicitado. Metadados incluem referências
+da página, favoritos e reviews recentes; arquivo histórico continua acessível.
+Detalhes de obra/universo consultam até cinco reviews próprias independentemente
+do diário. Exportação explícita usa o contrato completo; não exporta só a página.
+O resumo cresce por obras distintas/anos, não por cada revisita; não é um snapshot
+de todas as reviews. Não houve migration nem criação de serviço neste lote.

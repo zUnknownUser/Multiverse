@@ -81,8 +81,9 @@ struct WrappedData {
 @Observable
 final class AppStore {
     /// Conteúdo de demonstração; perfil e onboarding usam a API NestJS via `AccountAPI`.
-    private let repository: MultiverseRepository
+    private let repository: (any MultiverseRepository)?
     private let catalogAPI: (any CatalogAPI)?
+    let diaryStore: DiaryStore
     private let activityAPI: (any ActivityAPI)?
     let readingOrderStore: ReadingOrdersStore?
     let directMessages: DirectMessagesStore?
@@ -102,19 +103,52 @@ final class AppStore {
     let social: SocialStore?
     let people: PeopleStore?
     var usesRemotePeople: Bool { people != nil }
-    var activityLoadError: String?
-    private(set) var activityRefreshError: String?
-    private(set) var isRefreshingActivity = false
-    private var activityRevision = 0
+    var activityLoadError: String? {
+        get { diaryStore.loadError }
+        set { diaryStore.loadError = newValue }
+    }
+    private(set) var activityRefreshError: String? {
+        get { diaryStore.refreshError }
+        set { diaryStore.refreshError = newValue }
+    }
+    private(set) var isRefreshingActivity: Bool {
+        get { diaryStore.isRefreshing }
+        set { diaryStore.isRefreshing = newValue }
+    }
+    private var activityRevision: Int {
+        get { diaryStore.revision }
+        set { diaryStore.revision = newValue; diaryStore.isLoadingPage = false }
+    }
     var usesRemoteActivity: Bool { activityAPI != nil }
-    var logSaveError: String?
-    private(set) var isSavingLog = false
-    private(set) var isDeletingLog = false
-    private(set) var pendingDiaryDeletion: DiaryEntry?
-    private(set) var diaryDeleteError: String?
+    var logSaveError: String? {
+        get { diaryStore.saveError }
+        set { diaryStore.saveError = newValue }
+    }
+    private(set) var isSavingLog: Bool {
+        get { diaryStore.isSaving }
+        set { diaryStore.isSaving = newValue }
+    }
+    private(set) var isDeletingLog: Bool {
+        get { diaryStore.isDeleting }
+        set { diaryStore.isDeleting = newValue }
+    }
+    private(set) var pendingDiaryDeletion: DiaryEntry? {
+        get { diaryStore.pendingDeletion }
+        set { diaryStore.pendingDeletion = newValue }
+    }
+    private(set) var diaryDeleteError: String? {
+        get { diaryStore.deleteError }
+        set { diaryStore.deleteError = newValue }
+    }
     var isMutatingActivity: Bool { isSavingLog || isDeletingLog }
-    private var activityReviews: [UUID: ActivityReview] = [:]
-    private var activityFollowerCount = 0
+    private var activityReviews: [UUID: ActivityReview] {
+        get { diaryStore.reviews }
+        set { diaryStore.reviews = newValue }
+    }
+    private var activityFollowerCount: Int {
+        get { diaryStore.followerCount }
+        set { diaryStore.followerCount = newValue }
+    }
     var usesRemoteCatalog: Bool { catalogAPI != nil }
     private(set) var catalogIssue: CatalogError?
     var catalogLoadError: String? { catalogIssue?.errorDescription }
@@ -174,7 +208,10 @@ final class AppStore {
 
     // MARK: - Conteúdo (amostras + geradas; ordem = mais recente primeiro)
     var reviews: [Review] = []
-    var diary: [DiaryEntry] = []
+    var diary: [DiaryEntry] {
+        get { diaryStore.entries }
+        set { diaryStore.entries = newValue }
+    }
 
     // MARK: - Toggles
     var likedReviews: Set<String> = []
@@ -292,6 +329,7 @@ final class AppStore {
         duelCurationAPI: (any DuelCurationAPI)? = nil,
         draftStorage: (any LogDraftStorage)? = nil
     ) {
+        self.diaryStore = DiaryStore(api: activityAPI, ownerID: session?.userID ?? "duda")
         let storage = draftStorage ?? session.flatMap { session in
             activityAPI == nil ? nil : FileLogDraftStorage(userID: session.userID)
         }
@@ -322,7 +360,8 @@ final class AppStore {
         let onboarded = accountAPI == nil ? UserDefaults.standard.bool(forKey: onboardingKey) : (session?.onboarding?.completed ?? false)
         isOnboarded = onboarded
         themePreference = ThemePreference(rawValue: UserDefaults.standard.string(forKey: "mv-theme") ?? "") ?? .system
-        self.repository = repository ?? MockRepository(startFollowing: onboarded, session: session)
+        self.repository = repository ?? (accountAPI == nil ? MockRepository(startFollowing: onboarded, session: session) : nil)
+        if accountAPI != nil { comingSoonUniverses = [] }
     }
 
     /// Bootstrap and retries share one owner, acquired before any suspension.
@@ -376,6 +415,14 @@ final class AppStore {
     }
 
     private func loadInitialRepository() async throws {
+        guard let repository else {
+            if let snapshot = try await catalogAPI?.fetchCatalog() {
+                try Task.checkCancellation()
+                try snapshot.validate()
+                applyCatalog(snapshot)
+            }
+            return
+        }
         async let catalogResult = repository.loadCatalog()
         async let remoteCatalogResult = catalogAPI?.fetchCatalog()
         async let reviewsResult = repository.fetchReviews()
@@ -506,7 +553,7 @@ final class AppStore {
         guard let activityAPI else { return }
         activityLoadError = nil
         do {
-            let snapshot = try await activityAPI.fetchActivity()
+            let snapshot = try await activityAPI.fetchActivityPage(query: diaryStore.query, after: nil)
             try Task.checkCancellation()
             try snapshot.validate(for: meID)
             applyActivity(snapshot)
@@ -525,7 +572,7 @@ final class AppStore {
         let revision = activityRevision
         defer { isRefreshingActivity = false }
         do {
-            let snapshot = try await activityAPI.fetchActivity()
+            let snapshot = try await activityAPI.fetchActivityPage(query: diaryStore.query, after: nil)
             try Task.checkCancellation()
             guard revision == activityRevision else { return }
             try snapshot.validate(for: meID)
@@ -538,11 +585,10 @@ final class AppStore {
         }
     }
 
-    private func applyActivity(_ snapshot: ActivitySnapshot) {
-        diary = snapshot.entries
-        activityReviews = Dictionary(uniqueKeysWithValues: snapshot.reviews.compactMap { review in review.entryId.map { ($0, review) } })
-        reviews = snapshot.reviews.map(\.display)
-        activityFollowerCount = snapshot.followerCount
+    private func applyActivity(_ snapshot: ActivitySnapshot, appending: Bool = false) {
+        if isMutatingActivity { diaryStore.query = DiaryQuery() }
+        diaryStore.apply(snapshot, appending: appending)
+        reviews = activityReviews.values.sorted { $0.createdAt > $1.createdAt }.map(\.display)
         for universe in snapshot.universes where universesByID[universe.id] == nil { universesByID[universe.id] = universe }
         for item in snapshot.items { itemsByID[item.id] = item }
         items = items.map { itemsByID[$0.id] ?? $0 }
@@ -551,6 +597,24 @@ final class AppStore {
             self.pendingDiaryDeletion = nil
             diaryDeleteError = nil
         }
+    }
+
+    var diaryCount: Int { diaryStore.totalCount }
+    var diaryReviewCount: Int { diaryStore.summary?.reviewCount ?? reviews.filter { $0.user == meID }.count }
+    var registeredItemIDs: Set<String> { Set(diaryStore.latestEntries.map(\.itemId)) }
+
+    func loadDiaryPage(query: DiaryQuery, more: Bool = false) async {
+        guard !isLoading else { return }
+        if let snapshot = await diaryStore.loadPage(query: query, more: more) {
+            applyActivity(snapshot, appending: more)
+        }
+    }
+
+    func exportActivity() async throws -> ActivitySnapshot? {
+        guard let activityAPI else { return nil }
+        let snapshot = try await activityAPI.exportActivity()
+        try snapshot.validate(for: meID)
+        return snapshot
     }
 
     var logPickerItems: [Item] {
@@ -572,7 +636,7 @@ final class AppStore {
     // MARK: - Visto / diário
 
     func isSeen(_ id: String) -> Bool {
-        if usesRemoteActivity, diary.contains(where: { $0.itemId == id }) { return true }
+        if usesRemoteActivity, registeredItemIDs.contains(id) { return true }
         if let c = checks[id] { return c }
         return diary.contains { $0.itemId == id }
     }
@@ -587,12 +651,12 @@ final class AppStore {
         checks[id] = seen
         scheduleOnboardingSave()
         let repository = self.repository
-        Task { try? await repository.setItemSeen(itemID: id, seen: seen) }
+        Task { try? await repository?.setItemSeen(itemID: id, seen: seen) }
         syncWidgetData()
     }
 
     func myDiaryEntry(for itemID: String) -> DiaryEntry? {
-        diary.first { $0.itemId == itemID }
+        diaryStore.latestEntries.first { $0.itemId == itemID }
     }
 
     // MARK: - Seguir
@@ -632,7 +696,7 @@ final class AppStore {
             follows.remove(id)
         }
         let repository = self.repository
-        Task { try? await repository.setFollowing(userID: id, following: turningOn) }
+        Task { try? await repository?.setFollowing(userID: id, following: turningOn) }
         scheduleOnboardingSave()
         return turningOn
     }
@@ -642,7 +706,7 @@ final class AppStore {
         follows.formUnion(ids)
         scheduleOnboardingSave()
         let repository = self.repository
-        Task { for id in ids { try? await repository.setFollowing(userID: id, following: true) } }
+        Task { for id in ids { try? await repository?.setFollowing(userID: id, following: true) } }
     }
 
     // MARK: - Curtidas / spoilers / listas
@@ -661,7 +725,7 @@ final class AppStore {
         let turningOn = !likedReviews.contains(id)
         if turningOn { likedReviews.insert(id) } else { likedReviews.remove(id) }
         let repository = self.repository
-        Task { try? await repository.setReviewLiked(reviewID: id, liked: turningOn) }
+        Task { try? await repository?.setReviewLiked(reviewID: id, liked: turningOn) }
         return turningOn
     }
 
@@ -669,7 +733,7 @@ final class AppStore {
     func revealSpoiler(_ id: String) {
         revealedSpoilers.insert(id)
         let repository = self.repository
-        Task { try? await repository.setSpoilerRevealed(reviewID: id) }
+        Task { try? await repository?.setSpoilerRevealed(reviewID: id) }
     }
 
     /// Contagem base determinística por tipo (~20% chance de ficar em 0 e sumir do rodapé),
@@ -705,7 +769,7 @@ final class AppStore {
         reactions[reviewID] = (reactions[reviewID] == type) ? nil : type
         let newValue = reactions[reviewID]
         let repository = self.repository
-        Task { try? await repository.setReaction(reviewID: reviewID, type: newValue) }
+        Task { try? await repository?.setReaction(reviewID: reviewID, type: newValue) }
     }
 
     func commentsLabel(for review: Review) -> String {
@@ -719,7 +783,7 @@ final class AppStore {
         let turningOn = !likedComments.contains(key)
         if turningOn { likedComments.insert(key) } else { likedComments.remove(key) }
         let repository = self.repository
-        Task { try? await repository.setCommentLiked(reviewID: reviewID, commentIndex: index, liked: turningOn) }
+        Task { try? await repository?.setCommentLiked(reviewID: reviewID, commentIndex: index, liked: turningOn) }
     }
     func commentLikeCount(review: Review, index: Int) -> Int {
         review.comments[index].likes + (isLikedComment(reviewID: review.id, index: index) ? 1 : 0)
@@ -732,7 +796,7 @@ final class AppStore {
         let turningOn = !likedItems.contains(id)
         if turningOn { likedItems.insert(id) } else { likedItems.remove(id) }
         let repository = self.repository
-        Task { try? await repository.setItemLiked(itemID: id, liked: turningOn) }
+        Task { try? await repository?.setItemLiked(itemID: id, liked: turningOn) }
     }
 
     func isWanted(_ id: String) -> Bool { library.map { $0.wantedIDs.contains(id) } ?? wantList.contains(id) }
@@ -742,7 +806,7 @@ final class AppStore {
         let turningOn = !wantList.contains(id)
         if turningOn { wantList.insert(id) } else { wantList.remove(id) }
         let repository = self.repository
-        Task { try? await repository.setItemWanted(itemID: id, wanted: turningOn) }
+        Task { try? await repository?.setItemWanted(itemID: id, wanted: turningOn) }
     }
 
     func isListLiked(_ id: String) -> Bool { likedLists.contains(id) }
@@ -751,7 +815,7 @@ final class AppStore {
         let turningOn = !likedLists.contains(id)
         if turningOn { likedLists.insert(id) } else { likedLists.remove(id) }
         let repository = self.repository
-        Task { try? await repository.setListLiked(listID: id, liked: turningOn) }
+        Task { try? await repository?.setListLiked(listID: id, liked: turningOn) }
     }
 
     // MARK: - Votações
@@ -765,7 +829,7 @@ final class AppStore {
         pollVote = index
         showToast(L10n.text("Voto computado. Veja o que o pessoal acha."))
         let repository = self.repository
-        Task { try? await repository.submitPollVote(topic: .weekly, optionIndex: index) }
+        Task { try? await repository?.submitPollVote(topic: .weekly, optionIndex: index) }
     }
 
     func essentialPercents(for item: Item) -> [Int]? {
@@ -780,7 +844,7 @@ final class AppStore {
         guard essentialVotes[itemID] == nil else { return }
         essentialVotes[itemID] = index
         let repository = self.repository
-        Task { try? await repository.submitPollVote(topic: .essential(itemID: itemID), optionIndex: index) }
+        Task { try? await repository?.submitPollVote(topic: .essential(itemID: itemID), optionIndex: index) }
     }
 
     func canonPercents(for item: Item) -> [Int]? {
@@ -791,7 +855,7 @@ final class AppStore {
         guard canonVotes[itemID] == nil else { return }
         canonVotes[itemID] = index
         let repository = self.repository
-        Task { try? await repository.submitPollVote(topic: .canon(itemID: itemID), optionIndex: index) }
+        Task { try? await repository?.submitPollVote(topic: .canon(itemID: itemID), optionIndex: index) }
     }
 
     var currentDuel: Duel { duels[duelIndex % duels.count] }
@@ -806,7 +870,7 @@ final class AppStore {
         guard duelVotes[di] == nil else { return }
         duelVotes[di] = side
         let repository = self.repository
-        Task { try? await repository.submitPollVote(topic: .duel(index: di), optionIndex: side) }
+        Task { try? await repository?.submitPollVote(topic: .duel(index: di), optionIndex: side) }
         syncWidgetData()
     }
     func nextDuel() { duelIndex += 1; syncWidgetData() }
@@ -865,7 +929,7 @@ final class AppStore {
         let turningOn = !orderVotes.contains(id)
         if turningOn { orderVotes.insert(id) } else { orderVotes.remove(id) }
         let repository = self.repository
-        Task { try? await repository.setOrderUpvoted(orderID: id, upvoted: turningOn) }
+        Task { try? await repository?.setOrderUpvoted(orderID: id, upvoted: turningOn) }
         return turningOn
     }
 
@@ -876,7 +940,7 @@ final class AppStore {
         let turningOn = !orderFollows.contains(id)
         if turningOn { orderFollows.insert(id) } else { orderFollows.remove(id) }
         let repository = self.repository
-        Task { try? await repository.setOrderFollowing(orderID: id, following: turningOn) }
+        Task { try? await repository?.setOrderFollowing(orderID: id, following: turningOn) }
         syncWidgetData()
     }
 
@@ -938,7 +1002,7 @@ final class AppStore {
     }
 
     func isOrderStepRead(_ id: String) -> Bool {
-        readingOrderStore == nil ? isSeen(id) : diary.contains { $0.itemId == id }
+        readingOrderStore == nil ? isSeen(id) : registeredItemIDs.contains(id)
     }
 
     struct TimelineRow: Identifiable {
@@ -1156,7 +1220,7 @@ final class AppStore {
 
         let stats: [(String, String)]
         if isMe {
-            stats = [("\(diary.count + (activityAPI == nil ? 318 : 0))", L10n.text("Registros")), (people?.state.map { Logic.fmt($0.followerCount) } ?? (activityAPI == nil ? "312" : Logic.fmt(activityFollowerCount)), L10n.text("Seguidores")), ("\(usesRemotePeople || activityAPI != nil ? friendsCount : friendsList.count)", L10n.text("Seguindo"))]
+            stats = [("\(diaryCount + (activityAPI == nil ? 318 : 0))", L10n.text("Registros")), (people?.state.map { Logic.fmt($0.followerCount) } ?? (activityAPI == nil ? "312" : Logic.fmt(activityFollowerCount)), L10n.text("Seguidores")), ("\(usesRemotePeople || activityAPI != nil ? friendsCount : friendsList.count)", L10n.text("Seguindo"))]
         } else {
             let followers = (u.followers ?? (200 + Int(sd % 700))) + (follows.contains(userID) ? 1 : 0)
             stats = [("\(120 + Int(sd % 600))", L10n.text("Registros")), (Logic.fmt(followers), L10n.text("Seguidores")), ("\(40 + Int(sd % 200))", L10n.text("Seguindo"))]
@@ -1169,12 +1233,12 @@ final class AppStore {
         } else if isMe && usesRemoteActivity {
             // A revisit is still one favorite; the latest log owns its liked state.
             var seen = Set<String>()
-            favIDs = Array(diary.filter { seen.insert($0.itemId).inserted && $0.liked }.prefix(4).map(\.itemId))
+            favIDs = Array(diaryStore.latestEntries.filter { seen.insert($0.itemId).inserted && $0.liked }.prefix(4).map(\.itemId))
         } else {
             favIDs = isMe ? StaticContent.myFavoriteItemIDs : Array(Set(myRevs.map(\.item)).prefix(4))
         }
         let favorites = favIDs.compactMap { itemsByID[$0] }
-        let recentReviews = Array(myRevs.prefix(4))
+        let recentReviews = isMe ? (diaryStore.summary?.recentReviews.map(\.display) ?? Array(myRevs.prefix(4))) : Array(myRevs.prefix(4))
 
         var compatPercent: Int?
         var compatLine: String?
@@ -1253,7 +1317,7 @@ final class AppStore {
 
     // MARK: - Sheet de registro
 
-    var canOfferFirstRecord: Bool { hasBootstrapped && !isLoading && activityLoadError == nil && diary.isEmpty }
+    var canOfferFirstRecord: Bool { hasBootstrapped && !isLoading && activityLoadError == nil && diaryCount == 0 }
 
     func openLogBlank() {
         guard !isMutatingActivity else { return }
@@ -1379,8 +1443,8 @@ final class AppStore {
 
         let repository = self.repository
         Task {
-            try? await repository.addDiaryEntry(entry)
-            if let newReview { try? await repository.publishReview(newReview) }
+            try? await repository?.addDiaryEntry(entry)
+            if let newReview { try? await repository?.publishReview(newReview) }
         }
     }
 
@@ -1431,7 +1495,7 @@ final class AppStore {
         let authorID = reviews[idx].user
         showToast(authorID == meID ? L10n.text("Resposta publicada") : L10n.format("%1$@ vai ser notificado", String(describing: usersByID[authorID]?.name ?? "")))
         let repository = self.repository
-        Task { try? await repository.postComment(reviewID: reviewID, comment: comment) }
+        Task { try? await repository?.postComment(reviewID: reviewID, comment: comment) }
     }
 
     // MARK: - Onboarding
@@ -1821,7 +1885,7 @@ final class AppStore {
     func revealShielded(reviewID: String) {
         revealedSpoilers.insert(reviewID)
         let repository = self.repository
-        Task { try? await repository.setSpoilerRevealed(reviewID: reviewID) }
+        Task { try? await repository?.setSpoilerRevealed(reviewID: reviewID) }
     }
 
     /// Botão "Já vi isso" do card do escudo: marca o item como visto e avança o ponto até ele.
@@ -1836,19 +1900,19 @@ final class AppStore {
         guard index > (shieldPoints[universeID] ?? -1) else { return }
         shieldPoints[universeID] = index
         let repository = self.repository
-        Task { try? await repository.setShieldPoint(universeID: universeID, timelineIndex: index) }
+        Task { try? await repository?.setShieldPoint(universeID: universeID, timelineIndex: index) }
     }
 
     func setShieldPoint(universeID: String, index: Int) {
         shieldPoints[universeID] = index
         let repository = self.repository
-        Task { try? await repository.setShieldPoint(universeID: universeID, timelineIndex: index) }
+        Task { try? await repository?.setShieldPoint(universeID: universeID, timelineIndex: index) }
     }
 
     func setShieldAdvanceAutomatically(_ enabled: Bool) {
         shieldAdvanceAutomatically = enabled
         let repository = self.repository
-        Task { try? await repository.setShieldAdvanceAutomatically(enabled) }
+        Task { try? await repository?.setShieldAdvanceAutomatically(enabled) }
     }
 
     // MARK: - Clubes de maratona
@@ -1870,7 +1934,7 @@ final class AppStore {
     func setMyClubUnits(clubID: String, units: Int) {
         clubMemberUnits["\(clubID)|\(meID)"] = units
         let repository = self.repository
-        Task { try? await repository.setClubUnitsCompleted(clubID: clubID, units: units) }
+        Task { try? await repository?.setClubUnitsCompleted(clubID: clubID, units: units) }
     }
 
     func clubMessagesFor(clubID: String, week: Int, segment: String) -> [ClubMessage] {
@@ -1894,7 +1958,7 @@ final class AppStore {
         if turningOn { heartedClubMessages.insert(id) } else { heartedClubMessages.remove(id) }
         if let idx = clubMessages.firstIndex(where: { $0.id == id }) { clubMessages[idx].hearts += turningOn ? 1 : -1 }
         let repository = self.repository
-        Task { try? await repository.setClubMessageHearted(messageID: id, hearted: turningOn) }
+        Task { try? await repository?.setClubMessageHearted(messageID: id, hearted: turningOn) }
     }
 
     func powClubMessage(_ id: String) {
@@ -1902,7 +1966,7 @@ final class AppStore {
         powedClubMessages.insert(id)
         if let idx = clubMessages.firstIndex(where: { $0.id == id }) { clubMessages[idx].pows += 1 }
         let repository = self.repository
-        Task { try? await repository.addClubMessagePow(messageID: id) }
+        Task { try? await repository?.addClubMessagePow(messageID: id) }
     }
 
     func postClubMessage(clubID: String, week: Int, segment: String, text: String) {
@@ -1912,7 +1976,7 @@ final class AppStore {
         let message = ClubMessage(id: "cm-\(UUID().uuidString.prefix(8))", clubID: clubID, week: week, segment: segment, userID: meID, text: trimmed, when: L10n.text("agora"), hearts: 0, pows: 0, aboutUnit: myUnits)
         clubMessages.append(message)
         let repository = self.repository
-        Task { try? await repository.postClubMessage(message) }
+        Task { try? await repository?.postClubMessage(message) }
     }
 
     func pokeLaggingMembers() { showToast(L10n.text("Lembrete enviado pros atrasados do clube.")) }
@@ -1945,7 +2009,7 @@ final class AppStore {
         let index = plausible ? 0 : 1
         theoryVotes[theoryID] = index
         let repository = self.repository
-        Task { try? await repository.submitPollVote(topic: .theory(id: theoryID), optionIndex: index) }
+        Task { try? await repository?.submitPollVote(topic: .theory(id: theoryID), optionIndex: index) }
     }
 
     /// "71% ACERTO" — reputação de quem postou a teoria (fixa pros 3 exemplos, determinística pro resto).
@@ -1962,13 +2026,13 @@ final class AppStore {
         guard predictionAnswers[questionID] == nil else { return }
         predictionAnswers[questionID] = .choice(optionIndex)
         let repository = self.repository
-        Task { try? await repository.submitPredictionAnswer(questionID: questionID, answer: .choice(optionIndex)) }
+        Task { try? await repository?.submitPredictionAnswer(questionID: questionID, answer: .choice(optionIndex)) }
     }
 
     func submitPredictionSlider(questionID: String, value: Double) {
         predictionAnswers[questionID] = .slider(value)
         let repository = self.repository
-        Task { try? await repository.submitPredictionAnswer(questionID: questionID, answer: .slider(value)) }
+        Task { try? await repository?.submitPredictionAnswer(questionID: questionID, answer: .slider(value)) }
     }
 
     func predictionLeague() -> [(user: User, points: Int, isMe: Bool)] {
@@ -1993,13 +2057,13 @@ final class AppStore {
     func submitReport(targetType: String, targetID: String, reason: ReportReason, alsoBlock: Bool) {
         showToast(L10n.text("Denúncia enviada. Revisamos em até 24h."))
         let repository = self.repository
-        Task { try? await repository.submitReport(ReportSubmission(targetType: targetType, targetID: targetID, reason: reason, alsoBlock: alsoBlock)) }
+        Task { try? await repository?.submitReport(ReportSubmission(targetType: targetType, targetID: targetID, reason: reason, alsoBlock: alsoBlock)) }
     }
 
     // MARK: - Sugerir correção
 
     func loadCorrections(for itemID: String) async {
-        guard let fetched = try? await repository.fetchCorrectionSuggestions(itemID: itemID) else { return }
+        guard let fetched = try? await repository?.fetchCorrectionSuggestions(itemID: itemID) else { return }
         correctionsByItem[itemID] = fetched
     }
 
@@ -2008,14 +2072,14 @@ final class AppStore {
         correctionsByItem[itemID, default: []].insert(suggestion, at: 0)
         showToast(L10n.text("Sugestão enviada pra revisão."))
         let repository = self.repository
-        Task { try? await repository.submitCorrection(suggestion) }
+        Task { try? await repository?.submitCorrection(suggestion) }
     }
 
     // MARK: - Onde assistir
 
     func loadWatchAvailability(for itemID: String) async {
         guard watchAvailabilityByItem[itemID] == nil else { return }
-        guard let fetched = try? await repository.fetchWatchAvailability(itemID: itemID) else { return }
+        guard let fetched = try? await repository?.fetchWatchAvailability(itemID: itemID) else { return }
         watchAvailabilityByItem[itemID] = fetched
     }
 
@@ -2028,14 +2092,14 @@ final class AppStore {
     func messages(with userID: String) -> [Message] { messagesByConversation[userID] ?? [] }
 
     func loadMessages(with userID: String) async {
-        guard let fetched = try? await repository.fetchMessages(conversationID: userID) else { return }
+        guard let fetched = try? await repository?.fetchMessages(conversationID: userID) else { return }
         messagesByConversation[userID] = fetched
     }
 
     func openConversation(with userID: String) {
         if let idx = conversations.firstIndex(where: { $0.userID == userID }) { conversations[idx].unreadCount = 0 }
         let repository = self.repository
-        Task { try? await repository.markConversationRead(userID) }
+        Task { try? await repository?.markConversationRead(userID) }
     }
 
     func sendMessage(to userID: String, text: String) {
@@ -2062,7 +2126,7 @@ final class AppStore {
         list[idx].duelChallenge?.responderChoice = choice
         messagesByConversation[userID] = list
         let repository = self.repository
-        Task { try? await repository.respondToDuelChallenge(messageID: messageID, choice: choice) }
+        Task { try? await repository?.respondToDuelChallenge(messageID: messageID, choice: choice) }
     }
 
     private func appendMessage(_ message: Message) {
@@ -2074,7 +2138,7 @@ final class AppStore {
             conversations.insert(Conversation(userID: message.conversationID, lastPreview: message.text ?? L10n.text("mandou uma carta"), lastWhen: L10n.text("agora"), unreadCount: 0, isRequest: !follows.contains(message.conversationID)), at: 0)
         }
         let repository = self.repository
-        Task { try? await repository.sendMessage(message) }
+        Task { try? await repository?.sendMessage(message) }
     }
 
     // MARK: - Salas por obra
@@ -2085,14 +2149,14 @@ final class AppStore {
     }
 
     func loadRoomMessages(itemID: String) async {
-        guard let fetched = try? await repository.fetchRoomMessages(itemID: itemID) else { return }
+        guard let fetched = try? await repository?.fetchRoomMessages(itemID: itemID) else { return }
         roomMessages[itemID] = fetched
     }
 
     func setRoomProgress(itemID: String, segment: Int) {
         roomProgress[itemID] = segment
         let repository = self.repository
-        Task { try? await repository.setRoomProgress(itemID: itemID, segmentIndex: segment) }
+        Task { try? await repository?.setRoomProgress(itemID: itemID, segmentIndex: segment) }
     }
 
     func postRoomMessage(itemID: String, segment: Int, text: String) {
@@ -2101,6 +2165,6 @@ final class AppStore {
         let message = RoomMessage(id: "rm-\(UUID().uuidString.prefix(8))", itemID: itemID, segmentIndex: segment, userID: meID, text: trimmed, when: L10n.text("agora"))
         roomMessages[itemID, default: []].append(message)
         let repository = self.repository
-        Task { try? await repository.postRoomMessage(message) }
+        Task { try? await repository?.postRoomMessage(message) }
     }
 }

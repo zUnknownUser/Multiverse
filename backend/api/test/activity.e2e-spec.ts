@@ -80,6 +80,134 @@ describe.skipIf(!databaseURL)('Diary and reviews with PostgreSQL', () => {
     configureApp(app);
     await app.listen(0, '127.0.0.1'); // Keep one port per suite; concurrent Supertest requests must not close/rebind it.
   });
+  it('pages tied dates without duplicates, scopes cursors and keeps full-history aggregates', async () => {
+    const uid = 'paged_diary';
+    await profile(uid);
+    const ids = Array.from({ length: 75 }, () => randomUUID());
+    await db.query(
+      `INSERT INTO diary_entries(firebase_uid,id,item_id,logged_at,rating,liked,rewatch)
+      SELECT $1,id,'m-civil','2025-01-01T01:00:00.123456Z'::timestamptz,4,true,false FROM unnest($2::uuid[]) id`,
+      [uid, ids],
+    );
+    const page = (query: object, account = uid) =>
+      request(app.getHttpServer())
+        .get('/api/v1/me/activity')
+        .auth(account, { type: 'bearer' })
+        .query(query);
+    const first = await page({ limit: 30, timeZone: 'America/Manaus' }).expect(
+      200,
+    );
+    expect(first.body.entries).toHaveLength(30);
+    expect(first.body.summary).toMatchObject({
+      total: 75,
+      reviewCount: 0,
+      years: [2024],
+    });
+    expect(first.body.summary.latestEntries).toHaveLength(1);
+    expect(first.body.summary.buckets).toEqual([
+      { year: 2024, type: 'HQ', universe: 'marvel', count: 75 },
+    ]);
+    const second = await page({
+      limit: 30,
+      timeZone: 'America/Manaus',
+      after: first.body.nextCursor,
+    }).expect(200);
+    const third = await page({
+      limit: 30,
+      timeZone: 'America/Manaus',
+      after: second.body.nextCursor,
+    }).expect(200);
+    expect(third.body.entries).toHaveLength(15);
+    expect(third.body.nextCursor).toBeNull();
+    expect(
+      new Set(
+        [
+          ...first.body.entries,
+          ...second.body.entries,
+          ...third.body.entries,
+        ].map((e) => e.id),
+      ).size,
+    ).toBe(75);
+    const filtered = await page({
+      limit: 30,
+      year: 2025,
+      timeZone: 'America/Manaus',
+    }).expect(200);
+    expect(filtered.body.entries).toEqual([]);
+    expect(filtered.body.summary.total).toBe(75);
+    await profile('paged_other');
+    await page(
+      { limit: 30, timeZone: 'America/Manaus', after: first.body.nextCursor },
+      'paged_other',
+    ).expect(400);
+    await page({
+      limit: 30,
+      selection: 'rated',
+      after: first.body.nextCursor,
+    }).expect(400);
+    await page({ limit: 101 }).expect(400);
+    await page({ limit: 30, after: 'invalid' }).expect(400);
+    await page({ limit: 30, timeZone: 'Not/AZone' }).expect(400);
+    const searched = await page({
+      limit: 30,
+      search: 'GÚERRA civíl',
+      selection: 'liked',
+    }).expect(200);
+    expect(searched.body.entries).toHaveLength(30);
+    expect(searched.body.items).toHaveLength(1);
+    const revisited = await page({ limit: 30, selection: 'rewatched' }).expect(
+      200,
+    );
+    expect(revisited.body.entries).toEqual([]);
+    expect(revisited.body.summary.total).toBe(75);
+    await page({
+      limit: 30,
+      timeZone: 'America/Manaus',
+      itemId: 'm-civil',
+      after: first.body.nextCursor,
+    }).expect(400);
+    const full = await read(uid).expect(200);
+    expect(full.body.entries).toHaveLength(75);
+    expect(full.body.summary).toBeUndefined();
+    const oldID = third.body.entries[14].id;
+    const changed = await request(app.getHttpServer())
+      .patch('/api/v1/me/diary/' + oldID)
+      .auth(uid, { type: 'bearer' })
+      .query({ limit: 30 })
+      .send({ ...input(), loggedAt: '2024-01-01T00:00:00Z' })
+      .expect(200);
+    expect(changed.body.entries).toHaveLength(31);
+    expect(
+      changed.body.entries.some((e: { id: string }) => e.id === oldID),
+    ).toBe(true);
+    expect(changed.body.reviews).toHaveLength(1);
+    expect(changed.body.summary.total).toBe(75);
+    const scoped = await page({
+      limit: 5,
+      selection: 'reviewed',
+      itemId: 'm-civil',
+      universeId: 'marvel',
+    }).expect(200);
+    expect(
+      scoped.body.entries.map((entry: { id: string }) => entry.id),
+    ).toEqual([oldID]);
+    expect(scoped.body.reviews).toHaveLength(1);
+    expect(scoped.body.summary.total).toBe(75);
+    const wrongUniverse = await page({
+      limit: 5,
+      selection: 'reviewed',
+      universeId: 'dc',
+    }).expect(200);
+    expect(wrongUniverse.body.reviews).toEqual([]);
+    const removed = await request(app.getHttpServer())
+      .delete('/api/v1/me/diary/' + oldID)
+      .auth(uid, { type: 'bearer' })
+      .query({ limit: 30 })
+      .expect(200);
+    expect(removed.body.state.entries).toHaveLength(30);
+    expect(removed.body.state.summary.total).toBe(74);
+  });
+
   afterAll(async () => {
     await app?.close();
     if (admin) {

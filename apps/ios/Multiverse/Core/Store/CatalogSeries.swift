@@ -20,7 +20,7 @@ extension AppStore {
     }
 
     func registeredIssueCount(in series: CatalogSeriesSummary) -> Int {
-        let registered = Set(diary.map(\.itemId))
+        let registered = registeredItemIDs
         return series.items.filter { registered.contains($0.id) }.count
     }
 }

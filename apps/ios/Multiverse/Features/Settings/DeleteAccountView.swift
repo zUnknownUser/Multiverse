@@ -6,6 +6,7 @@ struct DeleteAccountView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var confirmationText = ""
     @State private var exportURL: URL?
+    @State private var exportError: String?
     @State private var isDeleting = false
 
     private let confirmationWord = L10n.text("EXCLUIR")
@@ -27,7 +28,7 @@ struct DeleteAccountView: View {
                 Text(L10n.text("Isso é permanente. Vai sumir tudo:")).font(MVFont.body(14, weight: 500)).foregroundStyle(MV.C.ink)
 
                 VStack(alignment: .leading, spacing: 14) {
-                    lossRow(L10n.format("%1$@ registros no diário", String(describing: store.diary.count)))
+                    lossRow(L10n.format("%1$@ registros no diário", String(describing: store.diaryCount)))
                     lossRow(L10n.format("%1$@ reviews e seus comentários", String(describing: myReviewCount)))
                     lossRow(L10n.format("%1$@ listas e %2$@ ordens de leitura", String(describing: store.lists.count), String(describing: store.readingOrders.count)))
                     if let badge = topBadgeName { lossRow(L10n.format("Selo Lorista de %1$@", String(describing: badge))) }
@@ -48,6 +49,10 @@ struct DeleteAccountView: View {
                         .clipShape(RoundedRectangle(cornerRadius: MV.R.xl))
                 }
 
+                if let exportError {
+                    AuthErrorBanner(message: exportError)
+                    Button(L10n.text("TENTAR DE NOVO")) { Task { await prepareExport() } }
+                }
                 if let exportURL {
                     ShareLink(item: exportURL) {
                         Text(L10n.text("Baixar meus dados antes (JSON)")).font(MVFont.bold(13)).underline().foregroundStyle(MV.C.ink)
@@ -70,10 +75,10 @@ struct DeleteAccountView: View {
             .padding(.horizontal, MV.pad)
             .padding(.bottom, 24)
         }
-        .task { exportURL = makeExportFile() }
+        .task { await prepareExport() }
     }
 
-    private var myReviewCount: Int { store.reviews.filter { $0.user == store.meID }.count }
+    private var myReviewCount: Int { store.diaryReviewCount }
     private var topBadgeName: String? { store.badgeNames[store.user(store.meID)?.badgeUniverse ?? ""] }
 
     private func lossRow(_ text: String) -> some View {
@@ -84,16 +89,21 @@ struct DeleteAccountView: View {
     }
 
     /// Exporta diário e reviews do usuário logado pra um JSON temporário (LGPD/portabilidade).
-    private func makeExportFile() -> URL? {
+    private func prepareExport() async {
         struct Export: Codable {
             let handle: String
             let diary: [DiaryEntry]
             let reviews: [Review]
         }
-        let export = Export(handle: store.user(store.meID)?.handle ?? "", diary: store.diary, reviews: store.reviews.filter { $0.user == store.meID })
-        guard let data = try? JSONEncoder().encode(export) else { return nil }
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("multiverse-dados.json")
-        try? data.write(to: url)
-        return url
+        do {
+            exportError = nil
+            let snapshot = try await store.exportActivity()
+            let export = Export(handle: store.user(store.meID)?.handle ?? "", diary: snapshot?.entries ?? store.diary,
+                                reviews: snapshot?.reviews.map(\.display) ?? store.reviews.filter { $0.user == store.meID })
+            let data = try JSONEncoder().encode(export)
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("multiverse-dados-\(UUID().uuidString).json")
+            try data.write(to: url, options: [.atomic, .completeFileProtection])
+            exportURL = url
+        } catch { exportError = error.localizedDescription }
     }
 }
