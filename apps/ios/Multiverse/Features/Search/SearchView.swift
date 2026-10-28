@@ -6,6 +6,7 @@ struct SearchView: View {
     @State private var filter: SearchFilter = .all
     @State private var visibleResults = 40
     @State private var waitingForSearch = false
+    private var catalogQuery: CatalogQuery { store.catalogQuery(query: query, filter: filter) }
     private var searchingPeople: Bool { store.usesRemotePeople && (filter == .people || (filter == .all && !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)) }
 
     var body: some View {
@@ -43,7 +44,7 @@ struct SearchView: View {
                     CatalogSeriesSection()
                 }
 
-                let (rows, total) = store.searchResults(query: query, filter: filter, limit: visibleResults)
+                let (rows, total) = store.searchResults(query: query, filter: filter, limit: store.catalogStore.paginated ? max(visibleResults, store.catalogStore.page(catalogQuery).values.count + (store.people?.searchIDs.count ?? 0)) : visibleResults)
                 Text(searchingPeople ? L10n.text("RESULTADOS") : (query.isEmpty ? L10n.text(store.usesRemoteCatalog ? "Explore o catálogo" : "Mais registrados esta semana") : L10n.format("search.results", total)))
                     .kicker(11).foregroundStyle(MV.C.muted)
 
@@ -53,7 +54,7 @@ struct SearchView: View {
                     }
                     if people.isSearching || waitingForSearch { ProgressView().frame(maxWidth: .infinity) }
                 }
-                if rows.isEmpty && !(searchingPeople && (waitingForSearch || store.people?.isSearching == true || store.people?.searchError != nil || store.people?.searchQuery != query.trimmingCharacters(in: .whitespacesAndNewlines))) {
+                if rows.isEmpty && !(store.catalogStore.paginated && filter != .people && (!store.catalogStore.page(catalogQuery).loaded || store.catalogStore.page(catalogQuery).error != nil)) && !(searchingPeople && (waitingForSearch || store.people?.isSearching == true || store.people?.searchError != nil || store.people?.searchQuery != query.trimmingCharacters(in: .whitespacesAndNewlines))) {
                     Text(store.usesAccountAPI && !store.usesRemotePeople && filter == .people
                          ? L10n.text("A busca por loristas estará disponível em breve. Enquanto isso, explore as obras do catálogo.")
                          : searchingPeople && filter == .people
@@ -69,12 +70,15 @@ struct SearchView: View {
                         ForEach(rows) { row in
                             SearchResultRowView(row: row)
                                 .onAppear {
-                                    if row.id == rows.last?.id && rows.count < total {
+                                    if !store.catalogStore.paginated && row.id == rows.last?.id && rows.count < total {
                                         visibleResults = min(total, visibleResults + 40)
                                     }
                                 }
                         }
                     }
+                }
+                if store.catalogStore.paginated && filter != .people {
+                    CatalogPageControls(state: store.catalogStore.page(catalogQuery)) { more in await store.catalogStore.load(catalogQuery, more: more) }
                 }
                 if searchingPeople, let people = store.people, people.nextCursor != nil {
                     PrimaryAuthButton(title: L10n.text("VER MAIS")) {
@@ -90,6 +94,11 @@ struct SearchView: View {
             .padding(.bottom, 24)
             .onChange(of: query) { _, _ in visibleResults = 40 }
             .onChange(of: filter) { _, _ in visibleResults = 40 }
+        }
+        .task(id: filter.rawValue + "|" + query + "|" + String(store.catalogStore.generation)) {
+            guard store.catalogStore.paginated, filter != .people else { return }
+            do { try await Task.sleep(for: .milliseconds(250)) } catch { return }
+            await store.catalogStore.load(catalogQuery)
         }
         .task(id: filter.rawValue + "|" + query + "|" + String(store.people?.discoveryEpoch ?? 0)) {
             guard let people = store.people else { return }

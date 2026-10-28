@@ -104,6 +104,9 @@ describe.skipIf(!databaseURL)('Diary and reviews with PostgreSQL', () => {
       years: [2024],
     });
     expect(first.body.summary.latestEntries).toHaveLength(1);
+    expect(first.body.summary.catalogReferences).toEqual([
+      expect.objectContaining({ id: 'm-civil', uni: 'marvel', type: 'HQ' }),
+    ]);
     expect(first.body.summary.buckets).toEqual([
       { year: 2024, type: 'HQ', universe: 'marvel', count: 75 },
     ]);

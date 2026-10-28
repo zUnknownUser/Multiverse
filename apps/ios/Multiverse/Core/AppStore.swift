@@ -82,6 +82,7 @@ struct WrappedData {
 final class AppStore {
     /// Conteúdo de demonstração; perfil e onboarding usam a API NestJS via `AccountAPI`.
     private let repository: (any MultiverseRepository)?
+    let catalogStore: CatalogStore
     private let catalogAPI: (any CatalogAPI)?
     let diaryStore: DiaryStore
     private let activityAPI: (any ActivityAPI)?
@@ -152,12 +153,12 @@ final class AppStore {
     var usesRemoteCatalog: Bool { catalogAPI != nil }
     private(set) var catalogIssue: CatalogError?
     var catalogLoadError: String? { catalogIssue?.errorDescription }
-    var comingSoonUniverses = StaticContent.comingSoonUniverses.map { UpcomingUniverse(id: $0, name: $0) }
+    var comingSoonUniverses: [UpcomingUniverse] { get { catalogStore.upcoming } set { catalogStore.upcoming = newValue } }
     private let widgetWriter: (any WidgetSnapshotWriting)?
 
     // MARK: - Catálogo (carregado por `bootstrap()`)
-    var universes: [Universe] = []
-    var items: [Item] = []
+    var universes: [Universe] { get { catalogStore.universes } set { catalogStore.universes = newValue } }
+    var items: [Item] { get { catalogStore.items } set { catalogStore.items = newValue } }
     var users: [User] = []
     var badgeNames: [String: String] = [:]
     var connections: [String: [String]] = [:]
@@ -184,9 +185,9 @@ final class AppStore {
     @ObservationIgnored private var onboardingSaveQueue: Task<OnboardingState, Error>?
     @ObservationIgnored private var onboardingDebounce: Task<Void, Never>?
 
-    private(set) var itemsByID: [String: Item] = [:]
+    private(set) var itemsByID: [String: Item] { get { catalogStore.itemsByID } set { catalogStore.itemsByID = newValue } }
     private(set) var usersByID: [String: User] = [:]
-    private(set) var universesByID: [String: Universe] = [:]
+    private(set) var universesByID: [String: Universe] { get { catalogStore.universesByID } set { catalogStore.universesByID = newValue } }
 
     /// Presentation state is separate from ownership of an in-flight load.
     var isLoading = true
@@ -329,6 +330,7 @@ final class AppStore {
         duelCurationAPI: (any DuelCurationAPI)? = nil,
         draftStorage: (any LogDraftStorage)? = nil
     ) {
+        self.catalogStore = CatalogStore(api: catalogAPI)
         self.diaryStore = DiaryStore(api: activityAPI, ownerID: session?.userID ?? "duda")
         let storage = draftStorage ?? session.flatMap { session in
             activityAPI == nil ? nil : FileLogDraftStorage(userID: session.userID)
@@ -361,7 +363,7 @@ final class AppStore {
         isOnboarded = onboarded
         themePreference = ThemePreference(rawValue: UserDefaults.standard.string(forKey: "mv-theme") ?? "") ?? .system
         self.repository = repository ?? (accountAPI == nil ? MockRepository(startFollowing: onboarded, session: session) : nil)
-        if accountAPI != nil { comingSoonUniverses = [] }
+        if accountAPI == nil { comingSoonUniverses = StaticContent.comingSoonUniverses.map { UpcomingUniverse(id: $0, name: $0) } }
     }
 
     /// Bootstrap and retries share one owner, acquired before any suspension.
@@ -391,7 +393,7 @@ final class AppStore {
             if !hasLoadedRepository {
                 try await loadInitialRepository()
                 hasLoadedRepository = true
-            } else if let snapshot = try await catalogAPI?.fetchCatalog() {
+            } else if let snapshot = try await catalogAPI?.fetchBootstrap() {
                 try Task.checkCancellation()
                 try snapshot.validate()
                 applyCatalog(snapshot)
@@ -416,7 +418,7 @@ final class AppStore {
 
     private func loadInitialRepository() async throws {
         guard let repository else {
-            if let snapshot = try await catalogAPI?.fetchCatalog() {
+            if let snapshot = try await catalogAPI?.fetchBootstrap() {
                 try Task.checkCancellation()
                 try snapshot.validate()
                 applyCatalog(snapshot)
@@ -424,7 +426,7 @@ final class AppStore {
             return
         }
         async let catalogResult = repository.loadCatalog()
-        async let remoteCatalogResult = catalogAPI?.fetchCatalog()
+        async let remoteCatalogResult = catalogAPI?.fetchBootstrap()
         async let reviewsResult = repository.fetchReviews()
         async let diaryResult = repository.fetchDiary()
         async let followsResult = repository.fetchFollows()
@@ -541,13 +543,7 @@ final class AppStore {
 
     // MARK: - Acesso a dados
 
-    private func applyCatalog(_ snapshot: CatalogSnapshot) {
-        universes = snapshot.universes
-        items = snapshot.items
-        comingSoonUniverses = snapshot.comingSoon
-        universesByID = Dictionary(uniqueKeysWithValues: universes.map { ($0.id, $0) })
-        itemsByID = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })
-    }
+    private func applyCatalog(_ snapshot: CatalogSnapshot) { catalogStore.install(snapshot) }
 
     private func loadRemoteActivity() async throws {
         guard let activityAPI else { return }
@@ -588,6 +584,7 @@ final class AppStore {
     private func applyActivity(_ snapshot: ActivitySnapshot, appending: Bool = false) {
         if isMutatingActivity { diaryStore.query = DiaryQuery() }
         diaryStore.apply(snapshot, appending: appending)
+        if let references = snapshot.summary?.catalogReferences { catalogStore.applyReferences(references) }
         reviews = activityReviews.values.sorted { $0.createdAt > $1.createdAt }.map(\.display)
         for universe in snapshot.universes where universesByID[universe.id] == nil { universesByID[universe.id] = universe }
         for item in snapshot.items { itemsByID[item.id] = item }
@@ -975,7 +972,9 @@ final class AppStore {
 
     func universePercent(_ uniID: String) -> Int {
         guard let u = universesByID[uniID] else { return 0 }
-        let count = items.filter { $0.uni == uniID && isSeen($0.id) }.count
+        let seen = registeredItemIDs.union(checks.filter { $0.value }.map(\.key))
+        let count = catalogStore.paginated ? seen.filter { catalogStore.reference($0)?.uni == uniID }.count
+            : items.filter { $0.uni == uniID && isSeen($0.id) }.count
         if catalogAPI != nil { return u.total > 0 ? min(100, count * 100 / u.total) : 0 }
         return min(99, u.base + count)
     }
@@ -986,7 +985,8 @@ final class AppStore {
     }
 
     func topRatedItems(in uniID: String) -> [Item] {
-        items.filter { $0.uni == uniID && $0.type != "Personagem" }.sorted { $0.avg > $1.avg }
+        if let ids = catalogStore.topRatedIDs { return ids.compactMap { item($0) }.filter { $0.uni == uniID } }
+        return items.filter { $0.uni == uniID && $0.type != "Personagem" }.sorted { $0.avg > $1.avg }
     }
     func charactersList(in uniID: String) -> [Item] {
         items.filter { $0.uni == uniID && $0.type == "Personagem" }
@@ -1093,6 +1093,7 @@ final class AppStore {
     }
 
     var homeDiscoveryItems: [Item] {
+        if let ids = catalogStore.discoveryIDs { return ids.compactMap { item($0) } }
         if usesRemoteCatalog {
             return Array(items.lazy.filter { !["Personagem", "Evento"].contains($0.type) }.prefix(8))
         }
@@ -1120,6 +1121,11 @@ final class AppStore {
 
     // MARK: - Busca
 
+    func catalogQuery(query: String, filter: SearchFilter) -> CatalogQuery {
+        let category: String = switch filter { case .works: "works"; case .characters: "characters"; case .events: "events"; default: "all" }
+        return .init(text: query.trimmingCharacters(in: .whitespacesAndNewlines), category: category)
+    }
+
     func searchResults(query: String, filter: SearchFilter, limit: Int = 40) -> (rows: [SearchResultRow], totalCount: Int) {
         let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let visibleLimit = max(0, limit)
@@ -1131,7 +1137,8 @@ final class AppStore {
         }
 
         if filter != .people {
-            var filtered = items.filter { it in
+            let remote = catalogStore.paginated ? catalogStore.page(catalogQuery(query: query, filter: filter)) : nil
+            var filtered = (remote?.values ?? items).filter { it in
                 let typeOK: Bool
                 switch filter {
                 case .all: typeOK = true
@@ -1141,13 +1148,13 @@ final class AppStore {
                 case .people: typeOK = false
                 }
                 guard typeOK else { return false }
-                guard !q.isEmpty else { return true }
+                guard remote == nil, !q.isEmpty else { return true }
                 let uniName = universesByID[it.uni]?.name ?? ""
                 return matches(it.title + " " + uniName)
             }
             if !usesRemoteCatalog { filtered.sort { Logic.logCount($0) > Logic.logCount($1) } }
 
-            totalCount += filtered.count
+            totalCount += remote?.total ?? filtered.count
             rows.append(contentsOf: filtered.prefix(visibleLimit).map { it in
                 let uni = universesByID[it.uni]!
                 let p = Logic.posterColors(item: it, universe: uni)
@@ -1526,7 +1533,8 @@ final class AppStore {
     }
 
     func onboardingConsumablePicks() -> [Item] {
-        Array(items.filter { onboardingUniverses.contains($0.uni) && $0.type != "Personagem" }.prefix(15))
+        let candidates = catalogStore.onboardingIDs.map { $0.compactMap { item($0) } } ?? items
+        return Array(candidates.filter { onboardingUniverses.contains($0.uni) && $0.type != "Personagem" }.prefix(15))
     }
 
     func onboardingPeopleSorted() -> [User] {
@@ -1598,7 +1606,14 @@ final class AppStore {
         remoteVersion = progress.version
         onboardingUniverses = Set(progress.universeIDs).intersection(universes.map(\.id))
         if !progress.completed {
-            let seen = Set(progress.seenItemIDs)
+            var seen = Set(progress.seenItemIDs)
+            if catalogStore.paginated {
+                await catalogStore.resolve(progress.seenItemIDs, refresh: true)
+                try Task.checkCancellation()
+                guard progress.seenItemIDs.allSatisfy({ catalogStore.itemErrors[$0] == nil }) else { throw CatalogError.unavailable }
+                seen = seen.filter { catalogStore.reference($0).map { $0.type != "Personagem" } == true }
+            }
+            checks = Dictionary(uniqueKeysWithValues: seen.map { ($0, true) })
             for item in items where item.type != "Personagem" { checks[item.id] = seen.contains(item.id) }
         } else {
             for id in progress.seenItemIDs { checks[id] = true }
@@ -1653,7 +1668,7 @@ final class AppStore {
     private func onboardingSnapshot(step: Int? = nil, completed: Bool = false) -> OnboardingState {
         let currentStep = onboardingPhase == .step1 ? 1 : (onboardingPhase == .step2 ? 2 : 3)
         return OnboardingState(universeIDs: onboardingUniverses.sorted(),
-                               seenItemIDs: items.filter { $0.type != "Personagem" && (usesRemoteActivity ? checks[$0.id] == true : isSeen($0.id)) }.map(\.id).sorted(),
+                               seenItemIDs: catalogStore.paginated ? checks.filter { $0.value }.map(\.key).sorted() : items.filter { $0.type != "Personagem" && (usesRemoteActivity ? checks[$0.id] == true : isSeen($0.id)) }.map(\.id).sorted(),
                                followedUserIDs: follows.sorted(), step: step ?? currentStep,
                                completed: completed, version: remoteVersion)
     }

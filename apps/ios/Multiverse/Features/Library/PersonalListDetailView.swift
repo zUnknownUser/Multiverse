@@ -7,11 +7,13 @@ struct PersonalListDetailView: View {
     @State private var editing = false
     @State private var adding = false
     @State private var deleting = false
+    private var referenceIDs: [String] { store.library?.lists.first(where: { $0.id == listID })?.itemIDs ?? [] }
     var body: some View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             VStack(alignment: .leading, spacing: 18) {
                 if let library = store.library {
                     LibraryStatusNotice(library: library)
+                    CatalogReferenceStatus(ids: referenceIDs)
                     if let list = library.lists.first(where: { $0.id == listID }) {
                         Text(L10n.text("LISTA PRIVADA")).kicker()
                         Text(list.title).font(MVFont.display(28, width: 118))
@@ -32,6 +34,7 @@ struct PersonalListDetailView: View {
                 }
             }.foregroundStyle(MV.C.ink).padding(MV.pad)
         }.task { await store.library?.refresh() }.refreshable { await store.library?.refresh() }
+        .task(id: referenceIDs) { await store.catalogStore.resolve(referenceIDs) }
         .sheet(isPresented: $editing) { if let library = store.library, let list = library.lists.first(where: { $0.id == listID }) { PersonalListEditor(library: library, list: list) } }
         .sheet(isPresented: $adding) { LibraryItemPicker(listID: listID) }
         .confirmationDialog(L10n.text("Excluir esta lista? As obras e seu diário serão mantidos."), isPresented: $deleting, titleVisibility: .visible) {
@@ -44,14 +47,18 @@ private struct LibraryItemPicker: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var search = ""
+    private var catalogQuery: CatalogQuery { .init(text: search, category: "consumable") }
     var body: some View {
         NavigationStack {
             List {
                 if let library = store.library {
                     LibraryStatusNotice(library: library)
                     if let list = library.lists.first(where: { $0.id == listID }) {
-                        let results = store.items.filter { search.isEmpty || $0.title.localizedStandardContains(search) }
-                        if results.isEmpty { Text(L10n.text("Nenhuma obra encontrada.")) }
+                        let results = store.catalogStore.paginated ? store.catalogStore.page(catalogQuery).values : store.items.filter { search.isEmpty || $0.title.localizedStandardContains(search) }
+                        if results.isEmpty && (!store.catalogStore.paginated || store.catalogStore.page(catalogQuery).loaded) { Text(L10n.text("Nenhuma obra encontrada.")) }
+                        if store.catalogStore.paginated {
+                            CatalogPageControls(state: store.catalogStore.page(catalogQuery)) { more in await store.catalogStore.load(catalogQuery, more: more) }
+                        }
                         ForEach(results) { item in
                             let included = list.itemIDs.contains(item.id)
                             Button {
@@ -62,6 +69,9 @@ private struct LibraryItemPicker: View {
                         }
                     } else { Text(L10n.text("Esta lista não está mais disponível.")) }
                 }
+            }.task(id: CatalogTaskKey(query: catalogQuery, generation: store.catalogStore.generation)) {
+                do { try await Task.sleep(for: .milliseconds(250)) } catch { return }
+                await store.catalogStore.load(catalogQuery)
             }.searchable(text: $search, prompt: L10n.text("Buscar obras"))
             .navigationTitle(L10n.text("ADICIONAR OBRAS"))
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.text("CONCLUÍDO")) { dismiss() } } }

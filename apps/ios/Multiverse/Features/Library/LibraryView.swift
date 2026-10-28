@@ -33,6 +33,7 @@ struct LibraryView: View {
     @State private var selection = 0
     @State private var creating = false
     @State private var query = ""
+    private var referenceIDs: [String] { selection == 0 ? (store.library?.wantedIDs ?? []) : selection == 1 ? (store.library?.favoriteIDs ?? []) : [] }
     var body: some View {
         ScreenScaffold {
             LazyVStack(alignment: .leading, spacing: 18) {
@@ -50,6 +51,7 @@ struct LibraryView: View {
                 }.pickerStyle(.segmented)
                 if let library = store.library {
                     LibraryStatusNotice(library: library)
+                    CatalogReferenceStatus(ids: referenceIDs)
                     if library.snapshot != nil {
                         if selection == 2 {
                             Button(L10n.text("CRIAR LISTA")) { creating = true }.buttonStyle(.borderedProminent).disabled(!library.canMutate)
@@ -64,7 +66,7 @@ struct LibraryView: View {
                                 Button(L10n.text("EXPLORAR CATÁLOGO")) { store.goToTab(.search) }
                             }
                             let matches = ids.filter { ProductSearch.matches(store.item($0)?.title ?? "", query: query) }
-                            if matches.isEmpty && !ids.isEmpty { searchEmpty }
+                            if matches.isEmpty && !ids.isEmpty && ids.allSatisfy({ store.item($0) != nil || store.catalogStore.missingIDs.contains($0) }) { searchEmpty }
                             ForEach(matches, id: \.self) { id in
                                 LibraryItemRow(itemID: id) {
                                     Task { await library.change(selection == 0 ? "wanted" : "favorite", itemID: id, enabled: false) }
@@ -75,6 +77,7 @@ struct LibraryView: View {
                 }
             }.foregroundStyle(MV.C.ink).padding(MV.pad)
         }.task { await store.library?.refresh() }.refreshable { await store.library?.refresh() }
+        .task(id: referenceIDs) { await store.catalogStore.resolve(referenceIDs) }
         .onChange(of: selection) { _, _ in query = "" }
         .sheet(isPresented: $creating) { if let library = store.library { PersonalListEditor(library: library) } }
     }
@@ -114,6 +117,9 @@ struct LibraryItemRow: View {
                         Text(item.title).font(MVFont.bold(14)).multilineTextAlignment(.leading)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }.buttonStyle(.plain)
+            } else if store.catalogStore.paginated && !store.catalogStore.missingIDs.contains(itemID) {
+                if store.catalogStore.itemErrors[itemID] == nil { ProgressView().frame(maxWidth: .infinity) }
+                else { Image(systemName: "exclamationmark.triangle").frame(maxWidth: .infinity) }
             } else {
                 Text(L10n.text("Obra indisponível no catálogo")).font(MVFont.body(14)).frame(maxWidth: .infinity, alignment: .leading)
             }

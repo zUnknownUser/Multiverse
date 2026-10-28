@@ -6,9 +6,11 @@ struct ReadingOrderView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
 
+    private var referenceIDs: [String] { store.readingOrders.first(where: { $0.id == orderID })?.steps ?? [] }
     var body: some View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             ReadingOrdersStatus().padding(.horizontal, MV.pad)
+            CatalogReferenceStatus(ids: referenceIDs).padding(.horizontal, MV.pad)
             if let order = store.readingOrders.first(where: { $0.id == orderID }), let uni = store.universe(order.uni) {
                 let progress = store.orderProgress(order)
                 VStack(alignment: .leading, spacing: 20) {
@@ -21,6 +23,7 @@ struct ReadingOrderView: View {
                     .font(MVFont.body(14)).foregroundStyle(MV.C.muted).padding(MV.pad)
             }
         }
+        .task(id: referenceIDs) { await store.catalogStore.resolve(referenceIDs) }
         .task(id: scenePhase) {
             guard scenePhase == .active else { return }
             await store.readingOrderStore?.refresh(); await store.refreshActivity()
@@ -100,7 +103,7 @@ struct ReadingOrderView: View {
             ForEach(Array(order.steps.enumerated()), id: \.offset) { index, itemID in
                 if let item = store.item(itemID) {
                     StepRow(number: index + 1, item: item, uni: uni)
-                } else if store.readingOrderStore != nil {
+                } else if store.readingOrderStore != nil && (!store.catalogStore.paginated || store.catalogStore.missingIDs.contains(itemID)) {
                     Text(L10n.text("Uma obra deste percurso mudou. Atualize o catálogo para continuar."))
                         .font(MVFont.body(13)).foregroundStyle(MV.C.muted)
                     Button(L10n.text("ATUALIZAR CATÁLOGO")) { Task { await store.reloadAccount(); await store.readingOrderStore?.refresh() } }.font(MVFont.bold(12))

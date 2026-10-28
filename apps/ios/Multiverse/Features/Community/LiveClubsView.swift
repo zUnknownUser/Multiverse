@@ -82,6 +82,7 @@ struct LiveClubView: View {
                             ForEach(detail.schedule) { schedule in Text("\(schedule.startsOn) · \(store.item(schedule.itemID)?.title ?? schedule.itemID)").tag(schedule.id) }
                         }.tint(MV.C.ink)
                     }
+                    CatalogReferenceStatus(ids: detail.schedule.map(\.itemID))
                     if let plan {
                         VStack(alignment: .leading, spacing: 12) {
                             if let item = store.item(plan.itemID) {
@@ -153,6 +154,7 @@ struct LiveClubView: View {
         guard !busy, let api = store.clubsAPI else { return }; busy = true; error = nil
         do {
             let result = try await api.fetchClub(id); try Task.checkCancellation(); detail = result
+            await store.catalogStore.resolve(result.schedule.map(\.itemID))
             if !result.schedule.contains(where: { $0.id == selectedSchedule }) { selectedSchedule = result.schedule.first?.id ?? "" }
             units = plan?.myUnits ?? 0; busy = false; await loadMembers()
         } catch { self.error = error.localizedDescription; if case CommunityError.clubUnavailable = error { detail = nil; members = [] }; busy = false }

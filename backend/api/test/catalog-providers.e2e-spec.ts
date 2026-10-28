@@ -95,6 +95,139 @@ describe.skipIf(!databaseURL)(
       configureApp(app);
       await app.listen(0, '127.0.0.1'); // Keep one port per suite; concurrent Supertest requests must not close/rebind it.
     });
+    it('bounds bootstrap, resolves exact references and pages filtered series in numeric order', async () => {
+      const get = (path: string, language = 'pt-BR') =>
+        request(app.getHttpServer())
+          .get('/api/v1/catalog/' + path)
+          .set('Accept-Language', language);
+      await db.query(`INSERT INTO catalog_items(id,universe_id,type,sort_order)
+        SELECT 'page-fixture-'||n,'marvel','HQ',10000+n FROM generate_series(1,125) n`);
+      await db.query(`INSERT INTO catalog_item_translations(item_id,locale,title,year)
+        SELECT 'page-fixture-'||n,'pt-BR','Paginação Fênix #'||n,'2025' FROM generate_series(1,125) n`);
+      await db.query(
+        "INSERT INTO catalog_series(id,universe_id,year) VALUES('page-series','marvel',2025)",
+      );
+      await db.query(
+        "INSERT INTO catalog_series_translations(series_id,locale,title) VALUES('page-series','pt-BR','Paginação Fênix')",
+      );
+      await db.query(`INSERT INTO catalog_series_items(item_id,series_id,issue_number,position)
+        SELECT 'page-fixture-'||n,'page-series',n::text,n FROM generate_series(1,125) n`);
+      try {
+        const bootstrap = await get('bootstrap').expect(200);
+        expect(bootstrap.body.items.length).toBeLessThanOrEqual(
+          31 * bootstrap.body.universes.length,
+        );
+        expect(bootstrap.body.onboardingIDs.length).toBeLessThanOrEqual(
+          15 * bootstrap.body.universes.length,
+        );
+        expect(
+          bootstrap.body.universes.find(
+            (u: { id: string }) => u.id === 'marvel',
+          ).total,
+        ).toBeGreaterThan(125);
+        const first = await get('items')
+          .query({
+            q: 'PAGINACAO fenix',
+            category: 'works',
+            limit: 30,
+            series: 'page-series',
+          })
+          .expect(200);
+        expect(first.body.total).toBe(125);
+        expect(
+          first.body.items.map(
+            (i: { series: { position: number } }) => i.series.position,
+          ),
+        ).toEqual(Array.from({ length: 30 }, (_, i) => i + 1));
+        const ids = new Set(first.body.items.map((i: { id: string }) => i.id));
+        let cursor = first.body.nextCursor;
+        while (cursor) {
+          const next = await get('items')
+            .query({
+              q: 'PAGINACAO fenix',
+              category: 'works',
+              limit: 30,
+              series: 'page-series',
+              after: cursor,
+            })
+            .expect(200);
+          for (const item of next.body.items) {
+            expect(ids.has(item.id)).toBe(false);
+            ids.add(item.id);
+          }
+          cursor = next.body.nextCursor;
+        }
+        expect(ids.size).toBe(125);
+        await get('items')
+          .query({
+            after: first.body.nextCursor,
+            series: 'page-series',
+            q: 'different',
+          })
+          .expect(400);
+        await get('items').query({ limit: 51 }).expect(400);
+        await get('items').query({ after: 'malformed' }).expect(400);
+        const detail = await get('series/page-series', 'en').expect(200);
+        expect(detail.body).toMatchObject({
+          id: 'page-series',
+          title: 'Paginação Fênix',
+          total: 125,
+        });
+        let seriesCursor: string | null = null;
+        const seriesIDs = new Set<string>();
+        do {
+          const list: {
+            body: { series: { id: string }[]; nextCursor: string | null };
+          } = await get('series')
+            .query({
+              limit: 2,
+              ...(seriesCursor ? { after: seriesCursor } : {}),
+            })
+            .expect(200);
+          for (const group of list.body.series) {
+            expect(seriesIDs.has(group.id)).toBe(false);
+            seriesIDs.add(group.id);
+          }
+          seriesCursor = list.body.nextCursor;
+        } while (seriesCursor);
+        expect(seriesIDs.has('page-series')).toBe(true);
+        await db.query(
+          "UPDATE catalog_items SET status='archived' WHERE id='page-fixture-125'",
+        );
+        const resolved = await get('resolve', 'en')
+          .query({ ids: 'page-fixture-124,page-fixture-125,unknown-work' })
+          .expect(200);
+        expect(resolved.body.items.map((i: { id: string }) => i.id)).toEqual([
+          'page-fixture-124',
+        ]);
+        expect(resolved.body.missingIDs).toEqual([
+          'page-fixture-125',
+          'unknown-work',
+        ]);
+        expect((await get('series/page-series').expect(200)).body.total).toBe(
+          124,
+        );
+        await get('resolve')
+          .query({
+            ids: Array.from({ length: 51 }, (_, i) => 'page-fixture-' + i).join(
+              ',',
+            ),
+          })
+          .expect(400);
+        await get('resolve')
+          .query({ ids: 'page-fixture-1,page-fixture-1' })
+          .expect(400);
+      } finally {
+        await db.query(
+          "DELETE FROM catalog_series_items WHERE series_id='page-series'",
+        );
+        await db.query("DELETE FROM catalog_series WHERE id='page-series'");
+        await db.query(
+          "DELETE FROM catalog_items WHERE id LIKE 'page-fixture-%'",
+        );
+      }
+    });
+
     afterAll(async () => {
       await app?.close();
       if (admin) {

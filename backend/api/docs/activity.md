@@ -130,9 +130,13 @@ limitar o histórico; permanece melhoria de capacidade E03.
 sem acentos/caixa), `selection` (`all`, `liked`, `rated`, `rewatched`), `year` e
 `timeZone` IANA. Consultas de reviews também aceitam `selection=reviewed`, `itemId` e `universeId` (Marvel/DC), sem depender da página aberta no diário. Limite 1–100. Cursor opaco preserva microssegundos e desempate
 por criação/UUID, vinculado à conta, idioma e filtros. Resposta adiciona
-`nextCursor` e `summary` (total, reviewCount, averageRating, years, latestEntries, recentReviews, buckets, activeDays).
+`nextCursor` e `summary` (total, reviewCount, averageRating, years, latestEntries, recentReviews, buckets, activeDays, catalogReferences).
 O resumo independe dos filtros/páginas; latestEntries contém só a última entrada
 por obra para progresso/defaults/favoritos, sem textos ou metadados completos.
+`catalogReferences` contém apenas `{id, uni, type, seriesID}` de obras publicadas
+registradas ou marcadas no onboarding da própria conta. Mantém progresso de
+universos/séries correto com o catálogo paginado, sem carregar títulos/capas de
+todo o histórico e sem incluir atividade de outras contas.
 PUT/PATCH/DELETE também aceitam `limit=30`; uma edição antiga inclui o UUID
 confirmado além da página, no máximo 31 registros. Cliente reinicia a navegação
 após mutações. Sem query mantém o contrato completo, inclusive exportação.

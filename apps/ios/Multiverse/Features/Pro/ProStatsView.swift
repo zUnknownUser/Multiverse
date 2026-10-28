@@ -178,7 +178,7 @@ struct ProStatsView: View {
     }
 
     private var communityDeltaNote: String {
-        let communityAvg = store.items.reduce(0.0) { $0 + $1.avg } / Double(max(1, store.items.count))
+        let communityAvg = store.catalogStore.aggregateAverage ?? store.items.reduce(0.0) { $0 + $1.avg } / Double(max(1, store.items.count))
         return L10n.format("comunidade: %1$@", String(describing: L10n.decimal(communityAvg)))
     }
 

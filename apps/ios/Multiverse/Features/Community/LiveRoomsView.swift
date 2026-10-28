@@ -17,6 +17,7 @@ struct LiveRoomsView: View {
                 TextField(L10n.text("Buscar obra"), text: $query).padding(12).comicCard(shadow: MV.Shadow.s)
                 if let error { AuthErrorBanner(message: error); Button(L10n.text("TENTAR DE NOVO")) { Task { await load() } } }
                 if busy { ProgressView() }
+                CatalogReferenceStatus(ids: rooms.map(\.itemID))
                 if rooms.isEmpty && !busy && error == nil { CommunityEmptyMessage(text: L10n.text("Nenhuma sala encontrada para esta busca.")) }
                 ForEach(rooms) { room in
                     if let item = store.item(room.itemID) {
@@ -33,7 +34,7 @@ struct LiveRoomsView: View {
                 }
                 if cursor != nil { Button(L10n.text("CARREGAR MAIS")) { Task { await load(more: true) } }.disabled(busy) }
             }.padding(MV.pad)
-        }.task(id: query) {
+        }.task(id: rooms.map(\.itemID)) { await store.catalogStore.resolve(rooms.map(\.itemID)) }.task(id: query) {
             do { try await Task.sleep(for: .milliseconds(300)); try Task.checkCancellation(); await load() } catch { }
         }.refreshable { await load() }
     }
@@ -148,8 +149,10 @@ struct LiveRoomView: View {
         }
         .task(id: scenePhase) {
             guard scenePhase == .active else { return }
+            await store.catalogStore.resolve([itemID])
             await watchRoom()
         }
+        .overlay(alignment: .top) { CatalogReferenceStatus(ids: [itemID]).padding(MV.pad) }
         .onDisappear { Task { await voice.leave() } }
         .onChange(of: scenePhase) { _, phase in if phase == .background { Task { await voice.leave() } } }
         .sheet(isPresented: $showingVoice) {

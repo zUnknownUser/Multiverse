@@ -20,8 +20,15 @@ struct LogSheetView: View {
             ScrollView {
                 if store.logDraft?.itemID == nil {
                     PickItemContent()
-                } else {
-                    LogFormContent()
+                } else if let id = store.logDraft?.itemID {
+                    CatalogReferenceStatus(ids: [id]).padding(MV.pad)
+                    if store.item(id) != nil { LogFormContent() }
+                    else if store.catalogStore.missingIDs.contains(id) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(L10n.text("Obra indisponível no catálogo"))
+                            Text(store.logDraft?.text ?? "").textSelection(.enabled)
+                        }.padding(MV.pad)
+                    }
                 }
             }
             .scrollIndicators(.hidden)
@@ -41,13 +48,15 @@ struct LogSheetView: View {
             Button(L10n.text("Cancelar"), role: .cancel) {}
         }
         .task { await store.social?.loadPrivacy() }
+        .task(id: store.logDraft?.itemID) { if let id = store.logDraft?.itemID { await store.catalogStore.resolve([id]) } }
     }
 }
 
 private struct PickItemContent: View {
     @Environment(AppStore.self) private var store
     @State private var query = ""
-    private var matchingItems: [Item] { store.logPickerItems.filter { ProductSearch.matches($0.title, query: query) } }
+    private var catalogQuery: CatalogQuery { .init(text: query, category: "consumable") }
+    private var matchingItems: [Item] { store.catalogStore.paginated ? store.catalogStore.page(catalogQuery).values : store.logPickerItems.filter { ProductSearch.matches($0.title, query: query) } }
     private let columns = [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
 
     var body: some View {
@@ -56,7 +65,7 @@ private struct PickItemContent: View {
                 .font(MVFont.section(18)).foregroundStyle(MV.C.ink)
             TextField(L10n.text("Buscar obra pelo título"), text: $query)
                 .padding(12).comicCard(shadow: MV.Shadow.s).autocorrectionDisabled()
-            if matchingItems.isEmpty && !store.logPickerItems.isEmpty {
+            if matchingItems.isEmpty && (!store.catalogStore.paginated || store.catalogStore.page(catalogQuery).loaded) && !store.logPickerItems.isEmpty {
                 Text(L10n.text("Nenhuma obra encontrada. Tente outro título.")).font(MVFont.body(14)).foregroundStyle(MV.C.muted)
             }
             LazyVGrid(columns: columns, spacing: 12) {
@@ -67,13 +76,20 @@ private struct PickItemContent: View {
                         .buttonStyle(.plain)
                 }
             }
-            if store.logPickerItems.isEmpty {
+            if store.catalogStore.paginated {
+                CatalogPageControls(state: store.catalogStore.page(catalogQuery)) { more in await store.catalogStore.load(catalogQuery, more: more) }
+            }
+            if !store.catalogStore.paginated && store.logPickerItems.isEmpty {
                 Text(L10n.text("Ainda não há itens disponíveis para registrar. Volte em instantes."))
                     .font(MVFont.body(14)).foregroundStyle(MV.C.muted)
             }
         }
         .padding(.horizontal, MV.pad)
         .padding(.bottom, 24)
+        .task(id: CatalogTaskKey(query: catalogQuery, generation: store.catalogStore.generation)) {
+            do { try await Task.sleep(for: .milliseconds(250)) } catch { return }
+            await store.catalogStore.load(catalogQuery)
+        }
     }
 }
 

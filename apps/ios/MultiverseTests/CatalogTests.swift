@@ -149,6 +149,28 @@ struct CatalogTests {
         #expect(store.catalogIssue == nil)
     }
 
+    @Test func paginatedRequestsPreserveFiltersCursorAndExactReferenceIDs() async throws {
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [CatalogURLProtocol.self]
+        let transport = URLSession(configuration: config)
+        defer { transport.invalidateAndCancel() }
+        let api = CatalogAPIClient(baseURL: URL(string: "https://example.test/api/v1"), transport: transport)
+        CatalogURLProtocol.fixture.reset(data: try JSONEncoder().encode(snapshot()))
+        _ = try await api.fetchBootstrap()
+        #expect(CatalogURLProtocol.fixture.request?.url?.path == "/api/v1/catalog/bootstrap")
+        CatalogURLProtocol.fixture.reset(data: try JSONEncoder().encode(CatalogItemPage(locale: "pt-BR", total: 0, items: [], nextCursor: nil)))
+        _ = try await api.fetchItems(query: .init(text: "Fênix & Marvel", category: "works", universe: "marvel", series: "series-id"), after: "opaque+/=")
+        let request = try #require(CatalogURLProtocol.fixture.request)
+        let query = Dictionary(uniqueKeysWithValues: URLComponents(url: request.url!, resolvingAgainstBaseURL: false)!.queryItems!.map { ($0.name, $0.value!) })
+        #expect(request.url?.path == "/api/v1/catalog/items")
+        #expect(query == ["q": "Fênix & Marvel", "category": "works", "universe": "marvel", "series": "series-id", "after": "opaque+/=", "limit": "30"])
+        #expect(request.value(forHTTPHeaderField: "X-Multiverse-Environment") == AppEnvironment.current.rawValue)
+        CatalogURLProtocol.fixture.reset(data: try JSONEncoder().encode(CatalogResolution(locale: "pt-BR", items: [], missingIDs: ["missing-work"])))
+        let resolved = try await api.resolveItems(ids: ["missing-work"])
+        #expect(resolved.missingIDs == ["missing-work"])
+        #expect(CatalogURLProtocol.fixture.request?.url?.path == "/api/v1/catalog/resolve")
+    }
+
     @Test func catalogRequestUsesIOSLanguageAndDecodesServerResponse() async throws {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [CatalogURLProtocol.self]

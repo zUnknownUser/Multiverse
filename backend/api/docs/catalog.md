@@ -25,34 +25,42 @@ futuras são feitas no banco por migrations novas; não edite migrations aplicad
 
 `total` é a quantidade publicada de itens. `members` conta perfis com onboarding
 concluído que selecionaram o universo, excluindo contas em exclusão. Os números
-fictícios de engajamento não foram importados. `base` e `live` retornam zero; presença ainda será implementada. `avg`,
+fictícios de engajamento não foram importados. `base` e `live` retornam zero; presença de salas usa a API própria. `avg`,
 `logCount` e `reviewCount` usam a atividade persistida (veja [diário](activity.md)). A leitura usa uma transação
 com snapshot consistente para não misturar itens e totais de publicações distintas.
 
 ## iOS
 
-`RootView` injeta `CatalogAPIClient` em `AppStore`. O catálogo remoto substitui os
-universos e itens usados no onboarding, busca, cards e detalhes, mantendo os mesmos
-modelos visuais. A lista “Em breve” também vem da API, incluindo League of Legends.
-A carga ocorre ao preparar a sessão; reabra o app para obter alterações editoriais.
+`RootView` injeta `CatalogAPIClient`; `CatalogStore` possui a seleção inicial,
+cache por ID, páginas, cursores e erros. `AppStore` coordena a sessão e mantém os
+acessos usados pelas telas. Demos e previews continuam com o catálogo em memória.
 
-O loading aparece somente durante a consulta. Falta de internet, timeout e serviço
-indisponível têm mensagens distintas e ações de tentar novamente ou sair, usando
-fontes, cores e botão primário existentes. Ausência de universos é apresentada como
-“Catálogo em preparação”, um estado informativo, e buscas vazias orientam mudar o
-nome ou filtro sem exibir erro. Cancelamento de uma consulta não mostra falha.
-Não substitui uma falha por catálogo fictício. A tentativa refaz a consulta; seleções retiradas do
-catálogo são descartadas localmente ao restaurar o onboarding. Universo sem itens
-continua válido. A busca filtra o snapshot carregado, sem paginação nesta primeira etapa.
+A sessão real carrega `/catalog/bootstrap` (até 31 itens por universo), com
+seleções explícitas para Home/onboarding/notas e totais do catálogo inteiro.
+Busca, personagens, seletores de obras e edições carregam páginas de 30;
+listas de séries usam páginas de 20. Séries preservam a ordem numérica das edições.
+Os filtros e o idioma fazem parte do cursor; mudar a busca não mistura resultados.
 
-Mocks continuam disponíveis para previews/testes. O diário e as reviews da própria
-conta são persistidos. O [feed social](social-feed.md) usa reviews reais com opt-in,
-paginação e bloqueio. Listas, timelines, clubes e outros módulos ainda usam os dados anteriores nesta etapa.
-O catálogo inicial não torna esses recursos persistentes nem seus contadores reais.
+Biblioteca, favoritos, percursos, salas, clubes e cartas resolvem os IDs usados
+pela tela em lotes de até 50. Referências privadas do diário continuam vindo da
+API de atividade. Um erro de rede permite tentar novamente; apenas `missingIDs`
+confirma retirada do catálogo. Referências compartilhadas terminam de carregar
+mesmo se a tela que iniciou a leitura fechar. Recarregar a conta invalida páginas
+e respostas antigas. Essa cache é de sessão, sem persistência offline.
+
+Progresso usa referências compactas de obras registradas/vistas e totais completos,
+sem depender da página visível. O onboarding restaura seleções publicadas fora do
+bootstrap e descarta apenas retiradas confirmadas; falha de leitura não apaga escolhas.
+A média do catálogo também vem de agregação completa. Falhas nunca carregam fixtures
+na conta real. Estados vazios, erros, loading e retry mantêm o design e as traduções.
+
+As integrações sociais, biblioteca, clubes, salas e mensagens usam suas APIs
+próprias. O catálogo fornece metadados; a situação de lançamento de cada módulo é
+registrada em [LAUNCH_READINESS](../../../docs/LAUNCH_READINESS.md).
 
 ## Disponibilidade no início do lançamento
 
-O onboarding pede `min(3, loristas elegíveis)`: zero pula a etapa de seguir e
+O fluxo legado pede `min(3, loristas elegíveis)`; na sessão atual seguir é opcional. No fluxo legado, zero pula a etapa de seguir e
 apresenta duas etapas; um ou dois ajustam o mínimo; três ou mais pedem três.
 Elegibilidade exige outra conta com perfil ativo e onboarding concluído. A API
 retorna até 20 sugestões e prioriza seleções já persistidas para que continuem
@@ -65,9 +73,7 @@ a comunidade vazia e não libera uma conclusão sem confirmação da API.
 Um universo sem obras permite continuar com uma mensagem informativa. Na Home,
 a seção de descoberta usa obras publicadas do catálogo, inclusive IDs novos;
 contagens são totais reais, sem alegar tendência semanal ou atividade de amigos.
-A ausência de notas e de reviews convida ao primeiro registro. Presença em tempo
-real ainda não está disponível, então os cards de universo mostram quantidade
-de itens em vez de sugerir que zero pessoas estão online.
+A ausência de notas e de reviews convida ao primeiro registro. Os cards de universo mostram quantidade de itens; presença real fica nas salas.
 
 Sugestões de pessoas de exemplo ficam restritas ao modo de demonstração.
 A sessão real usa a [API de pessoas](people.md): busca por nome/@usuário, perfis
@@ -82,5 +88,28 @@ pronto para lançamento. Todos os novos textos têm PT-BR e inglês.
 Testes HTTP com PostgreSQL isolado cobrem seed, PT/EN, fallback, publicação, novos
 IDs e rejeição transacional sem modificar progresso salvo. Os testes iOS cobrem
 decodificação, idioma, falha/retry sem fallback fictício, integridade referencial e
-um catálogo com apenas um universo. A API deve ser publicada com a migration antes
-de executar a nova versão do app. O predeploy do Railway executa `npm run db:migrate`.
+um catálogo com apenas um universo. O lote de paginação também cobre 125 edições,
+limites/cursor/fallback, resolve publicado, cache, cancelamento e restauração de escolhas.
+Publicar a API antes da versão do app que consome as novas rotas; este lote não cria migration. O predeploy do Railway executa `npm run db:migrate`.
+
+## Carga reduzida e navegação — contrato do lote 28/10/2026
+
+- `GET /catalog` conserva o snapshot legado. O novo cliente usa
+  `GET /catalog/bootstrap`: mesmos universos/totais, seleção inicial limitada por
+  universo para descoberta, onboarding e oito mais bem avaliados. Metadados
+  incluem `discoveryIDs`, `onboardingIDs`, `topRatedIDs` e média agregada.
+- `GET /catalog/items` pagina até 50 itens (30 por padrão), com `q`, `category`
+  (`all`, `works`, `characters`, `events`, `consumable`), `universe`, `series` e
+  `after`. Busca combina palavras sem acentos/caixa em título e universo. Cursor
+  opaco vinculado ao idioma/filtros; séries ordenam posição numérica + ID.
+- `GET /catalog/series` pagina até 30 descritores (20 por padrão); `universe` filtra.
+  Cada descritor contém id/título/ano/universo e total publicado, independente da
+  página de edições. `GET /catalog/series/:id` resolve a abertura por link direto.
+- `GET /catalog/resolve?ids=...` resolve até 50 IDs exatos publicados. Retorna
+  `items` e `missingIDs`; ausência confirmada é diferente de falha de rede.
+- Referências compactas de obras vistas/registradas são agregadas ao resumo privado
+  da atividade para preservar progresso mesmo sem carregar seus metadados completos.
+  Biblioteca, listas, ordens e favoritos resolvem apenas suas próprias referências.
+- Todas as leituras usam PostgreSQL existente, publicação ativa e fallback PT/EN.
+  Não há consulta a provedores externos nem contratação de serviço. Clientes antigos
+  continuam compatíveis. Retirada editorial é refletida ao atualizar as consultas.

@@ -54,7 +54,7 @@ struct ProfileView: View {
     }
 
     private func refreshPeople() async {
-        if userID == store.meID { await store.people?.loadHome(); await store.library?.refresh(); await store.dailyDuels?.refresh() }
+        if userID == store.meID { await store.people?.loadHome(); await store.library?.refresh(); await store.catalogStore.resolve(Array(store.library?.favoriteIDs.prefix(4) ?? [])); await store.dailyDuels?.refresh() }
         else { await store.people?.loadProfile(userID) }
     }
 
@@ -212,10 +212,11 @@ struct ProfileView: View {
 
     @ViewBuilder
     private func favoritesSection(data: AppStore.ProfileData) -> some View {
+        CatalogReferenceStatus(ids: Array(store.library?.favoriteIDs.prefix(4) ?? []))
         if !data.favorites.isEmpty || (data.isMe && store.usesRemoteActivity) {
             VStack(alignment: .leading, spacing: 10) {
                 Text(L10n.text("FAVORITOS")).font(MVFont.section(17)).foregroundStyle(MV.C.ink)
-                if data.favorites.isEmpty {
+                if data.favorites.isEmpty && (store.library?.favoriteIDs.isEmpty ?? true) {
                     Text(L10n.text(store.library == nil ? "Os registros marcados com ♥ Curti aparecerão aqui." : "Marque o coração de uma obra para adicioná-la aos favoritos."))
                         .font(MVFont.body(13)).foregroundStyle(MV.C.muted)
                 }

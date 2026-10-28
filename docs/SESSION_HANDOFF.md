@@ -1,3 +1,29 @@
+## Catálogo paginado e direção social — 28/10/2026
+
+- E03 concluído no código: API preserva `/catalog` legado e adiciona bootstrap
+  limitado (até 31 itens/universo), itens/séries por cursor e resolução de até 50 IDs.
+  Busca e seletores iOS usam 30 itens; séries, 20 descritores. Edições ordenam posição
+  numérica; progresso usa totais/referências completos. Não há migration.
+- E02 avançou: CatalogStore possui cache, páginas, cursores, erros e invalidação;
+  DiaryStore já foi extraído. AppStore ainda coordena onboarding/navegação/gravações.
+- Consumidores tratados: busca, onboarding, registro, séries/personagens, biblioteca,
+  listas, favoritos, percursos, detalhes, salas, clubes e cartas de mensagens.
+  Leituras compartilhadas sobrevivem ao fechamento da tela, mudanças de busca não
+  misturam respostas e seleções antigas publicadas não se perdem fora do bootstrap.
+- Testes locais: API 117 unitários + 176 HTTP; iOS 318 testes/38 suítes; 1.278
+  traduções e três checks de ambiente. Release sem assinatura aprovado. Uma tentativa
+  do simulador terminou antes de iniciar; nova execução completa aprovada.
+- Push/deploy autorizados pelo usuário; publicação deste lote em andamento.
+  CI do lote anterior 40710681608: todos os quatro jobs confirmados aprovados.
+- Direção confirmada por Lucas: comunidade social Marvel/DC com experiência clara;
+  o visual e a estrutura atuais estão aprovados, sem pedido de redesenho. Avaliação
+  e próximo lote de clareza registrados em LAUNCH_READINESS/E10. Atenção ao “+” do
+  diário versus publicar na comunidade, acesso à comunidade pela Home, contexto das
+  salas/clubes e retorno pelos avisos. Existem APIs reais; facilidade de uso ainda
+  precisa de validação com pessoas novas. Nenhum serviço novo autorizado.
+- Homologação integrada/Apple Developer continuam pendentes; não alterar cobrança.
+  Preservar edições alheias em MockRepository.swift e marketing fora do commit.
+
 ## Diário paginado e composição real — 28/10/2026
 
 - E01 concluído: AppStore autenticado usa APIs e não instancia/carrega MockRepository.

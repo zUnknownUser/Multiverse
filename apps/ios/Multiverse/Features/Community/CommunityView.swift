@@ -84,7 +84,7 @@ struct CommunityView: View {
                 ForEach(timeline.posts) { post in CommunityPostCard(post: post, user: timeline.users[post.user]) }
                 if timeline.cursor != nil { Button(L10n.text("CARREGAR MAIS")) { Task { await load(more: true) } }.disabled(timeline.busy) }
             }.padding(MV.pad)
-        }.task(id: filter) {
+        }.task(id: item) { if let item { await store.catalogStore.resolve([item]) } }.task(id: filter) {
             do { if !search.isEmpty { try await Task.sleep(for: .milliseconds(300)) }; try Task.checkCancellation(); await load() } catch { }
         }.refreshable { await load() }
         .sheet(isPresented: $composing, onDismiss: { Task { await load() } }) {

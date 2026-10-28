@@ -143,9 +143,19 @@ export async function activityPage(
         ORDER BY r.created_at DESC,r.id LIMIT 4`,
       [uid],
     );
+    const catalogReferences = await client.query(
+      `SELECT i.id,i.universe_id AS uni,i.type,csi.series_id AS "seriesID"
+      FROM catalog_items i JOIN catalog_universes u ON u.id=i.universe_id AND u.status='active'
+      JOIN catalog_item_translations p ON p.item_id=i.id AND p.locale='pt-BR'
+      LEFT JOIN catalog_series_items csi ON csi.item_id=i.id WHERE i.status='published' AND
+      (i.id IN (SELECT item_id FROM diary_entries WHERE firebase_uid=$1) OR
+       i.id IN (SELECT unnest(seen_item_ids) FROM onboarding WHERE firebase_uid=$1)) ORDER BY i.id`,
+      [uid],
+    );
     summary = {
       ...totals.rows[0],
       latestEntries: latest.rows,
+      catalogReferences: catalogReferences.rows,
       recentReviews: recent.rows,
       buckets: buckets.rows,
       activeDays: days.rows.map((row) => row.day),

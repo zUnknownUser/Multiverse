@@ -12,6 +12,7 @@ struct ItemView: View {
 
     var body: some View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
+            CatalogReferenceStatus(ids: [itemID]).padding(.horizontal, MV.pad)
             if let item = store.item(itemID) {
                 let uni = store.universe(of: item)
                 VStack(alignment: .leading, spacing: 22) {
@@ -56,9 +57,11 @@ struct ItemView: View {
                     reviewsSection(item: item).padding(.horizontal, MV.pad)
                 }
                 .padding(.bottom, 24)
+            } else if store.catalogStore.missingIDs.contains(itemID) {
+                Text(L10n.text("Obra indisponível no catálogo")).padding(MV.pad)
             }
         }
-        .task { await store.library?.refresh() }
+        .task(id: itemID) { await store.catalogStore.resolve([itemID]); await store.library?.refresh() }
         .sheet(isPresented: $addingToList) { AddItemToListSheet(itemID: itemID) }
         .sheet(isPresented: $showingSend) {
             SendCardSheet(itemID: itemID)

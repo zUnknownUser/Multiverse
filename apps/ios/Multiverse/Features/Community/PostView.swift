@@ -86,6 +86,7 @@ private struct PostThreadView: View {
                 }
             }.foregroundStyle(MV.C.ink).padding(MV.pad)
         }.task { await thread.load() }.refreshable { await thread.load() }
+        .task(id: thread.post?.itemID) { if let id = thread.post?.itemID { await store.catalogStore.resolve([id]) } }
         .confirmationDialog(L10n.text("Excluir esta publicação?"), isPresented: $deleting, titleVisibility: .visible) {
             Button(L10n.text("EXCLUIR PUBLICAÇÃO"), role: .destructive) { Task { if await thread.delete() { dismiss() } } }
         }

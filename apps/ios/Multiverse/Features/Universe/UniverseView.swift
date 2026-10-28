@@ -293,9 +293,12 @@ private struct CharactersTabContent: View {
     @Environment(AppStore.self) private var store
     private let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
 
+    private var query: CatalogQuery { .init(category: "characters", universe: universeID) }
     var body: some View {
+        VStack {
+        if store.catalogStore.paginated { CatalogPageControls(state: store.catalogStore.page(query)) { more in await store.catalogStore.load(query, more: more) } }
         LazyVGrid(columns: columns, spacing: 16) {
-            ForEach(store.charactersList(in: universeID)) { item in
+            ForEach(store.catalogStore.paginated ? store.catalogStore.page(query).values : store.charactersList(in: universeID)) { item in
                 Button { store.push(.item(item.id)) } label: {
                     VStack(spacing: 6) {
                         let uni = store.universe(of: item)
@@ -315,6 +318,7 @@ private struct CharactersTabContent: View {
             }
         }
         .padding(.horizontal, MV.pad)
+        }.task(id: CatalogTaskKey(query: query, generation: store.catalogStore.generation)) { await store.catalogStore.load(query) }
     }
 }
 

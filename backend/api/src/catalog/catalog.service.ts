@@ -1,12 +1,16 @@
-import { catalogCoverField } from './catalog-cover.js';
-import { catalogSeriesJoin, catalogSeriesField } from './catalog-series.js';
+import {
+  publishedItemRelations,
+  itemFields,
+  normalizedTitle,
+} from './catalog-sql.js';
+import {
+  browseCatalog,
+  catalogSeriesPage,
+  resolveCatalog,
+} from './catalog-navigation.js';
 import { Inject, Injectable } from '@nestjs/common';
 import type { QueryResultRow } from 'pg';
 import { DatabaseService } from '../database/database.service.js';
-import {
-  catalogDescription,
-  descriptionSourceJoin,
-} from './catalog-description.js';
 
 export function catalogLanguage(header = ''): 'pt-BR' | 'en' {
   const languages = header
@@ -38,19 +42,6 @@ export interface CatalogItemRow extends QueryResultRow {
   canon: string;
   desc: string;
 }
-
-// Fixed SQL shared by all public catalog reads. Values always use parameters.
-const publishedItemRelations = `catalog_items i
-  JOIN catalog_universes u ON u.id=i.universe_id AND u.status='active'
-  JOIN catalog_universe_translations up ON up.universe_id=u.id AND up.locale='pt-BR'
-  JOIN catalog_item_translations p ON p.item_id=i.id AND p.locale='pt-BR'
-  LEFT JOIN catalog_item_translations t ON t.item_id=i.id AND t.locale=$1
-  ${descriptionSourceJoin} ${catalogSeriesJoin('$1')}`;
-const itemFields = `i.id,i.universe_id AS uni,i.type,coalesce(t.title,p.title) AS title,
-  coalesce(t.year,p.year) AS year,s.average AS avg,s.log_count AS "logCount",s.review_count AS "reviewCount",
-  s.rating_histogram AS "ratingHistogram",
-  coalesce(t.canon,p.canon) AS canon,${catalogDescription('$1')} AS "desc",${catalogSeriesField},${catalogCoverField}`;
-const normalizedTitle = `lower(regexp_replace(normalize(coalesce(t.title,p.title),NFD),'[\u0300-\u036f]','','g'))`;
 
 @Injectable()
 export class CatalogService {
@@ -113,7 +104,23 @@ export class CatalogService {
     return result.rows[0];
   }
 
-  async snapshot(locale: 'pt-BR' | 'en') {
+  browse(locale: 'pt-BR' | 'en', query: Record<string, unknown>) {
+    return this.db.transaction((client) =>
+      browseCatalog(client, locale, query),
+    );
+  }
+  series(locale: 'pt-BR' | 'en', query: Record<string, unknown>, id?: string) {
+    return this.db.transaction((client) =>
+      catalogSeriesPage(client, locale, query, id),
+    );
+  }
+  resolve(locale: 'pt-BR' | 'en', query: Record<string, unknown>) {
+    return this.db.transaction((client) =>
+      resolveCatalog(client, locale, query),
+    );
+  }
+
+  async snapshot(locale: 'pt-BR' | 'en', bounded = false) {
     return this.db.transaction(async (client) => {
       // Universes, totals and items must describe the same published snapshot.
       await client.query(
@@ -138,10 +145,50 @@ export class CatalogService {
       const items = await client.query<CatalogItemRow>(
         `SELECT ${itemFields} FROM ${publishedItemRelations}
          JOIN catalog_item_statistics s ON s.item_id=i.id
-         WHERE i.status='published' ORDER BY i.sort_order,i.id`,
-        [locale],
+         WHERE i.status='published' AND (NOT $2::boolean OR i.id IN (
+           SELECT id FROM (
+             SELECT i.id,i.type,
+               row_number() OVER(PARTITION BY i.universe_id,(i.type='Personagem') ORDER BY i.sort_order,i.id) AS editorial,
+               row_number() OVER(PARTITION BY i.universe_id,(i.type IN ('Personagem','Evento')) ORDER BY i.sort_order,i.id) AS discovery,
+               row_number() OVER(PARTITION BY i.universe_id,(i.type='Personagem') ORDER BY s.average DESC,i.id) AS rated
+             FROM catalog_items i JOIN catalog_universes u ON u.id=i.universe_id AND u.status='active'
+             JOIN catalog_item_translations p ON p.item_id=i.id AND p.locale='pt-BR'
+             JOIN catalog_item_statistics s ON s.item_id=i.id WHERE i.status='published'
+           ) choices WHERE type<>'Personagem' AND (editorial<=15 OR rated<=8 OR (type<>'Evento' AND discovery<=8))
+         )) ORDER BY i.sort_order,i.id`,
+        [locale, bounded],
       );
+      const average = bounded
+        ? await client.query(`SELECT coalesce(avg(s.average),0)::float8 AS average
+        FROM catalog_items i JOIN catalog_universes u ON u.id=i.universe_id AND u.status='active'
+        JOIN catalog_item_translations p ON p.item_id=i.id AND p.locale='pt-BR'
+        JOIN catalog_item_statistics s ON s.item_id=i.id WHERE i.status='published'`)
+        : null;
       return {
+        ...(bounded
+          ? {
+              discoveryIDs: items.rows
+                .filter((i) => !['Personagem', 'Evento'].includes(i.type))
+                .slice(0, 8)
+                .map((i) => i.id),
+              onboardingIDs: universes.rows.flatMap((u) =>
+                items.rows
+                  .filter((i) => i.uni === u.id && i.type !== 'Personagem')
+                  .slice(0, 15)
+                  .map((i) => i.id),
+              ),
+              topRatedIDs: universes.rows.flatMap((u) =>
+                items.rows
+                  .filter((i) => i.uni === u.id && i.type !== 'Personagem')
+                  .sort(
+                    (a, b) => b.avg - a.avg || a.id.localeCompare(b.id, 'en'),
+                  )
+                  .slice(0, 8)
+                  .map((i) => i.id),
+              ),
+              aggregateAverage: average!.rows[0].average,
+            }
+          : {}),
         version: 1,
         locale,
         universes: universes.rows

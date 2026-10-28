@@ -424,8 +424,8 @@ Fontes: [MockRepository](../apps/ios/Multiverse/Core/Repository/MockRepository.s
 | ID | Estado | Melhoria | Resultado esperado |
 | --- | --- | --- | --- |
 | E01 | Concluído | Remover carregamento demo da composição normal | Sessão real não carrega fixtures/módulos ocultos nem latência artificial de 220 ms; previews/testes preservados |
-| E02 | Parcial | Dividir AppStore, hoje com cerca de 2.000 linhas | Estado de diário, onboarding, navegação e legado com responsabilidades claras; aproveitar stores já existentes |
-| E03 | Parcial | Paginar diário e carga inicial de catálogo | Evitar snapshots completos crescentes; salvar registro não precisa retornar todo histórico; preservar progresso/estatísticas corretos |
+| E02 | Parcial | Dividir AppStore, hoje com cerca de 2.000 linhas | DiaryStore e CatalogStore extraídos; onboarding, navegação e legado ainda precisam de responsabilidades próprias |
+| E03 | Concluído | Paginar diário e carga inicial de catálogo | Diário paginado, bootstrap limitado, busca/séries por cursor e referências sob demanda; progresso/estatísticas usam agregações completas |
 | E04 | Pendente | Leitura offline e rascunhos persistentes | Últimos dados e rascunhos sobrevivem ao relançamento; fila/retry com isolamento por conta e idempotência definidos |
 | E05 | Pendente | Evoluir armazenamento de imagens | Planejar object storage e entrega autorizada antes da escala; manter bloqueios, exclusão e privacidade ao sair de PostgreSQL/base64 |
 | E06 | Pendente | Proteção geral contra excesso de requisições | Complementar limites por ação; verificar proteção já existente no provedor antes de configurar limites globais |
@@ -497,3 +497,53 @@ Validação de 28/10: API 117 unitários + 175 HTTP, formatação/lint/tipos/bui
 Railway `3ea2ce38-18d2-4c8b-9334-0b226e7a40cf` confirmou SUCCESS e cinco checks
 remotos passaram. CI 40710681608: API/Firebase/traduções aprovados; iOS remoto ainda
 em execução na última consulta. Não houve migration nem ativação de serviço pago.
+
+### Catálogo e CatalogStore — implementado, publicação em validação (28/10/2026)
+
+Escopo autorizado: bootstrap limitado, busca/edições/séries paginadas, metadados sob
+demanda, progresso independente da página, testes e push/deploy. CatalogStore é
+responsável por cache, consultas, erros e invalidação. Preservar design e arquitetura.
+A visão de produto foi esclarecida: comunidade social Marvel/DC, com conversas e
+debates no centro; catálogo/diário como apoio. Após este lote, avaliar a experiência
+atual e possíveis ambiguidades de navegação sem redesenhar recursos neste escopo.
+
+
+- CatalogStore implementado: bootstrap, cache por consulta/ID, cursores, resolução
+  em lotes, erros/retry e invalidação contra respostas antigas.
+- Busca, personagens, séries, diário, listas e seletores da comunidade usam páginas;
+  biblioteca, favoritos, percursos, salas, clubes e mensagens resolvem suas referências.
+- Progresso/total de edições e média geral independem das páginas carregadas.
+  Escolhas de onboarding fora da seleção inicial são preservadas.
+- Validação local final: 117 unitários + 176 HTTP com PostgreSQL isolado, 318 testes
+  iOS em 38 suítes, 1.278 traduções, três checks de ambiente e Release sem assinatura
+  aprovados. Uma tentativa do simulador encerrou antes dos testes; a repetição completa
+  passou. Publicação será registrada após conclusão. Sem migration ou novo serviço.
+- CI anterior 40710681608 confirmado integralmente aprovado, incluindo iOS.
+
+### Clareza da experiência social — avaliação do código (28/10/2026)
+
+Lucas confirmou que a direção atual está boa e não pediu redesenho. O objetivo é
+comunidade Marvel/DC: encontrar conversas, participar e voltar quando houver resposta.
+
+A base funcional existe: publicações, comentários/respostas, enquetes, teorias/duelos,
+salas por obra, clubes com calendário, mensagens privadas, notificações, bloqueio e
+denúncias usam serviços reais. Diário/biblioteca apoiam o interesse comum. Isso não
+comprova por si só facilidade de uso nem engajamento; faltam sessões com pessoas novas.
+
+Pontos a validar no próximo lote E10, preservando o visual e a arquitetura:
+
+1. Entrada na comunidade: a barra visível contém Início, Busca, Biblioteca e Perfil;
+   a comunidade é acessada pela Home/obras/universos. Verificar se quem chega entende
+   imediatamente onde conversar, sem precisar conhecer o app.
+2. Intenção da ação: o “+” central abre registro no diário; publicar uma discussão
+   fica na comunidade. Conferir se o usuário distingue registrar, avaliar e publicar.
+3. Contexto: Home combina conversas e reviews, enquanto comunidade agrega salas,
+   clubes, teorias e duelos. Explicar destino e alcance da publicação/resposta e
+   preservar esse contexto ao navegar e voltar.
+4. Retorno: validar resposta → aviso → conversa certa, além de vazios, ausência de
+   resposta, offline e retry sem duplicação. Avaliar em PT-BR/EN e tela pequena.
+
+Próximo lote recomendado: percorrer esses quatro caminhos com uma conta nova,
+registrar atritos concretos e corrigir textos/entrada/retorno onde houver ambiguidade.
+Não ampliar recursos nem contratar serviços para esta validação. Homologação
+integrada e assinatura Apple continuam pendentes por decisão anterior.

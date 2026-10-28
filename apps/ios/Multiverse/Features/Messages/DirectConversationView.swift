@@ -89,6 +89,8 @@ struct DirectConversationView: View {
             }
             if !thread.unavailable { composer }
         }.background(MV.C.paper).foregroundStyle(MV.C.ink).toolbar(.hidden, for: .navigationBar)
+            .task(id: thread.messages.compactMap(\.itemID)) { await store.catalogStore.resolve(thread.messages.compactMap(\.itemID)) }
+            .overlay(alignment: .top) { CatalogReferenceStatus(ids: thread.messages.compactMap(\.itemID)).padding(MV.pad) }
             .task {
                 inbox.activePeer = thread.peerID
                 await thread.refresh()
@@ -220,10 +222,12 @@ private struct DirectCardPicker: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
+    private var catalogQuery: CatalogQuery { .init(text: query) }
     var body: some View {
         NavigationStack {
             List {
-                ForEach(store.items.filter { query.isEmpty || $0.title.localizedCaseInsensitiveContains(query) }.prefix(60)) { item in
+                if store.catalogStore.paginated { CatalogPageControls(state: store.catalogStore.page(catalogQuery)) { more in await store.catalogStore.load(catalogQuery, more: more) } }
+                ForEach(store.catalogStore.paginated ? store.catalogStore.page(catalogQuery).values : Array(store.items.filter { query.isEmpty || $0.title.localizedCaseInsensitiveContains(query) }.prefix(60))) { item in
                     Button { pick(item.id); dismiss() } label: {
                         HStack(spacing: 12) {
                             PosterView(item: item, universe: store.universe(of: item), width: 40, height: 60, titleSize: 8, shadow: 0)
@@ -232,7 +236,10 @@ private struct DirectCardPicker: View {
                     }.listRowBackground(MV.C.paper)
                 }
             }.listStyle(.plain).scrollContentBackground(.hidden).background(MV.C.paper)
-                .searchable(text: $query, prompt: L10n.text("Buscar obra…"))
+                .task(id: CatalogTaskKey(query: catalogQuery, generation: store.catalogStore.generation)) {
+                    do { try await Task.sleep(for: .milliseconds(250)) } catch { return }
+                    await store.catalogStore.load(catalogQuery)
+                }.searchable(text: $query, prompt: L10n.text("Buscar obra…"))
                 .navigationTitle(L10n.text("Mandar carta")).navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L10n.text("Cancelar")) { dismiss() } } }
         }

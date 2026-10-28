@@ -50,12 +50,14 @@ struct ScheduleEditor: View {
     @State private var busy = false
     @State private var error: String?
     @State private var pending: ScheduleInput?
-    private var works: [Item] { store.items.filter { $0.uni == club.universeID && (query.isEmpty || $0.title.localizedCaseInsensitiveContains(query)) } }
+    private var catalogQuery: CatalogQuery { .init(text: query, category: "consumable", universe: club.universeID) }
+    private var works: [Item] { store.catalogStore.paginated ? store.catalogStore.page(catalogQuery).values : store.items.filter { $0.uni == club.universeID && (query.isEmpty || $0.title.localizedCaseInsensitiveContains(query)) } }
     var body: some View {
         NavigationStack {
             Form {
                 Section {
                     TextField(L10n.text("Buscar obra"), text: $query)
+                    if store.catalogStore.paginated { CatalogPageControls(state: store.catalogStore.page(catalogQuery)) { more in await store.catalogStore.load(catalogQuery, more: more) } }
                     Picker(L10n.text("Obra"), selection: $item) { Text(L10n.text("Selecione uma obra")).tag(""); ForEach(works) { Text($0.title).tag($0.id) } }
                     DatePicker(L10n.text("Início"), selection: $startsOn, displayedComponents: .date)
                     Stepper(L10n.format("%1$@ unidades", String(units)), value: $units, in: 1...10000)
@@ -65,6 +67,9 @@ struct ScheduleEditor: View {
                 Button(L10n.text("ADICIONAR ETAPA")) { Task { await save() } }.disabled(busy || item.isEmpty || unitLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || unitLabel.count > 30)
             }.navigationTitle(L10n.text("ADICIONAR ETAPA"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L10n.text("FECHAR")) { dismiss() }.disabled(busy) } }
+        }.task(id: CatalogTaskKey(query: catalogQuery, generation: store.catalogStore.generation)) {
+            do { try await Task.sleep(for: .milliseconds(250)) } catch { return }
+            await store.catalogStore.load(catalogQuery)
         }.interactiveDismissDisabled(busy || pending != nil)
     }
     private func save() async {

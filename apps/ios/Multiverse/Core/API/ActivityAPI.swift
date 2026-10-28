@@ -26,6 +26,7 @@ struct ActivitySummary: Codable, Sendable {
     let latestEntries: [DiaryEntry]
     let buckets: [ActivityBucket]
     let activeDays: [String]
+    var catalogReferences: [CatalogReference]? = nil
 }
 
 struct ActivityBucket: Codable, Sendable {
