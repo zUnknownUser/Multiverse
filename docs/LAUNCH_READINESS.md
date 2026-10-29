@@ -581,5 +581,8 @@ review reutiliza as políticas existentes; nenhuma migração ou serviço novo.
 
 Validação local: 117 testes unitários + 177 testes HTTP com PostgreSQL, 321 testes
 iOS em 38 suítes, Release iOS aprovado, catálogo PT-BR/EN com 1.299 entradas e
-`make localization-check environment-check` aprovados. CI e deploy Railway serão
-registrados após o push; não foram feitas contas, publicações ou envios reais nos testes.
+`make localization-check environment-check` aprovados. CI [40882031078](https://github.com/zUnknownUser/Multiverse/actions/runs/40882031078)
+passou nos quatro jobs. Deploy Railway `a0446e1c-9922-4480-9a7f-641e62291dac`
+concluiu SUCCESS. Smoke checks: readiness 200 ready/production e novo endpoint
+de contexto 401 sem credenciais. Não foram feitas contas, publicações ou envios
+reais nos testes; validação manual com usuários segue como próxima confirmação.

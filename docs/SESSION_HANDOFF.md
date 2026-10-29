@@ -982,6 +982,8 @@ visibilidade, bloqueio e moderação. Sem migrations, serviços ou gastos novos.
 
 Validação local: API 117 unitários + 177 HTTP/PostgreSQL; iOS 321 testes/38 suítes
 e build Release; localização PT-BR/EN com 1.299 entradas; `make localization-check
-environment-check` aprovado. O CI e o deploy da API dependem do push e devem ser
-registrados em `LAUNCH_READINESS.md`. Validação manual com usuários continua
-pendente e não deve ser descrita como coberta pelos testes automatizados.
+environment-check` aprovado. Push `9b37e86` para `master`; CI
+[40882031078](https://github.com/zUnknownUser/Multiverse/actions/runs/40882031078)
+aprovado nos quatro jobs. Deploy Railway `a0446e1c-9922-4480-9a7f-641e62291dac`
+SUCCESS; readiness 200 e endpoint protegido 401 sem token. Validação manual com
+usuários continua pendente e não deve ser descrita como coberta pelos testes.
