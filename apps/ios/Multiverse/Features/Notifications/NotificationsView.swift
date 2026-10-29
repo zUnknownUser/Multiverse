@@ -6,8 +6,8 @@ struct NotificationsView: View {
     var body: some View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             LazyVStack(alignment: .leading, spacing: 18) {
-                Text(L10n.text("ATIVIDADE")).font(MVFont.display(28, width: 122))
-                Text(L10n.text("O que o pessoal fez com o que você postou.")).font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.muted)
+                Text(L10n.text("AVISOS")).font(MVFont.display(28, width: 122))
+                Text(L10n.text("Respostas, menções e novidades. Toque para voltar à conversa.")).font(MVFont.body(13, weight: 600)).foregroundStyle(MV.C.muted)
                 if let notifications = store.notifications {
                     if let error = notifications.error {
                         AuthErrorBanner(message: error)
@@ -15,7 +15,11 @@ struct NotificationsView: View {
                     }
                     if notifications.busy { ProgressView() }
                     if notifications.entries.isEmpty && !notifications.busy && notifications.error == nil {
-                        Text(L10n.text("Nenhuma atividade ainda. As novidades aparecerão aqui."))
+                        Text(L10n.text("Quando alguém responder ou mencionar você, o aviso aparecerá aqui."))
+                        if store.communityAPI != nil {
+                            Button(L10n.text("ENCONTRAR CONVERSAS")) { store.push(.community(universe: nil, item: nil)) }
+                                .font(MVFont.bold(12)).buttonStyle(.bordered)
+                        }
                     }
                     if notifications.entries.contains(where: { $0.readAt == nil }) {
                         Button(L10n.text("MARCAR ESTAS COMO LIDAS")) { Task { _ = await notifications.markRead(notifications.entries.map(\.id)) } }.disabled(notifications.busy)

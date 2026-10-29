@@ -99,6 +99,13 @@ export class InteractionsController {
   ) {
     return this.service.comments(req.identity.uid, id, cursor(query));
   }
+  @Get('reviews/:id/comments/:commentID/context') context(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', uuid) id: string,
+    @Param('commentID', uuid) commentID: string,
+  ) {
+    return this.service.context(req.identity.uid, id, commentID);
+  }
   @Put('reviews/:id/comments/:commentID') post(
     @Req() req: AuthenticatedRequest,
     @Param('id', uuid) id: string,

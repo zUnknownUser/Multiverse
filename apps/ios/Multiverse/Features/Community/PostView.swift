@@ -2,11 +2,12 @@ import SwiftUI
 
 struct PostView: View {
     let id: String
+    var notificationCommentID: String? = nil
     @Environment(AppStore.self) private var store
     @State private var thread: CommunityThread?
     var body: some View {
         Group {
-            if let thread { PostThreadView(thread: thread) } else { ProgressView() }
+            if let thread { PostThreadView(thread: thread, notificationCommentID: notificationCommentID) } else { ProgressView() }
         }.task(id: id) {
             if thread == nil, let api = store.communityAPI { thread = CommunityThread(api: api, id: id) }
         }
@@ -14,6 +15,9 @@ struct PostView: View {
 }
 private struct PostThreadView: View {
     let thread: CommunityThread
+    var notificationCommentID: String? = nil
+    @State private var openedNotification = false
+    @State private var replyHandle: String?
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var revealed: Set<String> = []
@@ -21,7 +25,7 @@ private struct PostThreadView: View {
     @State private var spoiler = false
     @State private var pending: (id: String, text: String, spoiler: Bool, parent: String?)?
     @State private var replyTo: RemoteComment?
-    @State private var contextTarget: RemoteComment?
+    @State private var contextTarget: CommentSelection?
     @State private var mentioning = false
     @State private var editing = false
     @State private var resolving = false
@@ -36,6 +40,10 @@ private struct PostThreadView: View {
             LazyVStack(alignment: .leading, spacing: 18) {
                 if let error = thread.error { AuthErrorBanner(message: error); Button(L10n.text("TENTAR DE NOVO")) { Task { await thread.load() } } }
                 if thread.busy && thread.post == nil { ProgressView() }
+                if let notificationCommentID {
+                    Button(L10n.text("VER COMENTÁRIO DO AVISO")) { contextTarget = .init(id: notificationCommentID) }
+                        .font(MVFont.bold(12)).buttonStyle(.bordered)
+                }
                 if let post = thread.post {
                     VStack(alignment: .leading, spacing: 14) {
                         author(post.user)
@@ -71,11 +79,11 @@ private struct PostThreadView: View {
                         VStack(alignment: .leading, spacing: 10) {
                             if let replyTo {
                                 HStack {
-                                    Text(L10n.format("Em resposta a %1$@", thread.users[replyTo.user]?.handle ?? "")).font(MVFont.bold(12))
+                                    Text(L10n.format("Em resposta a %1$@", thread.users[replyTo.user]?.handle ?? replyHandle ?? "")).font(MVFont.bold(12))
                                     Spacer(); Button(L10n.text("CANCELAR")) { self.replyTo = nil }.disabled(thread.busy || pending != nil)
                                 }
                             }
-                            if let replyTo { Button(L10n.text("VER CONTEXTO")) { contextTarget = replyTo }.font(MVFont.bold(11)) }
+                            if let replyTo { Button(L10n.text("VER CONTEXTO")) { contextTarget = .init(id: replyTo.id) }.font(MVFont.bold(11)) }
                             Button(L10n.text("MENCIONAR PESSOA")) { mentioning = true }.disabled(thread.busy || pending != nil)
                             TextField(L10n.text("Escreva um comentário"), text: $text, axis: .vertical).focused($replyFocused).lineLimit(3...8).disabled(thread.busy || pending != nil)
                             Toggle(L10n.text("Contém spoiler"), isOn: $spoiler).disabled(thread.busy || pending != nil)
@@ -85,13 +93,20 @@ private struct PostThreadView: View {
                     } else { Text(L10n.text("O autor limitou quem pode comentar.")) }
                 }
             }.foregroundStyle(MV.C.ink).padding(MV.pad)
-        }.task { await thread.load() }.refreshable { await thread.load() }
+        }.task {
+            await thread.load()
+            if !openedNotification, let notificationCommentID {
+                openedNotification = true; contextTarget = .init(id: notificationCommentID)
+            }
+        }.refreshable { await thread.load() }
         .task(id: thread.post?.itemID) { if let id = thread.post?.itemID { await store.catalogStore.resolve([id]) } }
         .confirmationDialog(L10n.text("Excluir esta publicação?"), isPresented: $deleting, titleVisibility: .visible) {
             Button(L10n.text("EXCLUIR PUBLICAÇÃO"), role: .destructive) { Task { if await thread.delete() { dismiss() } } }
         }
         .sheet(item: $contextTarget) { target in
-            CommentContextView(api: thread.api, post: thread.id, target: target.id)
+            CommentContextView(api: thread.api, post: thread.id, target: target.id, onReply: thread.canComment && pending == nil ? { comment, user in
+                replyHandle = user?.handle; replyTo = comment
+            } : nil)
         }
         .sheet(isPresented: $mentioning) { MentionPicker { user in text += (text.isEmpty || text.hasSuffix(" ") ? "" : " ") + user.handle + " " } }
         .sheet(isPresented: $editing, onDismiss: { Task { await thread.load() } }) {
@@ -128,7 +143,7 @@ private struct PostThreadView: View {
                     .font(MVFont.bold(11)).foregroundStyle(MV.C.muted)
             } else {
                 if comment.isReply == true {
-                    Button { contextTarget = comment } label: {
+                    Button { contextTarget = .init(id: comment.id) } label: {
                         VStack(alignment: .leading, spacing: 4) {
                             if let parent, let person = thread.users[parent.user] {
                                 Label(L10n.format("Em resposta a %1$@", person.handle), systemImage: "arrowshape.turn.up.left")
@@ -139,7 +154,7 @@ private struct PostThreadView: View {
                 }
                 CommentMessage(comment: comment, revealed: $revealed)
                 reactions(comment: comment.id)
-                if thread.canComment { Button(L10n.text("RESPONDER")) { replyTo = comment }.disabled(thread.busy || pending != nil) }
+                if thread.canComment { Button(L10n.text("RESPONDER")) { replyHandle = nil; replyTo = comment }.disabled(thread.busy || pending != nil) }
                 if comment.user != store.meID {
                     Button(L10n.text("DENUNCIAR")) { reportTarget = .init(id: comment.id, comment: comment.id, author: comment.user) }.font(MVFont.body(11, weight: 700))
                 }

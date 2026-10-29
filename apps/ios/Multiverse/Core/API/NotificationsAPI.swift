@@ -17,7 +17,9 @@ struct ActivityNotification: Codable, Identifiable, Sendable {
 struct NotificationsPage: Codable, Sendable {
     let notifications: [ActivityNotification]; let users: [User]; let unreadCount: Int; let nextCursor: String?
     func validate() throws {
-        guard unreadCount >= 0, notifications.count <= 30, Set(notifications.map(\.id)).count == notifications.count,
+        guard notifications.allSatisfy({ entry in
+            entry.commentID == nil || (["post", "review"].contains(entry.targetType) && UUID(uuidString: entry.commentID!) != nil)
+        }), unreadCount >= 0, notifications.count <= 30, Set(notifications.map(\.id)).count == notifications.count,
               notifications.allSatisfy({ n in UUID(uuidString: n.id) != nil && ["follow", "comment", "reaction", "mention", "reply", "message"].contains(n.kind) && ["person", "review", "post", "message"].contains(n.targetType) && (n.targetType == "person" || UUID(uuidString: n.targetID) != nil) && users.contains(where: { $0.id == n.user }) }),
               nextCursor == nil || (!notifications.isEmpty && !(nextCursor?.isEmpty ?? true)) else { throw SocialError.invalid }
     }

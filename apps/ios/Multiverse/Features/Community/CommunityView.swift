@@ -11,7 +11,7 @@ struct CommunityLink: View {
                     Image(systemName: "bubble.left.and.bubble.right")
                     VStack(alignment: .leading) {
                         Text(L10n.text("COMUNIDADE")).font(MVFont.section(17))
-                        Text(L10n.text("Perguntas, ideias e conversas sobre este universo.")).font(MVFont.body(12, weight: 500))
+                        Text(item != nil ? L10n.text("Perguntas, ideias e conversas sobre esta obra.") : universe != nil ? L10n.text("Perguntas, ideias e conversas sobre este universo.") : L10n.text("Entre nas conversas de Marvel e DC e compartilhe suas ideias.")).font(MVFont.body(12, weight: 500))
                     }
                     Spacer(); Image(systemName: "chevron.right")
                 }.foregroundStyle(MV.C.ink).padding(14).comicCard()
@@ -41,15 +41,21 @@ struct CommunityView: View {
         ScreenScaffold(showBack: true, onBack: { dismiss() }) {
             LazyVStack(alignment: .leading, spacing: 18) {
                 Text(title).font(MVFont.display(28, width: 122))
+                if club != nil {
+                    Text(L10n.text("CONVERSAS DO CLUBE")).kicker()
+                    Text(L10n.text("Publicações e respostas ligadas a este clube.")).font(MVFont.body(13)).foregroundStyle(MV.C.muted)
+                } else if kind == nil {
+                    Text(L10n.text("Escolha uma conversa para participar ou comece a sua.")).font(MVFont.body(13)).foregroundStyle(MV.C.muted)
+                }
                 if let universe { Text(store.universe(universe)?.name ?? universe).kicker() }
                 if let item { Text(store.item(item)?.title ?? item).font(MVFont.bold(14)) }
                 if kind == nil && club == nil {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
-                            module(L10n.text("CLUBES"), icon: "person.3", route: .liveClubs(universe))
-                            module(L10n.text("SALAS"), icon: "bubble.left.and.bubble.right", route: .liveRooms(universe))
-                            module(L10n.text("TEORIAS"), icon: "lightbulb", route: .communityFeed(.init(universe: universe, item: item, kind: "theory")))
-                            module(L10n.text("DUELOS"), icon: "bolt", route: .communityFeed(.init(universe: universe, item: item, kind: "duel")))
+                            module(L10n.text("CLUBES"), icon: "person.3", route: .liveClubs(filter.universe))
+                            module(L10n.text("SALAS"), icon: "bubble.left.and.bubble.right", route: .liveRooms(filter.universe))
+                            module(L10n.text("TEORIAS"), icon: "lightbulb", route: .communityFeed(.init(universe: filter.universe, item: item, kind: "theory")))
+                            module(L10n.text("DUELOS"), icon: "bolt", route: .communityFeed(.init(universe: filter.universe, item: item, kind: "duel")))
                         }.padding(.bottom, 4)
                     }
                 }

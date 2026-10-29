@@ -39,6 +39,25 @@ import Testing
         #expect(app.notifications?.entries.first?.readAt == nil)
         #expect(api.readIDs == [entry.id])
     }
+    @Test func responseAlertKeepsItsTargetAndBackStackAcrossTabsAndRepeatedTaps() async {
+        for tab in AppTab.allCases {
+            for type in ["post", "review"] {
+                let api = NotificationsStub()
+                let actual = AppStore(notificationsAPI: api)
+                let target = UUID().uuidString.lowercased(), comment = UUID().uuidString.lowercased()
+                let alert = ActivityNotification(id: UUID().uuidString.lowercased(), kind: "reply", targetType: type, targetID: target, commentID: comment, createdAt: .now, readAt: nil, user: user.id)
+                actual.tab = tab; actual.openNotifications(); api.fail = true
+                await actual.openNotification(alert); await actual.openNotification(alert)
+                let path = switch tab { case .home: actual.homePath; case .search: actual.searchPath; case .library: actual.libraryPath; case .clubs: actual.clubsPath; case .profile: actual.profilePath }
+                #expect(path == [.notifications, type == "post" ? .post(target, comment: comment) : .review(target, comment: comment)])
+                #expect(actual.tab == tab)
+            }
+        }
+    }
+    @Test func invalidCommentDestinationsAreRejected() {
+        let invalid = ActivityNotification(id: UUID().uuidString.lowercased(), kind: "reply", targetType: "post", targetID: UUID().uuidString.lowercased(), commentID: "invalid", createdAt: .now, readAt: nil, user: user.id)
+        #expect(throws: SocialError.invalid) { try NotificationsPage(notifications: [invalid], users: [user], unreadCount: 1, nextCursor: nil).validate() }
+    }
     @Test func badgeComesFromServerAndReadFailureKeepsUnread() async {
         let api = NotificationsStub(), first = entry()
         api.page = .init(notifications: [first], users: [user], unreadCount: 7, nextCursor: nil)

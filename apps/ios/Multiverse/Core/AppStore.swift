@@ -1785,18 +1785,6 @@ final class AppStore {
         push(.notifications)
     }
 
-    /// Navigate first: a read receipt failure must not block access or clear the badge.
-    func openNotification(_ entry: ActivityNotification) async {
-        switch entry.targetType {
-        case "message": push(.conversation(entry.user))
-        case "review": push(.review(entry.targetID))
-        case "post": push(.post(entry.targetID))
-        case "person": openUserProfile(entry.targetID)
-        default: return
-        }
-        _ = await notifications?.markRead([entry.id])
-    }
-
     func openMyProfile() {
         tab = .profile
         profilePath = []

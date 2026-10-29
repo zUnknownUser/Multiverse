@@ -16,11 +16,18 @@ struct CommentMessage: View {
 struct CommentContextView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+    private let onReply: ((RemoteComment, User?) -> Void)?
     @State private var context: CommentContext
     @State private var revealed: Set<String> = []
 
-    init(api: any CommunityAPI, post: String, target: String) {
+    init(api: any CommunityAPI, post: String, target: String, onReply: ((RemoteComment, User?) -> Void)? = nil) {
+        self.onReply = onReply
         _context = State(initialValue: CommentContext(api: api, post: post, target: target))
+    }
+
+    init(context: CommentContext, onReply: ((RemoteComment, User?) -> Void)? = nil) {
+        self.onReply = onReply
+        _context = State(initialValue: context)
     }
 
     var body: some View {
@@ -48,7 +55,7 @@ struct CommentContextView: View {
                         ForEach(context.comments) { comment in
                             VStack(alignment: .leading, spacing: 10) {
                                 if comment.id == context.targetID {
-                                    Text(L10n.text("RESPOSTA SELECIONADA")).font(MVFont.bold(10)).foregroundStyle(MV.C.muted)
+                                    Text(L10n.text("COMENTÁRIO SELECIONADO")).font(MVFont.bold(10)).foregroundStyle(MV.C.muted)
                                 }
                                 if let user = context.users[comment.user] {
                                     Button {
@@ -58,17 +65,25 @@ struct CommentContextView: View {
                                     }.buttonStyle(.plain)
                                 }
                                 CommentMessage(comment: comment, revealed: $revealed)
+                                if let onReply, context.canComment && context.error == nil {
+                                    Button(L10n.text("RESPONDER")) { onReply(comment, context.users[comment.user]); dismiss() }
+                                        .font(MVFont.bold(12)).disabled(context.busy)
+                                }
                             }.frame(maxWidth: .infinity, alignment: .leading).padding(14).comicCard().id(comment.id)
                         }
                     }.foregroundStyle(MV.C.ink).padding(MV.pad)
                 }.refreshable { await context.load() }
+                .task {
+                    await context.load()
+                    await Task.yield()
+                    proxy.scrollTo(context.targetID, anchor: .center)
+                }
             }
             .toolbar(.visible, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button(L10n.text("FECHAR")) { dismiss() }.foregroundStyle(MV.C.ink) }
+                ToolbarItem(placement: .confirmationAction) { Button(L10n.text("VOLTAR À CONVERSA")) { dismiss() }.foregroundStyle(MV.C.ink) }
             }
         }
         .presentationDragIndicator(.visible)
-        .task { await context.load() }
     }
 }

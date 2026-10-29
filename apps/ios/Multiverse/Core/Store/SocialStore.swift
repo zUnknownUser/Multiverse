@@ -183,6 +183,9 @@ import Observation
             return true
         } catch { privacyError = error.localizedDescription; return false }
     }
+    func commentContext(review: String, target: String) -> CommentContext {
+        CommentContext(api: api, review: review, target: target)
+    }
     func loadComments(_ id: String, more: Bool = false) async {
         guard !loadingComments.contains(id), !more || commentCursors[id] != nil else { return }
         let epoch = generation, cursor = more ? commentCursors[id] : nil, revision = interactionRevision

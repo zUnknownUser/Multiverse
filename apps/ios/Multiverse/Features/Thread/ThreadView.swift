@@ -3,6 +3,9 @@ import UIKit
 
 struct ThreadView: View {
     let reviewID: String
+    var notificationCommentID: String? = nil
+    @State private var notificationContext: CommentSelection?
+    @State private var openedNotification = false
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var draft = ""
@@ -21,6 +24,10 @@ struct ThreadView: View {
             } else if let review = store.review(reviewID), let item = store.item(review.item) {
                 let uni = store.universe(of: item)
                 VStack(alignment: .leading, spacing: 18) {
+                    if let notificationCommentID {
+                        Button(L10n.text("VER COMENTÁRIO DO AVISO")) { notificationContext = .init(id: notificationCommentID) }
+                            .font(MVFont.bold(12)).buttonStyle(.bordered)
+                    }
                     miniHeader(item: item, uni: uni)
                     if store.isShieldedReview(review) {
                         ShieldedReviewCard(review: review)
@@ -39,9 +46,19 @@ struct ThreadView: View {
             validated = false
             if store.isRemoteReview(reviewID) { await store.social?.loadReview(reviewID); await store.social?.loadComments(reviewID) }
             validated = true
+            if !openedNotification, let notificationCommentID {
+                openedNotification = true; notificationContext = .init(id: notificationCommentID)
+            }
         }
         .refreshable {
             if store.isRemoteReview(reviewID) { await store.social?.loadReview(reviewID); await store.social?.loadComments(reviewID) }
+        }
+        .sheet(item: $notificationContext) { target in
+            if let social = store.social {
+                CommentContextView(context: social.commentContext(review: reviewID, target: target.id), onReply: social.canComment[reviewID] == true && pendingComment == nil ? { _, user in
+                    draft = (user?.handle ?? "") + " "; focused = true
+                } : nil)
+            }
         }
         .safeAreaInset(edge: .bottom) {
             if let review = store.review(reviewID), !store.isRemoteReview(reviewID) || (validated && store.social?.detailErrors[reviewID] == nil) {

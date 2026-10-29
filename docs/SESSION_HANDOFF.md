@@ -965,3 +965,23 @@ uma autorização automática para redesenhar o app.
 Validação incremental final: 35 testes de HTTP/rascunhos passaram após acrescentar
 falha de escrita local e mensagem específica de cota de foto. A suíte completa
 anterior passou com 302 testes; os dois cenários adicionais passaram nesta rodada.
+
+## Lote de clareza — 29/10/2026
+
+Lucas autorizou revisar os caminhos de conversar, publicar e voltar pelos avisos,
+preservando visual/arquitetura, sem novos gastos e com push/deploy ao concluir.
+Entrada social foi movida para cima na Home; o botão central identifica o Diário;
+atalhos de comunidade mantêm o universo selecionado; o compositor explica destino
+e visibilidade e confirma descarte de rascunho.
+
+Avisos de review/publicação agora preservam o ID da resposta, abrem o contexto
+exato (inclusive fora da primeira página), permitem responder conforme a permissão
+e mantêm a lista de avisos no caminho de volta. Adicionado endpoint autenticado de
+contexto para comentários de review, aplicando as regras existentes de conta,
+visibilidade, bloqueio e moderação. Sem migrations, serviços ou gastos novos.
+
+Validação local: API 117 unitários + 177 HTTP/PostgreSQL; iOS 321 testes/38 suítes
+e build Release; localização PT-BR/EN com 1.299 entradas; `make localization-check
+environment-check` aprovado. O CI e o deploy da API dependem do push e devem ser
+registrados em `LAUNCH_READINESS.md`. Validação manual com usuários continua
+pendente e não deve ser descrita como coberta pelos testes automatizados.

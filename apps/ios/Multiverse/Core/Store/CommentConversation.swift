@@ -1,6 +1,8 @@
 import Foundation
 import Observation
 
+struct CommentSelection: Identifiable { let id: String }
+
 struct CommentContextPage: Codable, Sendable {
     let reviewID: String
     let targetID: String
@@ -60,12 +62,19 @@ struct CommentConversation {
     private(set) var busy = false
     private(set) var error: String?
     private(set) var earlierID: String?
-    let api: any CommunityAPI
+    private let fetch: (String) async throws -> CommentContextPage
+    private(set) var canComment = false
     let postID: String
     let targetID: String
 
     init(api: any CommunityAPI, post: String, target: String) {
-        self.api = api; postID = post; targetID = target
+        postID = post; targetID = target
+        fetch = { try await api.fetchCommentContext(post: post, comment: $0) }
+    }
+
+    init(api: any SocialAPI, review: String, target: String) {
+        postID = review; targetID = target
+        fetch = { try await api.fetchReviewCommentContext(review: review, comment: $0) }
     }
 
     func load(earlier: Bool = false) async {
@@ -74,7 +83,7 @@ struct CommentConversation {
         busy = true; error = nil
         defer { busy = false }
         do {
-            let page = try await api.fetchCommentContext(post: postID, comment: requested)
+            let page = try await fetch(requested)
             try Task.checkCancellation()
             try page.validate(post: postID, target: requested)
             let known = Set(comments.map(\.id))
@@ -83,6 +92,7 @@ struct CommentConversation {
                       page.comments.allSatisfy({ !known.contains($0.id) }),
                       page.comments.first?.parentID.map({ !known.contains($0) }) ?? true else { throw SocialError.invalid }
             }
+            canComment = page.canComment
             comments = page.comments + (earlier ? comments : [])
             if !earlier { users = [:] }
             for user in page.users { users[user.id] = user }
@@ -90,8 +100,8 @@ struct CommentConversation {
         } catch is CancellationError { }
         catch {
             self.error = error.localizedDescription
-            if error is CommunityError || (error as? SocialError) == .commentUnavailable {
-                comments = []; users = [:]; earlierID = nil
+            if error is CommunityError || (error as? SocialError) == .commentUnavailable || (error as? SocialError) == .unavailable {
+                comments = []; users = [:]; earlierID = nil; canComment = false
             }
         }
     }

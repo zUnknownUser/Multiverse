@@ -304,6 +304,76 @@ describe.skipIf(!databaseURL)('Social feed and safety with PostgreSQL', () => {
       [],
     );
   });
+  it('resolves an off-page review comment for an alert without bypassing visibility', async () => {
+    const reviewID = await publicReview();
+    await permission('everyone').expect(200);
+    for (let i = 0; i < 31; i++) {
+      await db.query(
+        "INSERT INTO review_comments(id,review_id,firebase_uid,text,created_at) VALUES($1,$2,'bruno',$3,'2026-10-01T10:00:00Z')",
+        [randomUUID(), reviewID, 'Earlier ' + i],
+      );
+    }
+    const target = randomUUID();
+    await comment(reviewID, target, 'bruno', 'Selected spoiler', true).expect(
+      200,
+    );
+    const path = `reviews/${reviewID}/comments/${target}/context`;
+    const first = await get(`reviews/${reviewID}/comments`).expect(200);
+    expect(
+      first.body.comments.some((c: { id: string }) => c.id === target),
+    ).toBe(false);
+    const result = await get(path).expect(200);
+    expect(result.body).toMatchObject({
+      reviewID,
+      targetID: target,
+      canComment: true,
+      truncated: false,
+    });
+    expect(result.body.comments).toHaveLength(1);
+    expect(result.body.comments[0]).toMatchObject({
+      id: target,
+      text: 'Selected spoiler',
+      spoiler: true,
+      user: 'bruno',
+    });
+    await permission('nobody').expect(200);
+    expect((await get(path).expect(200)).body.canComment).toBe(false);
+    await request(app.getHttpServer())
+      .get('/api/v1/' + path)
+      .expect(401);
+    await get(`reviews/${reviewID}/comments/invalid/context`).expect(400);
+    await get(`reviews/${randomUUID()}/comments/${target}/context`).expect(404);
+    await get(`reviews/${reviewID}/comments/${randomUUID()}/context`).expect(
+      404,
+    );
+    await privacy(false).expect(200);
+    await get(path).expect(404);
+    await privacy(true).expect(200);
+    await block('owner', 'bruno').expect(200);
+    await get(path).expect(404);
+    await block('owner', 'bruno', false).expect(200);
+    await block('bruno', 'owner').expect(200);
+    await get(path).expect(404);
+    await block('bruno', 'owner', false).expect(200);
+    await block('alice', 'owner').expect(200);
+    await get(path).expect(404);
+    await block('alice', 'owner', false).expect(200);
+    await db.query(
+      "UPDATE review_comments SET moderation_status='hidden' WHERE id=$1",
+      [target],
+    );
+    await get(path).expect(404);
+    await db.query(
+      "UPDATE review_comments SET moderation_status='visible' WHERE id=$1",
+      [target],
+    );
+    await request(app.getHttpServer())
+      .put(`/api/v1/reviews/${reviewID}/comments/${target}/report`)
+      .auth('owner', { type: 'bearer' })
+      .send({ reason: 'spam', alsoBlock: false })
+      .expect(200);
+    await get(path).expect(404);
+  });
   it('reports comments idempotently and supports audited administrative decisions', async () => {
     const reviewID = await publicReview(),
       id = randomUUID();

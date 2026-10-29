@@ -23,8 +23,10 @@ struct CustomTabBar: View {
             .overlay(alignment: .top) { Rectangle().fill(MV.C.ink).frame(height: MV.stroke) }
 
             Button(action: onPlusTapped) {
-                Text("+")
-                    .font(MVFont.black(28))
+                VStack(spacing: 0) {
+                    Text("+").font(MVFont.black(24))
+                    Text(L10n.text("DIÁRIO")).font(MVFont.label(8))
+                }
                     .foregroundStyle(MV.C.card)
                     .frame(width: 54, height: 54)
                     .background(Circle().fill(MV.C.marvel))
@@ -33,7 +35,7 @@ struct CustomTabBar: View {
             }
             .buttonStyle(.plain)
             .offset(y: -18)
-            .accessibilityLabel(L10n.text("Registrar"))
+            .accessibilityLabel(L10n.text("Registrar no diário"))
         }
         .fixedSize(horizontal: false, vertical: true)
     }

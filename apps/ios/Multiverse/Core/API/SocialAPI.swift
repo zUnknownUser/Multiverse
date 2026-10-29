@@ -8,6 +8,7 @@ import Foundation
     func fetchBlocks() async throws -> SocialBlocks
     func setBlock(id: String, blocked: Bool) async throws -> BlockReceipt
     func reportReview(id: String, reason: String, alsoBlock: Bool) async throws -> ReportReceipt
+    func fetchReviewCommentContext(review: String, comment: String) async throws -> CommentContextPage
     func fetchComments(reviewID: String, after: String?) async throws -> CommentsPage
     func postComment(reviewID: String, id: String, text: String, spoiler: Bool) async throws -> CommentReceipt
     func setReaction(reviewID: String, commentID: String?, reaction: String?, liked: Bool) async throws -> InteractionSummary
@@ -106,4 +107,9 @@ extension ReportReason {
     var apiValue: String {
         switch self { case .spoiler: "spoiler"; case .offensive: "offensive"; case .spam: "spam"; case .wrongCanon: "wrong_canon"; case .other: "other" }
     }
+}
+
+// Older test/preview implementations need not provide notification deep links.
+extension SocialAPI {
+    func fetchReviewCommentContext(review: String, comment: String) async throws -> CommentContextPage { throw SocialError.commentUnavailable }
 }

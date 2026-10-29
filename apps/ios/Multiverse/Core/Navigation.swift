@@ -10,7 +10,7 @@ enum Route: Hashable {
     case catalogSeries(String)
     case universe(String)
     case user(String)
-    case review(String)
+    case review(String, comment: String? = nil)
     case order(String)
     case list(String)
     case library
@@ -22,7 +22,7 @@ enum Route: Hashable {
     case deleteAccount
     /// Avisos deixou de ser aba — agora é o sino no topo da Home, empilhado como rota.
     case community(universe: String?, item: String?)
-    case post(String)
+    case post(String, comment: String? = nil)
     case dailyDuel(String)
     case communityFeed(CommunityFilter)
     case liveClubs(String?)
@@ -52,5 +52,35 @@ extension Route {
         case .wrapped, .club, .clubDiscussion, .theories, .theoryDetail, .predictions, .correctionForm, .adjustShieldPoint, .room, .exploreRooms, .livePremiere, .pro: true
         default: false
         }
+    }
+}
+
+// Notification destinations preserve the exact response without replacing the
+// current stack, so Back returns to the same loaded notification list.
+extension ActivityNotification {
+    var destination: Route? {
+        switch targetType {
+        case "message": .conversation(user)
+        case "review": .review(targetID, comment: commentID)
+        case "post": .post(targetID, comment: commentID)
+        case "person": .user(targetID)
+        default: nil
+        }
+    }
+}
+
+extension AppStore {
+    func openNotification(_ entry: ActivityNotification) async {
+        guard let destination = entry.destination else { return }
+        let current: Route? = switch tab {
+        case .home: homePath.last
+        case .search: searchPath.last
+        case .library: libraryPath.last
+        case .clubs: clubsPath.last
+        case .profile: profilePath.last
+        }
+        if current != destination { push(destination) }
+        // A failed receipt preserves the badge and never prevents navigation.
+        _ = await notifications?.markRead([entry.id])
     }
 }

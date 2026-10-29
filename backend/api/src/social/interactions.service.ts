@@ -220,10 +220,15 @@ export class InteractionsService {
   async context(uid: string, reviewID: string, targetID: string) {
     return this.lifecycle.withActiveAccount(uid, async (client) => {
       const review = await this.review(client, uid, reviewID);
-      // Bound database work to one ancestry path, irrespective of the post's size.
-      // Check visibility at every step; never traverse through a hidden ancestor.
+      // Reviews have flat comments; posts resolve a bounded ancestry path.
+      // Both paths apply the same parent and comment visibility as their lists.
       const result = await client.query(
-        `WITH RECURSIVE ancestors AS (
+        this.domain === 'review'
+          ? `SELECT ${this.commentFields}
+             FROM review_comments c JOIN profiles cp ON cp.firebase_uid=c.firebase_uid
+             JOIN reviews r ON r.id=c.review_id
+             WHERE c.id=$3 AND c.review_id=$2 AND ${commentVisible}`
+          : `WITH RECURSIVE ancestors AS (
           SELECT c.id,c.parent_id,1 AS depth,ARRAY[c.id] AS path
           FROM post_comments c JOIN profiles cp ON cp.firebase_uid=c.firebase_uid JOIN community_posts r ON r.id=c.post_id
           WHERE c.id=$3 AND c.post_id=$2 AND ${postCommentVisible}

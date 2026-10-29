@@ -560,3 +560,26 @@ API, Firebase e configuração/traduções aprovados; iOS ainda em execução na
 consulta, com suíte local completa aprovada. App iOS tem Release sem assinatura
 validado; distribuição pela loja/TestFlight continua pendente de Apple Developer.
 Nenhum plano, limite de gasto ou serviço contratado foi alterado.
+
+### Lote de clareza — concluído (29/10/2026)
+
+Autorizado por Lucas: conversar, publicar e retornar pelos avisos, preservando
+visual/arquitetura e sem novos gastos; push/deploy ao concluir.
+
+- [x] Tornar explícitos a entrada social na Home e o destino do “+” (diário).
+- [x] Preservar o universo selecionado nos atalhos e explicar o destino da publicação.
+- [x] Abrir o comentário indicado no aviso, inclusive fora da primeira página,
+  com contexto, resposta e retorno à lista; preservar spoilers, privacidade e retry.
+- [x] Validar fluxos, PT-BR/EN, estados vazios/falhas e compilação Release; atualizar
+  documentação e publicar no ambiente existente. Validação com usuários permanece separada.
+
+Entregas: entrada da comunidade antecipada na Home, rótulo “DIÁRIO” no botão “+”,
+atalhos preservando o universo ativo, destino/visibilidade da publicação e confirmação
+ao descartar rascunho. Avisos agora abrem a resposta exata em reviews e publicações,
+com conversa contextual, ação de resposta e retorno à lista. O endpoint aditivo de
+review reutiliza as políticas existentes; nenhuma migração ou serviço novo.
+
+Validação local: 117 testes unitários + 177 testes HTTP com PostgreSQL, 321 testes
+iOS em 38 suítes, Release iOS aprovado, catálogo PT-BR/EN com 1.299 entradas e
+`make localization-check environment-check` aprovados. CI e deploy Railway serão
+registrados após o push; não foram feitas contas, publicações ou envios reais nos testes.

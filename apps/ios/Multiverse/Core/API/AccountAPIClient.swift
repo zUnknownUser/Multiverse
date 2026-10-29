@@ -31,6 +31,9 @@ final class AccountAPIClient: AccountAPI, ActivityAPI, PeopleAPI, SocialAPI, Com
         try await request("feed", query: after.map { [URLQueryItem(name: "after", value: $0)] } ?? [])
     }
     func fetchReview(id: String) async throws -> SocialPage { try await request("reviews/" + id) }
+    func fetchReviewCommentContext(review: String, comment: String) async throws -> CommentContextPage {
+        try await request("reviews/" + review + "/comments/" + comment + "/context")
+    }
     func fetchComments(reviewID: String, after: String?) async throws -> CommentsPage {
         try await request("reviews/" + reviewID + "/comments", query: after.map { [URLQueryItem(name: "after", value: $0)] } ?? [])
     }

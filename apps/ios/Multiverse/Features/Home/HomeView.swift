@@ -7,6 +7,7 @@ struct HomeView: View {
         ScreenScaffold {
             VStack(alignment: .leading, spacing: 26) {
                 header.padding(.horizontal, MV.pad)
+                HomeCommunitySection()
                 if store.savedLogDraft != nil || store.canOfferFirstRecord {
                     firstRecordCard.padding(.horizontal, MV.pad)
                 }
@@ -15,7 +16,6 @@ struct HomeView: View {
                 if store.showsDemoFeatures && store.isShieldActive { ShieldStatusBanner().padding(.horizontal, MV.pad) }
                 if store.showsDemoFeatures { wrappedBanner.padding(.horizontal, MV.pad) }
                 universeGrid.padding(.horizontal, MV.pad)
-                HomeCommunitySection()
                 if store.showsDemoFeatures && !store.clubs.isEmpty { MyClubsCard().padding(.horizontal, MV.pad) }
                 if !store.homeDiscoveryItems.isEmpty { trendingSection }
                 if store.dailyDuels != nil { DailyDuelCard().padding(.horizontal, MV.pad) }
@@ -196,7 +196,7 @@ struct HomeView: View {
     private var feedSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text(L10n.text(store.usesRemoteActivity && store.social == nil ? "SUAS REVIEWS" : "DO SEU PESSOAL")).font(MVFont.section(19)).foregroundStyle(MV.C.ink)
+                Text(L10n.text(store.usesRemoteActivity && store.social == nil ? "SUAS REVIEWS" : "REVIEWS DO PESSOAL")).font(MVFont.section(19)).foregroundStyle(MV.C.ink)
                 Spacer()
                 Text(L10n.format("seguindo %1$@", String(describing: store.friendsCount))).kicker(11).foregroundStyle(MV.C.muted)
             }

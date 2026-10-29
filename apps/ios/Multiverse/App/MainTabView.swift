@@ -115,7 +115,7 @@ private struct RouteDestination: View {
         case .catalogSeries(let id): CatalogSeriesView(seriesID: id)
         case .universe(let id): UniverseView(universeID: id)
         case .user(let id): ProfileView(userID: id)
-        case .review(let id): ThreadView(reviewID: id)
+        case .review(let id, let comment): ThreadView(reviewID: id, notificationCommentID: comment)
         case .order(let id): ReadingOrderView(orderID: id)
         case .library: LibraryView()
         case .list(let id):
@@ -127,7 +127,7 @@ private struct RouteDestination: View {
         case .blockedUsers: BlockedUsersView()
         case .deleteAccount: DeleteAccountView()
         case .community(let universe, let item): CommunityView(universe: universe, item: item)
-        case .post(let id): PostView(id: id)
+        case .post(let id, let comment): PostView(id: id, notificationCommentID: comment)
         case .dailyDuel(let id): DailyDuelView(id: id)
         case .communityFeed(let filter): CommunityView(universe: filter.universe, item: filter.item, initialFeed: filter.feed, initialSearch: filter.search, kind: filter.kind, club: filter.club, schedule: filter.schedule)
         case .liveClubs(let universe): LiveClubsView(universe: universe)

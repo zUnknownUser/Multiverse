@@ -16687,12 +16687,11 @@
       }
     },
     "Registrar no diário" : {
-      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Log in diary"
+            "value" : "Log in your diary"
           }
         },
         "pt-BR" : {
@@ -22060,6 +22059,342 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ACOMPANHAR RESPOSTAS"
+          }
+        }
+      }
+    },
+    "REVIEWS DO PESSOAL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMMUNITY REVIEWS"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "REVIEWS DO PESSOAL"
+          }
+        }
+      }
+    },
+    "Perguntas, ideias e conversas sobre esta obra." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questions, ideas and conversations about this work."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perguntas, ideias e conversas sobre esta obra."
+          }
+        }
+      }
+    },
+    "Entre nas conversas de Marvel e DC e compartilhe suas ideias." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join Marvel and DC conversations and share your ideas."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entre nas conversas de Marvel e DC e compartilhe suas ideias."
+          }
+        }
+      }
+    },
+    "CONVERSAS DO CLUBE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CLUB CONVERSATIONS"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CONVERSAS DO CLUBE"
+          }
+        }
+      }
+    },
+    "Publicações e respostas ligadas a este clube." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posts and replies from this club."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicações e respostas ligadas a este clube."
+          }
+        }
+      }
+    },
+    "Escolha uma conversa para participar ou comece a sua." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join a conversation or start your own."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha uma conversa para participar ou comece a sua."
+          }
+        }
+      }
+    },
+    "Respostas, menções e novidades. Toque para voltar à conversa." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replies, mentions and updates. Tap to return to the conversation."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Respostas, menções e novidades. Toque para voltar à conversa."
+          }
+        }
+      }
+    },
+    "Quando alguém responder ou mencionar você, o aviso aparecerá aqui." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When someone replies or mentions you, you’ll see it here."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quando alguém responder ou mencionar você, o aviso aparecerá aqui."
+          }
+        }
+      }
+    },
+    "ENCONTRAR CONVERSAS" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FIND CONVERSATIONS"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ENCONTRAR CONVERSAS"
+          }
+        }
+      }
+    },
+    "COMENTÁRIO SELECIONADO" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SELECTED COMMENT"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMENTÁRIO SELECIONADO"
+          }
+        }
+      }
+    },
+    "VOLTAR À CONVERSA" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BACK TO CONVERSATION"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VOLTAR À CONVERSA"
+          }
+        }
+      }
+    },
+    "VER COMENTÁRIO DO AVISO" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VIEW NOTIFICATION COMMENT"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VER COMENTÁRIO DO AVISO"
+          }
+        }
+      }
+    },
+    "Descartar esta publicação?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard this post?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descartar esta publicação?"
+          }
+        }
+      }
+    },
+    "CONTINUAR ESCREVENDO" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KEEP WRITING"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CONTINUAR ESCREVENDO"
+          }
+        }
+      }
+    },
+    "O texto e as imagens ainda não publicados serão descartados." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpublished text and images will be discarded."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O texto e as imagens ainda não publicados serão descartados."
+          }
+        }
+      }
+    },
+    "O envio pode já ter sido recebido. Confira a comunidade antes de publicar novamente." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your post may already have been received. Check the community before posting again."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O envio pode já ter sido recebido. Confira a comunidade antes de publicar novamente."
+          }
+        }
+      }
+    },
+    "Esta publicação fica nas conversas deste clube." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This post goes to this club’s conversations."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta publicação fica nas conversas deste clube."
+          }
+        }
+      }
+    },
+    "Esta publicação fica nesta sala, no trecho selecionado." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This post goes to this room’s selected section."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta publicação fica nesta sala, no trecho selecionado."
+          }
+        }
+      }
+    },
+    "Esta publicação aparece na comunidade do universo escolhido." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This post appears in the community for the selected universe."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta publicação aparece na comunidade do universo escolhido."
+          }
+        }
+      }
+    },
+    "DESCARTAR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DISCARD"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DESCARTAR"
+          }
+        }
+      }
+    },
+    "AVISOS" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NOTIFICATIONS"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AVISOS"
           }
         }
       }

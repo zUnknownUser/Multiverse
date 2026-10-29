@@ -98,3 +98,15 @@ autor publica review e permite “Todos”; leitor comenta/reage, reabre e confe
 autor muda para “Quem sigo”/“Ninguém”; leitor confere a restrição; testar denúncia,
 bloqueio, perda de rede e reenvio, em português e inglês. A validação automatizada
 não autentica contas reais nem envia denúncias para produção.
+
+## Retorno por avisos — contrato aditivo (28/10/2026)
+
+`GET /reviews/:id/comments/:commentID/context` resolve um comentário exato de review
+sem percorrer páginas. Exige autenticação e as mesmas políticas de visibilidade,
+conta ativa, bloqueio, exclusão/moderação e permissão de comentário da listagem.
+Retorna `{reviewID, targetID, comments, users, canComment, truncated:false}` com um
+comentário; IDs válidos indisponíveis retornam 404 (`REVIEW_UNAVAILABLE` ou
+`COMMENT_UNAVAILABLE`), sem divulgar o motivo. IDs inválidos retornam 400.
+O contrato de contexto de publicações continua com a cadeia de até 30 ancestrais.
+O app preserva `commentID` na rota do aviso e consulta o contexto isoladamente,
+sem substituir a lista paginada nem revelar spoilers automaticamente.

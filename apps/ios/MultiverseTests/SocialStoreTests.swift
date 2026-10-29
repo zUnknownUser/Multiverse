@@ -19,6 +19,13 @@ import Testing
     var commentFailure = false
     var commentItems: [RemoteComment] = []
     var holdComments = false
+    var contextError: (any Error)?
+    var contextRequests: [String] = []
+    func fetchReviewCommentContext(review: String, comment: String) async throws -> CommentContextPage {
+        contextRequests.append(comment)
+        if let contextError { throw contextError }
+        return .init(reviewID: review, targetID: comment, comments: commentItems.filter { $0.id == comment }, users: page.users, canComment: commentPermission != "nobody", truncated: false)
+    }
     var pendingComments: CheckedContinuation<CommentsPage, any Error>?
     func fetchComments(reviewID: String, after: String?) async throws -> CommentsPage {
         if commentFailure { throw AuthError.networkUnavailable }
@@ -89,6 +96,24 @@ import Testing
 }
 
 @MainActor struct SocialStoreTests {
+    @Test func reviewNotificationContextPreservesTimelineAndHandlesRevokedAccess() async {
+        let api = SocialStub(), id = UUID().uuidString.lowercased()
+        let item = RemoteComment(id: id, user: "alice", text: "Spoiler", spoiler: true, createdAt: .now, interaction: .init(id: id, likes: 0, liked: false, myReaction: nil, reactions: ["POW!":0,"ZAP!":0,"KRAK!":0,"HEH":0]))
+        let store = SocialStore(api: api), review = api.page.reviews[0].id
+        await store.loadReview(review); await store.loadComments(review)
+        api.commentItems = [item]
+        let context = store.commentContext(review: review, target: id)
+        api.contextError = AuthError.networkUnavailable
+        await context.load()
+        #expect(context.comments.isEmpty && context.error != nil)
+        api.contextError = nil; await context.load()
+        #expect(context.comments.first?.id == id && context.comments.first?.spoiler == true && context.canComment)
+        #expect(store.comments[review]?.isEmpty == true)
+        api.commentPermission = "nobody"; await context.load()
+        #expect(!context.canComment && context.comments.count == 1)
+        api.contextError = SocialError.unavailable; await context.load()
+        #expect(context.comments.isEmpty && !context.canComment && context.error != nil)
+    }
     @Test func remoteCommentsRequireAcknowledgementAndRetryKeepsTheSameIdentity() async {
         let api = SocialStub(), id = api.page.reviews[0].id, commentID = UUID().uuidString
         let store = SocialStore(api: api)

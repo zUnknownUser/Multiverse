@@ -23,6 +23,10 @@ struct PostComposer: View {
     @State private var postID = UUID().uuidString.lowercased()
     @State private var pending: (input: PostInput, edit: PostEdit?)?
     @State private var initialized = false
+    @State private var confirmingClose = false
+    private var hasChanges: Bool {
+        title != (editing?.title ?? "") || text != (editing?.text ?? "") || spoiler != (editing?.spoiler ?? false) || !photos.isEmpty || retained.map(\.id) != (editing?.images ?? []).map(\.id) || !optionA.isEmpty || !optionB.isEmpty
+    }
     private var canSend: Bool {
         !busy && !readingPhotos && !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && title.unicodeScalars.count <= 140 && text.unicodeScalars.count <= 5000 && !selectedUniverse.isEmpty && (kind != "duel" || editing != nil || (!optionA.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !optionB.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && optionA != optionB && optionA.count <= 120 && optionB.count <= 120))
     }
@@ -55,7 +59,13 @@ struct PostComposer: View {
         .presentationBackground(MV.C.paper)
         .presentationCornerRadius(MV.R.sheet)
         .presentationDragIndicator(.visible)
-        .interactiveDismissDisabled(busy || readingPhotos || pending != nil)
+        .interactiveDismissDisabled(busy || readingPhotos || pending != nil || hasChanges)
+        .confirmationDialog(L10n.text("Descartar esta publicação?"), isPresented: $confirmingClose, titleVisibility: .visible) {
+            Button(L10n.text("DESCARTAR"), role: .destructive) { dismiss() }
+            Button(L10n.text("CONTINUAR ESCREVENDO"), role: .cancel) {}
+        } message: {
+            Text(pending == nil ? L10n.text("O texto e as imagens ainda não publicados serão descartados.") : L10n.text("O envio pode já ter sido recebido. Confira a comunidade antes de publicar novamente."))
+        }
         .sheet(isPresented: $mentioning) { MentionPicker { user in text += (text.isEmpty || text.hasSuffix(" ") ? "" : " ") + user.handle + " " } }
         .onAppear {
             guard !initialized else { return }; initialized = true
@@ -83,7 +93,7 @@ struct PostComposer: View {
                     .accessibilityAddTraits(.isHeader)
             }
             Spacer(minLength: 0)
-            Button { dismiss() } label: {
+            Button { if hasChanges || pending != nil { confirmingClose = true } else { dismiss() } } label: {
                 Image(systemName: "xmark").font(.system(size: 15, weight: .bold))
                     .frame(width: 44, height: 44).comicCard(radius: MV.R.md, shadow: MV.Shadow.s)
             }
@@ -100,6 +110,16 @@ struct PostComposer: View {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 8) { universeSelector; itemLabel }
                 VStack(alignment: .leading, spacing: 8) { universeSelector; itemLabel }
+            }
+            if club != nil {
+                Label(L10n.text("Esta publicação fica nas conversas deste clube."), systemImage: "person.3")
+                    .font(MVFont.body(12)).foregroundStyle(MV.C.muted)
+            } else if kind == "room" {
+                Label(L10n.text("Esta publicação fica nesta sala, no trecho selecionado."), systemImage: "bubble.left.and.bubble.right")
+                    .font(MVFont.body(12)).foregroundStyle(MV.C.muted)
+            } else {
+                Label(L10n.text("Esta publicação aparece na comunidade do universo escolhido."), systemImage: "bubble.left.and.bubble.right")
+                    .font(MVFont.body(12)).foregroundStyle(MV.C.muted)
             }
             Label(L10n.text("Publicações da comunidade são públicas, mesmo quando seu diário é privado."), systemImage: "globe")
                 .font(MVFont.body(11)).foregroundStyle(MV.C.muted)
